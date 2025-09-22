@@ -1,33 +1,63 @@
 import { useState } from "react";
-import { Settings as SettingsIcon, User, Bell, Shield, Globe, Palette, CreditCard, HelpCircle, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Settings as SettingsIcon, Calendar, Users, Search, Camera, Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface HomeConfig {
+  greeting: string;
+  showCalendar: boolean;
+  quickActions: string[];
+}
 
 const Settings = () => {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState({
-    events: true,
-    community: true,
-    marketplace: false,
-    photos: true
+  const [isEditingGreeting, setIsEditingGreeting] = useState(false);
+  const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
+    const saved = localStorage.getItem('eazy-family-home-config');
+    return saved ? JSON.parse(saved) : {
+      greeting: "Good morning! ☀️",
+      showCalendar: true,
+      quickActions: ["Find Events", "Add Photos"]
+    };
   });
-  const [language, setLanguage] = useState("en");
-  const [theme, setTheme] = useState("light");
+  const [tempGreeting, setTempGreeting] = useState(homeConfig.greeting);
 
-  // Mock user data from onboarding
-  const userData = {
-    initials: "EF",
-    children: [
-      { initials: "SM", age: "5" },
-      { initials: "LM", age: "3" }
-    ],
-    location: "zurich",
-    subscriptionTier: "free"
+  const availableQuickActions = [
+    { id: "Find Events", label: "Find Events", icon: Search },
+    { id: "Add Photos", label: "Add Photos", icon: Camera },
+    { id: "Calendar", label: "Calendar", icon: Calendar },
+    { id: "Community", label: "Community", icon: Users },
+  ];
+
+  const saveHomeConfig = (newConfig: HomeConfig) => {
+    setHomeConfig(newConfig);
+    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+  };
+
+  const handleGreetingEdit = () => {
+    if (isEditingGreeting) {
+      saveHomeConfig({ ...homeConfig, greeting: tempGreeting });
+    } else {
+      setTempGreeting(homeConfig.greeting);
+    }
+    setIsEditingGreeting(!isEditingGreeting);
+  };
+
+  const handleCalendarToggle = (enabled: boolean) => {
+    saveHomeConfig({ ...homeConfig, showCalendar: enabled });
+  };
+
+  const handleQuickActionToggle = (actionId: string, enabled: boolean) => {
+    const newActions = enabled 
+      ? [...homeConfig.quickActions, actionId]
+      : homeConfig.quickActions.filter(action => action !== actionId);
+    saveHomeConfig({ ...homeConfig, quickActions: newActions });
   };
 
   const handleLogout = () => {
@@ -43,251 +73,156 @@ const Settings = () => {
         <h1 className="text-2xl font-bold">Settings</h1>
       </div>
 
-      {/* Profile Section */}
+      {/* Homepage Customization */}
       <Card className="shadow-custom-md">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback className="gradient-primary text-white text-xl font-bold">
-                {userData.initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg">Family Account</h3>
-              <p className="text-sm text-muted-foreground">
-                {userData.children.length} children • {userData.location}
-              </p>
-              <Badge 
-                variant={userData.subscriptionTier === 'free' ? 'secondary' : 'default'}
-                className="mt-2"
-              >
-                {userData.subscriptionTier === 'free' ? 'Free Plan' : userData.subscriptionTier}
-              </Badge>
+        <CardHeader>
+          <CardTitle>Homepage Customization</CardTitle>
+          <CardDescription>
+            Personalize your homepage experience
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Greeting Customization */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Greeting Message</Label>
+            <div className="flex items-center gap-2">
+              {isEditingGreeting ? (
+                <>
+                  <Input
+                    value={tempGreeting}
+                    onChange={(e) => setTempGreeting(e.target.value)}
+                    className="flex-1"
+                    placeholder="Enter your greeting"
+                  />
+                  <Button onClick={handleGreetingEdit} size="sm" variant="outline">
+                    <Save className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setIsEditingGreeting(false);
+                      setTempGreeting(homeConfig.greeting);
+                    }} 
+                    size="sm" 
+                    variant="outline"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 p-2 bg-muted rounded-md">
+                    {homeConfig.greeting}
+                  </div>
+                  <Button onClick={handleGreetingEdit} size="sm" variant="outline">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Subscription */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CreditCard className="w-5 h-5" />
-            Subscription
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="gradient-primary rounded-lg p-4 text-white">
-            <h4 className="font-semibold mb-2">Upgrade to Premium</h4>
-            <p className="text-white/90 text-sm mb-3">
-              Unlimited photo storage, group participation, and marketplace access
-            </p>
-            <Button variant="secondary" size="sm">
-              View Plans
-            </Button>
+          {/* Calendar Section Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-base font-medium">Calendar Section</Label>
+              <p className="text-sm text-muted-foreground">
+                Show today's highlights and calendar events on homepage
+              </p>
+            </div>
+            <Switch 
+              checked={homeConfig.showCalendar} 
+              onCheckedChange={handleCalendarToggle}
+            />
           </div>
 
-          {/* Current Plan Features */}
-          <div className="space-y-2">
-            <h5 className="font-medium text-sm">Current Plan Includes:</h5>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Profile creation & directory browsing</li>
-              <li>• Store photos for 7 days</li>
-              <li>• View marketplace & observe groups</li>
-              <li>• Personal shopping & to-do lists</li>
-            </ul>
+          {/* Quick Actions */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Quick Actions</Label>
+            <p className="text-sm text-muted-foreground">
+              Choose which quick actions to display on your homepage
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              {availableQuickActions.map((action) => {
+                const Icon = action.icon;
+                const isEnabled = homeConfig.quickActions.includes(action.id);
+                
+                return (
+                  <div key={action.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <Checkbox
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => 
+                        handleQuickActionToggle(action.id, checked as boolean)
+                      }
+                    />
+                    <Icon className="w-5 h-5 text-muted-foreground" />
+                    <span className="font-medium">{action.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Account Settings */}
       <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Account
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>Account</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Edit Profile</span>
-            <Button variant="ghost" size="sm">
-              Edit
-            </Button>
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <h3 className="font-medium">Subscription</h3>
+              <p className="text-sm text-muted-foreground">Free Plan</p>
+            </div>
+            <Badge variant="secondary">Free</Badge>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Manage Children</span>
-            <Button variant="ghost" size="sm">
-              {userData.children.length} children
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Privacy Settings</span>
-            <Button variant="ghost" size="sm">
-              Configure
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Notifications */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Event Reminders</span>
-            <Switch 
-              checked={notifications.events}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, events: checked }))}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Community Updates</span>
-            <Switch 
-              checked={notifications.community}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, community: checked }))}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Marketplace Activity</span>
-            <Switch 
-              checked={notifications.marketplace}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, marketplace: checked }))}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Photo Memories</span>
-            <Switch 
-              checked={notifications.photos}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, photos: checked }))}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Preferences */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Palette className="w-5 h-5" />
-            Preferences
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Language</span>
-            <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="de">German</SelectItem>
-                <SelectItem value="fr">French</SelectItem>
-                <SelectItem value="it">Italian</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Theme</span>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Distance Units</span>
-            <Select defaultValue="km">
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="km">Kilometers</SelectItem>
-                <SelectItem value="miles">Miles</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Privacy & Security */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            Privacy & Security
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Two-Factor Authentication</span>
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <h3 className="font-medium">Family Members</h3>
+              <p className="text-sm text-muted-foreground">2 adults, 1 child</p>
+            </div>
             <Button variant="outline" size="sm">
-              Enable
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Data Export</span>
-            <Button variant="ghost" size="sm">
-              Request
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">Delete Account</span>
-            <Button variant="ghost" size="sm" className="text-destructive">
-              Delete
+              Manage
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Support */}
+      {/* App Settings */}
       <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <HelpCircle className="w-5 h-5" />
-            Support
-          </CardTitle>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm">Help Center</span>
-            <Button variant="ghost" size="sm">
-              Visit
-            </Button>
+            <div>
+              <h3 className="font-medium">Push Notifications</h3>
+              <p className="text-sm text-muted-foreground">Get notified about events and updates</p>
+            </div>
+            <Switch />
           </div>
+
           <div className="flex items-center justify-between">
-            <span className="text-sm">Contact Support</span>
-            <Button variant="ghost" size="sm">
-              Email
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">App Version</span>
-            <span className="text-sm text-muted-foreground">1.0.0</span>
+            <div>
+              <h3 className="font-medium">Email Updates</h3>
+              <p className="text-sm text-muted-foreground">Weekly summary and important announcements</p>
+            </div>
+            <Switch />
           </div>
         </CardContent>
       </Card>
 
-      {/* Logout */}
-      <Button 
-        variant="outline" 
-        className="w-full text-destructive hover:text-destructive"
-        onClick={handleLogout}
-      >
-        <LogOut className="w-4 h-4 mr-2" />
-        Sign Out
-      </Button>
+      {/* Actions */}
+      <div className="space-y-3">
+        <Button variant="outline" className="w-full" onClick={() => navigate('/onboarding')}>
+          Re-run Onboarding
+        </Button>
+        <Button variant="destructive" className="w-full" onClick={handleLogout}>
+          Sign Out
+        </Button>
+      </div>
     </div>
   );
 };
