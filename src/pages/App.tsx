@@ -49,7 +49,7 @@ const AppLayout = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 glass-effect border-b px-4 py-3">
-        <div className="flex items-center justify-between max-w-md mx-auto">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">{userInitials}</span>
@@ -73,12 +73,14 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="pb-20">
-        {isHomePath ? <AppHome /> : <Outlet />}
+      <main className="pb-20 md:pb-6 md:ml-64">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {isHomePath ? <AppHome /> : <Outlet />}
+        </div>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 glass-effect border-t">
+      <nav className="fixed bottom-0 left-0 right-0 glass-effect border-t md:hidden">
         <div className="max-w-md mx-auto px-2 py-2">
           <div className="flex justify-around items-center">
             {navigationItems.map((item) => {
@@ -106,11 +108,37 @@ const AppLayout = () => {
         </div>
       </nav>
 
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:block fixed left-0 top-16 bottom-0 w-64 glass-effect border-r p-4">
+        <nav className="space-y-2">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPath === item.path;
+            
+            return (
+              <Button
+                key={item.id}
+                variant="ghost"
+                onClick={() => navigate(item.path)}
+                className={`w-full justify-start gap-3 h-12 ${
+                  isActive 
+                    ? 'text-primary bg-primary/10' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </Button>
+            );
+          })}
+        </nav>
+      </aside>
+
       {/* Floating Action Button */}
       {!isHomePath && (
         <Button
           size="lg"
-          className="fixed bottom-24 right-4 gradient-primary text-white border-0 hover:opacity-90 shadow-custom-lg rounded-full w-14 h-14 p-0"
+          className="fixed bottom-6 right-6 md:bottom-24 md:right-6 gradient-primary text-white border-0 hover:opacity-90 shadow-custom-lg rounded-full w-14 h-14 p-0"
           onClick={() => {
             // TODO: Add quick action based on current page
           }}
@@ -124,7 +152,7 @@ const AppLayout = () => {
 
 const AppHome = () => {
   return (
-    <div className="max-w-md mx-auto px-4 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Welcome Section */}
       <div className="text-center space-y-4">
         <div className="gradient-warm rounded-2xl p-6 text-center">
