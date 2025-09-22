@@ -54,8 +54,8 @@ const AppLayout = () => {
             <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">{userInitials}</span>
             </div>
-            <div>
-              <h1 className="font-bold text-lg gradient-primary bg-clip-text text-transparent">
+            <div className="flex-1 min-w-0">
+              <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
                 Eazy.Family
               </h1>
             </div>
