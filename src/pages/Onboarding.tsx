@@ -95,6 +95,19 @@ const Onboarding = () => {
     }));
   };
 
+  const skipOnboarding = () => {
+    // Skip onboarding with minimal data
+    const skipData = {
+      userInitials: "U",
+      children: [{ initials: "C", age: "5" }],
+      location: "zurich",
+      language: "en",
+      features: ["calendar"]
+    };
+    localStorage.setItem('eazy-family-onboarding', JSON.stringify(skipData));
+    navigate('/app');
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -335,6 +348,17 @@ const Onboarding = () => {
           >
             {currentStep === steps.length ? 'Get Started' : 'Next'}
             <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        {/* Skip Option */}
+        <div className="text-center mt-4">
+          <Button
+            variant="ghost"
+            onClick={skipOnboarding}
+            className="text-muted-foreground hover:text-foreground text-sm"
+          >
+            Skip setup and go to app
           </Button>
         </div>
       </div>
