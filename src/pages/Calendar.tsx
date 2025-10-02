@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { Calendar as CalendarIcon, Plus, Filter, ChevronLeft, ChevronRight, CheckSquare, Square, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, Trash2, AlertCircle } from "lucide-react";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays } from "date-fns";
 
 interface Event {
-  id: string;
   title: string;
   time: string;
-  type: 'personal' | 'family' | 'child';
+  type: string;
   color: string;
   location?: string;
 }
@@ -20,417 +20,458 @@ interface Task {
   id: string;
   title: string;
   completed: boolean;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
   dueDate?: Date;
-  category: 'personal' | 'family' | 'child';
+  category?: string;
   createdAt: Date;
 }
 
 const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Swimming Lesson',
-    time: '14:00',
-    type: 'child',
-    color: 'bg-blue-500',
-    location: 'Aquatic Center'
-  },
-  {
-    id: '2',
-    title: 'Grocery Shopping',
-    time: '16:30',
-    type: 'family',
-    color: 'bg-green-500',
-    location: 'Migros'
-  },
-  {
-    id: '3',
-    title: 'Pediatrician Appointment',
-    time: '09:00',
-    type: 'child',
-    color: 'bg-red-500',
-    location: 'Dr. Mueller'
-  },
+  { title: "Soccer Practice", time: "4:00 PM", type: "sports", color: "bg-blue-500", location: "Central Park" },
+  { title: "Piano Lesson", time: "5:30 PM", type: "education", color: "bg-purple-500", location: "Music School" },
+  { title: "Family Dinner", time: "7:00 PM", type: "family", color: "bg-green-500" },
 ];
 
 const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Buy birthday gift for Emma',
-    completed: false,
-    priority: 'high',
-    dueDate: new Date(),
-    category: 'family',
-    createdAt: new Date()
-  },
-  {
-    id: '2',
-    title: 'Schedule dentist appointment',
-    completed: false,
-    priority: 'medium',
-    category: 'child',
-    createdAt: new Date()
-  },
-  {
-    id: '3',
-    title: 'Meal prep for the week',
-    completed: true,
-    priority: 'low',
-    category: 'family',
-    createdAt: new Date()
-  },
+  { id: "1", title: "Buy groceries", completed: false, priority: "high", dueDate: new Date(), category: "shopping", createdAt: new Date() },
+  { id: "2", title: "Call dentist", completed: false, priority: "medium", category: "health", createdAt: new Date() },
+  { id: "3", title: "Review homework", completed: true, priority: "low", category: "education", createdAt: new Date() },
 ];
 
 const Calendar = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
-  const [filter, setFilter] = useState<'all' | 'personal' | 'family' | 'child'>('all');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
+  const [eventFilter, setEventFilter] = useState<string>("all");
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [taskFilter, setTaskFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [newTaskTitle, setNewTaskTitle] = useState("");
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    return format(date, "EEEE, MMMM d, yyyy");
   };
 
-  const filteredEvents = mockEvents.filter(event => 
-    filter === 'all' || event.type === filter
+  const filteredEvents = eventFilter === "all" 
+    ? mockEvents 
+    : mockEvents.filter(event => event.type === eventFilter);
+
+  const filteredTasks = tasks.filter(task => 
+    !task.dueDate || isSameDay(task.dueDate, selectedDate)
   );
 
-  const filteredTasks = tasks.filter(task => {
-    if (taskFilter === 'completed') return task.completed;
-    if (taskFilter === 'active') return !task.completed;
-    return true;
-  });
-
   const addTask = () => {
-    if (!newTaskTitle.trim()) return;
-    
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: newTaskTitle,
-      completed: false,
-      priority: 'medium',
-      category: 'family',
-      createdAt: new Date()
-    };
-    
-    setTasks([...tasks, newTask]);
-    setNewTaskTitle('');
+    if (newTaskTitle.trim()) {
+      const newTask: Task = {
+        id: Date.now().toString(),
+        title: newTaskTitle,
+        completed: false,
+        priority: "medium",
+        dueDate: selectedDate,
+        createdAt: new Date(),
+      };
+      setTasks([...tasks, newTask]);
+      setNewTaskTitle("");
+    }
   };
 
-  const toggleTask = (taskId: string) => {
+  const toggleTask = (id: string) => {
     setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
+      task.id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+  const deleteTask = (id: string) => {
+    setTasks(tasks.filter(task => task.id !== id));
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'text-red-500';
-      case 'medium': return 'text-yellow-500';
-      case 'low': return 'text-green-500';
-      default: return 'text-gray-500';
+      case "high": return "text-red-500";
+      case "medium": return "text-yellow-500";
+      case "low": return "text-green-500";
+      default: return "text-gray-500";
     }
   };
 
   const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'high': return <AlertCircle className="w-4 h-4" />;
-      case 'medium': return <Clock className="w-4 h-4" />;
-      case 'low': return <CheckSquare className="w-4 h-4" />;
-      default: return null;
-    }
+    return <AlertCircle className={`h-4 w-4 ${getPriorityColor(priority)}`} />;
+  };
+
+  const renderDayView = () => {
+    return (
+      <div className="space-y-4">
+        <Card className="shadow-custom-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Today's Schedule</CardTitle>
+            <CardDescription>{formatDate(selectedDate)}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map((event, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                  <div className={`w-1 h-full ${event.color} rounded-full`} />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold">{event.title}</h4>
+                      <span className="text-sm text-muted-foreground">{event.time}</span>
+                    </div>
+                    {event.location && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                        <MapPin className="h-3 w-3" />
+                        {event.location}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-8">No events scheduled</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(selectedDate);
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+    return (
+      <div className="space-y-4">
+        <Card className="shadow-custom-md">
+          <CardHeader>
+            <CardTitle>Week View</CardTitle>
+            <CardDescription>
+              {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day, index) => (
+                <div
+                  key={index}
+                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                    isToday(day) ? "bg-primary/10 border-primary" : ""
+                  } ${isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""}`}
+                  onClick={() => setSelectedDate(day)}
+                >
+                  <div className="text-center">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {format(day, "EEE")}
+                    </p>
+                    <p className="text-lg font-bold">{format(day, "d")}</p>
+                    <div className="mt-2 space-y-1">
+                      {mockEvents.slice(0, 2).map((event, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-xs p-1 rounded ${event.color} text-white truncate`}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderMonthView = () => {
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+
+    return (
+      <div className="space-y-4">
+        <Card className="shadow-custom-md">
+          <CardHeader>
+            <CardTitle>Month View</CardTitle>
+            <CardDescription>{format(selectedDate, "MMMM yyyy")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-1">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="text-center text-xs font-medium text-muted-foreground p-2">
+                  {day}
+                </div>
+              ))}
+              {days.map((day, index) => {
+                const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+                return (
+                  <div
+                    key={index}
+                    className={`aspect-square p-2 border rounded-lg text-center cursor-pointer transition-colors ${
+                      !isCurrentMonth ? "bg-muted/30 text-muted-foreground" : ""
+                    } ${isToday(day) ? "bg-primary/10 border-primary font-bold" : ""} ${
+                      isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""
+                    } hover:bg-muted/50`}
+                    onClick={() => setSelectedDate(day)}
+                  >
+                    <p className="text-sm">{format(day, "d")}</p>
+                    {isCurrentMonth && mockEvents.length > 0 && (
+                      <div className="flex justify-center gap-0.5 mt-1">
+                        {mockEvents.slice(0, 3).map((event, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-1 h-1 rounded-full ${event.color}`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CalendarIcon className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Calendar</h1>
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6 text-primary" />
+            Calendar
+          </h1>
+          <p className="text-muted-foreground">Manage your family schedule</p>
         </div>
-        <Button size="sm" className="gradient-primary text-white border-0">
-          <Plus className="w-4 h-4 mr-1" />
+        <Button className="gap-2 gradient-primary text-white border-0">
+          <Plus className="h-4 w-4" />
           Add Event
         </Button>
       </div>
 
-      {/* Date Navigation */}
+      {/* View Mode Selector */}
       <Card className="shadow-custom-md">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="sm">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <h2 className="font-semibold">{formatDate(selectedDate)}</h2>
-            <Button variant="ghost" size="sm">
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          {/* View Mode Toggle */}
-          <div className="flex gap-2">
-            {['day', 'week', 'month'].map((mode) => (
-              <Button
-                key={mode}
-                variant={viewMode === mode ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode(mode as any)}
-                className={viewMode === mode ? 'gradient-primary text-white border-0' : ''}
-              >
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters */}
-      <div className="flex items-center gap-3">
-        <Filter className="w-4 h-4 text-muted-foreground" />
-        <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-          <SelectTrigger className="w-auto min-w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Events</SelectItem>
-            <SelectItem value="personal">Personal</SelectItem>
-            <SelectItem value="family">Family</SelectItem>
-            <SelectItem value="child">Children</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Calendar Integration Status */}
-      <Card className="shadow-custom-md border-l-4 border-l-warning">
-        <CardContent className="p-4">
+        <CardContent className="pt-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Calendar Sync</h3>
-              <p className="text-sm text-muted-foreground">
-                Connect your Google, iCloud, or Outlook calendar
-              </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  if (viewMode === "day") newDate.setDate(newDate.getDate() - 1);
+                  else if (viewMode === "week") newDate.setDate(newDate.getDate() - 7);
+                  else newDate.setMonth(newDate.getMonth() - 1);
+                  setSelectedDate(newDate);
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold min-w-[200px] text-center">
+                {viewMode === "day" && formatDate(selectedDate)}
+                {viewMode === "week" && `${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
+                {viewMode === "month" && format(selectedDate, "MMMM yyyy")}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  if (viewMode === "day") newDate.setDate(newDate.getDate() + 1);
+                  else if (viewMode === "week") newDate.setDate(newDate.getDate() + 7);
+                  else newDate.setMonth(newDate.getMonth() + 1);
+                  setSelectedDate(newDate);
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="sm">
-              Connect
-            </Button>
+
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === "day" ? "default" : "outline"}
+                onClick={() => setViewMode("day")}
+                className={viewMode === "day" ? "gradient-primary text-white border-0" : ""}
+              >
+                Day
+              </Button>
+              <Button
+                variant={viewMode === "week" ? "default" : "outline"}
+                onClick={() => setViewMode("week")}
+                className={viewMode === "week" ? "gradient-primary text-white border-0" : ""}
+              >
+                Week
+              </Button>
+              <Button
+                variant={viewMode === "month" ? "default" : "outline"}
+                onClick={() => setViewMode("month")}
+                className={viewMode === "month" ? "gradient-primary text-white border-0" : ""}
+              >
+                Month
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Today's Events */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Today's Schedule</h3>
-        
-        {filteredEvents.length > 0 ? (
-          <div className="space-y-3">
-            {filteredEvents.map((event) => (
-              <Card key={event.id} className="shadow-custom-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${event.color}`} />
-                    <div className="flex-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-muted-foreground">{event.time}</span>
-                        {event.location && (
-                          <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-sm text-muted-foreground">{event.location}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs ${
-                        event.type === 'child' ? 'bg-blue-100 text-blue-700' :
-                        event.type === 'family' ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {event.type}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="shadow-custom-md">
-            <CardContent className="p-8 text-center">
-              <CalendarIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">No events today</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Your schedule is clear! Perfect time for spontaneous family fun.
-              </p>
-              <Button className="gradient-primary text-white border-0">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Event
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+      {/* Event Filters */}
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          variant={eventFilter === "all" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setEventFilter("all")}
+          className={eventFilter === "all" ? "gradient-primary text-white border-0" : ""}
+        >
+          All Events
+        </Button>
+        <Button
+          variant={eventFilter === "sports" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setEventFilter("sports")}
+          className={eventFilter === "sports" ? "gradient-primary text-white border-0" : ""}
+        >
+          Sports
+        </Button>
+        <Button
+          variant={eventFilter === "education" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setEventFilter("education")}
+          className={eventFilter === "education" ? "gradient-primary text-white border-0" : ""}
+        >
+          Education
+        </Button>
+        <Button
+          variant={eventFilter === "family" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setEventFilter("family")}
+          className={eventFilter === "family" ? "gradient-primary text-white border-0" : ""}
+        >
+          Family
+        </Button>
       </div>
 
-      {/* Quick Add Suggestions */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Quick Add</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-auto p-4 flex flex-col gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            <span className="text-sm">Doctor Visit</span>
-          </Button>
-          <Button variant="outline" className="h-auto p-4 flex flex-col gap-2">
-            <CalendarIcon className="w-5 h-5" />
-            <span className="text-sm">Activity</span>
-          </Button>
-        </div>
-      </div>
+      {/* Calendar Views */}
+      {viewMode === "day" && renderDayView()}
+      {viewMode === "week" && renderWeekView()}
+      {viewMode === "month" && renderMonthView()}
 
-      {/* To-Do Section */}
-      <div className="space-y-4 border-t border-border pt-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-primary" />
-            To-Do List
-          </h3>
-          <div className="flex items-center gap-2">
-            <Select value={taskFilter} onValueChange={(value: any) => setTaskFilter(value)}>
-              <SelectTrigger className="w-auto min-w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Done</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Add New Task */}
+      {/* Mini Calendar & Quick Add */}
+      <div className="grid md:grid-cols-2 gap-6">
         <Card className="shadow-custom-md">
-          <CardContent className="p-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add a new task..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                className="flex-1"
-              />
-              <Button onClick={addTask} className="gradient-primary text-white border-0">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+          <CardHeader>
+            <CardTitle>Quick Date Picker</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CalendarUI
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border"
+            />
           </CardContent>
         </Card>
 
-        {/* Task List */}
-        {filteredTasks.length > 0 ? (
-          <div className="space-y-3">
-            {filteredTasks.map((task) => (
-              <Card key={task.id} className={`shadow-custom-md transition-opacity ${task.completed ? 'opacity-60' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={task.completed}
-                      onCheckedChange={() => toggleTask(task.id)}
-                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                    <div className="flex-1">
-                      <h4 className={`font-medium ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {task.title}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className={`flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
-                          {getPriorityIcon(task.priority)}
-                          <span className="text-xs capitalize">{task.priority}</span>
-                        </div>
-                        {task.dueDate && (
-                          <>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              Due today
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs ${
-                        task.category === 'child' ? 'bg-blue-100 text-blue-700' :
-                        task.category === 'family' ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {task.category}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteTask(task.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="shadow-custom-md">
-            <CardContent className="p-8 text-center">
-              <CheckSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">
-                {taskFilter === 'completed' ? 'No completed tasks' : 
-                 taskFilter === 'active' ? 'No active tasks' : 'No tasks yet'}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {taskFilter === 'completed' ? 'Complete some tasks to see them here.' :
-                 taskFilter === 'active' ? 'All tasks are completed! Great job.' :
-                 'Stay organized by adding your daily tasks and to-dos.'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="shadow-custom-md">
+          <CardHeader>
+            <CardTitle>Calendar Sync</CardTitle>
+            <CardDescription>Connected calendars</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div>
+                  <p className="font-medium text-sm">Google Calendar</p>
+                  <p className="text-xs text-muted-foreground">sarah@email.com</p>
+                </div>
+              </div>
+              <Badge variant="secondary">Connected</Badge>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <div>
+                  <p className="font-medium text-sm">Outlook Calendar</p>
+                  <p className="text-xs text-muted-foreground">family@outlook.com</p>
+                </div>
+              </div>
+              <Badge variant="secondary">Connected</Badge>
+            </div>
 
-        {/* Task Stats */}
-        {tasks.length > 0 && (
-          <Card className="shadow-custom-md bg-gradient-to-r from-primary/5 to-secondary/5">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {tasks.filter(t => t.completed).length} of {tasks.length} completed
-                </span>
-              </div>
-              <div className="w-full bg-secondary/20 rounded-full h-2 mt-2">
-                <div 
-                  className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${tasks.length > 0 ? (tasks.filter(t => t.completed).length / tasks.length) * 100 : 0}%` 
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            <Button variant="outline" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Calendar
+            </Button>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* To-Do List */}
+      <Card className="shadow-custom-md">
+        <CardHeader>
+          <CardTitle>To-Do List</CardTitle>
+          <CardDescription>Tasks for {format(selectedDate, "MMMM d")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add a new task..."
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && addTask()}
+            />
+            <Button onClick={addTask} className="gradient-primary text-white border-0">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {filteredTasks.length > 0 ? (
+              filteredTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <Checkbox
+                    checked={task.completed}
+                    onCheckedChange={() => toggleTask(task.id)}
+                  />
+                  <div className="flex-1">
+                    <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                      {task.title}
+                    </p>
+                    {task.category && (
+                      <Badge variant="secondary" className="text-xs mt-1">
+                        {task.category}
+                      </Badge>
+                    )}
+                  </div>
+                  {getPriorityIcon(task.priority)}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteTask(task.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-8">No tasks for this day</p>
+            )}
+          </div>
+
+          {tasks.filter(t => t.completed).length > 0 && (
+            <div className="pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                {tasks.filter(t => t.completed).length} completed task(s)
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

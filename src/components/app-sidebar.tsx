@@ -44,7 +44,6 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-14 pt-16" : "w-64 pt-16"} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Eazy.Family</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => {

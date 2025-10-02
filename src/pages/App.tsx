@@ -143,6 +143,7 @@ const AppLayout = () => {
 
 interface HomeConfig {
   greeting: string;
+  byline: string;
   showCalendar: boolean;
   quickActions: string[];
   iconImage?: string;
@@ -154,6 +155,7 @@ const AppHome = () => {
     const saved = localStorage.getItem('eazy-family-home-config');
     return saved ? JSON.parse(saved) : {
       greeting: "Good morning! ☀️",
+      byline: "Let's make today amazing",
       showCalendar: true,
       quickActions: ["Find Events", "Add Photos"]
     };
@@ -170,7 +172,7 @@ const AppHome = () => {
           } : {}}
         >
           <h2 className="text-2xl font-bold text-white mb-2 relative z-10">{homeConfig.greeting}</h2>
-          <p className="text-white/90 relative z-10">Ready to make today amazing for your family?</p>
+          <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
         </div>
       </div>
 
