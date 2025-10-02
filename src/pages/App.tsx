@@ -55,9 +55,19 @@ const AppLayout = () => {
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">{userInitials}</span>
-              </div>
+              {(() => {
+                const savedConfig = localStorage.getItem('eazy-family-home-config');
+                const config = savedConfig ? JSON.parse(savedConfig) : {};
+                const iconUrl = config.iconImage;
+                
+                return iconUrl ? (
+                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{userInitials}</span>
+                  </div>
+                );
+              })()}
               <div className="flex-1 min-w-0">
                 <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
                   Eazy.Family
@@ -135,6 +145,8 @@ interface HomeConfig {
   greeting: string;
   showCalendar: boolean;
   quickActions: string[];
+  iconImage?: string;
+  headerImage?: string;
 }
 
 const AppHome = () => {
@@ -151,9 +163,14 @@ const AppHome = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="text-center space-y-4">
-        <div className="gradient-warm rounded-2xl p-6 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">{homeConfig.greeting}</h2>
-          <p className="text-white/90">Ready to make today amazing for your family?</p>
+        <div 
+          className="gradient-warm rounded-2xl p-6 text-center bg-cover bg-center relative overflow-hidden"
+          style={homeConfig.headerImage ? { 
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${homeConfig.headerImage})` 
+          } : {}}
+        >
+          <h2 className="text-2xl font-bold text-white mb-2 relative z-10">{homeConfig.greeting}</h2>
+          <p className="text-white/90 relative z-10">Ready to make today amazing for your family?</p>
         </div>
       </div>
 

@@ -13,11 +13,15 @@ interface HomeConfig {
   greeting: string;
   showCalendar: boolean;
   quickActions: string[];
+  iconImage?: string;
+  headerImage?: string;
 }
 
 const Settings = () => {
   const navigate = useNavigate();
   const [isEditingGreeting, setIsEditingGreeting] = useState(false);
+  const [isEditingIcon, setIsEditingIcon] = useState(false);
+  const [isEditingHeader, setIsEditingHeader] = useState(false);
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     return saved ? JSON.parse(saved) : {
@@ -27,6 +31,8 @@ const Settings = () => {
     };
   });
   const [tempGreeting, setTempGreeting] = useState(homeConfig.greeting);
+  const [tempIconUrl, setTempIconUrl] = useState(homeConfig.iconImage || "");
+  const [tempHeaderUrl, setTempHeaderUrl] = useState(homeConfig.headerImage || "");
 
   const availableQuickActions = [
     { id: "Find Events", label: "Find Events", icon: Search },
@@ -47,6 +53,24 @@ const Settings = () => {
       setTempGreeting(homeConfig.greeting);
     }
     setIsEditingGreeting(!isEditingGreeting);
+  };
+
+  const handleIconEdit = () => {
+    if (isEditingIcon) {
+      saveHomeConfig({ ...homeConfig, iconImage: tempIconUrl });
+    } else {
+      setTempIconUrl(homeConfig.iconImage || "");
+    }
+    setIsEditingIcon(!isEditingIcon);
+  };
+
+  const handleHeaderEdit = () => {
+    if (isEditingHeader) {
+      saveHomeConfig({ ...homeConfig, headerImage: tempHeaderUrl });
+    } else {
+      setTempHeaderUrl(homeConfig.headerImage || "");
+    }
+    setIsEditingHeader(!isEditingHeader);
   };
 
   const handleCalendarToggle = (enabled: boolean) => {
@@ -133,6 +157,95 @@ const Settings = () => {
               checked={homeConfig.showCalendar} 
               onCheckedChange={handleCalendarToggle}
             />
+          </div>
+
+          {/* Icon Image */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Profile Icon</Label>
+            <div className="flex items-center gap-2">
+              {isEditingIcon ? (
+                <>
+                  <Input
+                    value={tempIconUrl}
+                    onChange={(e) => setTempIconUrl(e.target.value)}
+                    className="flex-1"
+                    placeholder="Enter image URL"
+                  />
+                  <Button onClick={handleIconEdit} size="sm" variant="outline">
+                    <Save className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setIsEditingIcon(false);
+                      setTempIconUrl(homeConfig.iconImage || "");
+                    }} 
+                    size="sm" 
+                    variant="outline"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 p-2 bg-muted rounded-md flex items-center gap-2">
+                    {homeConfig.iconImage ? (
+                      <>
+                        <img src={homeConfig.iconImage} alt="Icon" className="w-8 h-8 rounded-full object-cover" />
+                        <span className="text-sm truncate">{homeConfig.iconImage}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No custom icon</span>
+                    )}
+                  </div>
+                  <Button onClick={handleIconEdit} size="sm" variant="outline">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Header Image */}
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Header Background Image</Label>
+            <div className="flex items-center gap-2">
+              {isEditingHeader ? (
+                <>
+                  <Input
+                    value={tempHeaderUrl}
+                    onChange={(e) => setTempHeaderUrl(e.target.value)}
+                    className="flex-1"
+                    placeholder="Enter image URL"
+                  />
+                  <Button onClick={handleHeaderEdit} size="sm" variant="outline">
+                    <Save className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setIsEditingHeader(false);
+                      setTempHeaderUrl(homeConfig.headerImage || "");
+                    }} 
+                    size="sm" 
+                    variant="outline"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 p-2 bg-muted rounded-md">
+                    {homeConfig.headerImage ? (
+                      <span className="text-sm truncate block">{homeConfig.headerImage}</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No custom header image</span>
+                    )}
+                  </div>
+                  <Button onClick={handleHeaderEdit} size="sm" variant="outline">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Quick Actions */}
