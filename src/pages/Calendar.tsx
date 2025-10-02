@@ -4,9 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, Trash2, AlertCircle } from "lucide-react";
-import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, Trash2, AlertCircle, CheckSquare, ShoppingCart, Users } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays } from "date-fns";
+
+interface CalendarProps {}
+
+interface CalendarState {
+  date: Date;
+}
+
+interface EventFilters {
+  sports: boolean;
+  education: boolean;
+  family: boolean;
+}
+
+interface TaskFilters {
+  completed: boolean;
+  priority: "low" | "medium" | "high";
+}
 
 interface Event {
   title: string;
@@ -33,9 +50,13 @@ const mockEvents: Event[] = [
 ];
 
 const mockTasks: Task[] = [
-  { id: "1", title: "Buy groceries", completed: false, priority: "high", dueDate: new Date(), category: "shopping", createdAt: new Date() },
-  { id: "2", title: "Call dentist", completed: false, priority: "medium", category: "health", createdAt: new Date() },
-  { id: "3", title: "Review homework", completed: true, priority: "low", category: "education", createdAt: new Date() },
+  { id: "1", title: "Review homework", completed: false, priority: "high", dueDate: new Date(), category: "tasks", createdAt: new Date() },
+  { id: "2", title: "Call dentist", completed: false, priority: "medium", category: "tasks", createdAt: new Date() },
+];
+
+const mockShoppingTasks: Task[] = [
+  { id: "s1", title: "Buy groceries", completed: false, priority: "high", category: "shopping", createdAt: new Date() },
+  { id: "s2", title: "Pick up dry cleaning", completed: false, priority: "medium", category: "shopping", createdAt: new Date() },
 ];
 
 const Calendar = () => {
@@ -43,7 +64,9 @@ const Calendar = () => {
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
   const [eventFilter, setEventFilter] = useState<string>("all");
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [shoppingTasks, setShoppingTasks] = useState<Task[]>(mockShoppingTasks);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [todoTab, setTodoTab] = useState("tasks");
 
   const formatDate = (date: Date) => {
     return format(date, "EEEE, MMMM d, yyyy");
@@ -53,7 +76,19 @@ const Calendar = () => {
     ? mockEvents 
     : mockEvents.filter(event => event.type === eventFilter);
 
-  const filteredTasks = tasks.filter(task => 
+  const getCurrentTasks = () => {
+    return todoTab === "tasks" ? tasks : shoppingTasks;
+  };
+
+  const setCurrentTasks = (newTasks: Task[]) => {
+    if (todoTab === "tasks") {
+      setTasks(newTasks);
+    } else {
+      setShoppingTasks(newTasks);
+    }
+  };
+
+  const filteredTasks = getCurrentTasks().filter(task => 
     !task.dueDate || isSameDay(task.dueDate, selectedDate)
   );
 
@@ -65,21 +100,22 @@ const Calendar = () => {
         completed: false,
         priority: "medium",
         dueDate: selectedDate,
+        category: todoTab,
         createdAt: new Date(),
       };
-      setTasks([...tasks, newTask]);
+      setCurrentTasks([...getCurrentTasks(), newTask]);
       setNewTaskTitle("");
     }
   };
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map(task => 
+    setCurrentTasks(getCurrentTasks().map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
   const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    setCurrentTasks(getCurrentTasks().filter(task => task.id !== id));
   };
 
   const getPriorityColor = (priority: string) => {
@@ -159,16 +195,6 @@ const Calendar = () => {
                       {format(day, "EEE")}
                     </p>
                     <p className="text-sm sm:text-lg font-bold">{format(day, "d")}</p>
-                    <div className="mt-1 sm:mt-2 space-y-1 hidden sm:block">
-                      {mockEvents.slice(0, 2).map((event, idx) => (
-                        <div
-                          key={idx}
-                          className={`text-xs p-1 rounded ${event.color} text-white truncate`}
-                        >
-                          {event.title}
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
               ))}
@@ -213,16 +239,6 @@ const Calendar = () => {
                     onClick={() => setSelectedDate(day)}
                   >
                     <p className="text-xs sm:text-sm">{format(day, "d")}</p>
-                    {isCurrentMonth && mockEvents.length > 0 && (
-                      <div className="flex justify-center gap-0.5 mt-0.5 sm:mt-1">
-                        {mockEvents.slice(0, 3).map((event, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full ${event.color}`}
-                          />
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -365,108 +381,215 @@ const Calendar = () => {
       {viewMode === "week" && renderWeekView()}
       {viewMode === "month" && renderMonthView()}
 
-      {/* To-Do List */}
+      {/* To-Do Lists */}
       <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>To-Do List</CardTitle>
-          <CardDescription>Tasks for {format(selectedDate, "MMMM d")}</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <CheckSquare className="w-5 h-5" />
+            To-Do Lists
+          </CardTitle>
+          <CardDescription>Organize your family tasks and shopping lists</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add a new task..."
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && addTask()}
-            />
-            <Button onClick={addTask} className="gradient-primary text-white border-0">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <Tabs value={todoTab} onValueChange={setTodoTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="tasks" className="gap-2">
+                <CheckSquare className="w-4 h-4" />
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger value="shopping" className="gap-2">
+                <ShoppingCart className="w-4 h-4" />
+                Shopping
+              </TabsTrigger>
+              <TabsTrigger value="shared" className="gap-2">
+                <Users className="w-4 h-4" />
+                Shared
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="space-y-2">
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <Checkbox
-                    checked={task.completed}
-                    onCheckedChange={() => toggleTask(task.id)}
-                  />
-                  <div className="flex-1">
-                    <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                      {task.title}
-                    </p>
-                    {task.category && (
-                      <Badge variant="secondary" className="text-xs mt-1">
-                        {task.category}
-                      </Badge>
-                    )}
+            <TabsContent value="tasks" className="space-y-4 mt-4">
+              {/* Stats */}
+              <div className="grid grid-cols-4 gap-4">
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold">{tasks.length}</div>
+                  <div className="text-xs text-muted-foreground">Total</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-green-500">{tasks.filter(t => t.completed).length}</div>
+                  <div className="text-xs text-muted-foreground">Done</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-red-500">0</div>
+                  <div className="text-xs text-muted-foreground">Overdue</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-blue-500">{tasks.filter(t => !t.completed).length}</div>
+                  <div className="text-xs text-muted-foreground">Pending</div>
+                </Card>
+              </div>
+
+              {/* Add Task */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add a new task..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && addTask()}
+                />
+                <Button onClick={addTask} className="gradient-primary text-white border-0">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Task List */}
+              <div className="space-y-2">
+                {tasks.length > 0 ? (
+                  tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={task.completed}
+                        onCheckedChange={() => toggleTask(task.id)}
+                      />
+                      <div className="flex-1">
+                        <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                          {task.title}
+                        </p>
+                      </div>
+                      {getPriorityIcon(task.priority)}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <CheckSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No tasks yet</p>
+                    <p className="text-sm text-muted-foreground">Start by adding your first task</p>
                   </div>
-                  {getPriorityIcon(task.priority)}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No tasks for this day</p>
-            )}
-          </div>
+                )}
+              </div>
+            </TabsContent>
 
-          {tasks.filter(t => t.completed).length > 0 && (
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                {tasks.filter(t => t.completed).length} completed task(s)
-              </p>
-            </div>
-          )}
+            <TabsContent value="shopping" className="space-y-4 mt-4">
+              {/* Stats */}
+              <div className="grid grid-cols-4 gap-4">
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold">{shoppingTasks.length}</div>
+                  <div className="text-xs text-muted-foreground">Total</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-green-500">{shoppingTasks.filter(t => t.completed).length}</div>
+                  <div className="text-xs text-muted-foreground">Done</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-red-500">0</div>
+                  <div className="text-xs text-muted-foreground">Overdue</div>
+                </Card>
+                <Card className="text-center p-3">
+                  <div className="text-xl font-bold text-blue-500">{shoppingTasks.filter(t => !t.completed).length}</div>
+                  <div className="text-xs text-muted-foreground">Pending</div>
+                </Card>
+              </div>
+
+              {/* Add Shopping Item */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add shopping item..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && addTask()}
+                />
+                <Button onClick={addTask} className="gradient-primary text-white border-0">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Shopping List */}
+              <div className="space-y-2">
+                {shoppingTasks.length > 0 ? (
+                  shoppingTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={task.completed}
+                        onCheckedChange={() => toggleTask(task.id)}
+                      />
+                      <div className="flex-1">
+                        <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                          {task.title}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No shopping items yet</p>
+                    <p className="text-sm text-muted-foreground">Add items to your shopping list</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="shared" className="space-y-4 mt-4">
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-medium mb-2">Shared Lists</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Share and sync tasks with family members on your Family Plan
+                  </p>
+                  <Badge variant="secondary" className="text-xs">
+                    Family Plan Feature
+                  </Badge>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
       {/* Calendar Sync */}
-      <div className="max-w-2xl">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle>Calendar Sync</CardTitle>
-            <CardDescription>Connected calendars</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <div>
-                  <p className="font-medium text-sm">Google Calendar</p>
-                  <p className="text-xs text-muted-foreground">sarah@email.com</p>
-                </div>
+      <Card className="shadow-custom-md">
+        <CardHeader>
+          <CardTitle>Calendar Sync</CardTitle>
+          <CardDescription>Connected calendars</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <div>
+                <p className="font-medium text-sm">Google Calendar</p>
+                <p className="text-xs text-muted-foreground">sarah@email.com</p>
               </div>
-              <Badge variant="secondary">Connected</Badge>
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <div>
-                  <p className="font-medium text-sm">Outlook Calendar</p>
-                  <p className="text-xs text-muted-foreground">family@outlook.com</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Connected</Badge>
-            </div>
-
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Calendar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+            <Badge variant="secondary">Connected</Badge>
+          </div>
+          
+          <Button variant="outline" className="w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Calendar
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

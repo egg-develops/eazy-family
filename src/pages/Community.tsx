@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Users, MessageCircle, Plus, Heart, Share2, MapPin, Clock } from "lucide-react";
+import { Users, MessageCircle, Plus, Heart, Share2, MapPin, Clock, ShoppingCart, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// Interfaces and mock data
 interface Group {
   id: string;
   name: string;
@@ -28,6 +31,22 @@ interface Post {
   likes: number;
   comments: number;
   location?: string;
+}
+
+interface MarketItem {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  condition: 'new' | 'like-new' | 'good' | 'fair';
+  category: string;
+  seller: {
+    initials: string;
+    name: string;
+    location: string;
+  };
+  images: string[];
+  postedAt: string;
 }
 
 const mockGroups: Group[] = [
@@ -55,14 +74,6 @@ const mockGroups: Group[] = [
     category: 'playdates',
     isJoined: false
   },
-  {
-    id: '4',
-    name: 'Outdoor Adventures',
-    description: 'Family-friendly outdoor activities and hikes',
-    memberCount: 156,
-    category: 'activities',
-    isJoined: true
-  }
 ];
 
 const mockPosts: Post[] = [
@@ -76,142 +87,160 @@ const mockPosts: Post[] = [
     comments: 5,
     location: 'Seefeld Park'
   },
+];
+
+const mockItems: MarketItem[] = [
   {
-    id: '2',
-    author: { initials: 'JS', name: 'John S.' },
-    group: "Mother's Corner",
-    content: 'Looking for recommendations for indoor activities during this rainy weather. Any ideas for toddlers?',
-    timestamp: '4h ago',
-    likes: 8,
-    comments: 15
+    id: '1',
+    title: 'LEGO Classic Building Set',
+    description: 'Complete set with all pieces. Great condition, barely used.',
+    price: 'CHF 45',
+    condition: 'like-new',
+    category: 'toys',
+    seller: {
+      initials: 'MK',
+      name: 'Maria K.',
+      location: 'Zurich Center'
+    },
+    images: ['bg-gradient-to-br from-red-400 to-red-600'],
+    postedAt: '2h ago'
   },
-  {
-    id: '3',
-    author: { initials: 'AL', name: 'Anna L.' },
-    group: 'Play Dates Zurich',
-    content: 'Planning a picnic this Saturday at Lake Zurich. Who wants to join? Kids ages 4-7 welcome! 🌞',
-    timestamp: '6h ago',
-    likes: 23,
-    comments: 12,
-    location: 'Lake Zurich'
-  }
 ];
 
 const Community = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('feed');
+  const [activeTab, setActiveTab] = useState('marketplace');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState<string>('all');
 
   const joinedGroups = mockGroups.filter(group => group.isJoined);
-  const suggestedGroups = mockGroups.filter(group => !group.isJoined);
+  const filteredItems = mockItems.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = category === 'all' || item.category === category;
+    return matchesSearch && matchesCategory;
+  });
+
+  const getConditionColor = (condition: string) => {
+    switch (condition) {
+      case 'new': return 'bg-green-100 text-green-700';
+      case 'like-new': return 'bg-blue-100 text-blue-700';
+      case 'good': return 'bg-yellow-100 text-yellow-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div>
+        <div className="flex items-center gap-3 mb-2">
           <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('community.title')}</h1>
+          <h1 className="text-2xl font-bold">{t('community.hub')}</h1>
         </div>
-        <Button size="sm" className="gradient-primary text-white border-0">
-          <Plus className="w-4 h-4 mr-1" />
-          {t('community.createGroup')}
-        </Button>
-      </div>
-
-      {/* Community Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="text-center p-3 shadow-custom-md">
-          <div className="text-xl font-bold text-primary">{joinedGroups.length}</div>
-          <div className="text-xs text-muted-foreground">{t('community.groupsJoined')}</div>
-        </Card>
-        <Card className="text-center p-3 shadow-custom-md">
-          <div className="text-xl font-bold text-accent">47</div>
-          <div className="text-xs text-muted-foreground">{t('community.connections')}</div>
-        </Card>
-        <Card className="text-center p-3 shadow-custom-md">
-          <div className="text-xl font-bold text-success">12</div>
-          <div className="text-xs text-muted-foreground">{t('community.thisWeek')}</div>
-        </Card>
+        <p className="text-sm text-muted-foreground">{t('community.hubDesc')}</p>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="feed">{t('community.feed')}</TabsTrigger>
-          <TabsTrigger value="groups">{t('community.groups')}</TabsTrigger>
-          <TabsTrigger value="messages">{t('community.messages')}</TabsTrigger>
+          <TabsTrigger value="marketplace">
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            {t('community.marketplace')}
+          </TabsTrigger>
+          <TabsTrigger value="groups">
+            <Users className="w-4 h-4 mr-2" />
+            {t('community.groups')}
+          </TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            {t('community.messages')}
+          </TabsTrigger>
         </TabsList>
 
-        {/* Feed Tab */}
-        <TabsContent value="feed" className="space-y-4 mt-6">
-          {/* Create Post */}
-          <Card className="shadow-custom-md">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarFallback className="gradient-primary text-white text-sm font-bold">
-                    EF
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" className="flex-1 justify-start text-muted-foreground">
-                  {t('community.shareSomething')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Marketplace Tab */}
+        <TabsContent value="marketplace" className="space-y-4 mt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{t('community.marketplaceDesc')}</p>
+            <Button size="sm" className="gradient-primary text-white border-0">
+              <Plus className="w-4 h-4 mr-1" />
+              {t('community.sellItem')}
+            </Button>
+          </div>
 
-          {/* Posts Feed */}
+          {/* Search and Filters */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('marketplace.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="flex-1">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('marketplace.categories.all')}</SelectItem>
+                  <SelectItem value="toys">{t('marketplace.categories.toys')}</SelectItem>
+                  <SelectItem value="baby-gear">{t('marketplace.categories.babyGear')}</SelectItem>
+                  <SelectItem value="books">{t('marketplace.categories.books')}</SelectItem>
+                  <SelectItem value="clothing">{t('marketplace.categories.clothing')}</SelectItem>
+                  <SelectItem value="outdoor">{t('marketplace.categories.outdoor')}</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select defaultValue="any">
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">{t('community.anyCondition')}</SelectItem>
+                  <SelectItem value="new">{t('marketplace.condition.new')}</SelectItem>
+                  <SelectItem value="like-new">{t('marketplace.condition.likeNew')}</SelectItem>
+                  <SelectItem value="good">{t('marketplace.condition.good')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Items Grid */}
           <div className="space-y-4">
-            {mockPosts.map((post) => (
-              <Card key={post.id} className="shadow-custom-md">
-                <CardContent className="p-4 space-y-4">
-                  {/* Post Header */}
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="gradient-cool text-white text-sm font-bold">
-                        {post.author.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
+            {filteredItems.map((item) => (
+              <Card key={item.id} className="shadow-custom-md">
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <div className={`w-20 h-20 rounded-lg ${item.images[0]} flex-shrink-0`} />
+                    
+                    <div className="flex-1 space-y-2">
+                      <h4 className="font-semibold text-sm leading-tight">{item.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{post.author.name}</span>
-                        <span className="text-muted-foreground text-xs">{t('community.postedIn')}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {post.group}
+                        <Badge className={`text-xs ${getConditionColor(item.condition)}`}>
+                          {t(`marketplace.condition.${item.condition}`)}
                         </Badge>
+                        <Badge variant="outline" className="text-xs">{item.category}</Badge>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <Clock className="w-3 h-3" />
-                        {post.timestamp}
-                        {post.location && (
-                          <>
-                            <span>•</span>
-                            <MapPin className="w-3 h-3" />
-                            {post.location}
-                          </>
-                        )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="text-lg font-bold text-primary">{item.price}</div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Avatar className="w-5 h-5">
+                            <AvatarFallback className="gradient-cool text-white text-xs">
+                              {item.seller.initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span>{item.seller.location}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Post Content */}
-                  <p className="text-sm leading-relaxed">{post.content}</p>
-
-                  {/* Post Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" className="text-muted-foreground">
-                        <Heart className="w-4 h-4 mr-1" />
-                        {post.likes}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground">
-                        <MessageCircle className="w-4 h-4 mr-1" />
-                        {post.comments}
-                      </Button>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground">
-                      <Share2 className="w-4 h-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -220,71 +249,35 @@ const Community = () => {
         </TabsContent>
 
         {/* Groups Tab */}
-        <TabsContent value="groups" className="space-y-6 mt-6">
-          {/* My Groups */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t('community.myGroups')}</h3>
-            
-            <div className="space-y-3">
-              {joinedGroups.map((group) => (
-                <Card key={group.id} className="shadow-custom-md">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{group.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {group.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {group.memberCount} {t('community.members')}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {group.category}
-                          </Badge>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        {t('community.view')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        <TabsContent value="groups" className="space-y-4 mt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{t('community.groupsDesc')}</p>
+            <Button size="sm" className="gradient-primary text-white border-0">
+              <Plus className="w-4 h-4 mr-1" />
+              {t('community.createGroup')}
+            </Button>
           </div>
 
-          {/* Suggested Groups */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t('community.suggestedForYou')}</h3>
-            
-            <div className="space-y-3">
-              {suggestedGroups.map((group) => (
-                <Card key={group.id} className="shadow-custom-md">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{group.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {group.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {group.memberCount} {t('community.members')}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {group.category}
-                          </Badge>
-                        </div>
+          {/* My Groups */}
+          <div className="space-y-3">
+            {joinedGroups.map((group) => (
+              <Card key={group.id} className="shadow-custom-md">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{group.name}</h4>
+                      <p className="text-sm text-muted-foreground">{group.description}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {group.memberCount} {t('community.members')}
+                        </Badge>
                       </div>
-                      <Button size="sm" className="gradient-primary text-white border-0">
-                        {t('community.join')}
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <Button variant="outline" size="sm">{t('community.view')}</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
 

@@ -8,9 +8,8 @@ import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
 import Calendar from "./pages/Calendar";
 import Events from "./pages/Events";
-import Photos from "./pages/Photos";
+import Memories from "./pages/Memories";
 import Community from "./pages/Community";
-import Marketplace from "./pages/Marketplace";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -28,9 +27,8 @@ const App = () => (
           <Route path="/app" element={<AppLayout />}>
             <Route path="calendar" element={<Calendar />} />
             <Route path="events" element={<Events />} />
-            <Route path="photos" element={<Photos />} />
+            <Route path="memories" element={<Memories />} />
             <Route path="community" element={<Community />} />
-            <Route path="marketplace" element={<Marketplace />} />
             <Route path="settings" element={<Settings />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

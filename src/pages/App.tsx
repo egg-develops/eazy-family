@@ -30,9 +30,8 @@ const AppLayout = () => {
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
-    { id: "photos", label: t('nav.photos'), icon: Camera, path: "/app/photos" },
+    { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
-    { id: "marketplace", label: t('nav.marketplace'), icon: ShoppingCart, path: "/app/marketplace" },
     { id: "settings", label: "", icon: Settings, path: "/app/settings" },
   ];
 
@@ -330,7 +329,7 @@ const AppHome = () => {
                   navigate('/app/events');
                   break;
                 case "Add Photos":
-                  navigate('/app/photos');
+                  navigate('/app/memories');
                   break;
                 case "Calendar":
                   navigate('/app/calendar');

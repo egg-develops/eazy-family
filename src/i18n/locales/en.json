@@ -8,15 +8,15 @@
     "home": "Home",
     "calendar": "Calendar",
     "events": "Events",
-    "photos": "Photos",
+    "memories": "Memories",
     "community": "Community",
-    "marketplace": "Market",
     "settings": "Settings"
   },
   "calendar": {
     "title": "Calendar",
     "subtitle": "Manage your family schedule",
     "addEvent": "Add Event",
+    "addTodo": "Add To-Do",
     "day": "Day",
     "week": "Week",
     "month": "Month",
@@ -32,11 +32,24 @@
     "connectedCalendars": "Connected calendars",
     "connected": "Connected",
     "addCalendar": "Add Calendar",
-    "todoList": "To-Do List",
+    "todoList": "To-Do Lists",
+    "tasks": "Tasks",
+    "shopping": "Shopping",
+    "shared": "Shared",
     "tasksFor": "Tasks for",
     "addTask": "Add a new task...",
-    "noTasks": "No tasks for this day",
-    "completedTasks": "completed task(s)"
+    "noTasks": "No tasks yet",
+    "completedTasks": "completed task(s)",
+    "totalTasks": "Total Tasks",
+    "completed": "Completed",
+    "overdue": "Overdue",
+    "pending": "Pending",
+    "addNewTask": "Add New Task",
+    "startAdding": "Start by adding your first task",
+    "allTasks": "All Tasks",
+    "customTags": "Custom Tags",
+    "createTags": "Create custom tags for your events",
+    "tagsDesc": "Tags help you organize and filter your events"
   },
   "settings": {
     "title": "Settings",
@@ -48,6 +61,7 @@
       "profileImage": "Profile Image",
       "headerImage": "Header Background",
       "showCalendar": "Show Calendar Section",
+      "showWeather": "Show Weather Card",
       "quickActions": "Quick Actions"
     },
     "account": {
@@ -124,8 +138,8 @@
     "location": "Location",
     "time": "Time"
   },
-  "photos": {
-    "title": "Photos",
+  "memories": {
+    "title": "Memories",
     "subtitle": "Your family memories",
     "uploadNew": "Upload New Photos",
     "aiEnhanced": "AI Enhanced",
@@ -157,6 +171,8 @@
   },
   "community": {
     "title": "Community",
+    "hub": "Community Hub",
+    "hubDesc": "Connect, trade, and share with other families in Switzerland",
     "subtitle": "Connect with local families",
     "createGroup": "Create Group",
     "groupsJoined": "Groups Joined",
@@ -164,7 +180,12 @@
     "thisWeek": "This Week",
     "feed": "Feed",
     "groups": "Groups",
+    "groupsDesc": "Join groups and connect with other families",
     "messages": "Messages",
+    "marketplace": "Marketplace",
+    "marketplaceDesc": "Connect, trade, and share with other families",
+    "sellItem": "Sell Item",
+    "anyCondition": "Any Condition",
     "shareSomething": "Share something with the community...",
     "postedIn": "posted in",
     "myGroups": "My Groups",
@@ -199,6 +220,7 @@
     "condition": {
       "new": "new",
       "likeNew": "like-new",
+      "like-new": "like-new",
       "good": "good",
       "fair": "fair"
     },

@@ -71,7 +71,7 @@ const mockPhotos: Photo[] = [
   },
 ];
 
-const Photos = () => {
+const Memories = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string>('all');
@@ -93,10 +93,10 @@ const Photos = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Camera className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('photos.title')}</h1>
+          <h1 className="text-2xl font-bold">{t('memories.title')}</h1>
         </div>
         <Badge variant="secondary" className="text-xs">
-          {filteredPhotos.length} {t('photos.title').toLowerCase()}
+          {filteredPhotos.length} {t('memories.title').toLowerCase()}
         </Badge>
       </div>
 
@@ -107,15 +107,15 @@ const Photos = () => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-5 h-5" />
-                <h3 className="font-semibold">{t('photos.aiEnhanced')}</h3>
+                <h3 className="font-semibold">{t('memories.aiEnhanced')}</h3>
               </div>
               <p className="text-white/90 text-sm">
-                {aiEnhancedCount} {t('photos.autoOrganized')}
+                {aiEnhancedCount} {t('memories.autoOrganized')}
               </p>
             </div>
             <div className="text-right">
               <div className="text-lg font-bold">{storageUsed} MB</div>
-              <div className="text-white/80 text-xs">{t('photos.used')} {t('photos.unlimited')}</div>
+              <div className="text-white/80 text-xs">{t('memories.used')} {t('memories.unlimited')}</div>
             </div>
           </div>
         </CardContent>
@@ -126,7 +126,7 @@ const Photos = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={t('photos.searchPlaceholder')}
+            placeholder={t('memories.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -140,12 +140,12 @@ const Photos = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t('photos.filters.all')}</SelectItem>
-              <SelectItem value="family">{t('photos.filters.family')}</SelectItem>
-              <SelectItem value="outdoor">{t('photos.filters.outdoor')}</SelectItem>
-              <SelectItem value="educational">{t('photos.filters.educational')}</SelectItem>
-              <SelectItem value="creative">{t('photos.filters.creative')}</SelectItem>
-              <SelectItem value="sport">{t('photos.filters.sport')}</SelectItem>
+              <SelectItem value="all">{t('memories.filters.all')}</SelectItem>
+              <SelectItem value="family">{t('memories.filters.family')}</SelectItem>
+              <SelectItem value="outdoor">{t('memories.filters.outdoor')}</SelectItem>
+              <SelectItem value="educational">{t('memories.filters.educational')}</SelectItem>
+              <SelectItem value="creative">{t('memories.filters.creative')}</SelectItem>
+              <SelectItem value="sport">{t('memories.filters.sport')}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -156,7 +156,7 @@ const Photos = () => {
               onClick={() => setViewMode('grid')}
               className={viewMode === 'grid' ? 'bg-background shadow-sm' : ''}
             >
-              {t('photos.viewMode.grid')}
+              {t('memories.viewMode.grid')}
             </Button>
             <Button
               variant={viewMode === 'map' ? 'default' : 'ghost'}
@@ -164,7 +164,7 @@ const Photos = () => {
               onClick={() => setViewMode('map')}
               className={viewMode === 'map' ? 'bg-background shadow-sm' : ''}
             >
-              {t('photos.viewMode.map')}
+              {t('memories.viewMode.map')}
             </Button>
           </div>
         </div>
@@ -173,7 +173,7 @@ const Photos = () => {
       {/* Upload Button */}
       <Button className="w-full gradient-primary text-white border-0 hover:opacity-90">
         <Upload className="w-4 h-4 mr-2" />
-        {t('photos.uploadNew')}
+        {t('memories.uploadNew')}
       </Button>
 
       {/* AI Query Example */}
@@ -182,9 +182,9 @@ const Photos = () => {
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-accent mt-0.5" />
             <div>
-              <h4 className="font-medium text-sm">{t('photos.aiSearch')}</h4>
+              <h4 className="font-medium text-sm">{t('memories.aiSearch')}</h4>
               <p className="text-xs text-muted-foreground mt-1">
-                {t('photos.aiSearchDesc')}
+                {t('memories.aiSearchDesc')}
               </p>
             </div>
           </div>
@@ -196,7 +196,7 @@ const Photos = () => {
         <div className="space-y-6">
           {/* Recent Photos */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t('photos.recent')}</h3>
+            <h3 className="text-lg font-semibold">{t('memories.recent')}</h3>
             
             <div className="grid grid-cols-3 gap-2">
               {filteredPhotos.slice(0, 6).map((photo) => (
@@ -214,7 +214,7 @@ const Photos = () => {
 
           {/* Photo Details */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">{t('photos.details')}</h3>
+            <h3 className="text-lg font-semibold">{t('memories.details')}</h3>
             
             {filteredPhotos.slice(0, 3).map((photo) => (
               <Card key={photo.id} className="shadow-custom-md">
@@ -267,9 +267,9 @@ const Photos = () => {
             <div className="text-center space-y-4">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto" />
               <div>
-                <h3 className="font-medium">{t('photos.viewMode.mapView')}</h3>
+                <h3 className="font-medium">{t('memories.viewMode.mapView')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {t('photos.viewMode.mapComingSoon')}
+                  {t('memories.viewMode.mapComingSoon')}
                 </p>
               </div>
             </div>
@@ -281,17 +281,17 @@ const Photos = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-accent" />
-          {t('photos.memoryBooks')}
+          {t('memories.memoryBooks')}
         </h3>
         
         <Card className="shadow-custom-md gradient-warm text-white">
           <CardContent className="p-4">
             <h4 className="font-semibold mb-2">January Adventures</h4>
             <p className="text-white/90 text-sm mb-3">
-              {t('photos.memoryBookDesc')}
+              {t('memories.memoryBookDesc')}
             </p>
             <Button variant="secondary" size="sm">
-              {t('photos.viewMemoryBook')}
+              {t('memories.viewMemoryBook')}
             </Button>
           </CardContent>
         </Card>
@@ -300,4 +300,4 @@ const Photos = () => {
   );
 };
 
-export default Photos;
+export default Memories;
