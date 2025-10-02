@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Marquee } from "@/components/ui/marquee";
 
 interface Photo {
   id: string;
@@ -223,21 +224,23 @@ const Memories = () => {
       {/* Photos Grid */}
       {viewMode === 'grid' && (
         <div className="space-y-6">
-          {/* Recent Photos */}
+          {/* Recent Photos - Marquee */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">{t('memories.recent')}</h3>
             
-            <div className="grid grid-cols-3 gap-2">
-              {filteredPhotos.slice(0, 6).map((photo) => (
-                <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden">
-                  <div className={`w-full h-full ${photo.src}`} />
-                  {photo.aiEnhanced && (
-                    <div className="absolute top-1 right-1">
-                      <Sparkles className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="space-y-4 overflow-hidden">
+              <Marquee speed={30} pauseOnHover className="[--gap:0.5rem]">
+                {filteredPhotos.map((photo) => (
+                  <div key={photo.id} className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className={`w-full h-full ${photo.src}`} />
+                    {photo.aiEnhanced && (
+                      <div className="absolute top-1 right-1">
+                        <Sparkles className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </Marquee>
             </div>
           </div>
 

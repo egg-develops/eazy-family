@@ -21,6 +21,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { EazyAssistant } from "@/components/EazyAssistant";
+import { TextShimmer } from "@/components/ui/text-shimmer";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -183,7 +185,13 @@ const AppHome = () => {
             backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${homeConfig.headerImage})` 
           } : {}}
         >
-          <h2 className="text-2xl font-bold text-white mb-2 relative z-10">{homeConfig.greeting}</h2>
+          <TextShimmer 
+            as="h2" 
+            className="text-2xl font-bold text-white mb-2 relative z-10"
+            duration={3}
+          >
+            {homeConfig.greeting}
+          </TextShimmer>
           <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
         </div>
       </div>
@@ -214,7 +222,7 @@ const AppHome = () => {
               className="gap-2"
             >
               <Calendar className="w-4 h-4" />
-              Add Calendar
+              Calendar
             </Button>
           )}
           {!homeConfig.showWeather && (
@@ -224,7 +232,7 @@ const AppHome = () => {
               onClick={addWeather}
               className="gap-2"
             >
-              ☁️ Add Weather
+              ☁️ Weather
             </Button>
           )}
         </div>
@@ -402,6 +410,43 @@ const AppHome = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* To-Do List Widget */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Quick To-Do's</h3>
+        
+        <Card className="p-4 shadow-custom-md">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Checkbox id="todo1" />
+              <label htmlFor="todo1" className="text-sm flex-1 cursor-pointer">
+                Review homework
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox id="todo2" />
+              <label htmlFor="todo2" className="text-sm flex-1 cursor-pointer">
+                Call dentist for appointment
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <Checkbox id="todo3" />
+              <label htmlFor="todo3" className="text-sm flex-1 cursor-pointer">
+                Pack lunch for field trip
+              </label>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full justify-start gap-2"
+              onClick={() => navigate('/app/calendar')}
+            >
+              <Plus className="w-4 h-4" />
+              Add To-Do
+            </Button>
+          </div>
+        </Card>
       </div>
 
       {/* Community Updates */}

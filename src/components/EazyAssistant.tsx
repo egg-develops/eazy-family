@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { TextLoop } from "@/components/ui/text-loop";
 
 interface Message {
   role: "user" | "assistant";
@@ -131,14 +132,28 @@ export const EazyAssistant = () => {
         onClick={() => setIsOpen(true)}
       >
         <div className="flex items-center justify-between text-white">
-          <div className="space-y-1">
+          <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6" />
+              <Sparkles className="w-6 h-6 flex-shrink-0" />
               <h3 className="text-xl font-bold">Eazy Assistant</h3>
             </div>
-            <p className="text-white/90">How can I help you?</p>
+            <div className="text-white/90 text-sm min-h-[40px]">
+              <TextLoop interval={3}>
+                {[
+                  "Rainy day activities with two children",
+                  "Best family friendly restaurants in my area?",
+                  "Add these items to our shopping list",
+                  "Add an event to our family calendar",
+                  "Quick dinner recipe with 5 ingredients"
+                ].map((text) => (
+                  <span key={text} className="block">
+                    {text}
+                  </span>
+                ))}
+              </TextLoop>
+            </div>
           </div>
-          <Sparkles className="w-12 h-12 opacity-20" />
+          <Sparkles className="w-12 h-12 opacity-20 flex-shrink-0" />
         </div>
       </Card>
     );

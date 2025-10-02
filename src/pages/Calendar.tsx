@@ -375,7 +375,7 @@ const Calendar = () => {
 
       {/* Add Event/Reminder Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>New</DialogTitle>
           </DialogHeader>
@@ -415,51 +415,51 @@ const Calendar = () => {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <Label className="w-20">Starts</Label>
-                  <div className="flex gap-2 flex-1">
+                <div className="space-y-2">
+                  <Label>Starts</Label>
+                  <div className="flex gap-2">
                     <Input
                       type="date"
                       value={format(eventStartDate, "yyyy-MM-dd")}
                       onChange={(e) => setEventStartDate(new Date(e.target.value))}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     />
                     {!eventAllDay && (
                       <Input
                         type="time"
                         value={eventStartTime}
                         onChange={(e) => setEventStartTime(e.target.value)}
-                        className="w-28"
+                        className="w-24 flex-shrink-0"
                       />
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
-                  <Label className="w-20">Ends</Label>
-                  <div className="flex gap-2 flex-1">
+                <div className="space-y-2">
+                  <Label>Ends</Label>
+                  <div className="flex gap-2">
                     <Input
                       type="date"
                       value={format(eventEndDate, "yyyy-MM-dd")}
                       onChange={(e) => setEventEndDate(new Date(e.target.value))}
-                      className="flex-1"
+                      className="flex-1 min-w-0"
                     />
                     {!eventAllDay && (
                       <Input
                         type="time"
                         value={eventEndTime}
                         onChange={(e) => setEventEndTime(e.target.value)}
-                        className="w-28"
+                        className="w-24 flex-shrink-0"
                       />
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <Label>Travel Time</Label>
                 <Select value={eventTravelTime} onValueChange={setEventTravelTime}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -472,10 +472,10 @@ const Calendar = () => {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <Label>Repeat</Label>
                 <Select value={eventRepeat} onValueChange={setEventRepeat}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

@@ -177,4 +177,17 @@
     background: hsl(var(--background) / 0.8);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee var(--duration) linear infinite;
+  }
 }
