@@ -1,213 +1,203 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, Trash2, AlertCircle, CheckSquare, ShoppingCart, Users } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays } from "date-fns";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-
-interface CalendarProps {}
-
-interface CalendarState {
-  date: Date;
-}
-
-interface EventFilters {
-  sports: boolean;
-  education: boolean;
-  family: boolean;
-}
-
-interface TaskFilters {
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Event {
-  title: string;
-  time: string;
-  type: string;
-  color: string;
-  location?: string;
-}
-
-interface Task {
   id: string;
   title: string;
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-  dueDate?: Date;
-  category?: string;
-  createdAt: Date;
+  startDate: Date;
+  endDate: Date;
+  allDay: boolean;
+  location?: string;
+  repeat?: string;
+  travelTime?: string;
+  type: "event";
+  color: string;
 }
 
-const mockEvents: Event[] = [
-  { title: "Soccer Practice", time: "4:00 PM", type: "sports", color: "bg-blue-500", location: "Central Park" },
-  { title: "Piano Lesson", time: "5:30 PM", type: "education", color: "bg-purple-500", location: "Music School" },
-  { title: "Family Dinner", time: "7:00 PM", type: "family", color: "bg-green-500" },
-];
+interface Reminder {
+  id: string;
+  title: string;
+  dueDate?: Date;
+  dueTime?: string;
+  completed: boolean;
+  priority?: "low" | "medium" | "high";
+  type: "reminder";
+  notes?: string;
+}
 
-const mockTasks: Task[] = [
-  { id: "1", title: "Review homework", completed: false, priority: "high", dueDate: new Date(), category: "tasks", createdAt: new Date() },
-  { id: "2", title: "Call dentist", completed: false, priority: "medium", category: "tasks", createdAt: new Date() },
-];
+type CalendarItem = Event | Reminder;
 
-const mockShoppingTasks: Task[] = [
-  { id: "s1", title: "Buy groceries", completed: false, priority: "high", category: "shopping", createdAt: new Date() },
-  { id: "s2", title: "Pick up dry cleaning", completed: false, priority: "medium", category: "shopping", createdAt: new Date() },
+const mockItems: CalendarItem[] = [
+  { 
+    id: "1", 
+    title: "Fête du Travail", 
+    startDate: new Date(2026, 4, 1, 0, 0), 
+    endDate: new Date(2026, 4, 1, 23, 59), 
+    allDay: true, 
+    type: "event",
+    color: "hsl(var(--primary))"
+  },
+  { 
+    id: "2", 
+    title: "Asana Updates", 
+    startDate: new Date(2026, 4, 1, 10, 0), 
+    endDate: new Date(2026, 4, 1, 11, 0), 
+    allDay: false, 
+    location: "Suggested Location...",
+    type: "event",
+    color: "hsl(45 93% 47%)"
+  },
+  { 
+    id: "3", 
+    title: "El-Ki-Singen Saal 1", 
+    startDate: new Date(2026, 4, 1, 10, 45), 
+    endDate: new Date(2026, 4, 1, 11, 30), 
+    allDay: false, 
+    location: "Musikzentrum Kanzlei",
+    type: "event",
+    color: "hsl(280 65% 60%)"
+  },
+  {
+    id: "4",
+    title: "Review homework",
+    completed: false,
+    priority: "high",
+    dueDate: new Date(),
+    type: "reminder"
+  },
+  {
+    id: "5",
+    title: "Call dentist",
+    completed: false,
+    priority: "medium",
+    type: "reminder"
+  }
 ];
 
 const Calendar = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
-  const [eventFilter, setEventFilter] = useState<string>("all");
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [shoppingTasks, setShoppingTasks] = useState<Task[]>(mockShoppingTasks);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [todoTab, setTodoTab] = useState("tasks");
+  const [items, setItems] = useState<CalendarItem[]>(mockItems);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dialogTab, setDialogTab] = useState<"event" | "reminder">("event");
+  
+  // Form states for Event
+  const [eventTitle, setEventTitle] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventAllDay, setEventAllDay] = useState(false);
+  const [eventStartDate, setEventStartDate] = useState<Date>(new Date());
+  const [eventStartTime, setEventStartTime] = useState("09:00");
+  const [eventEndDate, setEventEndDate] = useState<Date>(new Date());
+  const [eventEndTime, setEventEndTime] = useState("10:00");
+  const [eventRepeat, setEventRepeat] = useState("never");
+  const [eventTravelTime, setEventTravelTime] = useState("none");
+  
+  // Form states for Reminder
+  const [reminderTitle, setReminderTitle] = useState("");
+  const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
+  const [reminderTime, setReminderTime] = useState("");
+  const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
 
-  const formatDate = (date: Date) => {
-    return format(date, "EEEE, MMMM d, yyyy");
+  const getItemsForDate = (date: Date) => {
+    return items.filter(item => {
+      if (item.type === "event") {
+        return isSameDay(item.startDate, date);
+      } else {
+        return item.dueDate ? isSameDay(item.dueDate, date) : false;
+      }
+    });
   };
 
-  const filteredEvents = eventFilter === "all" 
-    ? mockEvents 
-    : mockEvents.filter(event => event.type === eventFilter);
-
-  const getCurrentTasks = () => {
-    return todoTab === "tasks" ? tasks : shoppingTasks;
-  };
-
-  const setCurrentTasks = (newTasks: Task[]) => {
-    if (todoTab === "tasks") {
-      setTasks(newTasks);
-    } else {
-      setShoppingTasks(newTasks);
-    }
-  };
-
-  const filteredTasks = getCurrentTasks().filter(task => 
-    !task.dueDate || isSameDay(task.dueDate, selectedDate)
-  );
-
-  const addTask = () => {
-    if (newTaskTitle.trim()) {
-      const newTask: Task = {
-        id: Date.now().toString(),
-        title: newTaskTitle,
-        completed: false,
-        priority: "medium",
-        dueDate: selectedDate,
-        category: todoTab,
-        createdAt: new Date(),
-      };
-      setCurrentTasks([...getCurrentTasks(), newTask]);
-      setNewTaskTitle("");
-    }
-  };
-
-  const toggleTask = (id: string) => {
-    setCurrentTasks(getCurrentTasks().map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
+  const toggleReminder = (id: string) => {
+    setItems(items.map(item => 
+      item.id === id && item.type === "reminder" 
+        ? { ...item, completed: !item.completed } 
+        : item
     ));
   };
 
-  const deleteTask = (id: string) => {
-    setCurrentTasks(getCurrentTasks().filter(task => task.id !== id));
+  const resetEventForm = () => {
+    setEventTitle("");
+    setEventLocation("");
+    setEventAllDay(false);
+    setEventStartDate(selectedDate);
+    setEventStartTime("09:00");
+    setEventEndDate(selectedDate);
+    setEventEndTime("10:00");
+    setEventRepeat("never");
+    setEventTravelTime("none");
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "text-red-500";
-      case "medium": return "text-yellow-500";
-      case "low": return "text-green-500";
-      default: return "text-gray-500";
-    }
+  const resetReminderForm = () => {
+    setReminderTitle("");
+    setReminderDate(undefined);
+    setReminderTime("");
+    setReminderPriority("medium");
   };
 
-  const getPriorityIcon = (priority: string) => {
-    return <AlertCircle className={`h-4 w-4 ${getPriorityColor(priority)}`} />;
+  const handleAddEvent = () => {
+    if (!eventTitle.trim()) return;
+    
+    const newEvent: Event = {
+      id: Date.now().toString(),
+      title: eventTitle,
+      startDate: eventAllDay 
+        ? new Date(eventStartDate.setHours(0, 0, 0, 0))
+        : new Date(eventStartDate.toDateString() + " " + eventStartTime),
+      endDate: eventAllDay
+        ? new Date(eventEndDate.setHours(23, 59, 59, 999))
+        : new Date(eventEndDate.toDateString() + " " + eventEndTime),
+      allDay: eventAllDay,
+      location: eventLocation || undefined,
+      repeat: eventRepeat !== "never" ? eventRepeat : undefined,
+      travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
+      type: "event",
+      color: "hsl(var(--primary))"
+    };
+    
+    setItems([...items, newEvent]);
+    resetEventForm();
+    setIsDialogOpen(false);
+    toast({
+      title: "Event Added",
+      description: `${eventTitle} has been added to your calendar.`,
+    });
   };
 
-  const renderDayView = () => {
-    return (
-      <div className="space-y-4">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle className="text-xl">Today's Schedule</CardTitle>
-            <CardDescription>{formatDate(selectedDate)}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map((event, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                  <div className={`w-1 h-full ${event.color} rounded-full`} />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">{event.title}</h4>
-                      <span className="text-sm text-muted-foreground">{event.time}</span>
-                    </div>
-                    {event.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3" />
-                        {event.location}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No events scheduled</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
+  const handleAddReminder = () => {
+    if (!reminderTitle.trim()) return;
+    
+    const newReminder: Reminder = {
+      id: Date.now().toString(),
+      title: reminderTitle,
+      dueDate: reminderDate,
+      dueTime: reminderTime || undefined,
+      completed: false,
+      priority: reminderPriority,
+      type: "reminder"
+    };
+    
+    setItems([...items, newReminder]);
+    resetReminderForm();
+    setIsDialogOpen(false);
+    toast({
+      title: "Reminder Added",
+      description: `${reminderTitle} has been added to your reminders.`,
+    });
   };
 
-  const renderWeekView = () => {
-    const weekStart = startOfWeek(selectedDate);
-    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-    return (
-      <div className="space-y-4">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle>Week View</CardTitle>
-            <CardDescription>
-              {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
-              {weekDays.map((day, index) => (
-                <div
-                  key={index}
-                  className={`p-1 sm:p-3 border rounded-lg cursor-pointer transition-all ${
-                    isToday(day) ? "bg-primary/10 border-primary" : ""
-                  } ${isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""}`}
-                  onClick={() => setSelectedDate(day)}
-                >
-                  <div className="text-center">
-                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
-                      {format(day, "EEE")}
-                    </p>
-                    <p className="text-sm sm:text-lg font-bold">{format(day, "d")}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
-  const renderMonthView = () => {
+  const renderMonthCalendar = () => {
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
     const startDate = startOfWeek(monthStart);
@@ -215,44 +205,83 @@ const Calendar = () => {
     const days = eachDayOfInterval({ start: startDate, end: endDate });
 
     return (
-      <div className="space-y-4">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle>Month View</CardTitle>
-            <CardDescription>{format(selectedDate, "MMMM yyyy")}</CardDescription>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <div className="grid grid-cols-7 gap-1">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground p-1 sm:p-2">
-                  {day}
-                </div>
-              ))}
-              {days.map((day, index) => {
-                const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
-                return (
-                  <div
-                    key={index}
-                    className={`aspect-square p-1 sm:p-2 border rounded-lg text-center cursor-pointer transition-colors ${
-                      !isCurrentMonth ? "bg-muted/30 text-muted-foreground" : ""
-                    } ${isToday(day) ? "bg-primary/10 border-primary font-bold" : ""} ${
-                      isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""
-                    } hover:bg-muted/50`}
-                    onClick={() => setSelectedDate(day)}
-                  >
-                    <p className="text-xs sm:text-sm">{format(day, "d")}</p>
-                  </div>
-                );
-              })}
+      <Card className="shadow-custom-md">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl">{format(selectedDate, "MMMM yyyy")}</CardTitle>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setMonth(newDate.getMonth() - 1);
+                  setSelectedDate(newDate);
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  const newDate = new Date(selectedDate);
+                  newDate.setMonth(newDate.getMonth() + 1);
+                  setSelectedDate(newDate);
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pb-3">
+          <div className="grid grid-cols-7 gap-1">
+            {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+              <div key={idx} className="text-center text-xs font-medium text-muted-foreground p-2">
+                {day}
+              </div>
+            ))}
+            {days.map((day, index) => {
+              const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+              const dayItems = getItemsForDate(day);
+              const hasEvents = dayItems.some(item => item.type === "event");
+              
+              return (
+                <div
+                  key={index}
+                  className={`aspect-square p-1 flex flex-col items-center justify-start cursor-pointer transition-colors rounded-lg ${
+                    !isCurrentMonth ? "text-muted-foreground opacity-50" : ""
+                  } ${isToday(day) ? "bg-primary text-primary-foreground font-bold" : ""} ${
+                    isSameDay(day, selectedDate) && !isToday(day) ? "ring-2 ring-primary" : ""
+                  } hover:bg-muted`}
+                  onClick={() => setSelectedDate(day)}
+                >
+                  <p className="text-sm">{format(day, "d")}</p>
+                  {hasEvents && (
+                    <div className="flex gap-0.5 mt-1">
+                      {dayItems.filter(item => item.type === "event").slice(0, 3).map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="w-1 h-1 rounded-full"
+                          style={{ backgroundColor: item.type === "event" ? item.color : "hsl(var(--primary))" }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
   return (
-    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-4 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
@@ -262,352 +291,289 @@ const Calendar = () => {
           </h1>
           <p className="text-muted-foreground">Manage your family schedule</p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            className="gap-2 gradient-primary text-white border-0"
-            onClick={() => {
-              toast({
-                title: "Add Event",
-                description: "Event creation coming soon!",
-              });
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Add Event
-          </Button>
-          <Button 
-            className="gap-2 gradient-cool text-white border-0"
-            onClick={() => {
-              toast({
-                title: "Add To-Do",
-                description: "Quick add to-do coming soon!",
-              });
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Add To-Do
-          </Button>
-        </div>
+        <Button 
+          className="gap-2 gradient-primary text-white border-0"
+          onClick={() => {
+            setDialogTab("event");
+            setIsDialogOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          New
+        </Button>
       </div>
 
-      {/* View Mode Selector */}
-      <Card className="shadow-custom-md w-full">
-        <CardContent className="pt-6 px-2 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  if (viewMode === "day") newDate.setDate(newDate.getDate() - 1);
-                  else if (viewMode === "week") newDate.setDate(newDate.getDate() - 7);
-                  else newDate.setMonth(newDate.getMonth() - 1);
-                  setSelectedDate(newDate);
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-sm sm:text-lg font-semibold min-w-[180px] sm:min-w-[200px] text-center">
-                {viewMode === "day" && formatDate(selectedDate)}
-                {viewMode === "week" && `${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
-                {viewMode === "month" && format(selectedDate, "MMMM yyyy")}
-              </h2>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  if (viewMode === "day") newDate.setDate(newDate.getDate() + 1);
-                  else if (viewMode === "week") newDate.setDate(newDate.getDate() + 7);
-                  else newDate.setMonth(newDate.getMonth() + 1);
-                  setSelectedDate(newDate);
-                }}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+      {/* Month Calendar */}
+      {renderMonthCalendar()}
 
-            <div className="flex gap-2">
-              <Button
-                variant={viewMode === "day" ? "default" : "outline"}
-                onClick={() => setViewMode("day")}
-                size="sm"
-                className={viewMode === "day" ? "gradient-primary text-white border-0" : ""}
+      {/* Events & Reminders List */}
+      <Card className="shadow-custom-md">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">{format(selectedDate, "EEEE, MMMM d, yyyy")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {getItemsForDate(selectedDate).length > 0 ? (
+            getItemsForDate(selectedDate).map((item) => (
+              <div
+                key={item.id}
+                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
               >
-                Day
-              </Button>
-              <Button
-                variant={viewMode === "week" ? "default" : "outline"}
-                onClick={() => setViewMode("week")}
-                size="sm"
-                className={viewMode === "week" ? "gradient-primary text-white border-0" : ""}
-              >
-                Week
-              </Button>
-              <Button
-                variant={viewMode === "month" ? "default" : "outline"}
-                onClick={() => setViewMode("month")}
-                size="sm"
-                className={viewMode === "month" ? "gradient-primary text-white border-0" : ""}
-              >
-                Month
-              </Button>
-            </div>
-          </div>
+                {item.type === "event" ? (
+                  <>
+                    <div 
+                      className="w-1 h-full rounded-full mt-1"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold truncate">{item.title}</h4>
+                          {item.location && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{item.location}</span>
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-sm text-muted-foreground whitespace-nowrap">
+                          {item.allDay ? (
+                            <span>all-day</span>
+                          ) : (
+                            <div className="text-right">
+                              <div>{format(item.startDate, "HH:mm")}</div>
+                              <div>{format(item.endDate, "HH:mm")}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Checkbox
+                      checked={item.completed}
+                      onCheckedChange={() => toggleReminder(item.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`font-medium ${item.completed ? "line-through text-muted-foreground" : ""}`}>
+                        {item.title}
+                      </h4>
+                      {item.dueTime && (
+                        <p className="text-sm text-muted-foreground">{item.dueTime}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-muted-foreground py-8">No events or reminders</p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Event Filters */}
-      <div className="flex gap-2 flex-wrap">
-        <Button
-          variant={eventFilter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEventFilter("all")}
-          className={eventFilter === "all" ? "gradient-primary text-white border-0" : ""}
-        >
-          All Events
-        </Button>
-        <Button
-          variant={eventFilter === "sports" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEventFilter("sports")}
-          className={eventFilter === "sports" ? "gradient-primary text-white border-0" : ""}
-        >
-          Sports
-        </Button>
-        <Button
-          variant={eventFilter === "education" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEventFilter("education")}
-          className={eventFilter === "education" ? "gradient-primary text-white border-0" : ""}
-        >
-          Education
-        </Button>
-        <Button
-          variant={eventFilter === "family" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setEventFilter("family")}
-          className={eventFilter === "family" ? "gradient-primary text-white border-0" : ""}
-        >
-          Family
-        </Button>
-      </div>
-
-      {/* Calendar Views */}
-      {viewMode === "day" && renderDayView()}
-      {viewMode === "week" && renderWeekView()}
-      {viewMode === "month" && renderMonthView()}
-
-      {/* To-Do Lists */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckSquare className="w-5 h-5" />
-            To-Do Lists
-          </CardTitle>
-          <CardDescription>Organize your family tasks and shopping lists</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Tabs value={todoTab} onValueChange={setTodoTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="tasks" className="gap-2">
-                <CheckSquare className="w-4 h-4" />
-                Tasks
-              </TabsTrigger>
-              <TabsTrigger value="shopping" className="gap-2">
-                <ShoppingCart className="w-4 h-4" />
-                Shopping
-              </TabsTrigger>
-              <TabsTrigger value="shared" className="gap-2">
-                <Users className="w-4 h-4" />
-                Shared
-              </TabsTrigger>
+      {/* Add Event/Reminder Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>New</DialogTitle>
+          </DialogHeader>
+          
+          <Tabs value={dialogTab} onValueChange={(v) => setDialogTab(v as "event" | "reminder")} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="event">Event</TabsTrigger>
+              <TabsTrigger value="reminder">Reminder</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tasks" className="space-y-4 mt-4">
-              {/* Stats */}
-              <div className="grid grid-cols-4 gap-4">
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold">{tasks.length}</div>
-                  <div className="text-xs text-muted-foreground">Total</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-green-500">{tasks.filter(t => t.completed).length}</div>
-                  <div className="text-xs text-muted-foreground">Done</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-red-500">0</div>
-                  <div className="text-xs text-muted-foreground">Overdue</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-blue-500">{tasks.filter(t => !t.completed).length}</div>
-                  <div className="text-xs text-muted-foreground">Pending</div>
-                </Card>
-              </div>
-
-              {/* Add Task */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a new task..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addTask()}
-                />
-                <Button onClick={addTask} className="gradient-primary text-white border-0">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Task List */}
+            <TabsContent value="event" className="space-y-4 mt-4">
               <div className="space-y-2">
-                {tasks.length > 0 ? (
-                  tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id)}
+                <Input
+                  placeholder="Title"
+                  value={eventTitle}
+                  onChange={(e) => setEventTitle(e.target.value)}
+                  className="text-base"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  placeholder="Location or Video Call"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  className="text-base"
+                />
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <Label htmlFor="all-day">All-day</Label>
+                <Switch
+                  id="all-day"
+                  checked={eventAllDay}
+                  onCheckedChange={setEventAllDay}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <Label className="w-20">Starts</Label>
+                  <div className="flex gap-2 flex-1">
+                    <Input
+                      type="date"
+                      value={format(eventStartDate, "yyyy-MM-dd")}
+                      onChange={(e) => setEventStartDate(new Date(e.target.value))}
+                      className="flex-1"
+                    />
+                    {!eventAllDay && (
+                      <Input
+                        type="time"
+                        value={eventStartTime}
+                        onChange={(e) => setEventStartTime(e.target.value)}
+                        className="w-28"
                       />
-                      <div className="flex-1">
-                        <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                          {task.title}
-                        </p>
-                      </div>
-                      {getPriorityIcon(task.priority)}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteTask(task.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <CheckSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No tasks yet</p>
-                    <p className="text-sm text-muted-foreground">Start by adding your first task</p>
+                    )}
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <Label className="w-20">Ends</Label>
+                  <div className="flex gap-2 flex-1">
+                    <Input
+                      type="date"
+                      value={format(eventEndDate, "yyyy-MM-dd")}
+                      onChange={(e) => setEventEndDate(new Date(e.target.value))}
+                      className="flex-1"
+                    />
+                    {!eventAllDay && (
+                      <Input
+                        type="time"
+                        value={eventEndTime}
+                        onChange={(e) => setEventEndTime(e.target.value)}
+                        className="w-28"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Travel Time</Label>
+                <Select value={eventTravelTime} onValueChange={setEventTravelTime}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="15min">15 minutes</SelectItem>
+                    <SelectItem value="30min">30 minutes</SelectItem>
+                    <SelectItem value="1hour">1 hour</SelectItem>
+                    <SelectItem value="2hours">2 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Repeat</Label>
+                <Select value={eventRepeat} onValueChange={setEventRepeat}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="never">Never</SelectItem>
+                    <SelectItem value="daily">Every Day</SelectItem>
+                    <SelectItem value="weekly">Every Week</SelectItem>
+                    <SelectItem value="monthly">Every Month</SelectItem>
+                    <SelectItem value="yearly">Every Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    resetEventForm();
+                    setIsDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gradient-primary text-white border-0"
+                  onClick={handleAddEvent}
+                >
+                  Add
+                </Button>
               </div>
             </TabsContent>
 
-            <TabsContent value="shopping" className="space-y-4 mt-4">
-              {/* Stats */}
-              <div className="grid grid-cols-4 gap-4">
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold">{shoppingTasks.length}</div>
-                  <div className="text-xs text-muted-foreground">Total</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-green-500">{shoppingTasks.filter(t => t.completed).length}</div>
-                  <div className="text-xs text-muted-foreground">Done</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-red-500">0</div>
-                  <div className="text-xs text-muted-foreground">Overdue</div>
-                </Card>
-                <Card className="text-center p-3">
-                  <div className="text-xl font-bold text-blue-500">{shoppingTasks.filter(t => !t.completed).length}</div>
-                  <div className="text-xs text-muted-foreground">Pending</div>
-                </Card>
+            <TabsContent value="reminder" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Input
+                  placeholder="Title"
+                  value={reminderTitle}
+                  onChange={(e) => setReminderTitle(e.target.value)}
+                  className="text-base"
+                />
               </div>
 
-              {/* Add Shopping Item */}
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <Label>Due Date (Optional)</Label>
                 <Input
-                  placeholder="Add shopping item..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addTask()}
+                  type="date"
+                  value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
+                  onChange={(e) => setReminderDate(e.target.value ? new Date(e.target.value) : undefined)}
                 />
-                <Button onClick={addTask} className="gradient-primary text-white border-0">
-                  <Plus className="h-4 w-4" />
+              </div>
+
+              {reminderDate && (
+                <div className="space-y-2">
+                  <Label>Due Time (Optional)</Label>
+                  <Input
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Priority</Label>
+                <Select value={reminderPriority} onValueChange={(v) => setReminderPriority(v as "low" | "medium" | "high")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    resetReminderForm();
+                    setIsDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gradient-primary text-white border-0"
+                  onClick={handleAddReminder}
+                >
+                  Add
                 </Button>
               </div>
-
-              {/* Shopping List */}
-              <div className="space-y-2">
-                {shoppingTasks.length > 0 ? (
-                  shoppingTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id)}
-                      />
-                      <div className="flex-1">
-                        <p className={`${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                          {task.title}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteTask(task.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No shopping items yet</p>
-                    <p className="text-sm text-muted-foreground">Add items to your shopping list</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="shared" className="space-y-4 mt-4">
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-medium mb-2">Shared Lists</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Share and sync tasks with family members on your Family Plan
-                  </p>
-                  <Badge variant="secondary" className="text-xs">
-                    Family Plan Feature
-                  </Badge>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Calendar Sync */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle>Calendar Sync</CardTitle>
-          <CardDescription>Connected calendars</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <div>
-                <p className="font-medium text-sm">Google Calendar</p>
-                <p className="text-xs text-muted-foreground">sarah@email.com</p>
-              </div>
-            </div>
-            <Badge variant="secondary">Connected</Badge>
-          </div>
-          
-          <Button variant="outline" className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Calendar
-          </Button>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
