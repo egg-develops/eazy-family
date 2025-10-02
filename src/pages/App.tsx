@@ -150,6 +150,26 @@ const AppHome = () => {
       quickActions: ["Find Events", "Add Photos"]
     };
   });
+  
+  // Get calendar items from localStorage
+  const getCalendarItems = () => {
+    const saved = localStorage.getItem('eazy-family-calendar-items');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.map((item: any) => ({
+        ...item,
+        startDate: item.startDate ? new Date(item.startDate) : undefined,
+        endDate: item.endDate ? new Date(item.endDate) : undefined,
+      })).filter((item: any) => item.type === "event");
+    }
+    return [];
+  };
+  
+  const todayEvents = getCalendarItems().filter((event: any) => {
+    const today = new Date();
+    const eventDate = new Date(event.startDate);
+    return eventDate.toDateString() === today.toDateString();
+  });
 
   const removeCalendar = () => {
     const newConfig = { ...homeConfig, showCalendar: false };
@@ -303,25 +323,26 @@ const AppHome = () => {
           
           {calendarView === 'day' && (
             <>
-              <Card className="p-4 shadow-custom-md border-l-4 border-l-primary">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  <div className="flex-1">
-                    <h4 className="font-medium">Swimming Lesson</h4>
-                    <p className="text-sm text-muted-foreground">2:00 PM - Aquatic Center</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4 shadow-custom-md border-l-4 border-l-accent">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-5 h-5 text-accent" />
-                  <div className="flex-1">
-                    <h4 className="font-medium">Children's Museum</h4>
-                    <p className="text-sm text-muted-foreground">Interactive Art Exhibition</p>
-                  </div>
-                </div>
-              </Card>
+              {todayEvents.length > 0 ? (
+                todayEvents.map((event: any) => (
+                  <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-primary">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <div className="flex-1">
+                        <h4 className="font-medium">{event.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {event.allDay ? "All day" : new Date(event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                          {event.location && ` - ${event.location}`}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-4 shadow-custom-md">
+                  <p className="text-center text-muted-foreground">No events today</p>
+                </Card>
+              )}
             </>
           )}
 

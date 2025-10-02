@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,57 +38,67 @@ interface Reminder {
 
 type CalendarItem = Event | Reminder;
 
-const mockItems: CalendarItem[] = [
-  { 
-    id: "1", 
-    title: "Fête du Travail", 
-    startDate: new Date(2026, 4, 1, 0, 0), 
-    endDate: new Date(2026, 4, 1, 23, 59), 
-    allDay: true, 
-    type: "event",
-    color: "hsl(var(--primary))"
-  },
-  { 
-    id: "2", 
-    title: "Asana Updates", 
-    startDate: new Date(2026, 4, 1, 10, 0), 
-    endDate: new Date(2026, 4, 1, 11, 0), 
-    allDay: false, 
-    location: "Suggested Location...",
-    type: "event",
-    color: "hsl(45 93% 47%)"
-  },
-  { 
-    id: "3", 
-    title: "El-Ki-Singen Saal 1", 
-    startDate: new Date(2026, 4, 1, 10, 45), 
-    endDate: new Date(2026, 4, 1, 11, 30), 
-    allDay: false, 
-    location: "Musikzentrum Kanzlei",
-    type: "event",
-    color: "hsl(280 65% 60%)"
-  },
-  {
-    id: "4",
-    title: "Review homework",
-    completed: false,
-    priority: "high",
-    dueDate: new Date(),
-    type: "reminder"
-  },
-  {
-    id: "5",
-    title: "Call dentist",
-    completed: false,
-    priority: "medium",
-    type: "reminder"
+const getInitialItems = (): CalendarItem[] => {
+  const saved = localStorage.getItem('eazy-family-calendar-items');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    return parsed.map((item: any) => ({
+      ...item,
+      startDate: item.startDate ? new Date(item.startDate) : undefined,
+      endDate: item.endDate ? new Date(item.endDate) : undefined,
+      dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+    }));
   }
-];
+  
+  // Default items for October 2025
+  return [
+    { 
+      id: "1", 
+      title: "Swimming Lesson", 
+      startDate: new Date(2025, 9, 2, 14, 0), // Oct 2, 2025, 2:00 PM
+      endDate: new Date(2025, 9, 2, 15, 0), 
+      allDay: false, 
+      location: "Aquatic Center",
+      type: "event",
+      color: "hsl(220 70% 50%)"
+    },
+    { 
+      id: "2", 
+      title: "Children's Museum", 
+      startDate: new Date(2025, 9, 3, 10, 0), // Oct 3, 2025, 10:00 AM
+      endDate: new Date(2025, 9, 3, 12, 0), 
+      allDay: false, 
+      location: "Interactive Art Exhibition",
+      type: "event",
+      color: "hsl(45 90% 65%)"
+    },
+    {
+      id: "3",
+      title: "Review homework",
+      completed: false,
+      priority: "high",
+      dueDate: new Date(2025, 9, 2),
+      type: "reminder"
+    },
+    {
+      id: "4",
+      title: "Call dentist",
+      completed: false,
+      priority: "medium",
+      type: "reminder"
+    }
+  ];
+};
 
 const Calendar = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [items, setItems] = useState<CalendarItem[]>(mockItems);
+  const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
+  
+  // Save items to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
+  }, [items]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogTab, setDialogTab] = useState<"event" | "reminder">("event");
   
@@ -244,14 +254,14 @@ const Calendar = () => {
                 {day}
               </div>
             ))}
-            {days.map((day, index) => {
+            {days.map((day) => {
               const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
               const dayItems = getItemsForDate(day);
               const hasEvents = dayItems.some(item => item.type === "event");
               
               return (
                 <div
-                  key={index}
+                  key={day.toISOString()}
                   className={`aspect-square p-1 flex flex-col items-center justify-start cursor-pointer transition-colors rounded-lg ${
                     !isCurrentMonth ? "text-muted-foreground opacity-50" : ""
                   } ${isToday(day) ? "bg-primary text-primary-foreground font-bold" : ""} ${
