@@ -33,7 +33,7 @@ const AppLayout = () => {
     { id: "photos", label: t('nav.photos'), icon: Camera, path: "/app/photos" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
     { id: "marketplace", label: t('nav.marketplace'), icon: ShoppingCart, path: "/app/marketplace" },
-    { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
+    { id: "settings", label: "", icon: Settings, path: "/app/settings" },
   ];
 
   useEffect(() => {
@@ -249,25 +249,59 @@ const AppHome = () => {
             </div>
           </div>
           
-          <Card className="p-4 shadow-custom-md border-l-4 border-l-primary">
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-primary" />
-              <div className="flex-1">
-                <h4 className="font-medium">Swimming Lesson</h4>
-                <p className="text-sm text-muted-foreground">2:00 PM - Aquatic Center</p>
-              </div>
-            </div>
-          </Card>
+          {calendarView === 'day' && (
+            <>
+              <Card className="p-4 shadow-custom-md border-l-4 border-l-primary">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <div className="flex-1">
+                    <h4 className="font-medium">Swimming Lesson</h4>
+                    <p className="text-sm text-muted-foreground">2:00 PM - Aquatic Center</p>
+                  </div>
+                </div>
+              </Card>
 
-          <Card className="p-4 shadow-custom-md border-l-4 border-l-accent">
-            <div className="flex items-center gap-3">
-              <MapPin className="w-5 h-5 text-accent" />
-              <div className="flex-1">
-                <h4 className="font-medium">Children's Museum</h4>
-                <p className="text-sm text-muted-foreground">Interactive Art Exhibition</p>
+              <Card className="p-4 shadow-custom-md border-l-4 border-l-accent">
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-accent" />
+                  <div className="flex-1">
+                    <h4 className="font-medium">Children's Museum</h4>
+                    <p className="text-sm text-muted-foreground">Interactive Art Exhibition</p>
+                  </div>
+                </div>
+              </Card>
+            </>
+          )}
+
+          {calendarView === 'week' && (
+            <Card className="p-4 shadow-custom-md">
+              <div className="grid grid-cols-7 gap-2 text-center">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                  <div key={day} className={`p-2 rounded ${i === 2 ? 'bg-primary/10 border border-primary' : ''}`}>
+                    <div className="text-xs text-muted-foreground">{day}</div>
+                    <div className="text-sm font-semibold">{i + 1}</div>
+                    {i === 2 && <div className="w-1 h-1 bg-primary rounded-full mx-auto mt-1" />}
+                  </div>
+                ))}
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
+
+          {calendarView === 'month' && (
+            <Card className="p-4 shadow-custom-md">
+              <h4 className="font-semibold mb-3">October 2025</h4>
+              <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
+                  <div key={day} className="text-muted-foreground p-1">{day}</div>
+                ))}
+                {Array.from({ length: 31 }, (_, i) => (
+                  <div key={i} className={`p-1 rounded ${i === 1 ? 'bg-primary text-primary-foreground font-bold' : ''}`}>
+                    {i + 1}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       )}
 

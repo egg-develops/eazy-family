@@ -244,10 +244,16 @@ const Calendar = () => {
           </h1>
           <p className="text-muted-foreground">Manage your family schedule</p>
         </div>
-        <Button className="gap-2 gradient-primary text-white border-0">
-          <Plus className="h-4 w-4" />
-          Add Event
-        </Button>
+        <div className="flex gap-2">
+          <Button className="gap-2 gradient-primary text-white border-0">
+            <Plus className="h-4 w-4" />
+            Add Event
+          </Button>
+          <Button className="gap-2 gradient-cool text-white border-0">
+            <Plus className="h-4 w-4" />
+            Add To-Do
+          </Button>
+        </div>
       </div>
 
       {/* View Mode Selector */}
@@ -359,44 +365,6 @@ const Calendar = () => {
       {viewMode === "week" && renderWeekView()}
       {viewMode === "month" && renderMonthView()}
 
-      {/* Calendar Sync */}
-      <div className="max-w-2xl">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle>Calendar Sync</CardTitle>
-            <CardDescription>Connected calendars</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <div>
-                  <p className="font-medium text-sm">Google Calendar</p>
-                  <p className="text-xs text-muted-foreground">sarah@email.com</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Connected</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <div>
-                  <p className="font-medium text-sm">Outlook Calendar</p>
-                  <p className="text-xs text-muted-foreground">family@outlook.com</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Connected</Badge>
-            </div>
-
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Calendar
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* To-Do List */}
       <Card className="shadow-custom-md">
         <CardHeader>
@@ -461,6 +429,44 @@ const Calendar = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Calendar Sync */}
+      <div className="max-w-2xl">
+        <Card className="shadow-custom-md">
+          <CardHeader>
+            <CardTitle>Calendar Sync</CardTitle>
+            <CardDescription>Connected calendars</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <div>
+                  <p className="font-medium text-sm">Google Calendar</p>
+                  <p className="text-xs text-muted-foreground">sarah@email.com</p>
+                </div>
+              </div>
+              <Badge variant="secondary">Connected</Badge>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <div>
+                  <p className="font-medium text-sm">Outlook Calendar</p>
+                  <p className="text-xs text-muted-foreground">family@outlook.com</p>
+                </div>
+              </div>
+              <Badge variant="secondary">Connected</Badge>
+            </div>
+
+            <Button variant="outline" className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Calendar
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
