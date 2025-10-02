@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check } from "lucide-react";
+import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Task {
   id: string;
@@ -34,6 +35,7 @@ const getInitialTasks = (): Task[] => {
 
 const ToDoList = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [tasks, setTasks] = useState<Task[]>(getInitialTasks);
   const [activeTab, setActiveTab] = useState<"task" | "shopping" | "shared">("task");
   const [filterView, setFilterView] = useState("all");
@@ -55,11 +57,31 @@ const ToDoList = () => {
     return true;
   });
 
+  const getButtonText = () => {
+    if (activeTab === "shopping") {
+      return isMobile ? "+ New Item" : "New Item";
+    }
+    return isMobile ? "+ New Task" : "New Task";
+  };
+
+  const getAddText = () => {
+    if (activeTab === "shopping") return "Add Item";
+    if (activeTab === "shared") return "Add List";
+    return "Add New Task";
+  };
+
   const stats = {
     total: tasks.filter(t => t.type === activeTab).length,
     completed: tasks.filter(t => t.type === activeTab && t.completed).length,
     overdue: tasks.filter(t => t.type === activeTab && t.dueDate && t.dueDate < new Date() && !t.completed).length,
     pending: tasks.filter(t => t.type === activeTab && !t.completed).length,
+  };
+  
+  const sharedStats = {
+    sharedLists: 0,
+    collaborators: 0,
+    completedShared: tasks.filter(t => t.type === "shared" && t.completed).length,
+    active: tasks.filter(t => t.type === "shared" && !t.completed).length,
   };
 
   const handleAddTask = () => {
@@ -123,47 +145,92 @@ const ToDoList = () => {
 
         <TabsContent value={activeTab} className="space-y-6 mt-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="shadow-custom-md">
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold">{stats.total}</div>
-                <div className="text-sm text-muted-foreground">Total Tasks</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-custom-md">
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
-                <div className="text-sm text-muted-foreground">Completed</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-custom-md">
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-orange-600">{stats.overdue}</div>
-                <div className="text-sm text-muted-foreground">Overdue</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-custom-md">
-              <CardContent className="p-4 text-center">
-                <div className="text-3xl font-bold text-blue-600">{stats.pending}</div>
-                <div className="text-sm text-muted-foreground">Pending</div>
-              </CardContent>
-            </Card>
-          </div>
+          {activeTab === "shared" ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold">{sharedStats.sharedLists}</div>
+                  <div className="text-sm text-muted-foreground">Shared Lists</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-600">{sharedStats.collaborators}</div>
+                  <div className="text-sm text-muted-foreground">Collaborators</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">{sharedStats.completedShared}</div>
+                  <div className="text-sm text-muted-foreground">todos.shared.completed</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-orange-600">{sharedStats.active}</div>
+                  <div className="text-sm text-muted-foreground">Active</div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold">{stats.total}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {activeTab === "shopping" ? "Total Items" : "Total Tasks"}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
+                </CardContent>
+              </Card>
+              {activeTab !== "shopping" && (
+                <Card className="shadow-custom-md">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl font-bold text-orange-600">{stats.overdue}</div>
+                    <div className="text-sm text-muted-foreground">Overdue</div>
+                  </CardContent>
+                </Card>
+              )}
+              <Card className="shadow-custom-md">
+                <CardContent className="p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-600">{stats.pending}</div>
+                  <div className="text-sm text-muted-foreground">Pending</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          {/* Add New Task */}
-          <Card className="shadow-custom-md">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  <span className="font-semibold">Add New Task</span>
+          {/* Add New Task/Item */}
+          {!isMobile && (
+            <Card className="shadow-custom-md">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    <span className="font-semibold">{getAddText()}</span>
+                  </div>
+                  <Button onClick={() => setIsDialogOpen(true)}>
+                    {getButtonText()}
+                  </Button>
                 </div>
-                <Button onClick={() => setIsDialogOpen(true)}>
-                  New Task
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
+          
+          {isMobile && (
+            <Button 
+              className="w-full gradient-primary text-white border-0"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {activeTab === "shopping" ? "New Item" : "New Task"}
+            </Button>
+          )}
 
           {/* Filter */}
           <div className="flex items-center gap-3">
@@ -184,7 +251,15 @@ const ToDoList = () => {
           {/* Tasks List */}
           <Card className="shadow-custom-md min-h-[300px]">
             <CardContent className="p-6">
-              {filteredTasks.length > 0 ? (
+              {activeTab === "shared" && filteredTasks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                    <UserPlus className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-1">No shared lists</h3>
+                  <p className="text-muted-foreground">Share tasks with family members to collaborate</p>
+                </div>
+              ) : filteredTasks.length > 0 ? (
                 <div className="space-y-3">
                   {filteredTasks.map((task) => (
                     <div
@@ -214,8 +289,12 @@ const ToDoList = () => {
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Check className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-semibold mb-1">No tasks yet</h3>
-                  <p className="text-muted-foreground">Start by adding your first task</p>
+                  <h3 className="text-lg font-semibold mb-1">
+                    {activeTab === "shopping" ? "No items yet" : "No tasks yet"}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {activeTab === "shopping" ? "Start by adding your first item" : "Start by adding your first task"}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -223,18 +302,28 @@ const ToDoList = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Task Dialog */}
+      {/* Add Task/Item Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
+            <DialogTitle>
+              {activeTab === "shopping" ? "Add New Item" : activeTab === "shared" ? "Add Shared List" : "Add New Task"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title">Task Title</Label>
+              <Label htmlFor="task-title">
+                {activeTab === "shopping" ? "Item Name" : activeTab === "shared" ? "List Name" : "Task Title"}
+              </Label>
               <Input
                 id="task-title"
-                placeholder="Enter task description..."
+                placeholder={
+                  activeTab === "shopping" 
+                    ? "Enter item name..." 
+                    : activeTab === "shared"
+                    ? "Enter list name..."
+                    : "Enter task description..."
+                }
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
@@ -246,7 +335,7 @@ const ToDoList = () => {
               Cancel
             </Button>
             <Button onClick={handleAddTask} disabled={!newTaskTitle.trim()}>
-              Add Task
+              {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Add List" : "Add Task"}
             </Button>
           </DialogFooter>
         </DialogContent>
