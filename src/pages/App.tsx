@@ -89,11 +89,45 @@ const AppLayout = () => {
         <AppSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 pt-16 pb-20 md:pb-6">
+        <main className="flex-1 pt-16 pb-32 md:pb-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto px-4 py-6">
             {isHomePath ? <AppHome /> : <Outlet />}
           </div>
         </main>
+
+        {/* Action Bar - Mobile Only (above bottom nav) */}
+        <nav className="md:hidden fixed bottom-16 left-0 right-0 glass-effect border-t border-b">
+          <div className="max-w-md mx-auto px-4 py-2">
+            <div className="flex justify-around items-center">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/app/settings')}
+                className="flex items-center justify-center h-10 w-10 p-0"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center justify-center h-10 w-10 p-0 relative"
+              >
+                <Bell className="w-5 h-5" />
+                <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-accent" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="flex items-center justify-center h-10 w-10 p-0 gradient-primary text-white rounded-full"
+                onClick={() => {
+                  // TODO: Add quick action based on current page
+                }}
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </nav>
 
         {/* Bottom Navigation - Mobile Only */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
@@ -123,19 +157,6 @@ const AppLayout = () => {
             </div>
           </div>
         </nav>
-
-        {/* Floating Action Button */}
-        {!isHomePath && (
-          <Button
-            size="lg"
-            className="fixed bottom-6 right-6 md:bottom-6 md:right-6 gradient-primary text-white border-0 hover:opacity-90 shadow-custom-lg rounded-full w-14 h-14 p-0 z-50"
-            onClick={() => {
-              // TODO: Add quick action based on current page
-            }}
-          >
-            <Plus className="w-6 h-6" />
-          </Button>
-        )}
       </div>
     </SidebarProvider>
   );

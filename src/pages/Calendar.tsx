@@ -356,22 +356,8 @@ const Calendar = () => {
       {viewMode === "week" && renderWeekView()}
       {viewMode === "month" && renderMonthView()}
 
-      {/* Mini Calendar & Quick Add */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="shadow-custom-md">
-          <CardHeader>
-            <CardTitle>Quick Date Picker</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CalendarUI
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border"
-            />
-          </CardContent>
-        </Card>
-
+      {/* Calendar Sync */}
+      <div className="max-w-2xl">
         <Card className="shadow-custom-md">
           <CardHeader>
             <CardTitle>Calendar Sync</CardTitle>
