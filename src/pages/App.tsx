@@ -17,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 
 const navigationItems = [
   { id: "home", label: "Home", icon: Home, path: "/app" },
@@ -97,64 +98,36 @@ const AppLayout = () => {
 
         {/* Action Bar - Mobile Only (above bottom nav) */}
         <nav className="md:hidden fixed bottom-16 left-0 right-0 glass-effect border-t border-b">
-          <div className="max-w-md mx-auto px-4 py-2">
-            <div className="flex justify-around items-center">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/app/settings')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center justify-center h-10 w-10 p-0 relative"
-              >
-                <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-accent" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="flex items-center justify-center h-10 w-10 p-0 gradient-primary text-white rounded-full"
-                onClick={() => {
-                  // TODO: Add quick action based on current page
-                }}
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            </div>
+          <div className="max-w-md mx-auto px-4 py-2 flex justify-center">
+            <ExpandableTabs
+              tabs={[
+                { title: "Settings", icon: Settings },
+                { title: "Notifications", icon: Bell },
+                { title: "Add", icon: Plus },
+              ]}
+              onChange={(index) => {
+                if (index === 0) navigate('/app/settings');
+                // index 1 for notifications (future)
+                // index 2 for add action (future)
+              }}
+            />
           </div>
         </nav>
 
         {/* Bottom Navigation - Mobile Only */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
-          <div className="max-w-md mx-auto px-2 py-2">
-            <div className="flex justify-around items-center">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPath === item.path;
-                
-                return (
-                  <Button
-                    key={item.id}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(item.path)}
-                    className={`flex flex-col items-center gap-1 h-auto py-2 px-3 min-w-0 ${
-                      isActive 
-                        ? 'text-primary bg-primary/10' 
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-xs font-medium truncate">{item.label}</span>
-                  </Button>
-                );
-              })}
-            </div>
+          <div className="max-w-md mx-auto px-2 py-2 flex justify-center">
+            <ExpandableTabs
+              tabs={navigationItems.map(item => ({
+                title: item.label,
+                icon: item.icon,
+              }))}
+              onChange={(index) => {
+                if (index !== null) {
+                  navigate(navigationItems[index].path);
+                }
+              }}
+            />
           </div>
         </nav>
       </div>
