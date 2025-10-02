@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, Trash2, AlertCircle, CheckSquare, ShoppingCart, Users } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface CalendarProps {}
 
@@ -60,6 +61,7 @@ const mockShoppingTasks: Task[] = [
 ];
 
 const Calendar = () => {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -261,11 +263,27 @@ const Calendar = () => {
           <p className="text-muted-foreground">Manage your family schedule</p>
         </div>
         <div className="flex gap-2">
-          <Button className="gap-2 gradient-primary text-white border-0">
+          <Button 
+            className="gap-2 gradient-primary text-white border-0"
+            onClick={() => {
+              toast({
+                title: "Add Event",
+                description: "Event creation coming soon!",
+              });
+            }}
+          >
             <Plus className="h-4 w-4" />
             Add Event
           </Button>
-          <Button className="gap-2 gradient-cool text-white border-0">
+          <Button 
+            className="gap-2 gradient-cool text-white border-0"
+            onClick={() => {
+              toast({
+                title: "Add To-Do",
+                description: "Quick add to-do coming soon!",
+              });
+            }}
+          >
             <Plus className="h-4 w-4" />
             Add To-Do
           </Button>

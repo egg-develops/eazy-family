@@ -5,9 +5,9 @@ import {
   MapPin, 
   Camera, 
   Users, 
-  ShoppingCart, 
   Settings, 
-  Home
+  Home,
+  CheckSquare
 } from "lucide-react"
 import {
   Sidebar,
@@ -31,6 +31,7 @@ export function AppSidebar() {
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
+    { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/calendar" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
@@ -42,7 +43,7 @@ export function AppSidebar() {
     isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"
 
   return (
-    <Sidebar className={collapsed ? "w-14 pt-16" : "w-48 pt-16"} collapsible="icon">
+    <Sidebar className={`${collapsed ? "w-14" : "w-48"} pt-16 hidden md:flex`} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Camera, Upload, Search, Filter, MapPin, Calendar, Sparkles } from "lucide-react";
+import { Camera, Upload, Search, Filter, MapPin, Calendar, Sparkles, LayoutGrid, MapPin as MapPinIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface Photo {
   id: string;
@@ -73,6 +74,7 @@ const mockPhotos: Photo[] = [
 
 const Memories = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -149,29 +151,56 @@ const Memories = () => {
             </SelectContent>
           </Select>
 
-          <div className="flex gap-1 bg-muted rounded-md p-1">
+          <div className="flex gap-2">
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={viewMode === 'grid' ? 'bg-background shadow-sm' : ''}
+              className="gap-2"
             >
-              {t('memories.viewMode.grid')}
+              <LayoutGrid className="w-4 h-4" />
+              Grid
             </Button>
             <Button
-              variant={viewMode === 'map' ? 'default' : 'ghost'}
+              variant={viewMode === 'map' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('map')}
-              className={viewMode === 'map' ? 'bg-background shadow-sm' : ''}
+              className="gap-2"
             >
-              {t('memories.viewMode.map')}
+              <MapPinIcon className="w-4 h-4" />
+              Map
             </Button>
           </div>
         </div>
       </div>
 
       {/* Upload Button */}
-      <Button className="w-full gradient-primary text-white border-0 hover:opacity-90">
+      <Button 
+        className="w-full gradient-primary text-white border-0 hover:opacity-90"
+        onClick={() => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = 'image/*';
+          input.multiple = true;
+          input.onchange = async (e) => {
+            const files = (e.target as HTMLInputElement).files;
+            if (files && files.length > 0) {
+              toast({
+                title: "Uploading photos",
+                description: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`,
+              });
+              // Here you would upload to Supabase storage
+              setTimeout(() => {
+                toast({
+                  title: "Upload complete",
+                  description: "Photos uploaded successfully!",
+                });
+              }, 1500);
+            }
+          };
+          input.click();
+        }}
+      >
         <Upload className="w-4 h-4 mr-2" />
         {t('memories.uploadNew')}
       </Button>

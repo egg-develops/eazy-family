@@ -11,7 +11,8 @@ import {
   Users,
   ShoppingCart,
   Home,
-  Search
+  Search,
+  CheckSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,6 +31,7 @@ const AppLayout = () => {
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
+    { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/calendar" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
@@ -159,6 +161,18 @@ const AppHome = () => {
     localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
   };
 
+  const addCalendar = () => {
+    const newConfig = { ...homeConfig, showCalendar: true };
+    setHomeConfig(newConfig);
+    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+  };
+
+  const addWeather = () => {
+    const newConfig = { ...homeConfig, showWeather: true };
+    setHomeConfig(newConfig);
+    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+  };
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -188,6 +202,33 @@ const AppHome = () => {
           <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
         </Card>
       </div>
+
+      {/* Add Widget Buttons */}
+      {(!homeConfig.showCalendar || !homeConfig.showWeather) && (
+        <div className="flex gap-2">
+          {!homeConfig.showCalendar && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={addCalendar}
+              className="gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              Add Calendar
+            </Button>
+          )}
+          {!homeConfig.showWeather && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={addWeather}
+              className="gap-2"
+            >
+              ☁️ Add Weather
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Weather Card */}
       {homeConfig.showWeather && (
