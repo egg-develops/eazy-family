@@ -58,32 +58,30 @@ const AppLayout = () => {
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <div className="flex items-center gap-3">
               <SidebarTrigger />
-              {(() => {
-                const savedConfig = localStorage.getItem('eazy-family-home-config');
-                const config = savedConfig ? JSON.parse(savedConfig) : {};
-                const iconUrl = config.iconImage;
-                
-                return iconUrl ? (
-                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
-                ) : (
-                  <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{userInitials}</span>
-                  </div>
-                );
-              })()}
-              <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
-                  {t('app.name')}
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-accent" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/app/settings')}>
-                <Settings className="w-5 h-5" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/app')}
+                className="flex items-center gap-3 hover:bg-transparent p-0"
+              >
+                {(() => {
+                  const savedConfig = localStorage.getItem('eazy-family-home-config');
+                  const config = savedConfig ? JSON.parse(savedConfig) : {};
+                  const iconUrl = config.iconImage;
+                  
+                  return iconUrl ? (
+                    <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{userInitials}</span>
+                    </div>
+                  );
+                })()}
+                <div className="flex-1 min-w-0">
+                  <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
+                    {t('app.name')}
+                  </h1>
+                </div>
               </Button>
             </div>
           </div>
@@ -92,29 +90,11 @@ const AppLayout = () => {
         <AppSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 pt-16 pb-32 md:pb-6 overflow-x-hidden">
+        <main className="flex-1 pt-16 pb-20 md:pb-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto px-4 py-6">
             {isHomePath ? <AppHome /> : <Outlet />}
           </div>
         </main>
-
-        {/* Action Bar - Mobile Only (above bottom nav) */}
-        <nav className="md:hidden fixed bottom-16 left-0 right-0 glass-effect border-t border-b">
-          <div className="max-w-md mx-auto px-4 py-2 flex justify-center">
-            <ExpandableTabs
-              tabs={[
-                { title: t('nav.settings'), icon: Settings },
-                { title: t('common.notifications'), icon: Bell },
-                { title: t('common.add'), icon: Plus },
-              ]}
-              onChange={(index) => {
-                if (index === 0) navigate('/app/settings');
-                // index 1 for notifications (future)
-                // index 2 for add action (future)
-              }}
-            />
-          </div>
-        </nav>
 
         {/* Bottom Navigation - Mobile Only */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
@@ -152,6 +132,7 @@ interface HomeConfig {
 
 const AppHome = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     return saved ? JSON.parse(saved) : {
@@ -192,7 +173,20 @@ const AppHome = () => {
       {/* Today's Highlights */}
       {homeConfig.showCalendar && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
+            <div className="flex gap-1 bg-muted rounded-lg p-1">
+              <Button variant="ghost" size="sm" className="h-8 px-3 bg-background shadow-sm">
+                Day
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                Week
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 px-3">
+                Month
+              </Button>
+            </div>
+          </div>
           
           <Card className="p-4 shadow-custom-md border-l-4 border-l-primary">
             <div className="flex items-center gap-3">
@@ -228,14 +222,41 @@ const AppHome = () => {
                 case "Add Photos": return Camera;
                 case "Calendar": return Calendar;
                 case "Community": return Users;
+                case "To-Do List": return Calendar;
+                case "Shopping List": return ShoppingCart;
                 default: return Search;
               }
             };
             
             const ActionIcon = getIcon(action);
+            const handleActionClick = () => {
+              switch (action) {
+                case "Find Events":
+                  navigate('/app/events');
+                  break;
+                case "Add Photos":
+                  navigate('/app/photos');
+                  break;
+                case "Calendar":
+                  navigate('/app/calendar');
+                  break;
+                case "Community":
+                  navigate('/app/community');
+                  break;
+                case "To-Do List":
+                case "Shopping List":
+                  navigate('/app/calendar');
+                  break;
+              }
+            };
             
             return (
-              <Button key={index} variant="outline" className="h-auto p-4 flex flex-col gap-2">
+              <Button 
+                key={index} 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col gap-2"
+                onClick={handleActionClick}
+              >
                 <ActionIcon className="w-6 h-6" />
                 <span className="text-sm">{action}</span>
               </Button>

@@ -156,13 +156,13 @@ const Onboarding = () => {
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="initials">Your initials</Label>
+              <Label htmlFor="initials" className="block">Your initials</Label>
               <Input
                 id="initials"
                 placeholder="e.g., JD"
                 value={data.userInitials}
-                onChange={(e) => setData(prev => ({ ...prev, userInitials: e.target.value }))}
-                className="text-center text-lg font-medium"
+                onChange={(e) => setData(prev => ({ ...prev, userInitials: e.target.value.toUpperCase() }))}
+                className="text-center text-lg font-medium uppercase"
                 maxLength={4}
               />
             </div>

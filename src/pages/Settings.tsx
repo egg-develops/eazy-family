@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages } from "lucide-react";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,6 +51,8 @@ const Settings = () => {
     { id: "Add Photos", label: "Add Photos" },
     { id: "Calendar", label: "Calendar" },
     { id: "Community", label: "Community" },
+    { id: "To-Do List", label: "To-Do List" },
+    { id: "Shopping List", label: "Shopping List" },
   ];
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
@@ -238,15 +240,39 @@ const Settings = () => {
           </div>
 
           {/* Calendar Section Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Calendar Section</Label>
-              <p className="text-sm text-muted-foreground">Show calendar on homepage</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Calendar Section</Label>
+                <p className="text-sm text-muted-foreground">Show calendar with day/week/month views on homepage</p>
+              </div>
+              <Switch
+                checked={homeConfig.showCalendar}
+                onCheckedChange={handleCalendarToggle}
+              />
             </div>
-            <Switch
-              checked={homeConfig.showCalendar}
-              onCheckedChange={handleCalendarToggle}
-            />
+
+            {/* Show Calendar Preview when enabled */}
+            {homeConfig.showCalendar && (
+              <div className="p-4 border rounded-lg bg-muted/20 space-y-3">
+                <p className="text-sm font-medium">Calendar Preview</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    Day
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1">
+                    Week
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1">
+                    Month
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Full calendar with day, week, and month views will be shown on your homepage
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}

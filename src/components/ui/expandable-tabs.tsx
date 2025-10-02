@@ -63,8 +63,10 @@ export function ExpandableTabs({
   });
 
   const handleSelect = (index: number) => {
-    setSelected(index);
-    onChange?.(index);
+    // If clicking the same tab, deselect it (collapse)
+    const newSelection = selected === index ? null : index;
+    setSelected(newSelection);
+    onChange?.(newSelection);
   };
 
   const Separator = () => (
