@@ -144,22 +144,22 @@ const Calendar = () => {
               {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2">
+          <CardContent className="px-2 sm:px-6">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {weekDays.map((day, index) => (
                 <div
                   key={index}
-                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                  className={`p-1 sm:p-3 border rounded-lg cursor-pointer transition-all ${
                     isToday(day) ? "bg-primary/10 border-primary" : ""
                   } ${isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""}`}
                   onClick={() => setSelectedDate(day)}
                 >
                   <div className="text-center">
-                    <p className="text-xs font-medium text-muted-foreground">
+                    <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                       {format(day, "EEE")}
                     </p>
-                    <p className="text-lg font-bold">{format(day, "d")}</p>
-                    <div className="mt-2 space-y-1">
+                    <p className="text-sm sm:text-lg font-bold">{format(day, "d")}</p>
+                    <div className="mt-1 sm:mt-2 space-y-1 hidden sm:block">
                       {mockEvents.slice(0, 2).map((event, idx) => (
                         <div
                           key={idx}
@@ -193,10 +193,10 @@ const Calendar = () => {
             <CardTitle>Month View</CardTitle>
             <CardDescription>{format(selectedDate, "MMMM yyyy")}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-2 sm:px-6">
             <div className="grid grid-cols-7 gap-1">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground p-2">
+                <div key={day} className="text-center text-[10px] sm:text-xs font-medium text-muted-foreground p-1 sm:p-2">
                   {day}
                 </div>
               ))}
@@ -205,20 +205,20 @@ const Calendar = () => {
                 return (
                   <div
                     key={index}
-                    className={`aspect-square p-2 border rounded-lg text-center cursor-pointer transition-colors ${
+                    className={`aspect-square p-1 sm:p-2 border rounded-lg text-center cursor-pointer transition-colors ${
                       !isCurrentMonth ? "bg-muted/30 text-muted-foreground" : ""
                     } ${isToday(day) ? "bg-primary/10 border-primary font-bold" : ""} ${
                       isSameDay(day, selectedDate) ? "ring-2 ring-primary" : ""
                     } hover:bg-muted/50`}
                     onClick={() => setSelectedDate(day)}
                   >
-                    <p className="text-sm">{format(day, "d")}</p>
+                    <p className="text-xs sm:text-sm">{format(day, "d")}</p>
                     {isCurrentMonth && mockEvents.length > 0 && (
-                      <div className="flex justify-center gap-0.5 mt-1">
+                      <div className="flex justify-center gap-0.5 mt-0.5 sm:mt-1">
                         {mockEvents.slice(0, 3).map((event, idx) => (
                           <div
                             key={idx}
-                            className={`w-1 h-1 rounded-full ${event.color}`}
+                            className={`w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full ${event.color}`}
                           />
                         ))}
                       </div>
@@ -234,9 +234,9 @@ const Calendar = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CalendarIcon className="w-6 h-6 text-primary" />
@@ -251,10 +251,10 @@ const Calendar = () => {
       </div>
 
       {/* View Mode Selector */}
-      <Card className="shadow-custom-md">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+      <Card className="shadow-custom-md w-full">
+        <CardContent className="pt-6 px-2 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
               <Button
                 variant="ghost"
                 size="icon"
@@ -268,7 +268,7 @@ const Calendar = () => {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <h2 className="text-lg font-semibold min-w-[200px] text-center">
+              <h2 className="text-sm sm:text-lg font-semibold min-w-[180px] sm:min-w-[200px] text-center">
                 {viewMode === "day" && formatDate(selectedDate)}
                 {viewMode === "week" && `${format(startOfWeek(selectedDate), "MMM d")} - ${format(endOfWeek(selectedDate), "MMM d, yyyy")}`}
                 {viewMode === "month" && format(selectedDate, "MMMM yyyy")}
@@ -292,6 +292,7 @@ const Calendar = () => {
               <Button
                 variant={viewMode === "day" ? "default" : "outline"}
                 onClick={() => setViewMode("day")}
+                size="sm"
                 className={viewMode === "day" ? "gradient-primary text-white border-0" : ""}
               >
                 Day
@@ -299,6 +300,7 @@ const Calendar = () => {
               <Button
                 variant={viewMode === "week" ? "default" : "outline"}
                 onClick={() => setViewMode("week")}
+                size="sm"
                 className={viewMode === "week" ? "gradient-primary text-white border-0" : ""}
               >
                 Week
@@ -306,6 +308,7 @@ const Calendar = () => {
               <Button
                 variant={viewMode === "month" ? "default" : "outline"}
                 onClick={() => setViewMode("month")}
+                size="sm"
                 className={viewMode === "month" ? "gradient-primary text-white border-0" : ""}
               >
                 Month

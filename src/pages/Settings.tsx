@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Upload } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +24,8 @@ interface HomeConfig {
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
 
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
@@ -127,6 +131,16 @@ const Settings = () => {
   const handleRerunOnboarding = () => {
     localStorage.removeItem('eazy-family-onboarding');
     navigate('/onboarding');
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    i18n.changeLanguage(newLanguage);
+    localStorage.setItem('eazy-family-language', newLanguage);
+    toast({
+      title: "Language updated",
+      description: "Your language preference has been saved.",
+    });
   };
 
   const handleUpgrade = () => {
@@ -278,6 +292,37 @@ const Settings = () => {
           <Button variant="outline" className="w-full">
             Manage Family Members
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Language Settings */}
+      <Card className="shadow-custom-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="h-5 w-5" />
+            Language
+          </CardTitle>
+          <CardDescription>Choose your preferred language</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={language} onValueChange={handleLanguageChange} className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="en" id="en" />
+              <Label htmlFor="en" className="cursor-pointer">English</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="de" id="de" />
+              <Label htmlFor="de" className="cursor-pointer">Deutsch (German)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="fr" id="fr" />
+              <Label htmlFor="fr" className="cursor-pointer">Français (French)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="it" id="it" />
+              <Label htmlFor="it" className="cursor-pointer">Italiano (Italian)</Label>
+            </div>
+          </RadioGroup>
         </CardContent>
       </Card>
 

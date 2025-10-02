@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "Eazy.Family",
+    "greeting": "Bonjour! ☀️",
+    "byline": "Rendons aujourd'hui incroyable"
+  },
+  "nav": {
+    "home": "Accueil",
+    "calendar": "Calendrier",
+    "events": "Événements",
+    "photos": "Photos",
+    "community": "Communauté",
+    "marketplace": "Marché",
+    "settings": "Paramètres"
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "subtitle": "Gérez votre emploi du temps familial",
+    "addEvent": "Ajouter un événement",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois",
+    "allEvents": "Tous les événements",
+    "sports": "Sports",
+    "education": "Éducation",
+    "family": "Famille",
+    "todaySchedule": "Programme d'aujourd'hui",
+    "weekView": "Vue hebdomadaire",
+    "monthView": "Vue mensuelle",
+    "noEvents": "Aucun événement prévu",
+    "calendarSync": "Synchronisation du calendrier",
+    "connectedCalendars": "Calendriers connectés",
+    "connected": "Connecté",
+    "addCalendar": "Ajouter un calendrier",
+    "todoList": "Liste de tâches",
+    "tasksFor": "Tâches pour",
+    "addTask": "Ajouter une nouvelle tâche...",
+    "noTasks": "Aucune tâche pour ce jour",
+    "completedTasks": "tâche(s) terminée(s)"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Gérez vos préférences",
+    "homepage": {
+      "title": "Personnalisation de la page d'accueil",
+      "greeting": "Message d'accueil",
+      "byline": "Sous-titre",
+      "profileImage": "Image de profil",
+      "headerImage": "Arrière-plan de l'en-tête",
+      "showCalendar": "Afficher la section calendrier",
+      "quickActions": "Actions rapides"
+    },
+    "account": {
+      "title": "Compte",
+      "upgradePro": "Passer à Pro",
+      "manageFamily": "Gérer les membres de la famille"
+    },
+    "privacy": {
+      "title": "Confidentialité et sécurité",
+      "encryption": "Chiffrement de bout en bout",
+      "encryptionDesc": "Vos données sont cryptées",
+      "dataVisibility": "Visibilité des données",
+      "dataVisibilityDesc": "Contrôlez qui peut voir vos données",
+      "twoFactor": "Authentification à deux facteurs",
+      "twoFactorDesc": "Ajouter une sécurité supplémentaire",
+      "privacyPolicy": "Politique de confidentialité",
+      "termsOfService": "Conditions d'utilisation",
+      "downloadData": "Télécharger mes données",
+      "deleteAccount": "Supprimer le compte"
+    },
+    "notifications": {
+      "title": "Paramètres de l'application",
+      "pushNotifications": "Notifications push",
+      "emailNotifications": "Notifications par e-mail"
+    },
+    "actions": {
+      "rerunOnboarding": "Relancer l'intégration",
+      "signOut": "Se déconnecter"
+    },
+    "language": {
+      "title": "Langue",
+      "description": "Choisissez votre langue préférée",
+      "english": "Anglais",
+      "german": "Allemand",
+      "french": "Français",
+      "italian": "Italien"
+    }
+  },
+  "home": {
+    "upcomingEvents": "Événements à venir",
+    "newPhotos": "Nouvelles photos",
+    "todayHighlights": "Points forts d'aujourd'hui",
+    "quickActions": "Actions rapides",
+    "community": "Communauté",
+    "sharedIn": "partagé dans"
+  },
+  "common": {
+    "add": "Ajouter",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "notifications": "Notifications",
+    "search": "Rechercher"
+  }
+}

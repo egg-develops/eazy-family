@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "Eazy.Family",
+    "greeting": "Good morning! ☀️",
+    "byline": "Let's make today amazing"
+  },
+  "nav": {
+    "home": "Home",
+    "calendar": "Calendar",
+    "events": "Events",
+    "photos": "Photos",
+    "community": "Community",
+    "marketplace": "Market",
+    "settings": "Settings"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "subtitle": "Manage your family schedule",
+    "addEvent": "Add Event",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "allEvents": "All Events",
+    "sports": "Sports",
+    "education": "Education",
+    "family": "Family",
+    "todaySchedule": "Today's Schedule",
+    "weekView": "Week View",
+    "monthView": "Month View",
+    "noEvents": "No events scheduled",
+    "calendarSync": "Calendar Sync",
+    "connectedCalendars": "Connected calendars",
+    "connected": "Connected",
+    "addCalendar": "Add Calendar",
+    "todoList": "To-Do List",
+    "tasksFor": "Tasks for",
+    "addTask": "Add a new task...",
+    "noTasks": "No tasks for this day",
+    "completedTasks": "completed task(s)"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your preferences",
+    "homepage": {
+      "title": "Homepage Customization",
+      "greeting": "Greeting Message",
+      "byline": "Byline",
+      "profileImage": "Profile Image",
+      "headerImage": "Header Background",
+      "showCalendar": "Show Calendar Section",
+      "quickActions": "Quick Actions"
+    },
+    "account": {
+      "title": "Account",
+      "upgradePro": "Upgrade to Pro",
+      "manageFamily": "Manage Family Members"
+    },
+    "privacy": {
+      "title": "Privacy & Security",
+      "encryption": "End-to-end Encryption",
+      "encryptionDesc": "Your data is encrypted",
+      "dataVisibility": "Data Visibility",
+      "dataVisibilityDesc": "Control who can see your data",
+      "twoFactor": "Two-Factor Authentication",
+      "twoFactorDesc": "Add extra security",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "downloadData": "Download My Data",
+      "deleteAccount": "Delete Account"
+    },
+    "notifications": {
+      "title": "App Settings",
+      "pushNotifications": "Push Notifications",
+      "emailNotifications": "Email Notifications"
+    },
+    "actions": {
+      "rerunOnboarding": "Re-run Onboarding",
+      "signOut": "Sign Out"
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose your preferred language",
+      "english": "English",
+      "german": "German",
+      "french": "French",
+      "italian": "Italian"
+    }
+  },
+  "home": {
+    "upcomingEvents": "Upcoming Events",
+    "newPhotos": "New Photos",
+    "todayHighlights": "Today's Highlights",
+    "quickActions": "Quick Actions",
+    "community": "Community",
+    "sharedIn": "shared in"
+  },
+  "common": {
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "notifications": "Notifications",
+    "search": "Search"
+  }
+}
