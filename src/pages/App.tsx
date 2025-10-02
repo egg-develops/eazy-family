@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
+import { EazyAssistant } from "@/components/EazyAssistant";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -172,6 +173,9 @@ const AppHome = () => {
           <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
         </div>
       </div>
+
+      {/* Eazy Assistant */}
+      <EazyAssistant />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4">
