@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
 import Calendar from "./pages/Calendar";
+import ToDoList from "./pages/ToDoList";
 import Events from "./pages/Events";
 import Memories from "./pages/Memories";
 import Community from "./pages/Community";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/app" element={<AppLayout />}>
             <Route path="calendar" element={<Calendar />} />
+            <Route path="todos" element={<ToDoList />} />
             <Route path="events" element={<Events />} />
             <Route path="memories" element={<Memories />} />
             <Route path="community" element={<Community />} />

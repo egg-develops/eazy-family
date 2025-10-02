@@ -33,7 +33,7 @@ const AppLayout = () => {
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
-    { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/calendar" },
+    { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/todos" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
@@ -413,7 +413,7 @@ const AppHome = () => {
                   break;
                 case "To-Do List":
                 case "Shopping List":
-                  navigate('/app/calendar');
+                  navigate('/app/todos');
                   break;
               }
             };
@@ -461,7 +461,7 @@ const AppHome = () => {
               variant="ghost" 
               size="sm" 
               className="w-full justify-start gap-2"
-              onClick={() => navigate('/app/calendar')}
+              onClick={() => navigate('/app/todos')}
             >
               <Plus className="w-4 h-4" />
               Add To-Do
