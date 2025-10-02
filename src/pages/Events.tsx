@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MapPin, Filter, Clock, Heart, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +59,7 @@ const mockEvents: Event[] = [
 ];
 
 const Events = () => {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<string>('all');
   const [distance, setDistance] = useState<string>('10km');
 
@@ -71,10 +73,10 @@ const Events = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MapPin className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Events</h1>
+          <h1 className="text-2xl font-bold">{t('events.title')}</h1>
         </div>
         <Badge variant="secondary" className="text-xs">
-          {filteredEvents.length} events
+          {filteredEvents.length} {t('events.eventsCount')}
         </Badge>
       </div>
 
@@ -85,7 +87,7 @@ const Events = () => {
             <div>
               <h3 className="font-semibold">Zurich Area</h3>
               <p className="text-white/90 text-sm">
-                Showing family-friendly events near you
+                {t('events.showing')}
               </p>
             </div>
             <MapPin className="w-8 h-8 text-white/80" />
@@ -101,11 +103,11 @@ const Events = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Events</SelectItem>
-            <SelectItem value="educational">Educational</SelectItem>
-            <SelectItem value="creative">Creative</SelectItem>
-            <SelectItem value="outdoor">Outdoor</SelectItem>
-            <SelectItem value="entertainment">Entertainment</SelectItem>
+            <SelectItem value="all">{t('events.filters.all')}</SelectItem>
+            <SelectItem value="educational">{t('events.filters.educational')}</SelectItem>
+            <SelectItem value="creative">{t('events.filters.creative')}</SelectItem>
+            <SelectItem value="outdoor">{t('events.filters.outdoor')}</SelectItem>
+            <SelectItem value="entertainment">{t('events.filters.entertainment')}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -126,12 +128,12 @@ const Events = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Heart className="w-5 h-5 text-accent" />
-          Featured Today
+          {t('events.featuredToday')}
         </h3>
         
         <Card className="shadow-custom-lg overflow-hidden">
           <div className={`h-32 ${mockEvents[0].image} flex items-end p-4`}>
-            <Badge className="bg-white/90 text-primary">Featured</Badge>
+            <Badge className="bg-white/90 text-primary">{t('events.featured')}</Badge>
           </div>
           <CardContent className="p-4">
             <div className="space-y-3">
@@ -169,7 +171,7 @@ const Events = () => {
               </div>
 
               <Button className="w-full gradient-primary text-white border-0">
-                View Details & Book
+                {t('events.viewDetails')}
               </Button>
             </div>
           </CardContent>
@@ -178,7 +180,7 @@ const Events = () => {
 
       {/* More Events */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">More Events</h3>
+        <h3 className="text-lg font-semibold">{t('events.moreEvents')}</h3>
         
         <div className="space-y-4">
           {filteredEvents.slice(1).map((event) => (
@@ -214,7 +216,7 @@ const Events = () => {
       {/* Map View Toggle */}
       <Button variant="outline" className="w-full">
         <MapPin className="w-4 h-4 mr-2" />
-        View on Map
+        {t('events.viewOnMap')}
       </Button>
     </div>
   );

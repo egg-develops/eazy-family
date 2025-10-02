@@ -102,5 +102,113 @@
     "edit": "Modifier",
     "notifications": "Notifications",
     "search": "Rechercher"
+  },
+  "events": {
+    "title": "Événements",
+    "subtitle": "Découvrez des activités familiales",
+    "featured": "En vedette",
+    "featuredToday": "En vedette aujourd'hui",
+    "moreEvents": "Plus d'événements",
+    "viewDetails": "Voir les détails et réserver",
+    "viewOnMap": "Voir sur la carte",
+    "filters": {
+      "all": "Tous les événements",
+      "educational": "Éducatif",
+      "creative": "Créatif",
+      "outdoor": "Extérieur",
+      "entertainment": "Divertissement",
+      "distance": "Distance"
+    },
+    "showing": "Événements familiaux près de chez vous",
+    "eventsCount": "événements",
+    "location": "Lieu",
+    "time": "Heure"
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Vos souvenirs de famille",
+    "uploadNew": "Télécharger de nouvelles photos",
+    "aiEnhanced": "Amélioré par IA",
+    "autoOrganized": "photos organisées automatiquement",
+    "used": "utilisé",
+    "unlimited": "sur illimité",
+    "searchPlaceholder": "Rechercher des photos, lieux ou tags...",
+    "recent": "Récent",
+    "details": "Détails",
+    "memoryBooks": "Livres de souvenirs IA",
+    "viewMemoryBook": "Voir le livre de souvenirs",
+    "memoryBookDesc": "L'IA a créé un beau livre de souvenirs à partir de vos activités récentes",
+    "filters": {
+      "all": "Toutes les photos",
+      "family": "Famille",
+      "outdoor": "Extérieur",
+      "educational": "Éducatif",
+      "creative": "Créatif",
+      "sport": "Sport"
+    },
+    "viewMode": {
+      "grid": "Grille",
+      "map": "Carte",
+      "mapView": "Vue carte",
+      "mapComingSoon": "Photos organisées par lieu bientôt disponibles"
+    },
+    "aiSearch": "Exemple de recherche IA",
+    "aiSearchDesc": "Essayez : \"Montre-moi les photos du parc le mois dernier\" ou \"Trouve toutes les photos d'anniversaire\""
+  },
+  "community": {
+    "title": "Communauté",
+    "subtitle": "Connectez-vous avec des familles locales",
+    "createGroup": "Créer un groupe",
+    "groupsJoined": "Groupes rejoints",
+    "connections": "Connexions",
+    "thisWeek": "Cette semaine",
+    "feed": "Fil",
+    "groups": "Groupes",
+    "messages": "Messages",
+    "shareSomething": "Partagez quelque chose avec la communauté...",
+    "postedIn": "publié dans",
+    "myGroups": "Mes groupes",
+    "suggestedForYou": "Suggérés pour vous",
+    "members": "membres",
+    "view": "Voir",
+    "join": "Rejoindre",
+    "inAppMessaging": "Messagerie dans l'application",
+    "messagingDesc": "Connectez-vous en privé avec d'autres parents de votre communauté",
+    "premiumFeature": "Fonctionnalité Premium"
+  },
+  "marketplace": {
+    "title": "Marché",
+    "subtitle": "Achetez et vendez des articles pour la famille",
+    "sellItem": "Vendre un article",
+    "browse": "Parcourir",
+    "favorites": "Favoris",
+    "myItems": "Mes articles",
+    "searchPlaceholder": "Rechercher jouets, équipement bébé, livres...",
+    "upgrade": "Améliorer",
+    "upgradeDesc": "Passez à Premium pour acheter des articles",
+    "marketplaceAccess": "Accès au marché",
+    "categories": {
+      "all": "Toutes les catégories",
+      "toys": "Jouets et jeux",
+      "babyGear": "Équipement bébé",
+      "books": "Livres",
+      "clothing": "Vêtements",
+      "outdoor": "Extérieur et sport",
+      "electronics": "Électronique"
+    },
+    "condition": {
+      "new": "neuf",
+      "likeNew": "comme neuf",
+      "good": "bon",
+      "fair": "correct"
+    },
+    "yourFavorites": "Vos favoris",
+    "favoritesDesc": "Les articles que vous avez mis en favoris apparaîtront ici",
+    "browseItems": "Parcourir les articles",
+    "startSelling": "Commencer à vendre",
+    "startSellingDesc": "Listez des articles à vendre et connectez-vous avec des familles locales",
+    "familyPlanFeature": "Fonctionnalité du plan familial",
+    "listFirstItem": "Listez votre premier article",
+    "popularCategories": "Catégories populaires"
   }
 }

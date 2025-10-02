@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { 
   Calendar, 
   MapPin, 
@@ -20,21 +21,22 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-const navigationItems = [
-  { id: "home", label: "Home", icon: Home, path: "/app" },
-  { id: "calendar", label: "Calendar", icon: Calendar, path: "/app/calendar" },
-  { id: "events", label: "Events", icon: MapPin, path: "/app/events" },
-  { id: "photos", label: "Photos", icon: Camera, path: "/app/photos" },
-  { id: "community", label: "Community", icon: Users, path: "/app/community" },
-  { id: "marketplace", label: "Market", icon: ShoppingCart, path: "/app/marketplace" },
-  { id: "settings", label: "Settings", icon: Settings, path: "/app/settings" },
-]
-
 export function AppSidebar() {
+  const { t } = useTranslation()
   const { state } = useSidebar()
   const location = useLocation()
   const currentPath = location.pathname
   const collapsed = state === "collapsed"
+
+  const navigationItems = [
+    { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
+    { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
+    { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
+    { id: "photos", label: t('nav.photos'), icon: Camera, path: "/app/photos" },
+    { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
+    { id: "marketplace", label: t('nav.marketplace'), icon: ShoppingCart, path: "/app/marketplace" },
+    { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
+  ]
 
   const isActive = (path: string) => currentPath === path
   const getNavCls = (isActive: boolean) =>

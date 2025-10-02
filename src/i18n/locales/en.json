@@ -102,5 +102,113 @@
     "edit": "Edit",
     "notifications": "Notifications",
     "search": "Search"
+  },
+  "events": {
+    "title": "Events",
+    "subtitle": "Discover family-friendly activities",
+    "featured": "Featured",
+    "featuredToday": "Featured Today",
+    "moreEvents": "More Events",
+    "viewDetails": "View Details & Book",
+    "viewOnMap": "View on Map",
+    "filters": {
+      "all": "All Events",
+      "educational": "Educational",
+      "creative": "Creative",
+      "outdoor": "Outdoor",
+      "entertainment": "Entertainment",
+      "distance": "Distance"
+    },
+    "showing": "Showing family-friendly events near you",
+    "eventsCount": "events",
+    "location": "Location",
+    "time": "Time"
+  },
+  "photos": {
+    "title": "Photos",
+    "subtitle": "Your family memories",
+    "uploadNew": "Upload New Photos",
+    "aiEnhanced": "AI Enhanced",
+    "autoOrganized": "photos automatically organized",
+    "used": "used",
+    "unlimited": "of unlimited",
+    "searchPlaceholder": "Search photos, locations, or tags...",
+    "recent": "Recent",
+    "details": "Details",
+    "memoryBooks": "AI Memory Books",
+    "viewMemoryBook": "View Memory Book",
+    "memoryBookDesc": "AI created a beautiful memory book from your recent activities",
+    "filters": {
+      "all": "All Photos",
+      "family": "Family",
+      "outdoor": "Outdoor",
+      "educational": "Educational",
+      "creative": "Creative",
+      "sport": "Sports"
+    },
+    "viewMode": {
+      "grid": "Grid",
+      "map": "Map",
+      "mapView": "Map View",
+      "mapComingSoon": "Photos organized by location coming soon"
+    },
+    "aiSearch": "AI Search Example",
+    "aiSearchDesc": "Try: \"Show me photos from the park last month\" or \"Find all birthday photos\""
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "Connect with local families",
+    "createGroup": "Create Group",
+    "groupsJoined": "Groups Joined",
+    "connections": "Connections",
+    "thisWeek": "This Week",
+    "feed": "Feed",
+    "groups": "Groups",
+    "messages": "Messages",
+    "shareSomething": "Share something with the community...",
+    "postedIn": "posted in",
+    "myGroups": "My Groups",
+    "suggestedForYou": "Suggested for You",
+    "members": "members",
+    "view": "View",
+    "join": "Join",
+    "inAppMessaging": "In-App Messaging",
+    "messagingDesc": "Connect privately with other parents in your community",
+    "premiumFeature": "Premium Feature"
+  },
+  "marketplace": {
+    "title": "Marketplace",
+    "subtitle": "Buy and sell family items",
+    "sellItem": "Sell Item",
+    "browse": "Browse",
+    "favorites": "Favorites",
+    "myItems": "My Items",
+    "searchPlaceholder": "Search toys, baby gear, books...",
+    "upgrade": "Upgrade",
+    "upgradeDesc": "Upgrade to Premium to buy items",
+    "marketplaceAccess": "Marketplace Access",
+    "categories": {
+      "all": "All Categories",
+      "toys": "Toys & Games",
+      "babyGear": "Baby Gear",
+      "books": "Books",
+      "clothing": "Clothing",
+      "outdoor": "Outdoor & Sports",
+      "electronics": "Electronics"
+    },
+    "condition": {
+      "new": "new",
+      "likeNew": "like-new",
+      "good": "good",
+      "fair": "fair"
+    },
+    "yourFavorites": "Your Favorites",
+    "favoritesDesc": "Items you've favorited will appear here",
+    "browseItems": "Browse Items",
+    "startSelling": "Start Selling",
+    "startSellingDesc": "List items for sale and connect with local families",
+    "familyPlanFeature": "Family Plan Feature",
+    "listFirstItem": "List Your First Item",
+    "popularCategories": "Popular Categories"
   }
 }

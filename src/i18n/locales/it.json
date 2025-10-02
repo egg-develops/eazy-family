@@ -102,5 +102,113 @@
     "edit": "Modifica",
     "notifications": "Notifiche",
     "search": "Cerca"
+  },
+  "events": {
+    "title": "Eventi",
+    "subtitle": "Scopri attività per famiglie",
+    "featured": "In evidenza",
+    "featuredToday": "In evidenza oggi",
+    "moreEvents": "Altri eventi",
+    "viewDetails": "Vedi dettagli e prenota",
+    "viewOnMap": "Vedi sulla mappa",
+    "filters": {
+      "all": "Tutti gli eventi",
+      "educational": "Educativo",
+      "creative": "Creativo",
+      "outdoor": "All'aperto",
+      "entertainment": "Intrattenimento",
+      "distance": "Distanza"
+    },
+    "showing": "Eventi per famiglie vicino a te",
+    "eventsCount": "eventi",
+    "location": "Luogo",
+    "time": "Ora"
+  },
+  "photos": {
+    "title": "Foto",
+    "subtitle": "I tuoi ricordi di famiglia",
+    "uploadNew": "Carica nuove foto",
+    "aiEnhanced": "Migliorato con IA",
+    "autoOrganized": "foto organizzate automaticamente",
+    "used": "utilizzati",
+    "unlimited": "di illimitato",
+    "searchPlaceholder": "Cerca foto, luoghi o tag...",
+    "recent": "Recenti",
+    "details": "Dettagli",
+    "memoryBooks": "Libri dei ricordi IA",
+    "viewMemoryBook": "Vedi libro dei ricordi",
+    "memoryBookDesc": "L'IA ha creato un bellissimo libro dei ricordi dalle tue attività recenti",
+    "filters": {
+      "all": "Tutte le foto",
+      "family": "Famiglia",
+      "outdoor": "All'aperto",
+      "educational": "Educativo",
+      "creative": "Creativo",
+      "sport": "Sport"
+    },
+    "viewMode": {
+      "grid": "Griglia",
+      "map": "Mappa",
+      "mapView": "Vista mappa",
+      "mapComingSoon": "Foto organizzate per posizione in arrivo"
+    },
+    "aiSearch": "Esempio di ricerca IA",
+    "aiSearchDesc": "Prova: \"Mostrami le foto del parco il mese scorso\" o \"Trova tutte le foto di compleanno\""
+  },
+  "community": {
+    "title": "Comunità",
+    "subtitle": "Connettiti con famiglie locali",
+    "createGroup": "Crea gruppo",
+    "groupsJoined": "Gruppi uniti",
+    "connections": "Connessioni",
+    "thisWeek": "Questa settimana",
+    "feed": "Feed",
+    "groups": "Gruppi",
+    "messages": "Messaggi",
+    "shareSomething": "Condividi qualcosa con la comunità...",
+    "postedIn": "pubblicato in",
+    "myGroups": "I miei gruppi",
+    "suggestedForYou": "Suggeriti per te",
+    "members": "membri",
+    "view": "Visualizza",
+    "join": "Unisciti",
+    "inAppMessaging": "Messaggistica in-app",
+    "messagingDesc": "Connettiti privatamente con altri genitori della tua comunità",
+    "premiumFeature": "Funzionalità Premium"
+  },
+  "marketplace": {
+    "title": "Mercato",
+    "subtitle": "Compra e vendi articoli per la famiglia",
+    "sellItem": "Vendi articolo",
+    "browse": "Sfoglia",
+    "favorites": "Preferiti",
+    "myItems": "I miei articoli",
+    "searchPlaceholder": "Cerca giocattoli, articoli per bambini, libri...",
+    "upgrade": "Aggiorna",
+    "upgradeDesc": "Passa a Premium per acquistare articoli",
+    "marketplaceAccess": "Accesso al mercato",
+    "categories": {
+      "all": "Tutte le categorie",
+      "toys": "Giocattoli e giochi",
+      "babyGear": "Articoli per bambini",
+      "books": "Libri",
+      "clothing": "Abbigliamento",
+      "outdoor": "All'aperto e sport",
+      "electronics": "Elettronica"
+    },
+    "condition": {
+      "new": "nuovo",
+      "likeNew": "come nuovo",
+      "good": "buono",
+      "fair": "discreto"
+    },
+    "yourFavorites": "I tuoi preferiti",
+    "favoritesDesc": "Gli articoli che hai aggiunto ai preferiti appariranno qui",
+    "browseItems": "Sfoglia articoli",
+    "startSelling": "Inizia a vendere",
+    "startSellingDesc": "Elenca articoli in vendita e connettiti con famiglie locali",
+    "familyPlanFeature": "Funzionalità Piano Famiglia",
+    "listFirstItem": "Elenca il tuo primo articolo",
+    "popularCategories": "Categorie popolari"
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { 
   Bell, 
   Plus, 
@@ -19,19 +20,20 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 
-const navigationItems = [
-  { id: "home", label: "Home", icon: Home, path: "/app" },
-  { id: "calendar", label: "Calendar", icon: Calendar, path: "/app/calendar" },
-  { id: "events", label: "Events", icon: MapPin, path: "/app/events" },
-  { id: "photos", label: "Photos", icon: Camera, path: "/app/photos" },
-  { id: "community", label: "Community", icon: Users, path: "/app/community" },
-  { id: "marketplace", label: "Market", icon: ShoppingCart, path: "/app/marketplace" },
-];
-
 const AppLayout = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
+
+  const navigationItems = [
+    { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
+    { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
+    { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
+    { id: "photos", label: t('nav.photos'), icon: Camera, path: "/app/photos" },
+    { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
+    { id: "marketplace", label: t('nav.marketplace'), icon: ShoppingCart, path: "/app/marketplace" },
+  ];
 
   useEffect(() => {
     // Check if user has completed onboarding
@@ -71,7 +73,7 @@ const AppLayout = () => {
               })()}
               <div className="flex-1 min-w-0">
                 <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
-                  Eazy.Family
+                  {t('app.name')}
                 </h1>
               </div>
             </div>
@@ -101,9 +103,9 @@ const AppLayout = () => {
           <div className="max-w-md mx-auto px-4 py-2 flex justify-center">
             <ExpandableTabs
               tabs={[
-                { title: "Settings", icon: Settings },
-                { title: "Notifications", icon: Bell },
-                { title: "Add", icon: Plus },
+                { title: t('nav.settings'), icon: Settings },
+                { title: t('common.notifications'), icon: Bell },
+                { title: t('common.add'), icon: Plus },
               ]}
               onChange={(index) => {
                 if (index === 0) navigate('/app/settings');
@@ -116,18 +118,22 @@ const AppLayout = () => {
 
         {/* Bottom Navigation - Mobile Only */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
-          <div className="max-w-md mx-auto px-2 py-2 flex justify-center">
-            <ExpandableTabs
-              tabs={navigationItems.map(item => ({
-                title: item.label,
-                icon: item.icon,
-              }))}
-              onChange={(index) => {
-                if (index !== null) {
-                  navigate(navigationItems[index].path);
-                }
-              }}
-            />
+          <div className="max-w-md mx-auto px-2 py-2">
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex justify-center min-w-max px-2">
+                <ExpandableTabs
+                  tabs={navigationItems.map(item => ({
+                    title: item.label,
+                    icon: item.icon,
+                  }))}
+                  onChange={(index) => {
+                    if (index !== null) {
+                      navigate(navigationItems[index].path);
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </nav>
       </div>
@@ -145,11 +151,12 @@ interface HomeConfig {
 }
 
 const AppHome = () => {
+  const { t } = useTranslation();
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     return saved ? JSON.parse(saved) : {
-      greeting: "Good morning! ☀️",
-      byline: "Let's make today amazing",
+      greeting: t('app.greeting'),
+      byline: t('app.byline'),
       showCalendar: true,
       quickActions: ["Find Events", "Add Photos"]
     };
@@ -174,18 +181,18 @@ const AppHome = () => {
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-4 text-center shadow-custom-md">
           <div className="text-2xl font-bold text-primary">3</div>
-          <div className="text-sm text-muted-foreground">Upcoming Events</div>
+          <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
         </Card>
         <Card className="p-4 text-center shadow-custom-md">
           <div className="text-2xl font-bold text-accent">12</div>
-          <div className="text-sm text-muted-foreground">New Photos</div>
+          <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
         </Card>
       </div>
 
       {/* Today's Highlights */}
       {homeConfig.showCalendar && (
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Today's Highlights</h3>
+          <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
           
           <Card className="p-4 shadow-custom-md border-l-4 border-l-primary">
             <div className="flex items-center gap-3">
@@ -211,7 +218,7 @@ const AppHome = () => {
 
       {/* Quick Actions */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Quick Actions</h3>
+        <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
         
         <div className="grid grid-cols-2 gap-3">
           {homeConfig.quickActions.map((action, index) => {
@@ -239,7 +246,7 @@ const AppHome = () => {
 
       {/* Community Updates */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Community</h3>
+        <h3 className="text-lg font-semibold">{t('home.community')}</h3>
         
         <Card className="p-4 shadow-custom-md">
           <div className="flex items-start gap-3">
@@ -247,7 +254,7 @@ const AppHome = () => {
               <span className="text-white text-xs font-bold">MK</span>
             </div>
             <div className="flex-1">
-              <h4 className="font-medium text-sm">Maria K. shared in Daddy Day</h4>
+              <h4 className="font-medium text-sm">Maria K. {t('home.sharedIn')} Daddy Day</h4>
               <p className="text-sm text-muted-foreground mt-1">
                 "Great playground at Seefeld Park! Kids loved the new equipment 🎪"
               </p>

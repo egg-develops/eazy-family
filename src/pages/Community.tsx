@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Users, MessageCircle, Plus, Heart, Share2, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -97,6 +98,7 @@ const mockPosts: Post[] = [
 ];
 
 const Community = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('feed');
 
   const joinedGroups = mockGroups.filter(group => group.isJoined);
@@ -108,11 +110,11 @@ const Community = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Community</h1>
+          <h1 className="text-2xl font-bold">{t('community.title')}</h1>
         </div>
         <Button size="sm" className="gradient-primary text-white border-0">
           <Plus className="w-4 h-4 mr-1" />
-          Create Group
+          {t('community.createGroup')}
         </Button>
       </div>
 
@@ -120,24 +122,24 @@ const Community = () => {
       <div className="grid grid-cols-3 gap-4">
         <Card className="text-center p-3 shadow-custom-md">
           <div className="text-xl font-bold text-primary">{joinedGroups.length}</div>
-          <div className="text-xs text-muted-foreground">Groups Joined</div>
+          <div className="text-xs text-muted-foreground">{t('community.groupsJoined')}</div>
         </Card>
         <Card className="text-center p-3 shadow-custom-md">
           <div className="text-xl font-bold text-accent">47</div>
-          <div className="text-xs text-muted-foreground">Connections</div>
+          <div className="text-xs text-muted-foreground">{t('community.connections')}</div>
         </Card>
         <Card className="text-center p-3 shadow-custom-md">
           <div className="text-xl font-bold text-success">12</div>
-          <div className="text-xs text-muted-foreground">This Week</div>
+          <div className="text-xs text-muted-foreground">{t('community.thisWeek')}</div>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="feed">Feed</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
+          <TabsTrigger value="feed">{t('community.feed')}</TabsTrigger>
+          <TabsTrigger value="groups">{t('community.groups')}</TabsTrigger>
+          <TabsTrigger value="messages">{t('community.messages')}</TabsTrigger>
         </TabsList>
 
         {/* Feed Tab */}
@@ -152,7 +154,7 @@ const Community = () => {
                   </AvatarFallback>
                 </Avatar>
                 <Button variant="outline" className="flex-1 justify-start text-muted-foreground">
-                  Share something with the community...
+                  {t('community.shareSomething')}
                 </Button>
               </div>
             </CardContent>
@@ -173,7 +175,7 @@ const Community = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{post.author.name}</span>
-                        <span className="text-muted-foreground text-xs">posted in</span>
+                        <span className="text-muted-foreground text-xs">{t('community.postedIn')}</span>
                         <Badge variant="secondary" className="text-xs">
                           {post.group}
                         </Badge>
@@ -221,7 +223,7 @@ const Community = () => {
         <TabsContent value="groups" className="space-y-6 mt-6">
           {/* My Groups */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">My Groups</h3>
+            <h3 className="text-lg font-semibold">{t('community.myGroups')}</h3>
             
             <div className="space-y-3">
               {joinedGroups.map((group) => (
@@ -235,7 +237,7 @@ const Community = () => {
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="secondary" className="text-xs">
-                            {group.memberCount} members
+                            {group.memberCount} {t('community.members')}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             {group.category}
@@ -243,7 +245,7 @@ const Community = () => {
                         </div>
                       </div>
                       <Button variant="outline" size="sm">
-                        View
+                        {t('community.view')}
                       </Button>
                     </div>
                   </CardContent>
@@ -254,7 +256,7 @@ const Community = () => {
 
           {/* Suggested Groups */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Suggested for You</h3>
+            <h3 className="text-lg font-semibold">{t('community.suggestedForYou')}</h3>
             
             <div className="space-y-3">
               {suggestedGroups.map((group) => (
@@ -268,7 +270,7 @@ const Community = () => {
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="secondary" className="text-xs">
-                            {group.memberCount} members
+                            {group.memberCount} {t('community.members')}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
                             {group.category}
@@ -276,7 +278,7 @@ const Community = () => {
                         </div>
                       </div>
                       <Button size="sm" className="gradient-primary text-white border-0">
-                        Join
+                        {t('community.join')}
                       </Button>
                     </div>
                   </CardContent>
@@ -291,12 +293,12 @@ const Community = () => {
           <Card className="shadow-custom-md">
             <CardContent className="p-8 text-center">
               <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">In-App Messaging</h3>
+              <h3 className="font-medium mb-2">{t('community.inAppMessaging')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Connect privately with other parents in your community
+                {t('community.messagingDesc')}
               </p>
               <Badge variant="secondary" className="text-xs">
-                Premium Feature
+                {t('community.premiumFeature')}
               </Badge>
             </CardContent>
           </Card>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ShoppingCart, Plus, Search, Filter, Heart, MapPin, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ShoppingCart, Plus, Search, Filter, Heart, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +96,7 @@ const mockItems: MarketItem[] = [
 ];
 
 const Marketplace = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('browse');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
@@ -122,11 +124,11 @@ const Marketplace = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ShoppingCart className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Marketplace</h1>
+          <h1 className="text-2xl font-bold">{t('marketplace.title')}</h1>
         </div>
         <Button size="sm" className="gradient-primary text-white border-0">
           <Plus className="w-4 h-4 mr-1" />
-          Sell Item
+          {t('marketplace.sellItem')}
         </Button>
       </div>
 
@@ -135,13 +137,13 @@ const Marketplace = () => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-sm">Marketplace Access</h3>
+              <h3 className="font-medium text-sm">{t('marketplace.marketplaceAccess')}</h3>
               <p className="text-xs text-muted-foreground">
-                Upgrade to Premium to buy items
+                {t('marketplace.upgradeDesc')}
               </p>
             </div>
             <Button variant="outline" size="sm">
-              Upgrade
+              {t('marketplace.upgrade')}
             </Button>
           </div>
         </CardContent>
@@ -150,9 +152,9 @@ const Marketplace = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="browse">Browse</TabsTrigger>
-          <TabsTrigger value="favorites">Favorites</TabsTrigger>
-          <TabsTrigger value="selling">My Items</TabsTrigger>
+          <TabsTrigger value="browse">{t('marketplace.browse')}</TabsTrigger>
+          <TabsTrigger value="favorites">{t('marketplace.favorites')}</TabsTrigger>
+          <TabsTrigger value="selling">{t('marketplace.myItems')}</TabsTrigger>
         </TabsList>
 
         {/* Browse Tab */}
@@ -162,7 +164,7 @@ const Marketplace = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search toys, baby gear, books..."
+                placeholder={t('marketplace.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -175,13 +177,13 @@ const Marketplace = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="toys">Toys & Games</SelectItem>
-                <SelectItem value="baby-gear">Baby Gear</SelectItem>
-                <SelectItem value="books">Books</SelectItem>
-                <SelectItem value="clothing">Clothing</SelectItem>
-                <SelectItem value="outdoor">Outdoor & Sports</SelectItem>
-                <SelectItem value="electronics">Electronics</SelectItem>
+                <SelectItem value="all">{t('marketplace.categories.all')}</SelectItem>
+                <SelectItem value="toys">{t('marketplace.categories.toys')}</SelectItem>
+                <SelectItem value="baby-gear">{t('marketplace.categories.babyGear')}</SelectItem>
+                <SelectItem value="books">{t('marketplace.categories.books')}</SelectItem>
+                <SelectItem value="clothing">{t('marketplace.categories.clothing')}</SelectItem>
+                <SelectItem value="outdoor">{t('marketplace.categories.outdoor')}</SelectItem>
+                <SelectItem value="electronics">{t('marketplace.categories.electronics')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -210,7 +212,7 @@ const Marketplace = () => {
 
                       <div className="flex items-center gap-2">
                         <Badge className={`text-xs ${getConditionColor(item.condition)}`}>
-                          {item.condition}
+                          {t(`marketplace.condition.${item.condition}`)}
                         </Badge>
                         {item.ageRange && (
                           <Badge variant="outline" className="text-xs">
@@ -246,12 +248,12 @@ const Marketplace = () => {
           <Card className="shadow-custom-md">
             <CardContent className="p-8 text-center">
               <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">Your Favorites</h3>
+              <h3 className="font-medium mb-2">{t('marketplace.yourFavorites')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Items you've favorited will appear here
+                {t('marketplace.favoritesDesc')}
               </p>
               <Button variant="outline" onClick={() => setActiveTab('browse')}>
-                Browse Items
+                {t('marketplace.browseItems')}
               </Button>
             </CardContent>
           </Card>
@@ -262,17 +264,17 @@ const Marketplace = () => {
           <Card className="shadow-custom-md">
             <CardContent className="p-8 text-center">
               <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">Start Selling</h3>
+              <h3 className="font-medium mb-2">{t('marketplace.startSelling')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                List items for sale and connect with local families
+                {t('marketplace.startSellingDesc')}
               </p>
               <Badge variant="secondary" className="text-xs mb-4">
-                Family Plan Feature
+                {t('marketplace.familyPlanFeature')}
               </Badge>
               <br />
               <Button className="gradient-primary text-white border-0">
                 <Plus className="w-4 h-4 mr-2" />
-                List Your First Item
+                {t('marketplace.listFirstItem')}
               </Button>
             </CardContent>
           </Card>
@@ -281,16 +283,16 @@ const Marketplace = () => {
 
       {/* Quick Categories */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Popular Categories</h3>
+        <h3 className="text-lg font-semibold">{t('marketplace.popularCategories')}</h3>
         
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" className="h-auto p-4 flex flex-col gap-2">
             <ShoppingCart className="w-5 h-5" />
-            <span className="text-sm">Toys & Games</span>
+            <span className="text-sm">{t('marketplace.categories.toys')}</span>
           </Button>
           <Button variant="outline" className="h-auto p-4 flex flex-col gap-2">
             <ShoppingCart className="w-5 h-5" />
-            <span className="text-sm">Baby Gear</span>
+            <span className="text-sm">{t('marketplace.categories.babyGear')}</span>
           </Button>
         </div>
       </div>
