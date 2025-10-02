@@ -279,33 +279,59 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What features excite you most?</h2>
-              <p className="text-muted-foreground">Select all that apply - we'll prioritize these for you</p>
+              <h2 className="text-2xl font-bold">Tell us about your children</h2>
+              <p className="text-muted-foreground">We'll help you organize activities for them</p>
             </div>
-            <div className="grid grid-cols-1 gap-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      data.features.includes(feature.id) 
-                        ? 'border-primary shadow-custom-md gradient-primary text-white' 
-                        : ''
-                    }`}
-                    onClick={() => toggleFeature(feature.id)}
-                  >
-                    <CardContent className="flex items-center space-x-3 p-4">
-                      <Checkbox
-                        checked={data.features.includes(feature.id)}
-                        className="data-[state=checked]:bg-white data-[state=checked]:text-primary"
-                      />
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{feature.label}</span>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-4">
+              {data.children.map((child, index) => (
+                <Card key={index}>
+                  <CardContent className="p-4">
+                    <div className="flex gap-3 items-start">
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <Label htmlFor={`initials-${index}`}>Child's Initials</Label>
+                          <Input
+                            id={`initials-${index}`}
+                            placeholder="e.g., JD"
+                            value={child.initials}
+                            onChange={(e) => updateChild(index, 'initials', e.target.value)}
+                            maxLength={3}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`age-${index}`}>Age</Label>
+                          <Input
+                            id={`age-${index}`}
+                            type="number"
+                            placeholder="e.g., 5"
+                            value={child.age}
+                            onChange={(e) => updateChild(index, 'age', e.target.value)}
+                            min="0"
+                            max="18"
+                          />
+                        </div>
+                      </div>
+                      {data.children.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeChild(index)}
+                          className="mt-6"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              <Button
+                variant="outline"
+                onClick={addChild}
+                className="w-full"
+              >
+                + Add Another Child
+              </Button>
             </div>
           </div>
         );
