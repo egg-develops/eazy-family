@@ -11,11 +11,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ReferralSystem } from "@/components/ReferralSystem";
 
 interface HomeConfig {
   greeting: string;
   byline: string;
   showCalendar: boolean;
+  showWeather: boolean;
   quickActions: string[];
   iconImage?: string;
   headerImage?: string;
@@ -33,6 +35,7 @@ const Settings = () => {
       greeting: "Good morning! ☀️",
       byline: "Let's make today amazing",
       showCalendar: true,
+      showWeather: true,
       quickActions: ["Find Events", "Add Photos"],
       iconImage: undefined,
       headerImage: undefined,
@@ -239,6 +242,18 @@ const Settings = () => {
             )}
           </div>
 
+          {/* Weather Card Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Weather Card</Label>
+              <p className="text-sm text-muted-foreground">Display weather information on homepage</p>
+            </div>
+            <Switch
+              checked={homeConfig.showWeather}
+              onCheckedChange={() => saveHomeConfig({ showWeather: !homeConfig.showWeather })}
+            />
+          </div>
+
           {/* Calendar Section Toggle */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -441,6 +456,9 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Referral System */}
+      <ReferralSystem />
 
       {/* Actions */}
       <div className="space-y-3">

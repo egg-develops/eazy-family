@@ -33,6 +33,7 @@ const AppLayout = () => {
     { id: "photos", label: t('nav.photos'), icon: Camera, path: "/app/photos" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
     { id: "marketplace", label: t('nav.marketplace'), icon: ShoppingCart, path: "/app/marketplace" },
+    { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ];
 
   useEffect(() => {
@@ -125,6 +126,7 @@ interface HomeConfig {
   greeting: string;
   byline: string;
   showCalendar: boolean;
+  showWeather: boolean;
   quickActions: string[];
   iconImage?: string;
   headerImage?: string;
@@ -133,15 +135,29 @@ interface HomeConfig {
 const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     return saved ? JSON.parse(saved) : {
       greeting: t('app.greeting'),
       byline: t('app.byline'),
       showCalendar: true,
+      showWeather: true,
       quickActions: ["Find Events", "Add Photos"]
     };
   });
+
+  const removeCalendar = () => {
+    const newConfig = { ...homeConfig, showCalendar: false };
+    setHomeConfig(newConfig);
+    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+  };
+
+  const removeWeather = () => {
+    const newConfig = { ...homeConfig, showWeather: false };
+    setHomeConfig(newConfig);
+    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+  };
 
   return (
     <div className="space-y-6">
@@ -170,21 +186,66 @@ const AppHome = () => {
         </Card>
       </div>
 
+      {/* Weather Card */}
+      {homeConfig.showWeather && (
+        <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
+          <button 
+            onClick={removeWeather}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
+            aria-label="Remove weather"
+          >
+            ×
+          </button>
+          <div className="flex items-center justify-between text-white">
+            <div>
+              <p className="text-sm opacity-90">Zurich</p>
+              <h3 className="text-4xl font-bold">22°C</h3>
+              <p className="text-sm opacity-90">Partly Cloudy</p>
+            </div>
+            <div className="text-6xl">☁️</div>
+          </div>
+        </Card>
+      )}
+
       {/* Today's Highlights */}
       {homeConfig.showCalendar && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
-            <div className="flex gap-1 bg-muted rounded-lg p-1">
-              <Button variant="ghost" size="sm" className="h-8 px-3 bg-background shadow-sm">
-                Day
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-3">
-                Week
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-3">
-                Month
-              </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1 bg-muted rounded-lg p-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`h-8 px-3 ${calendarView === 'day' ? 'bg-background shadow-sm' : ''}`}
+                  onClick={() => setCalendarView('day')}
+                >
+                  Day
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`h-8 px-3 ${calendarView === 'week' ? 'bg-background shadow-sm' : ''}`}
+                  onClick={() => setCalendarView('week')}
+                >
+                  Week
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`h-8 px-3 ${calendarView === 'month' ? 'bg-background shadow-sm' : ''}`}
+                  onClick={() => setCalendarView('month')}
+                >
+                  Month
+                </Button>
+              </div>
+              <button 
+                onClick={removeCalendar}
+                className="w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                aria-label="Remove calendar"
+              >
+                ×
+              </button>
             </div>
           </div>
           
