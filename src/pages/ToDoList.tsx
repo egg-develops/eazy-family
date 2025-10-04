@@ -6,11 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface Task {
   id: string;
@@ -19,6 +21,15 @@ interface Task {
   type: "task" | "shopping" | "shared";
   dueDate?: Date;
   createdAt: Date;
+  sharedWith?: string[];
+}
+
+interface FamilyMember {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  role: string;
 }
 
 const getInitialTasks = (): Task[] => {
@@ -43,10 +54,51 @@ const ToDoList = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  const currentUserId = localStorage.getItem('eazy-family-user-id') || crypto.randomUUID();
 
   useEffect(() => {
     localStorage.setItem('eazy-family-todos', JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('eazy-family-user-id', currentUserId);
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (activeTab === "shared" && isDialogOpen) {
+      loadFamilyMembers();
+    }
+  }, [activeTab, isDialogOpen]);
+
+  const loadFamilyMembers = async () => {
+    setLoadingMembers(true);
+    try {
+      const { data, error } = await supabase
+        .from('family_members')
+        .select('*')
+        .eq('family_id', currentUserId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+      setFamilyMembers(data || []);
+    } catch (error) {
+      console.error('Error loading family members:', error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const toggleMemberSelection = (memberId: string) => {
+    setSelectedMembers(prev =>
+      prev.includes(memberId)
+        ? prev.filter(id => id !== memberId)
+        : [...prev, memberId]
+    );
+  };
 
   const filteredTasks = tasks.filter(task => {
     if (task.type !== activeTab) return false;
@@ -88,6 +140,15 @@ const ToDoList = () => {
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
+    
+    if (activeTab === "shared" && selectedMembers.length === 0) {
+      toast({
+        title: "No members selected",
+        description: "Please select at least one family member to share with.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const newTask: Task = {
       id: Date.now().toString(),
@@ -96,16 +157,18 @@ const ToDoList = () => {
       type: activeTab,
       dueDate: newTaskDueDate,
       createdAt: new Date(),
+      sharedWith: activeTab === "shared" ? selectedMembers : undefined,
     };
 
     setTasks([...tasks, newTask]);
     setNewTaskTitle("");
     setNewTaskDueDate(undefined);
+    setSelectedMembers([]);
     setIsDialogOpen(false);
     
     toast({
-      title: activeTab === "shopping" ? "Item Added" : "Task Added",
-      description: `"${newTaskTitle}" has been added to your list.`,
+      title: activeTab === "shopping" ? "Item Added" : activeTab === "shared" ? "List Created" : "Task Added",
+      description: `"${newTaskTitle}" has been ${activeTab === "shared" ? "shared with " + selectedMembers.length + " member(s)" : "added to your list"}.`,
     });
   };
 
@@ -319,11 +382,16 @@ const ToDoList = () => {
 
       {/* Add Task/Item Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {activeTab === "shopping" ? "Add New Item" : activeTab === "shared" ? "Add Shared List" : "Add New Task"}
+              {activeTab === "shopping" ? "Add New Item" : activeTab === "shared" ? "Create Shared List" : "Add New Task"}
             </DialogTitle>
+            {activeTab === "shared" && (
+              <DialogDescription>
+                Create a shared list and select family members to collaborate with
+              </DialogDescription>
+            )}
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -341,7 +409,7 @@ const ToDoList = () => {
                 }
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && !newTaskDueDate && handleAddTask()}
+                onKeyPress={(e) => e.key === "Enter" && activeTab !== "shared" && !newTaskDueDate && handleAddTask()}
               />
             </div>
             {activeTab === "task" && (
@@ -355,13 +423,60 @@ const ToDoList = () => {
                 />
               </div>
             )}
+            {activeTab === "shared" && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Select Family Members</Label>
+                  <Badge variant="secondary">{selectedMembers.length} selected</Badge>
+                </div>
+                {loadingMembers ? (
+                  <div className="text-center py-4 text-sm text-muted-foreground">
+                    Loading family members...
+                  </div>
+                ) : familyMembers.length === 0 ? (
+                  <div className="text-center py-4 border rounded-lg bg-muted/20">
+                    <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm text-muted-foreground">No family members found</p>
+                    <p className="text-xs text-muted-foreground">Add family members in Settings</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2">
+                    {familyMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                        onClick={() => toggleMemberSelection(member.id)}
+                      >
+                        <Checkbox
+                          checked={selectedMembers.includes(member.id)}
+                          onCheckedChange={() => toggleMemberSelection(member.id)}
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{member.full_name || "No name"}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.email || member.phone || "No contact"}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">{member.role}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsDialogOpen(false);
+              setSelectedMembers([]);
+            }}>
               Cancel
             </Button>
-            <Button onClick={handleAddTask} disabled={!newTaskTitle.trim()}>
-              {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Add List" : "Add Task"}
+            <Button 
+              onClick={handleAddTask} 
+              disabled={!newTaskTitle.trim() || (activeTab === "shared" && selectedMembers.length === 0)}
+            >
+              {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Create List" : "Add Task"}
             </Button>
           </DialogFooter>
         </DialogContent>

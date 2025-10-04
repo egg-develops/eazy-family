@@ -43,7 +43,7 @@ export function AppSidebar() {
     isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted/50"
 
   return (
-    <Sidebar className={`${collapsed ? "w-14" : "w-48"} pt-16 hidden md:flex`} collapsible="icon">
+    <Sidebar className={`${collapsed ? "w-12" : "w-48"} pt-16 hidden md:flex`} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -58,7 +58,7 @@ export function AppSidebar() {
                         end 
                         className={getNavCls(isActive(item.path))}
                       >
-                        <Icon className="mr-2 h-4 w-4" />
+                        <Icon className={`h-4 w-4 ${collapsed ? "" : "mr-2"}`} />
                         {!collapsed && <span>{item.label}</span>}
                       </NavLink>
                     </SidebarMenuButton>
