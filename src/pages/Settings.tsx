@@ -13,9 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
-import { GradientGenerator } from "@/components/ui/gradient-generator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 interface HomeConfig {
   greeting: string;
@@ -68,6 +66,9 @@ const Settings = () => {
   const [colorScheme, setColorScheme] = useState(() => {
     return localStorage.getItem('eazy-family-color-scheme') || 'gray';
   });
+  const [customColor, setCustomColor] = useState(() => {
+    return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
+  });
 
   useEffect(() => {
     if (isDarkMode) {
@@ -92,47 +93,64 @@ const Settings = () => {
     });
   };
 
+  const hexToHSL = (hex: string) => {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Convert hex to RGB
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
+
   const handleColorSchemeChange = (scheme: string) => {
     setColorScheme(scheme);
     localStorage.setItem('eazy-family-color-scheme', scheme);
     
     // Update CSS variables based on color scheme
     const root = document.documentElement;
-    switch (scheme) {
-      case 'gray':
-        root.style.setProperty('--primary', '240 5% 64%');
-        root.style.setProperty('--accent', '240 5% 74%');
-        break;
-      case 'blue':
-        root.style.setProperty('--primary', '220 70% 50%');
-        root.style.setProperty('--accent', '45 90% 65%');
-        break;
-      case 'green':
-        root.style.setProperty('--primary', '145 65% 45%');
-        root.style.setProperty('--accent', '165 75% 55%');
-        break;
-      case 'purple':
-        root.style.setProperty('--primary', '260 70% 60%');
-        root.style.setProperty('--accent', '280 65% 70%');
-        break;
-      case 'orange':
-        root.style.setProperty('--primary', '25 95% 55%');
-        root.style.setProperty('--accent', '45 95% 65%');
-        break;
-      case 'pink':
-        root.style.setProperty('--primary', '330 81% 60%');
-        root.style.setProperty('--accent', '330 81% 70%');
-        break;
-      case 'yellow':
-        root.style.setProperty('--primary', '45 93% 47%');
-        root.style.setProperty('--accent', '45 93% 57%');
-        break;
+    if (scheme === 'gray') {
+      root.style.setProperty('--primary', '240 5% 64%');
+      root.style.setProperty('--accent', '240 5% 74%');
+    } else if (scheme === 'custom') {
+      const hsl = hexToHSL(customColor);
+      root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--accent', hsl);
     }
     
     toast({
       title: "Color scheme updated",
-      description: `Switched to ${scheme} theme.`,
+      description: scheme === 'gray' ? 'Switched to gray theme.' : 'Using custom color.',
     });
+  };
+
+  const handleCustomColorChange = (color: string) => {
+    setCustomColor(color);
+    localStorage.setItem('eazy-family-custom-color', color);
+    
+    if (colorScheme === 'custom') {
+      const root = document.documentElement;
+      const hsl = hexToHSL(color);
+      root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--accent', hsl);
+    }
   };
 
   const availableQuickActions = [
@@ -555,98 +573,38 @@ const Settings = () => {
           </div>
 
           {/* Color Scheme Selection */}
-          <div className="space-y-3">
-            <Label>Color Scheme</Label>
-            <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
-            <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="grid grid-cols-2 gap-3">
-              <div className="relative col-span-2">
+          <div className="space-y-4">
+            <div>
+              <Label>Color Scheme</Label>
+              <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
+            </div>
+            
+            <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="space-y-3">
+              <div className="relative">
                 <RadioGroupItem value="gray" id="gray" className="peer sr-only" />
                 <Label
                   htmlFor="gray"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                  className="flex items-center gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(240 5% 64%)' }}></div>
                   <span className="text-sm font-medium">Gray (Default)</span>
                 </Label>
               </div>
+              
               <div className="relative">
-                <RadioGroupItem value="blue" id="blue" className="peer sr-only" />
+                <RadioGroupItem value="custom" id="custom" className="peer sr-only" />
                 <Label
-                  htmlFor="blue"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                  htmlFor="custom"
+                  className="flex flex-col gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(220 70% 50%)' }}></div>
-                  <span className="text-sm font-medium">Blue</span>
-                </Label>
-              </div>
-              <div className="relative">
-                <RadioGroupItem value="green" id="green" className="peer sr-only" />
-                <Label
-                  htmlFor="green"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(145 65% 45%)' }}></div>
-                  <span className="text-sm font-medium">Green</span>
-                </Label>
-              </div>
-              <div className="relative">
-                <RadioGroupItem value="purple" id="purple" className="peer sr-only" />
-                <Label
-                  htmlFor="purple"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(260 70% 60%)' }}></div>
-                  <span className="text-sm font-medium">Purple</span>
-                </Label>
-              </div>
-              <div className="relative">
-                <RadioGroupItem value="orange" id="orange" className="peer sr-only" />
-                <Label
-                  htmlFor="orange"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(25 95% 55%)' }}></div>
-                  <span className="text-sm font-medium">Orange</span>
-                </Label>
-              </div>
-              <div className="relative">
-                <RadioGroupItem value="pink" id="pink" className="peer sr-only" />
-                <Label
-                  htmlFor="pink"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(330 81% 60%)' }}></div>
-                  <span className="text-sm font-medium">Pink</span>
-                </Label>
-              </div>
-              <div className="relative">
-                <RadioGroupItem value="yellow" id="yellow" className="peer sr-only" />
-                <Label
-                  htmlFor="yellow"
-                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(45 93% 47%)' }}></div>
-                  <span className="text-sm font-medium">Yellow</span>
+                  <ColorPicker 
+                    value={customColor} 
+                    onChange={handleCustomColorChange}
+                  />
                 </Label>
               </div>
             </RadioGroup>
           </div>
-
-          {/* Custom Gradient Generator */}
-          <Collapsible className="space-y-3">
-            <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                <span>Custom Gradient Generator</span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-4 pt-4">
-              <p className="text-sm text-muted-foreground">
-                Create custom gradients for your app design. Copy the CSS code to use in your custom styles.
-              </p>
-              <GradientGenerator />
-            </CollapsibleContent>
-          </Collapsible>
         </CardContent>
       </Card>
 
