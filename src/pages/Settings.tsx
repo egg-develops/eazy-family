@@ -101,6 +101,14 @@ const Settings = () => {
         root.style.setProperty('--primary', '25 95% 55%');
         root.style.setProperty('--accent', '45 95% 65%');
         break;
+      case 'pink':
+        root.style.setProperty('--primary', '330 81% 60%');
+        root.style.setProperty('--accent', '330 81% 70%');
+        break;
+      case 'yellow':
+        root.style.setProperty('--primary', '45 93% 47%');
+        root.style.setProperty('--accent', '45 93% 57%');
+        break;
     }
     
     toast({
@@ -466,6 +474,26 @@ const Settings = () => {
                 >
                   <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(25 95% 55%)' }}></div>
                   <span className="text-sm font-medium">Orange</span>
+                </Label>
+              </div>
+              <div className="relative">
+                <RadioGroupItem value="pink" id="pink" className="peer sr-only" />
+                <Label
+                  htmlFor="pink"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(330 81% 60%)' }}></div>
+                  <span className="text-sm font-medium">Pink</span>
+                </Label>
+              </div>
+              <div className="relative">
+                <RadioGroupItem value="yellow" id="yellow" className="peer sr-only" />
+                <Label
+                  htmlFor="yellow"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(45 93% 47%)' }}></div>
+                  <span className="text-sm font-medium">Yellow</span>
                 </Label>
               </div>
             </RadioGroup>

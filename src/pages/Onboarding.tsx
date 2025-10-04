@@ -36,6 +36,7 @@ const steps = [
 const locations = [
   { value: "zurich", label: "Zurich" },
   { value: "geneva", label: "Geneva" },
+  { value: "kinderlager", label: "Kinderlager" },
   { value: "other", label: "Other" },
 ];
 
@@ -149,7 +150,7 @@ const Onboarding = () => {
       case 3:
         return data.language.length > 0;
       case 4:
-        return data.children.some(child => child.initials.trim().length > 0 && child.age.trim().length > 0);
+        return true; // Allow skipping children
       case 5:
         return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
       case 6:
@@ -172,10 +173,13 @@ const Onboarding = () => {
               </div>
               <h2 className="text-2xl font-bold">Welcome to Eazy.Family</h2>
               <p className="text-muted-foreground text-lg">
-                Every day of your family life easier.
+                Your Every Day. Easier.
               </p>
               <p className="text-muted-foreground">
-                Sync your calendars, to-do's, create memories and connections.
+                Sync your calendars and to-do's.
+              </p>
+              <p className="text-muted-foreground">
+                Create memories and connections.
               </p>
             </div>
           </div>
@@ -283,6 +287,16 @@ const Onboarding = () => {
                 className="w-full"
               >
                 + Add Another Child
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setData(prev => ({ ...prev, children: [{ initials: "", age: "" }] }));
+                  setCurrentStep(5);
+                }}
+                className="w-full"
+              >
+                Add Children Later
               </Button>
             </div>
           </div>

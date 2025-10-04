@@ -95,14 +95,14 @@ const AppLayout = () => {
         <AppSidebar />
 
         {/* Main Content */}
-        <main className="flex-1 pt-16 pb-20 md:pb-6 overflow-x-hidden">
+        <main className="flex-1 pt-16 pb-20 lg:pb-6 overflow-x-hidden">
           <div className="max-w-7xl mx-auto px-4 py-6">
             {isHomePath ? <AppHome /> : <Outlet />}
           </div>
         </main>
 
-        {/* Bottom Navigation - Mobile Only */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
+        {/* Bottom Navigation - Mobile and Tablet */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
           <div className="max-w-md mx-auto px-2 py-2">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">

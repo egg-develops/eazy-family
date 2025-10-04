@@ -159,32 +159,11 @@ const Calendar = () => {
   const handleAddEvent = () => {
     if (!eventTitle.trim()) return;
     
-    // Create proper date objects
-    const startDateTime = eventAllDay 
-      ? new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate(), 0, 0, 0, 0)
-      : new Date(
-          eventStartDate.getFullYear(), 
-          eventStartDate.getMonth(), 
-          eventStartDate.getDate(),
-          parseInt(eventStartTime.split(':')[0]),
-          parseInt(eventStartTime.split(':')[1])
-        );
-    
-    const endDateTime = eventAllDay
-      ? new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate(), 23, 59, 59, 999)
-      : new Date(
-          eventEndDate.getFullYear(), 
-          eventEndDate.getMonth(), 
-          eventEndDate.getDate(),
-          parseInt(eventEndTime.split(':')[0]),
-          parseInt(eventEndTime.split(':')[1])
-        );
-    
     const newEvent: Event = {
       id: Date.now().toString(),
       title: eventTitle,
-      startDate: startDateTime,
-      endDate: endDateTime,
+      startDate: eventStartDate,
+      endDate: eventEndDate,
       allDay: eventAllDay,
       location: eventLocation || undefined,
       repeat: eventRepeat !== "never" ? eventRepeat : undefined,
@@ -274,7 +253,7 @@ const Calendar = () => {
             {days.map((day) => {
               const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
               const dayItems = getItemsForDate(day);
-              const hasEvents = dayItems.some(item => item.type === "event");
+              const hasItems = dayItems.length > 0;
               
               return (
                 <div
@@ -287,9 +266,9 @@ const Calendar = () => {
                   onClick={() => setSelectedDate(day)}
                 >
                   <p className="text-sm">{format(day, "d")}</p>
-                  {hasEvents && (
+                  {hasItems && (
                     <div className="flex gap-0.5 mt-1">
-                      {dayItems.filter(item => item.type === "event").slice(0, 3).map((item, idx) => (
+                      {dayItems.slice(0, 3).map((item, idx) => (
                         <div 
                           key={idx} 
                           className="w-1 h-1 rounded-full"
