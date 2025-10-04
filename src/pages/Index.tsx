@@ -43,7 +43,7 @@ const Index = () => {
 
           <div className="gradient-warm rounded-2xl p-6 text-white shadow-custom-lg">
             <p className="font-medium">
-              Perfect for families with children aged 0-10 ✨
+              The Perfect App to Make Your Family Life Eazy
             </p>
           </div>
         </div>
@@ -82,10 +82,6 @@ const Index = () => {
           >
             Get Started - It's Free!
           </Button>
-          
-          <p className="text-center text-sm text-muted-foreground">
-            Join thousands of families making life easier
-          </p>
         </div>
       </div>
     </div>

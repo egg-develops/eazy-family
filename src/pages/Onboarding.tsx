@@ -229,7 +229,7 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Tell us about your children</h2>
+              <h2 className="text-2xl font-bold">Add your children</h2>
               <p className="text-muted-foreground">We'll help you organize activities for them</p>
             </div>
             <div className="space-y-4">
