@@ -80,8 +80,26 @@ const Settings = () => {
 
   useEffect(() => {
     // Apply saved color scheme on mount
-    handleColorSchemeChange(colorScheme);
+    const root = document.documentElement;
+    if (colorScheme === 'custom') {
+      const hsl = hexToHSL(customColor);
+      root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--accent', hsl);
+    } else if (colorScheme === 'gray') {
+      root.style.setProperty('--primary', '240 5% 64%');
+      root.style.setProperty('--accent', '240 5% 74%');
+    }
   }, []);
+
+  useEffect(() => {
+    // Update CSS variables when custom color changes
+    if (colorScheme === 'custom') {
+      const root = document.documentElement;
+      const hsl = hexToHSL(customColor);
+      root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--accent', hsl);
+    }
+  }, [customColor, colorScheme]);
 
   const handleDarkModeToggle = () => {
     const newValue = !isDarkMode;
@@ -144,13 +162,7 @@ const Settings = () => {
   const handleCustomColorChange = (color: string) => {
     setCustomColor(color);
     localStorage.setItem('eazy-family-custom-color', color);
-    
-    if (colorScheme === 'custom') {
-      const root = document.documentElement;
-      const hsl = hexToHSL(color);
-      root.style.setProperty('--primary', hsl);
-      root.style.setProperty('--accent', hsl);
-    }
+    // No need to update CSS here - the useEffect will handle it
   };
 
   const availableQuickActions = [
