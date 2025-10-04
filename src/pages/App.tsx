@@ -229,25 +229,37 @@ const AppHome = () => {
       {homeConfig.topNotifications.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {homeConfig.topNotifications.includes("Upcoming Events") && (
-            <Card className="p-4 text-center shadow-custom-md">
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/calendar')}
+            >
               <div className="text-2xl font-bold text-primary">3</div>
               <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
             </Card>
           )}
           {homeConfig.topNotifications.includes("New Photos") && (
-            <Card className="p-4 text-center shadow-custom-md">
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/memories')}
+            >
               <div className="text-2xl font-bold text-accent">12</div>
               <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
             </Card>
           )}
           {homeConfig.topNotifications.includes("Pending Tasks") && (
-            <Card className="p-4 text-center shadow-custom-md">
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/todos')}
+            >
               <div className="text-2xl font-bold text-orange-600">5</div>
               <div className="text-sm text-muted-foreground">Pending Tasks</div>
             </Card>
           )}
           {homeConfig.topNotifications.includes("Shopping List") && (
-            <Card className="p-4 text-center shadow-custom-md">
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/todos')}
+            >
               <div className="text-2xl font-bold text-blue-600">8</div>
               <div className="text-sm text-muted-foreground">Shopping Items</div>
             </Card>

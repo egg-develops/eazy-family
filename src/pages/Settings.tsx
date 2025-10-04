@@ -12,6 +12,7 @@ import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar 
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
 
 interface HomeConfig {
   greeting: string;
@@ -33,7 +34,7 @@ const Settings = () => {
 
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
-    return saved ? JSON.parse(saved) : {
+    const parsed = saved ? JSON.parse(saved) : {
       greeting: "Good morning! ☀️",
       byline: "Let's make today amazing",
       showCalendar: true,
@@ -43,6 +44,12 @@ const Settings = () => {
       quickActions: ["Find Events", "Add Photos"],
       iconImage: undefined,
       headerImage: undefined,
+    };
+    // Ensure arrays are always initialized
+    return {
+      ...parsed,
+      topNotifications: parsed.topNotifications || [],
+      quickActions: parsed.quickActions || [],
     };
   });
 
@@ -90,8 +97,8 @@ const Settings = () => {
     const root = document.documentElement;
     switch (scheme) {
       case 'gray':
-        root.style.setProperty('--primary', '240 5% 26%');
-        root.style.setProperty('--accent', '240 5% 40%');
+        root.style.setProperty('--primary', '240 5% 64%');
+        root.style.setProperty('--accent', '240 5% 74%');
         break;
       case 'blue':
         root.style.setProperty('--primary', '220 70% 50%');
@@ -474,10 +481,12 @@ const Settings = () => {
               <p className="font-medium">Free Plan</p>
               <p className="text-sm text-muted-foreground">Basic features included</p>
             </div>
-            <Button onClick={handleUpgrade} className="gap-2 gradient-primary text-white border-0">
-              <Crown className="h-4 w-4" />
-              Upgrade to Pro
-            </Button>
+            <UpgradeDialog>
+              <Button className="gap-2 gradient-primary text-white border-0">
+                <Crown className="h-4 w-4" />
+                Upgrade to Family Plan
+              </Button>
+            </UpgradeDialog>
           </div>
           <Button 
             variant="outline" 
@@ -492,18 +501,24 @@ const Settings = () => {
             <Label>Calendar Integrations</Label>
             <p className="text-sm text-muted-foreground">Connect your external calendars</p>
             <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
-                <CalendarIcon className="w-4 h-4" />
-                Apple Calendar (Premium)
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
-                <CalendarIcon className="w-4 h-4" />
-                Google Calendar (Premium)
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
-                <CalendarIcon className="w-4 h-4" />
-                Outlook Calendar (Premium)
-              </Button>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Apple Calendar (Premium)
+                </Button>
+              </UpgradeDialog>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Google Calendar (Premium)
+                </Button>
+              </UpgradeDialog>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Outlook Calendar (Premium)
+                </Button>
+              </UpgradeDialog>
             </div>
           </div>
         </CardContent>
@@ -541,14 +556,14 @@ const Settings = () => {
             <Label>Color Scheme</Label>
             <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
             <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="grid grid-cols-2 gap-3">
-              <div className="relative">
+              <div className="relative col-span-2">
                 <RadioGroupItem value="gray" id="gray" className="peer sr-only" />
                 <Label
                   htmlFor="gray"
                   className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
                 >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(240 5% 26%)' }}></div>
-                  <span className="text-sm font-medium">Gray</span>
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(240 5% 64%)' }}></div>
+                  <span className="text-sm font-medium">Gray (Default)</span>
                 </Label>
               </div>
               <div className="relative">
