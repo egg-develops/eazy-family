@@ -147,6 +147,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_family_invitation: {
+        Args: { _accepting_user_id: string; _invitation_token: string }
+        Returns: Json
+      }
       user_belongs_to_family: {
         Args: { _family_id: string; _user_id: string }
         Returns: boolean
