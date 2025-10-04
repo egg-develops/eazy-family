@@ -49,12 +49,12 @@ const languages = [
 
 const features = [
   { id: "calendar", label: "Synced Calendars", icon: Calendar },
-  { id: "shopping", label: "Synced Shopping List", icon: ShoppingCart },
-  { id: "events", label: "Finding family friendly events", icon: MapPin },
-  { id: "playdates", label: "Playdates for their children", icon: Users },
-  { id: "community", label: "Connecting with other parents", icon: Heart },
-  { id: "marketplace", label: "Marketplace", icon: ShoppingCart },
-  { id: "photos", label: "AI Photo Management", icon: Camera },
+  { id: "shopping", label: "Synced Shopping & To-Do Lists", icon: ShoppingCart },
+  { id: "events", label: "Finding Family-Friendly Events", icon: MapPin },
+  { id: "playdates", label: "Playdates for Children", icon: Users },
+  { id: "community", label: "Connecting with Parents", icon: Heart },
+  { id: "marketplace", label: "Marketplace: to buy and sell", icon: ShoppingCart },
+  { id: "photos", label: "AI Photo Management & Editing", icon: Camera },
 ];
 
 const Onboarding = () => {
@@ -153,8 +153,8 @@ const Onboarding = () => {
         return true; // Allow skipping children
       case 5:
         return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
-      case 6:
-        return data.features.length > 0;
+        case 6:
+          return true;
       case 7:
         return true; // Paywall screen
       default:
@@ -168,11 +168,11 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 mx-auto gradient-primary rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto gradient-primary rounded-full flex items-center justify-center z-0">
                 <Heart className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold">Welcome to Eazy.Family</h2>
-              <p className="text-muted-foreground text-lg">
+              <h2 className="text-2xl font-bold relative z-10">Welcome to Eazy.Family</h2>
+              <p className="text-muted-foreground text-lg relative z-10">
                 Your daily app to make family life easy — organize schedules, to-do's, plan events, and connect with other parents.
               </p>
             </div>
@@ -322,7 +322,7 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What features excite you most?</h2>
+              <h2 className="text-2xl font-bold">What features interest you most?</h2>
               <p className="text-muted-foreground">Select all that apply - we'll prioritize these for you</p>
             </div>
             <div className="grid grid-cols-1 gap-3">
