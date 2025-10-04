@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,11 +25,11 @@ interface OnboardingData {
 
 const steps = [
   { id: 1, title: "Welcome!", description: "Your daily app to stay organized" },
-  { id: 2, title: "Language", description: "Choose your preferred language" },
-  { id: 3, title: "Features", description: "What excites you most?" },
-  { id: 4, title: "Location", description: "Where are you based?" },
-  { id: 5, title: "About You", description: "Tell us your name" },
-  { id: 6, title: "Your Children", description: "Tell us about your little ones" },
+  { id: 2, title: "About You", description: "Tell us your name" },
+  { id: 3, title: "Language", description: "Choose your preferred language" },
+  { id: 4, title: "Your Children", description: "Tell us about your little ones" },
+  { id: 5, title: "Location", description: "Where are you based?" },
+  { id: 6, title: "Features", description: "What excites you most?" },
   { id: 7, title: "Premium", description: "Start your free trial" },
 ];
 
@@ -57,6 +58,7 @@ const features = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [data, setData] = useState<OnboardingData>({
     userName: "",
@@ -143,15 +145,15 @@ const Onboarding = () => {
       case 1:
         return true; // Welcome screen
       case 2:
-        return data.language.length > 0;
-      case 3:
-        return data.features.length > 0;
-      case 4:
-        return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
-      case 5:
         return data.userName.trim().length > 0;
-      case 6:
+      case 3:
+        return data.language.length > 0;
+      case 4:
         return data.children.some(child => child.initials.trim().length > 0 && child.age.trim().length > 0);
+      case 5:
+        return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
+      case 6:
+        return data.features.length > 0;
       case 7:
         return true; // Paywall screen
       default:
@@ -170,92 +172,16 @@ const Onboarding = () => {
               </div>
               <h2 className="text-2xl font-bold">Welcome to Eazy.Family</h2>
               <p className="text-muted-foreground text-lg">
-                Your daily app to stay organized, connected, and create memories
+                Every day of your family life easier.
+              </p>
+              <p className="text-muted-foreground">
+                Sync your calendars, to-do's, create memories and connections.
               </p>
             </div>
           </div>
         );
 
       case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Choose your language</h2>
-              <p className="text-muted-foreground">We'll customize the app experience for you</p>
-            </div>
-            <Select value={data.language} onValueChange={(value) => setData(prev => ({ ...prev, language: value }))}>
-              <SelectTrigger className="text-lg">
-                <SelectValue placeholder="Select your language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map((language) => (
-                  <SelectItem key={language.value} value={language.value}>
-                    {language.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What features excite you most?</h2>
-              <p className="text-muted-foreground">Select all that apply - we'll prioritize these for you</p>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      data.features.includes(feature.id) 
-                        ? 'border-primary shadow-custom-md gradient-primary text-white' 
-                        : ''
-                    }`}
-                    onClick={() => toggleFeature(feature.id)}
-                  >
-                    <CardContent className="flex items-center space-x-3 p-4">
-                      <Checkbox
-                        checked={data.features.includes(feature.id)}
-                        className="data-[state=checked]:bg-white data-[state=checked]:text-primary"
-                      />
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{feature.label}</span>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Where are you located?</h2>
-              <p className="text-muted-foreground">We'll show you local family-friendly events</p>
-            </div>
-            <Select value={data.location} onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}>
-              <SelectTrigger className="text-lg">
-                <SelectValue placeholder="Choose your location" />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem key={location.value} value={location.value}>
-                    {location.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
-      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
@@ -275,7 +201,33 @@ const Onboarding = () => {
           </div>
         );
 
-      case 6:
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">Choose your language</h2>
+              <p className="text-muted-foreground">We'll customize the app experience for you</p>
+            </div>
+            <Select value={data.language} onValueChange={(value) => {
+              setData(prev => ({ ...prev, language: value }));
+              i18n.changeLanguage(value);
+              localStorage.setItem('eazy-family-language', value);
+            }}>
+              <SelectTrigger className="text-lg">
+                <SelectValue placeholder="Select your language" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((language) => (
+                  <SelectItem key={language.value} value={language.value}>
+                    {language.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
@@ -332,6 +284,63 @@ const Onboarding = () => {
               >
                 + Add Another Child
               </Button>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">Where are you located?</h2>
+              <p className="text-muted-foreground">We'll show you local family-friendly events</p>
+            </div>
+            <Select value={data.location} onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}>
+              <SelectTrigger className="text-lg">
+                <SelectValue placeholder="Choose your location" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((location) => (
+                  <SelectItem key={location.value} value={location.value}>
+                    {location.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+
+      case 6:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">What features excite you most?</h2>
+              <p className="text-muted-foreground">Select all that apply - we'll prioritize these for you</p>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <Card 
+                    key={feature.id} 
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                      data.features.includes(feature.id) 
+                        ? 'border-primary shadow-custom-md gradient-primary text-white' 
+                        : ''
+                    }`}
+                    onClick={() => toggleFeature(feature.id)}
+                  >
+                    <CardContent className="flex items-center space-x-3 p-4">
+                      <Checkbox
+                        checked={data.features.includes(feature.id)}
+                        className="data-[state=checked]:bg-white data-[state=checked]:text-primary"
+                      />
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{feature.label}</span>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         );

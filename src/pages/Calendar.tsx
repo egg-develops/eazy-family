@@ -159,21 +159,38 @@ const Calendar = () => {
   const handleAddEvent = () => {
     if (!eventTitle.trim()) return;
     
+    // Create proper date objects
+    const startDateTime = eventAllDay 
+      ? new Date(eventStartDate.getFullYear(), eventStartDate.getMonth(), eventStartDate.getDate(), 0, 0, 0, 0)
+      : new Date(
+          eventStartDate.getFullYear(), 
+          eventStartDate.getMonth(), 
+          eventStartDate.getDate(),
+          parseInt(eventStartTime.split(':')[0]),
+          parseInt(eventStartTime.split(':')[1])
+        );
+    
+    const endDateTime = eventAllDay
+      ? new Date(eventEndDate.getFullYear(), eventEndDate.getMonth(), eventEndDate.getDate(), 23, 59, 59, 999)
+      : new Date(
+          eventEndDate.getFullYear(), 
+          eventEndDate.getMonth(), 
+          eventEndDate.getDate(),
+          parseInt(eventEndTime.split(':')[0]),
+          parseInt(eventEndTime.split(':')[1])
+        );
+    
     const newEvent: Event = {
       id: Date.now().toString(),
       title: eventTitle,
-      startDate: eventAllDay 
-        ? new Date(eventStartDate.setHours(0, 0, 0, 0))
-        : new Date(eventStartDate.toDateString() + " " + eventStartTime),
-      endDate: eventAllDay
-        ? new Date(eventEndDate.setHours(23, 59, 59, 999))
-        : new Date(eventEndDate.toDateString() + " " + eventEndTime),
+      startDate: startDateTime,
+      endDate: endDateTime,
       allDay: eventAllDay,
       location: eventLocation || undefined,
       repeat: eventRepeat !== "never" ? eventRepeat : undefined,
       travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
       type: "event",
-      color: "hsl(var(--primary))"
+      color: "hsl(220 70% 50%)"
     };
     
     setItems([...items, newEvent]);

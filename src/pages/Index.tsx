@@ -34,10 +34,11 @@ const Index = () => {
           
           <div className="space-y-4">
             <h1 className="text-4xl font-bold font-poppins">
-              Eazy<span className="gradient-primary bg-clip-text text-transparent">.Family</span>
+              Eazy.Family
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Your ultimate hub for simplifying family life and community engagement
+              Every day of your family life easier.<br />
+              Sync your calendars, to-do's, create memories and connections.
             </p>
           </div>
 

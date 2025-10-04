@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon } from "lucide-react";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
@@ -48,6 +48,66 @@ const Settings = () => {
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('eazy-family-dark-mode') === 'true';
+  });
+  const [colorScheme, setColorScheme] = useState(() => {
+    return localStorage.getItem('eazy-family-color-scheme') || 'blue';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    // Apply saved color scheme on mount
+    handleColorSchemeChange(colorScheme);
+  }, []);
+
+  const handleDarkModeToggle = () => {
+    const newValue = !isDarkMode;
+    setIsDarkMode(newValue);
+    localStorage.setItem('eazy-family-dark-mode', newValue.toString());
+    toast({
+      title: newValue ? "Dark mode enabled" : "Light mode enabled",
+      description: "Your theme preference has been saved.",
+    });
+  };
+
+  const handleColorSchemeChange = (scheme: string) => {
+    setColorScheme(scheme);
+    localStorage.setItem('eazy-family-color-scheme', scheme);
+    
+    // Update CSS variables based on color scheme
+    const root = document.documentElement;
+    switch (scheme) {
+      case 'blue':
+        root.style.setProperty('--primary', '220 70% 50%');
+        root.style.setProperty('--accent', '45 90% 65%');
+        break;
+      case 'green':
+        root.style.setProperty('--primary', '145 65% 45%');
+        root.style.setProperty('--accent', '165 75% 55%');
+        break;
+      case 'purple':
+        root.style.setProperty('--primary', '260 70% 60%');
+        root.style.setProperty('--accent', '280 65% 70%');
+        break;
+      case 'orange':
+        root.style.setProperty('--primary', '25 95% 55%');
+        root.style.setProperty('--accent', '45 95% 65%');
+        break;
+    }
+    
+    toast({
+      title: "Color scheme updated",
+      description: `Switched to ${scheme} theme.`,
+    });
+  };
 
   const availableQuickActions = [
     { id: "Find Events", label: "Find Events" },
@@ -333,6 +393,83 @@ const Settings = () => {
           <Button variant="outline" className="w-full">
             Manage Family Members
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Appearance Settings */}
+      <Card className="shadow-custom-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5" />
+            Appearance
+          </CardTitle>
+          <CardDescription>Customize how the app looks</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Dark Mode Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              {isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              <div>
+                <Label>Dark Mode</Label>
+                <p className="text-sm text-muted-foreground">
+                  {isDarkMode ? "Dark theme enabled" : "Light theme enabled"}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={isDarkMode}
+              onCheckedChange={handleDarkModeToggle}
+            />
+          </div>
+
+          {/* Color Scheme Selection */}
+          <div className="space-y-3">
+            <Label>Color Scheme</Label>
+            <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
+            <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <RadioGroupItem value="blue" id="blue" className="peer sr-only" />
+                <Label
+                  htmlFor="blue"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(220 70% 50%)' }}></div>
+                  <span className="text-sm font-medium">Blue</span>
+                </Label>
+              </div>
+              <div className="relative">
+                <RadioGroupItem value="green" id="green" className="peer sr-only" />
+                <Label
+                  htmlFor="green"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(145 65% 45%)' }}></div>
+                  <span className="text-sm font-medium">Green</span>
+                </Label>
+              </div>
+              <div className="relative">
+                <RadioGroupItem value="purple" id="purple" className="peer sr-only" />
+                <Label
+                  htmlFor="purple"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(260 70% 60%)' }}></div>
+                  <span className="text-sm font-medium">Purple</span>
+                </Label>
+              </div>
+              <div className="relative">
+                <RadioGroupItem value="orange" id="orange" className="peer sr-only" />
+                <Label
+                  htmlFor="orange"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(25 95% 55%)' }}></div>
+                  <span className="text-sm font-medium">Orange</span>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
         </CardContent>
       </Card>
 
