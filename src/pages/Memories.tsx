@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Camera, Upload, Search, Filter, MapPin, Calendar, Sparkles, LayoutGrid, MapPin as MapPinIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ParticleButton } from "@/components/ui/particle-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -181,7 +182,7 @@ const Memories = () => {
 
       {/* Upload and Camera Buttons */}
       <div className="grid grid-cols-2 gap-3">
-        <Button 
+        <ParticleButton 
           className="gradient-primary text-white border-0 hover:opacity-90"
           onClick={() => {
             const input = document.createElement('input');
@@ -209,9 +210,9 @@ const Memories = () => {
         >
           <Upload className="w-4 h-4 mr-2" />
           {t('memories.uploadNew')}
-        </Button>
+        </ParticleButton>
 
-        <Button 
+        <ParticleButton 
           className="gradient-primary text-white border-0 hover:opacity-90"
           onClick={() => {
             const input = document.createElement('input');
@@ -239,7 +240,7 @@ const Memories = () => {
         >
           <Camera className="w-4 h-4 mr-2" />
           Take Photo
-        </Button>
+        </ParticleButton>
       </div>
 
       {/* AI Search */}

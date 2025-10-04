@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { ParticleButton } from "@/components/ui/particle-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -281,22 +282,22 @@ const ToDoList = () => {
                     <Plus className="w-5 h-5" />
                     <span className="font-semibold">{getAddText()}</span>
                   </div>
-                  <Button onClick={() => setIsDialogOpen(true)}>
+                  <ParticleButton onClick={() => setIsDialogOpen(true)}>
                     {getButtonText()}
-                  </Button>
+                  </ParticleButton>
                 </div>
               </CardContent>
             </Card>
           )}
           
           {isMobile && (
-            <Button 
+            <ParticleButton 
               className="w-full gradient-primary text-white border-0"
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
               {activeTab === "shopping" ? "New Item" : "New Task"}
-            </Button>
+            </ParticleButton>
           )}
 
           {/* Filter */}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -414,7 +415,7 @@ const Calendar = () => {
           </h1>
           <p className="text-muted-foreground">Manage your family schedule</p>
         </div>
-        <Button 
+        <ParticleButton 
           className="gap-2 gradient-primary text-white border-0"
           onClick={() => {
             setDialogTab("event");
@@ -423,7 +424,7 @@ const Calendar = () => {
         >
           <Plus className="h-4 w-4" />
           New
-        </Button>
+        </ParticleButton>
       </div>
 
       {/* Month Calendar */}
