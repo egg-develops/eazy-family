@@ -13,6 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { GradientGenerator } from "@/components/ui/gradient-generator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 
 interface HomeConfig {
   greeting: string;
@@ -628,6 +631,22 @@ const Settings = () => {
               </div>
             </RadioGroup>
           </div>
+
+          {/* Custom Gradient Generator */}
+          <Collapsible className="space-y-3">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                <span>Custom Gradient Generator</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 pt-4">
+              <p className="text-sm text-muted-foreground">
+                Create custom gradients for your app design. Copy the CSS code to use in your custom styles.
+              </p>
+              <GradientGenerator />
+            </CollapsibleContent>
+          </Collapsible>
         </CardContent>
       </Card>
 
