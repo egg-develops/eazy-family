@@ -173,13 +173,7 @@ const Onboarding = () => {
               </div>
               <h2 className="text-2xl font-bold">Welcome to Eazy.Family</h2>
               <p className="text-muted-foreground text-lg">
-                Your Every Day. Easier.
-              </p>
-              <p className="text-muted-foreground">
-                Sync your calendars and to-do's.
-              </p>
-              <p className="text-muted-foreground">
-                Create memories and connections.
+                Your daily app to make family life easy — organize schedules, to-do's, plan events, and connect with other parents.
               </p>
             </div>
           </div>
@@ -407,17 +401,6 @@ const Onboarding = () => {
               {currentStep === steps.length ? 'Start Free Trial' : 'Next'}
               <ArrowRight className="w-4 h-4" />
             </Button>
-        </div>
-        
-        {/* Skip Option */}
-        <div className="text-center mt-4">
-          <Button
-            variant="ghost"
-            onClick={skipOnboarding}
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            Skip setup and go to app
-          </Button>
         </div>
       </div>
     </div>

@@ -33,12 +33,11 @@ const Index = () => {
           </div>
           
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold font-poppins">
+            <h1 className="text-4xl font-bold font-poppins bg-background px-2 py-1 rounded-lg inline-block">
               Eazy.Family
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Every day of your family life easier.<br />
-              Sync your calendars, to-do's, create memories and connections.
+              Sync your calendars, to-do's and shopping lists, plan events, connect with parents, and create memories.
             </p>
           </div>
 
