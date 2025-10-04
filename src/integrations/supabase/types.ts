@@ -147,7 +147,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      user_belongs_to_family: {
+        Args: { _family_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       family_member_role:
