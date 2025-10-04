@@ -220,9 +220,9 @@ export const EazyAssistant = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
-            placeholder="Type your message..."
+            placeholder="How can I help you?"
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 bg-background"
           />
           <Button
             onClick={handleSend}

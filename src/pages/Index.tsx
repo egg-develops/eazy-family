@@ -16,10 +16,10 @@ const Index = () => {
   }, [navigate]);
 
   const features = [
-    { icon: Calendar, title: "Synced Calendars", description: "Keep everyone's schedule in one place" },
+    { icon: Calendar, title: "Synced Calendars and To-Do Lists", description: "Keep everyone organized in one place" },
     { icon: MapPin, title: "Event Discovery", description: "Find family-friendly activities nearby" },
     { icon: Camera, title: "AI Photo Management", description: "Organize memories automatically" },
-    { icon: Users, title: "Community", description: "Connect with other parents" },
+    { icon: Users, title: "Community", description: "Connect with parents, schedule playdates" },
     { icon: ShoppingCart, title: "Marketplace", description: "Buy & sell family items" },
   ];
 
@@ -41,7 +41,7 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="gradient-warm rounded-2xl p-6 text-white shadow-custom-lg">
+          <div className="bg-muted rounded-2xl p-6 shadow-custom-lg">
             <p className="font-medium">
               The Perfect App to Make Your Family Life Eazy
             </p>

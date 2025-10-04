@@ -22,6 +22,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   ];
 
   const familyFeatures = [
+    "Unlimited family members",
     "Unlimited calendar syncs",
     "Shared lists across family",
     "Private messaging",
@@ -83,13 +84,19 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           {/* Pricing */}
           <div className="space-y-4 pt-4 border-t">
             <div className="text-center space-y-2">
-              <p className="text-3xl font-bold">$9.99<span className="text-lg text-muted-foreground">/month</span></p>
-              <p className="text-sm text-muted-foreground">Cancel anytime</p>
+              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-2">
+                7-Day Free Trial
+              </div>
+              <p className="text-3xl font-bold">CHF 5<span className="text-lg text-muted-foreground">/month</span></p>
+              <p className="text-sm text-muted-foreground">Cancel anytime • Auto-renews after trial</p>
             </div>
             <Button className="w-full gradient-primary text-white border-0" size="lg">
               <Crown className="h-4 w-4 mr-2" />
-              Upgrade Now
+              Start Free Trial
             </Button>
+            <p className="text-xs text-center text-muted-foreground">
+              You won't be charged until your 7-day trial ends
+            </p>
           </div>
         </div>
       </DialogContent>
