@@ -67,10 +67,10 @@ const FamilyProfile = () => {
       if (membersError) throw membersError;
       setFamilyMembers(members || []);
 
-      // Load pending invitations
+      // Load pending invitations (exclude token for security)
       const { data: invites, error: invitesError } = await supabase
         .from('family_invitations')
-        .select('*')
+        .select('id, invitee_email, invitee_phone, role, status, expires_at, created_at')
         .eq('family_id', currentUserId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
