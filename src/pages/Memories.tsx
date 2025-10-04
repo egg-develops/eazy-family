@@ -79,6 +79,10 @@ const Memories = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  
+  // In a real app, this would come from the database
+  const totalPhotos = mockPhotos.length;
+  const hasEnoughPhotosForAI = totalPhotos >= 7;
 
   const filteredPhotos = mockPhotos.filter(photo => {
     const matchesSearch = photo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -175,48 +179,99 @@ const Memories = () => {
         </div>
       </div>
 
-      {/* Upload Button */}
-      <Button 
-        className="w-full gradient-primary text-white border-0 hover:opacity-90"
-        onClick={() => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = 'image/*';
-          input.multiple = true;
-          input.onchange = async (e) => {
-            const files = (e.target as HTMLInputElement).files;
-            if (files && files.length > 0) {
-              toast({
-                title: "Uploading photos",
-                description: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`,
-              });
-              // Here you would upload to Supabase storage
-              setTimeout(() => {
+      {/* Upload and Camera Buttons */}
+      <div className="grid grid-cols-2 gap-3">
+        <Button 
+          className="gradient-primary text-white border-0 hover:opacity-90"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.multiple = true;
+            input.onchange = async (e) => {
+              const files = (e.target as HTMLInputElement).files;
+              if (files && files.length > 0) {
                 toast({
-                  title: "Upload complete",
-                  description: "Photos uploaded successfully!",
+                  title: "Uploading photos",
+                  description: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`,
                 });
-              }, 1500);
-            }
-          };
-          input.click();
-        }}
-      >
-        <Upload className="w-4 h-4 mr-2" />
-        {t('memories.uploadNew')}
-      </Button>
+                // Here you would upload to Supabase storage
+                setTimeout(() => {
+                  toast({
+                    title: "Upload complete",
+                    description: "Photos uploaded successfully!",
+                  });
+                }, 1500);
+              }
+            };
+            input.click();
+          }}
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          {t('memories.uploadNew')}
+        </Button>
 
-      {/* AI Query Example */}
+        <Button 
+          className="gradient-primary text-white border-0 hover:opacity-90"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment'; // Use camera
+            input.onchange = async (e) => {
+              const files = (e.target as HTMLInputElement).files;
+              if (files && files.length > 0) {
+                toast({
+                  title: "Capturing photo",
+                  description: "Processing photo from camera...",
+                });
+                // Here you would upload to Supabase storage
+                setTimeout(() => {
+                  toast({
+                    title: "Photo captured",
+                    description: "Photo saved successfully!",
+                  });
+                }, 1500);
+              }
+            };
+            input.click();
+          }}
+        >
+          <Camera className="w-4 h-4 mr-2" />
+          Take Photo
+        </Button>
+      </div>
+
+      {/* AI Search */}
       <Card className="shadow-custom-md border-l-4 border-l-accent">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-accent mt-0.5" />
-            <div>
+            <div className="flex-1">
               <h4 className="font-medium text-sm">{t('memories.aiSearch')}</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 {t('memories.aiSearchDesc')}
               </p>
+              {!hasEnoughPhotosForAI && (
+                <p className="text-xs text-warning mt-2 font-medium">
+                  Need {7 - totalPhotos} more {7 - totalPhotos === 1 ? 'photo' : 'photos'} to activate AI search
+                </p>
+              )}
             </div>
+            <Button 
+              size="sm" 
+              disabled={!hasEnoughPhotosForAI}
+              className="gap-2"
+              onClick={() => {
+                toast({
+                  title: "AI Search",
+                  description: "AI search functionality coming soon!",
+                });
+              }}
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -322,8 +377,26 @@ const Memories = () => {
             <p className="text-white/90 text-sm mb-3">
               {t('memories.memoryBookDesc')}
             </p>
-            <Button variant="secondary" size="sm">
-              {t('memories.viewMemoryBook')}
+            <Button 
+              variant="secondary" 
+              size="sm"
+              disabled={!hasEnoughPhotosForAI}
+              onClick={() => {
+                if (hasEnoughPhotosForAI) {
+                  toast({
+                    title: "Memory Book",
+                    description: "Creating your memory book...",
+                  });
+                } else {
+                  toast({
+                    title: "Not enough photos",
+                    description: `You need at least 7 photos to create a memory book. Currently you have ${totalPhotos}.`,
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              {hasEnoughPhotosForAI ? t('memories.viewMemoryBook') : `Need ${7 - totalPhotos} more photos`}
             </Button>
           </CardContent>
         </Card>

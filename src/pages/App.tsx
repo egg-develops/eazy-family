@@ -150,13 +150,14 @@ const AppHome = () => {
       showCalendar: true,
       showWeather: true,
       showGreeting: true,
-      topNotifications: ["Upcoming Events", "New Photos"],
+      topNotifications: ["Upcoming Events", "Pending Tasks"],
       quickActions: ["Find Events", "Add Photos"]
     };
-    // Ensure arrays are always initialized
+    // Ensure arrays are always initialized and greeting is visible by default
     return {
       ...parsed,
-      topNotifications: parsed.topNotifications || [],
+      showGreeting: parsed.showGreeting !== false, // visible by default
+      topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
       quickActions: parsed.quickActions || [],
     };
   });

@@ -310,44 +310,55 @@ const Calendar = () => {
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
+    
+    const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
       <Card className="shadow-custom-md">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl">{format(selectedDate, "MMMM yyyy")}</CardTitle>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setMonth(newDate.getMonth() - 1);
-                  setSelectedDate(newDate);
-                }}
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDate(new Date())}
               >
-                <ChevronLeft className="h-4 w-4" />
+                Today
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => {
-                  const newDate = new Date(selectedDate);
-                  newDate.setMonth(newDate.getMonth() + 1);
-                  setSelectedDate(newDate);
-                }}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setMonth(newDate.getMonth() - 1);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setMonth(newDate.getMonth() + 1);
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="pb-3">
-          <div className="grid grid-cols-7 gap-1">
-            {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
-              <div key={idx} className="text-center text-xs font-medium text-muted-foreground p-2">
+          <div className="grid grid-cols-7 gap-2">
+            {weekDays.map((day, idx) => (
+              <div key={idx} className="text-center text-sm font-semibold text-foreground p-2">
                 {day}
               </div>
             ))}
@@ -355,30 +366,35 @@ const Calendar = () => {
               const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
               const dayItems = getItemsForDate(day);
               const hasItems = dayItems.length > 0;
+              const isSelected = isSameDay(day, selectedDate);
+              const isTodayDate = isToday(day);
               
               return (
-                <div
+                <button
                   key={day.toISOString()}
-                  className={`aspect-square p-1 flex flex-col items-center justify-start cursor-pointer transition-colors rounded-lg ${
-                    !isCurrentMonth ? "text-muted-foreground opacity-50" : ""
-                  } ${isToday(day) ? "bg-primary text-primary-foreground font-bold" : ""} ${
-                    isSameDay(day, selectedDate) && !isToday(day) ? "ring-2 ring-primary" : ""
-                  } hover:bg-muted`}
+                  className={`
+                    aspect-square p-2 flex flex-col items-center justify-center 
+                    cursor-pointer transition-all rounded-lg relative
+                    ${!isCurrentMonth ? "text-muted-foreground/40" : "text-foreground"}
+                    ${isTodayDate ? "bg-primary text-primary-foreground font-bold ring-2 ring-primary" : ""}
+                    ${isSelected && !isTodayDate ? "bg-accent" : ""}
+                    ${!isTodayDate && !isSelected ? "hover:bg-muted" : ""}
+                  `}
                   onClick={() => setSelectedDate(day)}
                 >
-                  <p className="text-sm">{format(day, "d")}</p>
+                  <span className="text-base">{format(day, "d")}</span>
                   {hasItems && (
-                    <div className="flex gap-0.5 mt-1">
+                    <div className="flex gap-1 mt-1 absolute bottom-1">
                       {dayItems.slice(0, 3).map((item, idx) => (
                         <div 
                           key={idx} 
-                          className="w-1 h-1 rounded-full"
+                          className="w-1.5 h-1.5 rounded-full"
                           style={{ backgroundColor: item.type === "event" ? item.color : "hsl(var(--primary))" }}
                         />
                       ))}
                     </div>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
