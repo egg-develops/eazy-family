@@ -144,7 +144,7 @@ const AppHome = () => {
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
-    return saved ? JSON.parse(saved) : {
+    const parsed = saved ? JSON.parse(saved) : {
       greeting: t('app.greeting'),
       byline: t('app.byline'),
       showCalendar: true,
@@ -152,6 +152,12 @@ const AppHome = () => {
       showGreeting: true,
       topNotifications: ["Upcoming Events", "New Photos"],
       quickActions: ["Find Events", "Add Photos"]
+    };
+    // Ensure arrays are always initialized
+    return {
+      ...parsed,
+      topNotifications: parsed.topNotifications || [],
+      quickActions: parsed.quickActions || [],
     };
   });
   
@@ -226,7 +232,7 @@ const AppHome = () => {
       <EazyAssistant />
 
       {/* Quick Stats */}
-      {homeConfig.topNotifications.length > 0 && (
+      {homeConfig.topNotifications && homeConfig.topNotifications.length > 0 && (
         <div className="grid grid-cols-2 gap-4">
           {homeConfig.topNotifications.includes("Upcoming Events") && (
             <Card 
@@ -419,7 +425,7 @@ const AppHome = () => {
         <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
         
         <div className="grid grid-cols-2 gap-3">
-          {homeConfig.quickActions.map((action, index) => {
+          {homeConfig.quickActions && homeConfig.quickActions.map((action, index) => {
             const getIcon = (actionName: string) => {
               switch (actionName) {
                 case "Find Events": return Search;
