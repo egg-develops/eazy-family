@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +42,7 @@ const ToDoList = () => {
   const [filterView, setFilterView] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     localStorage.setItem('eazy-family-todos', JSON.stringify(tasks));
@@ -92,15 +94,17 @@ const ToDoList = () => {
       title: newTaskTitle,
       completed: false,
       type: activeTab,
+      dueDate: newTaskDueDate,
       createdAt: new Date(),
     };
 
     setTasks([...tasks, newTask]);
     setNewTaskTitle("");
+    setNewTaskDueDate(undefined);
     setIsDialogOpen(false);
     
     toast({
-      title: "Task Added",
+      title: activeTab === "shopping" ? "Item Added" : "Task Added",
       description: `"${newTaskTitle}" has been added to your list.`,
     });
   };
@@ -270,9 +274,20 @@ const ToDoList = () => {
                         checked={task.completed}
                         onCheckedChange={() => toggleTask(task.id)}
                       />
-                      <span className={`flex-1 ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                        {task.title}
-                      </span>
+                      <div className="flex-1">
+                        <span className={task.completed ? "line-through text-muted-foreground" : ""}>
+                          {task.title}
+                        </span>
+                        {task.dueDate && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {task.dueDate < new Date() && !task.completed ? (
+                              <span className="text-destructive font-medium">Overdue: {format(task.dueDate, "MMM d, yyyy")}</span>
+                            ) : (
+                              <span>Due: {format(task.dueDate, "MMM d, yyyy")}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -326,9 +341,20 @@ const ToDoList = () => {
                 }
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
+                onKeyPress={(e) => e.key === "Enter" && !newTaskDueDate && handleAddTask()}
               />
             </div>
+            {activeTab === "task" && (
+              <div className="space-y-2">
+                <Label htmlFor="task-due-date">Due Date (Optional)</Label>
+                <Input
+                  id="task-due-date"
+                  type="date"
+                  value={newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : ""}
+                  onChange={(e) => setNewTaskDueDate(e.target.value ? new Date(e.target.value) : undefined)}
+                />
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>

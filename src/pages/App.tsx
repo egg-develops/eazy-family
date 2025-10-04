@@ -131,6 +131,8 @@ interface HomeConfig {
   byline: string;
   showCalendar: boolean;
   showWeather: boolean;
+  showGreeting: boolean;
+  topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
   headerImage?: string;
@@ -147,6 +149,8 @@ const AppHome = () => {
       byline: t('app.byline'),
       showCalendar: true,
       showWeather: true,
+      showGreeting: true,
+      topNotifications: ["Upcoming Events", "New Photos"],
       quickActions: ["Find Events", "Add Photos"]
     };
   });
@@ -198,38 +202,58 @@ const AppHome = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="text-center space-y-4">
-        <div 
-          className="gradient-warm rounded-2xl p-6 text-center bg-cover bg-center relative overflow-hidden"
-          style={homeConfig.headerImage ? { 
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${homeConfig.headerImage})` 
-          } : {}}
-        >
-          <TextShimmer 
-            as="h2" 
-            className="text-2xl font-bold text-white mb-2 relative z-10"
-            duration={3}
+      {homeConfig.showGreeting && (
+        <div className="text-center space-y-4">
+          <div 
+            className="gradient-warm rounded-2xl p-6 text-center bg-cover bg-center relative overflow-hidden"
+            style={homeConfig.headerImage ? { 
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${homeConfig.headerImage})` 
+            } : {}}
           >
-            {homeConfig.greeting}
-          </TextShimmer>
-          <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
+            <TextShimmer 
+              as="h2" 
+              className="text-2xl font-bold text-white mb-2 relative z-10"
+              duration={3}
+            >
+              {homeConfig.greeting}
+            </TextShimmer>
+            <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Eazy Assistant */}
       <EazyAssistant />
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 text-center shadow-custom-md">
-          <div className="text-2xl font-bold text-primary">3</div>
-          <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
-        </Card>
-        <Card className="p-4 text-center shadow-custom-md">
-          <div className="text-2xl font-bold text-accent">12</div>
-          <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
-        </Card>
-      </div>
+      {homeConfig.topNotifications.length > 0 && (
+        <div className="grid grid-cols-2 gap-4">
+          {homeConfig.topNotifications.includes("Upcoming Events") && (
+            <Card className="p-4 text-center shadow-custom-md">
+              <div className="text-2xl font-bold text-primary">3</div>
+              <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("New Photos") && (
+            <Card className="p-4 text-center shadow-custom-md">
+              <div className="text-2xl font-bold text-accent">12</div>
+              <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("Pending Tasks") && (
+            <Card className="p-4 text-center shadow-custom-md">
+              <div className="text-2xl font-bold text-orange-600">5</div>
+              <div className="text-sm text-muted-foreground">Pending Tasks</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("Shopping List") && (
+            <Card className="p-4 text-center shadow-custom-md">
+              <div className="text-2xl font-bold text-blue-600">8</div>
+              <div className="text-sm text-muted-foreground">Shopping Items</div>
+            </Card>
+          )}
+        </div>
+      )}
 
       {/* Add Widget Buttons */}
       {(!homeConfig.showCalendar || !homeConfig.showWeather) && (

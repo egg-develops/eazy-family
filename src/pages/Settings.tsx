@@ -18,6 +18,8 @@ interface HomeConfig {
   byline: string;
   showCalendar: boolean;
   showWeather: boolean;
+  showGreeting: boolean;
+  topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
   headerImage?: string;
@@ -36,6 +38,8 @@ const Settings = () => {
       byline: "Let's make today amazing",
       showCalendar: true,
       showWeather: true,
+      showGreeting: true,
+      topNotifications: ["Upcoming Events", "New Photos"],
       quickActions: ["Find Events", "Add Photos"],
       iconImage: undefined,
       headerImage: undefined,
@@ -52,7 +56,7 @@ const Settings = () => {
     return localStorage.getItem('eazy-family-dark-mode') === 'true';
   });
   const [colorScheme, setColorScheme] = useState(() => {
-    return localStorage.getItem('eazy-family-color-scheme') || 'blue';
+    return localStorage.getItem('eazy-family-color-scheme') || 'gray';
   });
 
   useEffect(() => {
@@ -85,6 +89,10 @@ const Settings = () => {
     // Update CSS variables based on color scheme
     const root = document.documentElement;
     switch (scheme) {
+      case 'gray':
+        root.style.setProperty('--primary', '240 5% 26%');
+        root.style.setProperty('--accent', '240 5% 40%');
+        break;
       case 'blue':
         root.style.setProperty('--primary', '220 70% 50%');
         root.style.setProperty('--accent', '45 90% 65%');
@@ -186,10 +194,39 @@ const Settings = () => {
   };
 
   const handleQuickActionToggle = (actionId: string, enabled: boolean) => {
-    const newActions = enabled 
+    let newActions = enabled 
       ? [...homeConfig.quickActions, actionId]
       : homeConfig.quickActions.filter(a => a !== actionId);
+    
+    // Limit to 4 actions
+    if (newActions.length > 4) {
+      toast({
+        title: "Limit reached",
+        description: "You can only have up to 4 quick actions.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     saveHomeConfig({ quickActions: newActions });
+  };
+
+  const handleNotificationToggle = (notificationId: string, enabled: boolean) => {
+    let newNotifications = enabled 
+      ? [...homeConfig.topNotifications, notificationId]
+      : homeConfig.topNotifications.filter(n => n !== notificationId);
+    
+    // Limit to 2 notifications
+    if (newNotifications.length > 2) {
+      toast({
+        title: "Limit reached",
+        description: "You can only have up to 2 top notifications.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    saveHomeConfig({ topNotifications: newNotifications });
   };
 
   const handleLogout = () => {
@@ -238,33 +275,49 @@ const Settings = () => {
           <CardDescription>Personalize your home screen</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Greeting */}
-          <div className="space-y-2">
-            <Label htmlFor="greeting">Greeting Message</Label>
-            <div className="flex gap-2">
-              <Input
-                id="greeting"
-                value={editingGreeting}
-                onChange={(e) => setEditingGreeting(e.target.value)}
-                placeholder="Good morning! ☀️"
-              />
-              <Button onClick={handleGreetingEdit}>Save</Button>
+          {/* Greeting Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Show Greeting Block</Label>
+              <p className="text-sm text-muted-foreground">Display greeting message on homepage</p>
             </div>
+            <Switch
+              checked={homeConfig.showGreeting}
+              onCheckedChange={() => saveHomeConfig({ showGreeting: !homeConfig.showGreeting })}
+            />
           </div>
 
-          {/* Byline */}
-          <div className="space-y-2">
-            <Label htmlFor="byline">Byline</Label>
-            <div className="flex gap-2">
-              <Input
-                id="byline"
-                value={editingByline}
-                onChange={(e) => setEditingByline(e.target.value)}
-                placeholder="Let's make today amazing"
-              />
-              <Button onClick={handleBylineEdit}>Save</Button>
+          {/* Greeting */}
+          {homeConfig.showGreeting && (
+            <div className="space-y-2">
+              <Label htmlFor="greeting">Greeting Message</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="greeting"
+                  value={editingGreeting}
+                  onChange={(e) => setEditingGreeting(e.target.value)}
+                  placeholder="Good morning! ☀️"
+                />
+                <Button onClick={handleGreetingEdit}>Save</Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Byline */}
+          {homeConfig.showGreeting && (
+            <div className="space-y-2">
+              <Label htmlFor="byline">Byline</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="byline"
+                  value={editingByline}
+                  onChange={(e) => setEditingByline(e.target.value)}
+                  placeholder="Let's make today amazing"
+                />
+                <Button onClick={handleBylineEdit}>Save</Button>
+              </div>
+            </div>
+          )}
 
           {/* Profile Icon Upload */}
           <div className="space-y-2">
@@ -360,9 +413,9 @@ const Settings = () => {
 
           {/* Quick Actions */}
           <div className="space-y-3">
-            <Label>Quick Actions</Label>
+            <Label>Quick Actions (Max 4)</Label>
             <p className="text-sm text-muted-foreground">
-              Choose which quick actions to display on your homepage
+              Choose up to 4 quick actions to display on your homepage
             </p>
             <div className="grid grid-cols-1 gap-3">
               {availableQuickActions.map((action) => (
@@ -372,8 +425,36 @@ const Settings = () => {
                     onCheckedChange={(checked) => 
                       handleQuickActionToggle(action.id, checked as boolean)
                     }
+                    disabled={!homeConfig.quickActions.includes(action.id) && homeConfig.quickActions.length >= 4}
                   />
                   <span className="font-medium">{action.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Top Notifications */}
+          <div className="space-y-3">
+            <Label>Top Notifications (Max 2)</Label>
+            <p className="text-sm text-muted-foreground">
+              Choose up to 2 notification cards to display on your homepage
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              {[
+                { id: "Upcoming Events", label: "Upcoming Events" },
+                { id: "New Photos", label: "New Photos" },
+                { id: "Pending Tasks", label: "Pending Tasks" },
+                { id: "Shopping List", label: "Shopping List" },
+              ].map((notification) => (
+                <div key={notification.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <Checkbox
+                    checked={homeConfig.topNotifications.includes(notification.id)}
+                    onCheckedChange={(checked) => 
+                      handleNotificationToggle(notification.id, checked as boolean)
+                    }
+                    disabled={!homeConfig.topNotifications.includes(notification.id) && homeConfig.topNotifications.length >= 2}
+                  />
+                  <span className="font-medium">{notification.label}</span>
                 </div>
               ))}
             </div>
@@ -398,9 +479,33 @@ const Settings = () => {
               Upgrade to Pro
             </Button>
           </div>
-          <Button variant="outline" className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={() => navigate('/onboarding')}
+          >
             Manage Family Members
           </Button>
+
+          {/* Calendar Integrations */}
+          <div className="space-y-3">
+            <Label>Calendar Integrations</Label>
+            <p className="text-sm text-muted-foreground">Connect your external calendars</p>
+            <div className="space-y-2">
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
+                <CalendarIcon className="w-4 h-4" />
+                Apple Calendar (Premium)
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
+                <CalendarIcon className="w-4 h-4" />
+                Google Calendar (Premium)
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={handleUpgrade}>
+                <CalendarIcon className="w-4 h-4" />
+                Outlook Calendar (Premium)
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -436,6 +541,16 @@ const Settings = () => {
             <Label>Color Scheme</Label>
             <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
             <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <RadioGroupItem value="gray" id="gray" className="peer sr-only" />
+                <Label
+                  htmlFor="gray"
+                  className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
+                >
+                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(240 5% 26%)' }}></div>
+                  <span className="text-sm font-medium">Gray</span>
+                </Label>
+              </div>
               <div className="relative">
                 <RadioGroupItem value="blue" id="blue" className="peer sr-only" />
                 <Label

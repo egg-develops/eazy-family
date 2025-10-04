@@ -101,6 +101,9 @@ const Calendar = () => {
   }, [items]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogTab, setDialogTab] = useState<"event" | "reminder">("event");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [customRepeatNumber, setCustomRepeatNumber] = useState("1");
+  const [customRepeatUnit, setCustomRepeatUnit] = useState<"days" | "weeks" | "months">("weeks");
   
   // Form states for Event
   const [eventTitle, setEventTitle] = useState("");
@@ -147,6 +150,9 @@ const Calendar = () => {
     setEventEndTime("10:00");
     setEventRepeat("never");
     setEventTravelTime("none");
+    setEditingItemId(null);
+    setCustomRepeatNumber("1");
+    setCustomRepeatUnit("weeks");
   };
 
   const resetReminderForm = () => {
@@ -154,53 +160,148 @@ const Calendar = () => {
     setReminderDate(undefined);
     setReminderTime("");
     setReminderPriority("medium");
+    setEditingItemId(null);
+  };
+
+  const handleEditItem = (item: CalendarItem) => {
+    setEditingItemId(item.id);
+    if (item.type === "event") {
+      setDialogTab("event");
+      setEventTitle(item.title);
+      setEventLocation(item.location || "");
+      setEventAllDay(item.allDay);
+      setEventStartDate(item.startDate);
+      setEventStartTime(format(item.startDate, "HH:mm"));
+      setEventEndDate(item.endDate);
+      setEventEndTime(format(item.endDate, "HH:mm"));
+      setEventRepeat(item.repeat || "never");
+      setEventTravelTime(item.travelTime || "none");
+    } else {
+      setDialogTab("reminder");
+      setReminderTitle(item.title);
+      setReminderDate(item.dueDate);
+      setReminderTime(item.dueTime || "");
+      setReminderPriority(item.priority || "medium");
+    }
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
+    toast({
+      title: "Deleted",
+      description: "Item has been removed from your calendar.",
+    });
   };
 
   const handleAddEvent = () => {
     if (!eventTitle.trim()) return;
     
-    const newEvent: Event = {
-      id: Date.now().toString(),
-      title: eventTitle,
-      startDate: eventStartDate,
-      endDate: eventEndDate,
-      allDay: eventAllDay,
-      location: eventLocation || undefined,
-      repeat: eventRepeat !== "never" ? eventRepeat : undefined,
-      travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
-      type: "event",
-      color: "hsl(220 70% 50%)"
-    };
+    // Parse times and dates
+    const [startHours, startMinutes] = eventStartTime.split(':').map(Number);
+    const [endHours, endMinutes] = eventEndTime.split(':').map(Number);
     
-    setItems([...items, newEvent]);
+    const startDateTime = new Date(eventStartDate);
+    if (!eventAllDay) {
+      startDateTime.setHours(startHours, startMinutes);
+    }
+    
+    const endDateTime = new Date(eventEndDate);
+    if (!eventAllDay) {
+      endDateTime.setHours(endHours, endMinutes);
+    }
+    
+    const repeatValue = eventRepeat === "custom" 
+      ? `Every ${customRepeatNumber} ${customRepeatUnit}`
+      : eventRepeat !== "never" ? eventRepeat : undefined;
+    
+    if (editingItemId) {
+      // Update existing event
+      setItems(items.map(item => 
+        item.id === editingItemId && item.type === "event"
+          ? {
+              ...item,
+              title: eventTitle,
+              startDate: startDateTime,
+              endDate: endDateTime,
+              allDay: eventAllDay,
+              location: eventLocation || undefined,
+              repeat: repeatValue,
+              travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
+            }
+          : item
+      ));
+      toast({
+        title: "Event Updated",
+        description: `${eventTitle} has been updated.`,
+      });
+    } else {
+      // Add new event
+      const newEvent: Event = {
+        id: Date.now().toString(),
+        title: eventTitle,
+        startDate: startDateTime,
+        endDate: endDateTime,
+        allDay: eventAllDay,
+        location: eventLocation || undefined,
+        repeat: repeatValue,
+        travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
+        type: "event",
+        color: "hsl(220 70% 50%)"
+      };
+      
+      setItems([...items, newEvent]);
+      toast({
+        title: "Event Added",
+        description: `${eventTitle} has been added to your calendar.`,
+      });
+    }
+    
     resetEventForm();
     setIsDialogOpen(false);
-    toast({
-      title: "Event Added",
-      description: `${eventTitle} has been added to your calendar.`,
-    });
   };
 
   const handleAddReminder = () => {
     if (!reminderTitle.trim()) return;
     
-    const newReminder: Reminder = {
-      id: Date.now().toString(),
-      title: reminderTitle,
-      dueDate: reminderDate,
-      dueTime: reminderTime || undefined,
-      completed: false,
-      priority: reminderPriority,
-      type: "reminder"
-    };
+    if (editingItemId) {
+      // Update existing reminder
+      setItems(items.map(item => 
+        item.id === editingItemId && item.type === "reminder"
+          ? {
+              ...item,
+              title: reminderTitle,
+              dueDate: reminderDate,
+              dueTime: reminderTime || undefined,
+              priority: reminderPriority,
+            }
+          : item
+      ));
+      toast({
+        title: "Reminder Updated",
+        description: `${reminderTitle} has been updated.`,
+      });
+    } else {
+      // Add new reminder
+      const newReminder: Reminder = {
+        id: Date.now().toString(),
+        title: reminderTitle,
+        dueDate: reminderDate,
+        dueTime: reminderTime || undefined,
+        completed: false,
+        priority: reminderPriority,
+        type: "reminder"
+      };
+      
+      setItems([...items, newReminder]);
+      toast({
+        title: "Reminder Added",
+        description: `${reminderTitle} has been added to your reminders.`,
+      });
+    }
     
-    setItems([...items, newReminder]);
     resetReminderForm();
     setIsDialogOpen(false);
-    toast({
-      title: "Reminder Added",
-      description: `${reminderTitle} has been added to your reminders.`,
-    });
   };
 
   const renderMonthCalendar = () => {
@@ -322,7 +423,8 @@ const Calendar = () => {
             getItemsForDate(selectedDate).map((item) => (
               <div
                 key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => handleEditItem(item)}
               >
                 {item.type === "event" ? (
                   <>
@@ -340,6 +442,11 @@ const Calendar = () => {
                               <span className="truncate">{item.location}</span>
                             </p>
                           )}
+                          {item.repeat && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Repeats: {item.repeat}
+                            </p>
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground whitespace-nowrap">
                           {item.allDay ? (
@@ -353,12 +460,24 @@ const Calendar = () => {
                         </div>
                       </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteItem(item.id);
+                      }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Delete
+                    </Button>
                   </>
                 ) : (
                   <>
                     <Checkbox
                       checked={item.completed}
                       onCheckedChange={() => toggleReminder(item.id)}
+                      onClick={(e) => e.stopPropagation()}
                       className="mt-1"
                     />
                     <div className="flex-1 min-w-0">
@@ -369,6 +488,17 @@ const Calendar = () => {
                         <p className="text-sm text-muted-foreground">{item.dueTime}</p>
                       )}
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteItem(item.id);
+                      }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Delete
+                    </Button>
                   </>
                 )}
               </div>
@@ -490,9 +620,35 @@ const Calendar = () => {
                     <SelectItem value="weekly">Every Week</SelectItem>
                     <SelectItem value="monthly">Every Month</SelectItem>
                     <SelectItem value="yearly">Every Year</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+
+              {eventRepeat === "custom" && (
+                <div className="space-y-2">
+                  <Label>Custom Repeat</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min="1"
+                      value={customRepeatNumber}
+                      onChange={(e) => setCustomRepeatNumber(e.target.value)}
+                      className="w-20"
+                    />
+                    <Select value={customRepeatUnit} onValueChange={(v) => setCustomRepeatUnit(v as "days" | "weeks" | "months")}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="weeks">Weeks</SelectItem>
+                        <SelectItem value="months">Months</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-2 pt-4">
                 <Button
