@@ -12,6 +12,7 @@ import Events from "./pages/Events";
 import Memories from "./pages/Memories";
 import Community from "./pages/Community";
 import Settings from "./pages/Settings";
+import FamilyProfile from "./pages/FamilyProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="memories" element={<Memories />} />
             <Route path="community" element={<Community />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="family" element={<FamilyProfile />} />
           </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

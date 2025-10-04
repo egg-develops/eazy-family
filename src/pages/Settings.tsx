@@ -524,7 +524,7 @@ const Settings = () => {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate('/onboarding')}
+            onClick={() => navigate('/app/family')}
           >
             Manage Family Members
           </Button>

@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      family_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          expires_at: string
+          family_id: string
+          id: string
+          invitee_email: string | null
+          invitee_phone: string | null
+          inviter_id: string
+          role: Database["public"]["Enums"]["family_member_role"]
+          status: Database["public"]["Enums"]["invitation_status"] | null
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at: string
+          family_id: string
+          id?: string
+          invitee_email?: string | null
+          invitee_phone?: string | null
+          inviter_id: string
+          role: Database["public"]["Enums"]["family_member_role"]
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          token: string
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string
+          family_id?: string
+          id?: string
+          invitee_email?: string | null
+          invitee_phone?: string | null
+          inviter_id?: string
+          role?: Database["public"]["Enums"]["family_member_role"]
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          family_id: string
+          full_name: string | null
+          id: string
+          inviter_id: string
+          is_active: boolean | null
+          joined_at: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["family_member_role"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          family_id: string
+          full_name?: string | null
+          id?: string
+          inviter_id: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          phone?: string | null
+          role: Database["public"]["Enums"]["family_member_role"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          family_id?: string
+          full_name?: string | null
+          id?: string
+          inviter_id?: string
+          is_active?: boolean | null
+          joined_at?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["family_member_role"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +150,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      family_member_role:
+        | "parent"
+        | "child"
+        | "grandparent"
+        | "caretaker"
+        | "other"
+      invitation_status: "pending" | "accepted" | "declined" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +283,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      family_member_role: [
+        "parent",
+        "child",
+        "grandparent",
+        "caretaker",
+        "other",
+      ],
+      invitation_status: ["pending", "accepted", "declined", "expired"],
+    },
   },
 } as const
