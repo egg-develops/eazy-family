@@ -106,7 +106,9 @@
     "todayHighlights": "Today's Highlights",
     "quickActions": "Quick Actions",
     "community": "Community",
-    "sharedIn": "shared in"
+    "sharedIn": "shared in",
+    "weather": "Weather",
+    "addLocation": "Add Location"
   },
   "common": {
     "add": "Add",

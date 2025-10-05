@@ -92,7 +92,9 @@
     "todayHighlights": "Heutige Highlights",
     "quickActions": "Schnellaktionen",
     "community": "Gemeinschaft",
-    "sharedIn": "geteilt in"
+    "sharedIn": "geteilt in",
+    "weather": "Wetter",
+    "addLocation": "Standort hinzufügen"
   },
   "common": {
     "add": "Hinzufügen",

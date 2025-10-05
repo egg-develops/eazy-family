@@ -145,7 +145,17 @@ const AppHome = () => {
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
-    const parsed = saved ? JSON.parse(saved) : {
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        showGreeting: parsed.showGreeting !== false,
+        topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
+        quickActions: parsed.quickActions || [],
+      };
+    }
+    // Default config when nothing is saved
+    return {
       greeting: t('app.greeting'),
       byline: t('app.byline'),
       showCalendar: true,
@@ -153,13 +163,6 @@ const AppHome = () => {
       showGreeting: true,
       topNotifications: ["Upcoming Events", "Pending Tasks"],
       quickActions: ["Find Events", "Add Photos"]
-    };
-    // Ensure arrays are always initialized and greeting is visible by default
-    return {
-      ...parsed,
-      showGreeting: parsed.showGreeting !== false, // visible by default
-      topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
-      quickActions: parsed.quickActions || [],
     };
   });
   

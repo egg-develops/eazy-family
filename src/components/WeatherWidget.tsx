@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Plus, Cloud } from "lucide-react";
+import { MapPin, Cloud } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface WeatherLocation {
   id: string;
@@ -23,6 +24,7 @@ interface WeatherData {
 }
 
 export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
+  const { t } = useTranslation();
   const [locations, setLocations] = useState<WeatherLocation[]>([]);
   const [currentLocationIndex, setCurrentLocationIndex] = useState(0);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -188,9 +190,14 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   if (loading && !weatherData) {
     return (
       <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
-        <div className="flex items-center justify-center gap-3 text-white">
-          <Cloud className="w-8 h-8" />
-          <p className="opacity-90">Loading weather...</p>
+        <div className="flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <Cloud className="w-8 h-8" />
+            <div>
+              <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
+              <p className="text-sm opacity-90">Loading...</p>
+            </div>
+          </div>
         </div>
       </Card>
     );
@@ -211,6 +218,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       <div className="space-y-4">
         <div className="flex items-center justify-between text-white">
           <div className="flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Cloud className="w-5 h-5" />
+              <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
+            </div>
             {currentLocation && (
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4" />
@@ -263,12 +274,12 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
               className="text-white hover:bg-white/20 gap-2"
             >
               <Cloud className="w-4 h-4" />
-              Add Location
+              {t('home.addLocation')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Weather Location</DialogTitle>
+              <DialogTitle>{t('home.addLocation')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex gap-2">

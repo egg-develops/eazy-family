@@ -153,7 +153,6 @@ export const EazyAssistant = () => {
               </TextLoop>
             </div>
           </div>
-          <Sparkles className="w-12 h-12 opacity-20 flex-shrink-0" />
         </div>
       </Card>
     );

@@ -92,7 +92,9 @@
     "todayHighlights": "Momenti salienti di oggi",
     "quickActions": "Azioni rapide",
     "community": "Comunità",
-    "sharedIn": "condiviso in"
+    "sharedIn": "condiviso in",
+    "weather": "Meteo",
+    "addLocation": "Aggiungi posizione"
   },
   "common": {
     "add": "Aggiungi",
