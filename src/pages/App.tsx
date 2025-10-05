@@ -23,6 +23,7 @@ import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { EazyAssistant } from "@/components/EazyAssistant";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Checkbox } from "@/components/ui/checkbox";
+import { WeatherWidget } from "@/components/WeatherWidget";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -301,25 +302,9 @@ const AppHome = () => {
         </div>
       )}
 
-      {/* Weather Card */}
+      {/* Weather Widget */}
       {homeConfig.showWeather && (
-        <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
-          <button 
-            onClick={removeWeather}
-            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors"
-            aria-label="Remove weather"
-          >
-            ×
-          </button>
-          <div className="flex items-center justify-between text-white">
-            <div>
-              <p className="text-sm opacity-90">Zurich</p>
-              <h3 className="text-4xl font-bold">22°C</h3>
-              <p className="text-sm opacity-90">Partly Cloudy</p>
-            </div>
-            <div className="text-6xl">☁️</div>
-          </div>
-        </Card>
+        <WeatherWidget onRemove={removeWeather} />
       )}
 
       {/* Today's Highlights */}
