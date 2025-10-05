@@ -678,12 +678,12 @@ const Calendar = () => {
                 >
                   Cancel
                 </Button>
-                <Button
+                <ParticleButton
                   className="flex-1 gradient-primary text-white border-0"
                   onClick={handleAddEvent}
                 >
                   Add
-                </Button>
+                </ParticleButton>
               </div>
             </TabsContent>
 
@@ -742,12 +742,12 @@ const Calendar = () => {
                 >
                   Cancel
                 </Button>
-                <Button
+                <ParticleButton
                   className="flex-1 gradient-primary text-white border-0"
                   onClick={handleAddReminder}
                 >
                   Add
-                </Button>
+                </ParticleButton>
               </div>
             </TabsContent>
           </Tabs>

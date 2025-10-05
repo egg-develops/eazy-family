@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { triggerGamification } from "@/components/GamificationToast";
 
 interface Task {
   id: string;
@@ -174,9 +175,21 @@ const ToDoList = () => {
   };
 
   const toggleTask = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    const wasCompleted = task?.completed;
+    
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
+    
+    // Trigger celebration when marking as complete (not when uncompleting)
+    if (task && !wasCompleted) {
+      triggerGamification({
+        type: activeTab === 'task' ? 'list_created' : activeTab === 'shopping' ? 'photo_shared' : 'event_added',
+        title: '✨ Task Complete!',
+        points: 10
+      });
+    }
   };
 
   const deleteTask = (id: string) => {
