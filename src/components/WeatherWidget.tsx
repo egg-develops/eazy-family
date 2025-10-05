@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Plus } from "lucide-react";
+import { MapPin, Plus, Cloud } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -188,7 +188,8 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   if (loading && !weatherData) {
     return (
       <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
-        <div className="flex items-center justify-center text-white">
+        <div className="flex items-center justify-center gap-3 text-white">
+          <Cloud className="w-8 h-8" />
           <p className="opacity-90">Loading weather...</p>
         </div>
       </Card>
@@ -261,7 +262,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
               size="sm"
               className="text-white hover:bg-white/20 gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Cloud className="w-4 h-4" />
               Add Location
             </Button>
           </DialogTrigger>
