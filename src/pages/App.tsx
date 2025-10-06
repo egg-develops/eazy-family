@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
@@ -13,7 +13,8 @@ import {
   Home,
   Search,
   CheckSquare,
-  Menu
+  Menu,
+  Cloud
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -176,6 +177,7 @@ const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
+  const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     if (saved) {
@@ -243,9 +245,44 @@ const AppHome = () => {
     localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
   };
 
+  const handleHeaderImageUpload = async (file: File) => {
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-uploads')
+        .getPublicUrl(filePath);
+
+      const newConfig = { ...homeConfig, headerImage: publicUrl };
+      setHomeConfig(newConfig);
+      localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Hero Image Section */}
+      <input
+        ref={headerImageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleHeaderImageUpload(file);
+        }}
+      />
       {homeConfig.headerImage ? (
         <div className="relative rounded-2xl overflow-hidden h-48 md:h-64">
           <img 
@@ -254,7 +291,7 @@ const AppHome = () => {
             className="w-full h-full object-cover"
           />
           <button
-            onClick={() => navigate('/app/settings')}
+            onClick={() => headerImageInputRef.current?.click()}
             className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
             title="Change hero image"
           >
@@ -263,13 +300,12 @@ const AppHome = () => {
         </div>
       ) : (
         <div 
-          onClick={() => navigate('/app/settings')}
+          onClick={() => headerImageInputRef.current?.click()}
           className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:bg-primary-hover transition-colors group"
         >
           <div className="text-center text-primary-foreground">
             <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />
-            <p className="font-semibold">Add Hero Image</p>
-            <p className="text-sm opacity-80">Tap to upload in Settings</p>
+            <p className="font-semibold text-lg">Add Hero Image</p>
           </div>
         </div>
       )}
@@ -321,26 +357,25 @@ const AppHome = () => {
 
       {/* Add Widget Buttons */}
       {(!homeConfig.showCalendar || !homeConfig.showWeather) && (
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {!homeConfig.showCalendar && (
             <Button 
               variant="outline" 
-              size="sm"
+              className="h-auto p-4 flex flex-col gap-2 border-2 border-blue-500/30 hover:border-blue-500 transition-all"
               onClick={addCalendar}
-              className="gap-2"
             >
-              <Calendar className="w-4 h-4" />
-              Calendar
+              <Calendar className="w-5 h-5" />
+              <span className="text-sm">Calendar</span>
             </Button>
           )}
           {!homeConfig.showWeather && (
             <Button 
               variant="outline" 
-              size="sm"
+              className="h-auto p-4 flex flex-col gap-2 border-2 border-cyan-500/30 hover:border-cyan-500 transition-all"
               onClick={addWeather}
-              className="gap-2"
             >
-              ☁️ Weather
+              <Cloud className="w-5 h-5" />
+              <span className="text-sm">Weather</span>
             </Button>
           )}
         </div>
@@ -353,10 +388,14 @@ const AppHome = () => {
 
       {/* Today's Highlights */}
       {homeConfig.showCalendar && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
-            <div className="flex items-center gap-2">
+        <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
+              </div>
+              <div className="flex items-center gap-2">
               <div className="flex gap-1 bg-muted rounded-lg p-1">
                 <Button 
                   variant="ghost" 
@@ -397,9 +436,9 @@ const AppHome = () => {
             <>
               {todayEvents.length > 0 ? (
                 todayEvents.map((event: any) => (
-                   <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-primary">
+                  <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+                      <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                       <div className="flex-1">
                         <h4 className="font-medium">{event.title}</h4>
                         <p className="text-sm text-muted-foreground">
@@ -422,10 +461,10 @@ const AppHome = () => {
             <Card className="p-4 shadow-custom-md">
               <div className="grid grid-cols-7 gap-2 text-center">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                  <div key={day} className={`p-2 rounded ${i === 2 ? 'bg-primary/10 border border-primary' : ''}`}>
+                  <div key={day} className={`p-2 rounded ${i === 2 ? 'bg-blue-500/10 border border-blue-500' : ''}`}>
                     <div className="text-xs text-muted-foreground">{day}</div>
                     <div className="text-sm font-semibold">{i + 1}</div>
-                    {i === 2 && <div className="w-1 h-1 bg-primary rounded-full mx-auto mt-1" />}
+                    {i === 2 && <div className="w-1 h-1 bg-blue-500 rounded-full mx-auto mt-1" />}
                   </div>
                 ))}
               </div>
@@ -440,7 +479,7 @@ const AppHome = () => {
                   <div key={day} className="text-muted-foreground p-1">{day}</div>
                 ))}
                 {Array.from({ length: 31 }, (_, i) => (
-                  <div key={i} className={`p-1 rounded ${i === 1 ? 'bg-primary text-primary-foreground font-bold' : ''}`}>
+                  <div key={i} className={`p-1 rounded ${i === 1 ? 'bg-blue-500 text-white font-bold' : ''}`}>
                     {i + 1}
                   </div>
                 ))}
@@ -448,6 +487,7 @@ const AppHome = () => {
             </Card>
           )}
         </div>
+        </Card>
       )}
 
       {/* Quick Actions */}

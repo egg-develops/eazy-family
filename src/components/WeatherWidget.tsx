@@ -189,13 +189,13 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   if (loading && !weatherData) {
     return (
-      <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
-        <div className="flex items-center justify-between text-white">
+      <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Cloud className="w-8 h-8" />
+            <Cloud className="w-8 h-8 text-cyan-500" />
             <div>
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
-              <p className="text-sm opacity-90">Loading...</p>
+              <p className="text-sm opacity-70">Loading...</p>
             </div>
           </div>
         </div>
@@ -206,32 +206,32 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const currentLocation = locations[currentLocationIndex];
 
   return (
-    <Card className="p-6 shadow-custom-md gradient-cool relative overflow-hidden">
+    <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
       <button 
         onClick={onRemove}
-        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors z-10"
+        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
         aria-label="Remove weather"
       >
         ×
       </button>
       
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <Cloud className="w-5 h-5 flex-shrink-0" />
+              <Cloud className="w-5 h-5 text-cyan-500 flex-shrink-0" />
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             </div>
             {currentLocation && (
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4" />
-                <p className="text-sm opacity-90">{currentLocation.name}</p>
+                <p className="text-sm opacity-70">{currentLocation.name}</p>
               </div>
             )}
             {weatherData && (
               <>
                 <h3 className="text-4xl font-bold">{weatherData.temp}°C</h3>
-                <p className="text-sm opacity-90 capitalize">{weatherData.description}</p>
+                <p className="text-sm opacity-70 capitalize">{weatherData.description}</p>
               </>
             )}
           </div>
@@ -248,7 +248,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                   variant={index === currentLocationIndex ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => switchLocation(index)}
-                  className="text-white hover:bg-white/20 whitespace-nowrap"
+                  className="hover:bg-muted whitespace-nowrap"
                 >
                   {loc.name}
                 </Button>
@@ -271,7 +271,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/20 gap-2"
+              className="hover:bg-muted gap-2"
             >
               <Cloud className="w-4 h-4" />
               {t('home.addLocation')}
