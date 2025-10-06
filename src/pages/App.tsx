@@ -134,7 +134,7 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary/95 backdrop-blur-sm border-t-2 border-primary-hover shadow-custom-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t shadow-custom-lg">
           <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">
@@ -143,8 +143,8 @@ const AppLayout = () => {
                     title: item.label,
                     icon: item.icon,
                   }))}
-                  activeColor="text-primary-foreground drop-shadow-lg"
-                  inactiveColor="text-primary-foreground/80 drop-shadow-md"
+                  activeColor="text-foreground"
+                  inactiveColor="text-foreground/80"
                   className="bg-transparent border-none"
                   onChange={(index) => {
                     if (index !== null) {
