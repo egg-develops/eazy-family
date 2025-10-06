@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
 
 // Interfaces and mock data
 interface Group {
@@ -109,7 +110,7 @@ const mockItems: MarketItem[] = [
 
 const Community = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('marketplace');
+  const [activeTab, setActiveTab] = useState('messages');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
 
@@ -144,17 +145,17 @@ const Community = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="marketplace">
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            {t('community.marketplace')}
+          <TabsTrigger value="messages">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            {t('community.messages')}
           </TabsTrigger>
           <TabsTrigger value="groups">
             <Users className="w-4 h-4 mr-2" />
             {t('community.groups')}
           </TabsTrigger>
-          <TabsTrigger value="messages">
-            <MessageCircle className="w-4 h-4 mr-2" />
-            {t('community.messages')}
+          <TabsTrigger value="marketplace">
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            {t('community.marketplace')}
           </TabsTrigger>
         </TabsList>
 
@@ -290,9 +291,11 @@ const Community = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('community.messagingDesc')}
               </p>
-              <Badge variant="secondary" className="text-xs">
-                {t('community.premiumFeature')}
-              </Badge>
+              <UpgradeDialog>
+                <Button className="gradient-primary text-white border-0">
+                  Upgrade to Family Plan
+                </Button>
+              </UpgradeDialog>
             </CardContent>
           </Card>
         </TabsContent>
