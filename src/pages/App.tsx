@@ -12,24 +12,26 @@ import {
   ShoppingCart,
   Home,
   Search,
-  CheckSquare
+  CheckSquare,
+  Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { EazyAssistant } from "@/components/EazyAssistant";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WeatherWidget } from "@/components/WeatherWidget";
+import { NavLink } from "react-router-dom";
 
 const AppLayout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
@@ -55,52 +57,83 @@ const AppLayout = () => {
 
   const currentPath = location.pathname;
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
+  const isActive = (path: string) => currentPath === path;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        {/* Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/app')}
-                className="flex items-center gap-3 hover:bg-transparent p-0"
-              >
-                {(() => {
-                  const savedConfig = localStorage.getItem('eazy-family-home-config');
-                  const config = savedConfig ? JSON.parse(savedConfig) : {};
-                  const iconUrl = config.iconImage;
-                  
-                  return iconUrl ? (
-                    <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">{userInitials}</span>
-                    </div>
-                  );
-                })()}
-                <div className="flex-1 min-w-0">
-                  <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
-                    {t('app.name')}
-                  </h1>
+    <div className="min-h-screen flex w-full bg-background">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            {/* Hamburger Menu */}
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:flex">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <div className="py-6">
+                  <nav className="space-y-1 px-3">
+                    {navigationItems.map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <NavLink
+                          key={item.id}
+                          to={item.path}
+                          end
+                          onClick={() => setMenuOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            isActive(item.path)
+                              ? "bg-primary text-white font-semibold shadow-custom-md"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span>{item.label}</span>
+                        </NavLink>
+                      )
+                    })}
+                  </nav>
                 </div>
-              </Button>
-            </div>
-          </div>
-        </header>
+              </SheetContent>
+            </Sheet>
 
-        <AppSidebar />
-
-        {/* Main Content */}
-        <main className="flex-1 pt-16 pb-20 lg:pb-6 overflow-x-hidden">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            {isHomePath ? <AppHome /> : <Outlet />}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/app')}
+              className="flex items-center gap-3 hover:bg-transparent p-0"
+            >
+              {(() => {
+                const savedConfig = localStorage.getItem('eazy-family-home-config');
+                const config = savedConfig ? JSON.parse(savedConfig) : {};
+                const iconUrl = config.iconImage;
+                
+                return iconUrl ? (
+                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
+                ) : (
+                  <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">{userInitials}</span>
+                  </div>
+                );
+              })()}
+              <div className="flex-1 min-w-0">
+                <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
+                  {t('app.name')}
+                </h1>
+              </div>
+            </Button>
           </div>
-        </main>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 pt-16 pb-20 lg:pb-6 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          {isHomePath ? <AppHome /> : <Outlet />}
+        </div>
+      </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 gradient-primary border-t-2 border-white/20 shadow-custom-lg">
@@ -125,8 +158,7 @@ const AppLayout = () => {
             </div>
           </div>
         </nav>
-      </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
