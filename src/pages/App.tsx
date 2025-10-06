@@ -103,7 +103,7 @@ const AppLayout = () => {
         </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 gradient-primary border-t-2 border-primary shadow-custom-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 gradient-primary border-t-2 border-white/20 shadow-custom-lg">
           <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">
@@ -112,9 +112,9 @@ const AppLayout = () => {
                     title: item.label,
                     icon: item.icon,
                   }))}
-                  activeColor="text-white"
-                  inactiveColor="text-white/80"
-                  className="bg-white/20 backdrop-blur-md border-white/30 shadow-custom-lg"
+                  activeColor="text-white drop-shadow-lg"
+                  inactiveColor="text-white drop-shadow-md"
+                  className="bg-transparent border-none"
                   onChange={(index) => {
                     if (index !== null) {
                       navigate(navigationItems[index].path);

@@ -100,13 +100,13 @@ export function ExpandableTabs({
             onClick={() => handleSelect(index)}
             transition={transition}
             className={cn(
-              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300",
               selected === index
-                ? cn("bg-muted", activeColor)
-                : cn(inactiveColor, "hover:bg-muted hover:brightness-110")
+                ? cn("bg-white/30", activeColor)
+                : cn(inactiveColor, "hover:bg-white/20")
             )}
           >
-            <Icon size={20} />
+            <Icon size={20} className="drop-shadow-md" />
             <AnimatePresence initial={false}>
               {selected === index && (
                 <motion.span
@@ -115,7 +115,7 @@ export function ExpandableTabs({
                   animate="animate"
                   exit="exit"
                   transition={transition}
-                  className="overflow-hidden"
+                  className="overflow-hidden drop-shadow-md"
                 >
                   {tabData.title}
                 </motion.span>
