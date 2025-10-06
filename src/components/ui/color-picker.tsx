@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ColorPickerProps {
   value: string;
@@ -8,6 +9,12 @@ interface ColorPickerProps {
 }
 
 export function ColorPicker({ value, onChange }: ColorPickerProps) {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return null;
+  }
+  
   return (
     <div className="flex items-center gap-4">
       <div className="relative">

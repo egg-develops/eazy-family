@@ -175,7 +175,7 @@ export const EazyAssistant = () => {
         </Button>
       </div>
 
-      <ScrollArea className="h-[400px] p-4" ref={scrollRef}>
+      <ScrollArea className="h-[300px] p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">

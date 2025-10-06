@@ -585,7 +585,10 @@ const AppHome = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">{t('home.community')}</h3>
         
-        <Card className="p-4 shadow-custom-md">
+        <Card 
+          className="p-4 shadow-custom-md cursor-pointer hover:shadow-custom-lg transition-shadow"
+          onClick={() => navigate('/app/community')}
+        >
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 gradient-cool rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">MK</span>
