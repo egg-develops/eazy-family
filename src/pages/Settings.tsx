@@ -83,10 +83,14 @@ const Settings = () => {
     const root = document.documentElement;
     if (colorScheme === 'custom') {
       const hsl = hexToHSL(customColor);
+      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
+      const hoverL = Math.max(l - 10, 10);
       root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
       root.style.setProperty('--accent', hsl);
     } else if (colorScheme === 'gray') {
       root.style.setProperty('--primary', '240 5% 64%');
+      root.style.setProperty('--primary-hover', '240 5% 54%');
       root.style.setProperty('--accent', '240 5% 74%');
     }
   }, []);
@@ -96,7 +100,10 @@ const Settings = () => {
     if (colorScheme === 'custom') {
       const root = document.documentElement;
       const hsl = hexToHSL(customColor);
+      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
+      const hoverL = Math.max(l - 10, 10);
       root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
       root.style.setProperty('--accent', hsl);
     }
   }, [customColor, colorScheme]);
@@ -146,10 +153,14 @@ const Settings = () => {
     const root = document.documentElement;
     if (scheme === 'gray') {
       root.style.setProperty('--primary', '240 5% 64%');
+      root.style.setProperty('--primary-hover', '240 5% 54%');
       root.style.setProperty('--accent', '240 5% 74%');
     } else if (scheme === 'custom') {
       const hsl = hexToHSL(customColor);
+      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
+      const hoverL = Math.max(l - 10, 10); // Darken by 10% for hover
       root.style.setProperty('--primary', hsl);
+      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
       root.style.setProperty('--accent', hsl);
     }
     

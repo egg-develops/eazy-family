@@ -134,7 +134,7 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t shadow-custom-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg">
           <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">
@@ -143,8 +143,8 @@ const AppLayout = () => {
                     title: item.id === "settings" ? "" : item.label,
                     icon: item.icon,
                   }))}
-                  activeColor="text-primary-foreground"
-                  inactiveColor="text-primary-foreground/70"
+                  activeColor="text-white font-semibold drop-shadow-lg"
+                  inactiveColor="text-white/80 drop-shadow-md"
                   className="bg-transparent border-none"
                   onChange={(index) => {
                     if (index !== null) {
@@ -245,23 +245,31 @@ const AppHome = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      {homeConfig.showGreeting && (
-        <div className="text-center space-y-4">
-          <div 
-            className="gradient-warm rounded-2xl p-6 text-center bg-cover bg-center relative overflow-hidden"
-            style={homeConfig.headerImage ? { 
-              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${homeConfig.headerImage})` 
-            } : {}}
+      {/* Hero Image Section */}
+      {homeConfig.headerImage ? (
+        <div className="relative rounded-2xl overflow-hidden h-48 md:h-64">
+          <img 
+            src={homeConfig.headerImage} 
+            alt="Hero" 
+            className="w-full h-full object-cover"
+          />
+          <button
+            onClick={() => navigate('/app/settings')}
+            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            title="Change hero image"
           >
-            <TextShimmer 
-              as="h2" 
-              className="text-2xl font-bold text-white mb-2 relative z-10"
-              duration={3}
-            >
-              {homeConfig.greeting}
-            </TextShimmer>
-            <p className="text-white/90 relative z-10">{homeConfig.byline}</p>
+            <Camera className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <div 
+          onClick={() => navigate('/app/settings')}
+          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-gradient-warm flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group"
+        >
+          <div className="text-center text-white">
+            <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />
+            <p className="font-semibold">Add Hero Image</p>
+            <p className="text-sm opacity-80">Tap to upload in Settings</p>
           </div>
         </div>
       )}
