@@ -236,7 +236,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
             )}
           </div>
           {weatherData && (
-            <div className="text-6xl">{weatherData.icon}</div>
+            <div className="text-3xl">{weatherData.icon}</div>
           )}
         </div>
 

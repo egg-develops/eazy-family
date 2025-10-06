@@ -143,9 +143,9 @@ const AppLayout = () => {
                     title: item.id === "settings" ? "" : item.label,
                     icon: item.icon,
                   }))}
-                  activeColor="text-white font-semibold drop-shadow-lg"
-                  inactiveColor="text-white/80 drop-shadow-md"
-                  className="bg-transparent border-none"
+                  activeColor="text-primary-foreground font-semibold drop-shadow-lg"
+                  inactiveColor="text-primary-foreground/80 drop-shadow-md"
+                  className="bg-primary border-none"
                   onChange={(index) => {
                     if (index !== null) {
                       navigate(navigationItems[index].path);
@@ -494,10 +494,10 @@ const AppHome = () => {
               <Button 
                 key={index} 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col gap-2"
+                className="h-auto p-4 flex flex-col gap-2 border-2 hover:border-primary transition-all"
                 onClick={handleActionClick}
               >
-                <ActionIcon className="w-6 h-6" />
+                <ActionIcon className="w-5 h-5" />
                 <span className="text-sm">{action}</span>
               </Button>
             );

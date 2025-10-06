@@ -326,50 +326,6 @@ const Settings = () => {
           <CardDescription>Personalize your home screen</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Greeting Toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Show Greeting Block</Label>
-              <p className="text-sm text-muted-foreground">Display greeting message on homepage</p>
-            </div>
-            <Switch
-              checked={homeConfig.showGreeting}
-              onCheckedChange={() => saveHomeConfig({ showGreeting: !homeConfig.showGreeting })}
-            />
-          </div>
-
-          {/* Greeting */}
-          {homeConfig.showGreeting && (
-            <div className="space-y-2">
-              <Label htmlFor="greeting">Greeting Message</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="greeting"
-                  value={editingGreeting}
-                  onChange={(e) => setEditingGreeting(e.target.value)}
-                  placeholder="Good morning! ☀️"
-                />
-                <Button onClick={handleGreetingEdit}>Save</Button>
-              </div>
-            </div>
-          )}
-
-          {/* Byline */}
-          {homeConfig.showGreeting && (
-            <div className="space-y-2">
-              <Label htmlFor="byline">Byline</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="byline"
-                  value={editingByline}
-                  onChange={(e) => setEditingByline(e.target.value)}
-                  placeholder="Let's make today amazing"
-                />
-                <Button onClick={handleBylineEdit}>Save</Button>
-              </div>
-            </div>
-          )}
-
           {/* Profile Icon Upload */}
           <div className="space-y-2">
             <Label htmlFor="profile-icon">Profile Icon</Label>
@@ -520,14 +476,13 @@ const Settings = () => {
           <CardDescription>Manage your subscription and family</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <UpgradeDialog>
-              <Button className="gap-2 gradient-primary text-white border-0">
-                <Crown className="h-4 w-4" />
-                Upgrade to Family Plan
-              </Button>
-            </UpgradeDialog>
-          </div>
+          <UpgradeDialog>
+            <Button className="w-full gap-2 gradient-primary text-white border-0">
+              <Crown className="h-4 w-4" />
+              Upgrade to Family Plan
+            </Button>
+          </UpgradeDialog>
+          
           <Button 
             variant="outline" 
             className="w-full"

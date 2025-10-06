@@ -128,16 +128,16 @@ export const EazyAssistant = () => {
   if (!isOpen) {
     return (
       <Card 
-        className="p-6 shadow-custom-lg cursor-pointer hover:shadow-custom-xl transition-shadow gradient-primary relative overflow-hidden"
+        className="p-6 shadow-custom-lg cursor-pointer hover:shadow-custom-xl transition-shadow bg-primary relative overflow-hidden"
         onClick={() => setIsOpen(true)}
       >
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between text-primary-foreground">
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 flex-shrink-0" />
               <h3 className="text-xl font-bold">Eazy Assistant</h3>
             </div>
-            <div className="text-white/90 text-sm min-h-[40px]">
+            <div className="text-primary-foreground/90 text-sm min-h-[40px]">
               <TextLoop interval={3}>
                 {[
                   "Rainy day activities with two children",
@@ -160,8 +160,8 @@ export const EazyAssistant = () => {
 
   return (
     <Card className="shadow-custom-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-primary to-primary/80 p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white">
+      <div className="bg-primary p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-primary-foreground">
           <Sparkles className="w-5 h-5" />
           <h3 className="font-bold">Eazy Assistant</h3>
         </div>
@@ -169,7 +169,7 @@ export const EazyAssistant = () => {
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(false)}
-          className="text-white hover:bg-white/20"
+          className="text-primary-foreground hover:bg-primary-foreground/20"
         >
           <X className="w-5 h-5" />
         </Button>
@@ -227,6 +227,7 @@ export const EazyAssistant = () => {
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
             size="icon"
+            className="bg-primary hover:bg-primary-hover text-primary-foreground"
           >
             <Send className="w-4 h-4" />
           </Button>
