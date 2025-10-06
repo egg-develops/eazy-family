@@ -219,7 +219,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         <div className="flex items-center justify-between text-white">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <Cloud className="w-5 h-5" />
+              <Cloud className="w-5 h-5 flex-shrink-0" />
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             </div>
             {currentLocation && (

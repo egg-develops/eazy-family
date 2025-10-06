@@ -264,9 +264,9 @@ const AppHome = () => {
       ) : (
         <div 
           onClick={() => navigate('/app/settings')}
-          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-gradient-warm flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group"
+          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:bg-primary-hover transition-colors group"
         >
-          <div className="text-center text-white">
+          <div className="text-center text-primary-foreground">
             <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />
             <p className="font-semibold">Add Hero Image</p>
             <p className="text-sm opacity-80">Tap to upload in Settings</p>
@@ -397,9 +397,9 @@ const AppHome = () => {
             <>
               {todayEvents.length > 0 ? (
                 todayEvents.map((event: any) => (
-                  <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-primary">
+                   <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-primary">
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-primary" />
+                      <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
                       <div className="flex-1">
                         <h4 className="font-medium">{event.title}</h4>
                         <p className="text-sm text-muted-foreground">
