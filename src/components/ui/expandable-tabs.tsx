@@ -106,7 +106,7 @@ export function ExpandableTabs({
                 : cn(inactiveColor, "hover:bg-white/20")
             )}
           >
-            <Icon size={20} className="drop-shadow-md" />
+            <Icon size={20} className="drop-shadow-md flex-shrink-0" />
             <AnimatePresence initial={false}>
               {selected === index && (
                 <motion.span
@@ -115,7 +115,7 @@ export function ExpandableTabs({
                   animate="animate"
                   exit="exit"
                   transition={transition}
-                  className="overflow-hidden drop-shadow-md"
+                  className="overflow-hidden drop-shadow-md whitespace-nowrap"
                 >
                   {tabData.title}
                 </motion.span>
