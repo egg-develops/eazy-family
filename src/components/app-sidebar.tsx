@@ -41,8 +41,8 @@ export function AppSidebar() {
   const isActive = (path: string) => currentPath === path
   const getNavCls = (isActive: boolean) =>
     isActive 
-      ? "bg-primary text-primary-foreground font-semibold shadow-custom-md scale-105" 
-      : "hover:bg-muted/50 hover:scale-102 transition-all duration-200"
+      ? "bg-primary text-white font-semibold shadow-custom-md" 
+      : "text-foreground hover:bg-muted/50 hover:scale-102 transition-all duration-200"
 
   return (
     <Sidebar className={`${collapsed ? "w-12" : "w-48"} pt-16 hidden md:flex`} collapsible="icon">
@@ -59,9 +59,9 @@ export function AppSidebar() {
                         to={item.path} 
                         end 
                         className={`${getNavCls(isActive(item.path))} transition-all duration-300`}
-                        onClick={() => !collapsed && setOpen(false)}
+                        onClick={() => setOpen(false)}
                       >
-                        <Icon className={`h-4 w-4 ${collapsed ? "" : "mr-2"} ${isActive(item.path) ? "animate-pulse" : ""}`} />
+                        <Icon className={`h-4 w-4 ${collapsed ? "" : "mr-2"}`} />
                         {!collapsed && <span>{item.label}</span>}
                       </NavLink>
                     </SidebarMenuButton>
