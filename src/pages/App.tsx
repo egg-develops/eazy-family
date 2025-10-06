@@ -103,8 +103,8 @@ const AppLayout = () => {
         </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 glass-effect border-t">
-          <div className="max-w-md mx-auto px-2 py-2">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 gradient-primary border-t-2 border-primary shadow-custom-lg">
+          <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">
                 <ExpandableTabs
@@ -112,6 +112,8 @@ const AppLayout = () => {
                     title: item.label,
                     icon: item.icon,
                   }))}
+                  activeColor="text-white"
+                  className="bg-white/20 backdrop-blur-md border-white/30 shadow-custom-lg"
                   onChange={(index) => {
                     if (index !== null) {
                       navigate(navigationItems[index].path);
