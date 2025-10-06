@@ -18,7 +18,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { EazyAssistant } from "@/components/EazyAssistant";
 import { TextShimmer } from "@/components/ui/text-shimmer";
@@ -31,7 +36,6 @@ const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
@@ -40,7 +44,7 @@ const AppLayout = () => {
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
-    { id: "settings", label: "", icon: Settings, path: "/app/settings" },
+    { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ];
 
   useEffect(() => {
@@ -65,39 +69,33 @@ const AppLayout = () => {
       <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            {/* Hamburger Menu */}
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:flex">
+            {/* Hamburger Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0">
-                <div className="py-6">
-                  <nav className="space-y-1 px-3">
-                    {navigationItems.map((item) => {
-                      const Icon = item.icon
-                      return (
-                        <NavLink
-                          key={item.id}
-                          to={item.path}
-                          end
-                          onClick={() => setMenuOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                            isActive(item.path)
-                              ? "bg-primary text-white font-semibold shadow-custom-md"
-                              : "text-foreground hover:bg-muted"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span>{item.label}</span>
-                        </NavLink>
-                      )
-                    })}
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 bg-background z-50">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <DropdownMenuItem
+                      key={item.id}
+                      onClick={() => navigate(item.path)}
+                      className={`flex items-center gap-3 cursor-pointer ${
+                        isActive(item.path)
+                          ? "bg-primary text-white font-semibold"
+                          : ""
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Button
               variant="ghost"
