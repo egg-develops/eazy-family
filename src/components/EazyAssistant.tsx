@@ -137,7 +137,7 @@ export const EazyAssistant = () => {
               <Sparkles className="w-6 h-6 flex-shrink-0" />
               <h3 className="text-xl font-bold">Eazy Assistant</h3>
             </div>
-            <div className="text-primary-foreground/90 text-sm min-h-[40px]">
+            <div className="text-primary-foreground/90 text-sm min-h-[40px] pt-3">
               <TextLoop interval={3}>
                 {[
                   "Rainy day activities with two children",

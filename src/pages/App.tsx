@@ -391,10 +391,9 @@ const AppHome = () => {
         <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                <h3 className="text-lg font-semibold">{t('home.todayHighlights')}</h3>
-              </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            </div>
               <div className="flex items-center gap-2">
               <div className="flex gap-1 bg-muted rounded-lg p-1">
                 <Button 
@@ -534,7 +533,7 @@ const AppHome = () => {
               <Button 
                 key={index} 
                 variant="outline" 
-                className="h-auto p-4 flex flex-col gap-2 border-2 hover:border-primary transition-all"
+                className="h-auto p-4 flex flex-col gap-2 border-2 border-primary/30 hover:border-primary transition-all"
                 onClick={handleActionClick}
               >
                 <ActionIcon className="w-5 h-5" />
