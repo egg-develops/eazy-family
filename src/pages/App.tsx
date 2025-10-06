@@ -76,17 +76,17 @@ const AppLayout = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-background z-50">
+              <DropdownMenuContent align="start" className="w-56 bg-background border shadow-lg z-50">
                 {navigationItems.map((item) => {
                   const Icon = item.icon
                   return (
                     <DropdownMenuItem
                       key={item.id}
                       onClick={() => navigate(item.path)}
-                      className={`flex items-center gap-3 cursor-pointer ${
+                      className={`flex items-center gap-3 cursor-pointer transition-colors ${
                         isActive(item.path)
-                          ? "bg-primary text-white font-semibold"
-                          : ""
+                          ? "bg-primary text-primary-foreground font-semibold"
+                          : "hover:bg-accent hover:text-accent-foreground"
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -134,17 +134,17 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t shadow-custom-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t shadow-custom-lg">
           <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex justify-center min-w-max px-2">
                 <ExpandableTabs
                   tabs={navigationItems.map(item => ({
-                    title: item.label,
+                    title: item.id === "settings" ? "" : item.label,
                     icon: item.icon,
                   }))}
-                  activeColor="text-foreground"
-                  inactiveColor="text-foreground/80"
+                  activeColor="text-primary-foreground"
+                  inactiveColor="text-primary-foreground/70"
                   className="bg-transparent border-none"
                   onChange={(index) => {
                     if (index !== null) {

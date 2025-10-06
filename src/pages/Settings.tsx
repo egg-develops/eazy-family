@@ -510,10 +510,6 @@ const Settings = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <p className="font-medium">Free Plan</p>
-              <p className="text-sm text-muted-foreground">Basic features included</p>
-            </div>
             <UpgradeDialog>
               <Button className="gap-2 gradient-primary text-white border-0">
                 <Crown className="h-4 w-4" />
