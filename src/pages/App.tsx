@@ -113,6 +113,7 @@ const AppLayout = () => {
                     icon: item.icon,
                   }))}
                   activeColor="text-white"
+                  inactiveColor="text-white/80"
                   className="bg-white/20 backdrop-blur-md border-white/30 shadow-custom-lg"
                   onChange={(index) => {
                     if (index !== null) {

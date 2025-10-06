@@ -23,7 +23,7 @@ import {
 
 export function AppSidebar() {
   const { t } = useTranslation()
-  const { state } = useSidebar()
+  const { state, setOpen } = useSidebar()
   const location = useLocation()
   const currentPath = location.pathname
   const collapsed = state === "collapsed"
@@ -59,6 +59,7 @@ export function AppSidebar() {
                         to={item.path} 
                         end 
                         className={`${getNavCls(isActive(item.path))} transition-all duration-300`}
+                        onClick={() => !collapsed && setOpen(false)}
                       >
                         <Icon className={`h-4 w-4 ${collapsed ? "" : "mr-2"} ${isActive(item.path) ? "animate-pulse" : ""}`} />
                         {!collapsed && <span>{item.label}</span>}
