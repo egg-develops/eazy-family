@@ -17,7 +17,6 @@ import Memories from "./pages/Memories";
 import Community from "./pages/Community";
 import Settings from "./pages/Settings";
 import FamilyProfile from "./pages/FamilyProfile";
-import FamilyProfile from "./pages/FamilyProfile";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
