@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { TutorialWalkthrough } from "@/components/TutorialWalkthrough";
 
 interface HomeConfig {
   greeting: string;
@@ -71,6 +72,7 @@ const Settings = () => {
   const [customColor, setCustomColor] = useState(() => {
     return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
   });
+  const [runTutorial, setRunTutorial] = useState(false);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -314,10 +316,17 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
+      <TutorialWalkthrough run={runTutorial} onComplete={() => setRunTutorial(false)} />
+      
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your app preferences</p>
+      <div className="flex items-center justify-between">
+        <div data-tutorial="settings">
+          <h1 className="text-2xl font-bold">Settings</h1>
+          <p className="text-muted-foreground">Manage your app preferences</p>
+        </div>
+        <Button onClick={() => setRunTutorial(true)} variant="outline">
+          Start Tutorial
+        </Button>
       </div>
 
       {/* Homepage Customization */}
@@ -328,7 +337,7 @@ const Settings = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Profile Icon Upload */}
-          <div className="space-y-2">
+          <div className="space-y-2" data-tutorial="custom-images">
             <Label htmlFor="profile-icon">Profile Icon</Label>
             <div className="flex gap-2 items-center">
               <Input
@@ -372,7 +381,7 @@ const Settings = () => {
           </div>
 
           {/* Weather Card Toggle */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between" data-tutorial="weather-calendar">
             <div>
               <Label>Weather Card</Label>
               <p className="text-sm text-muted-foreground">Display weather information on homepage</p>
@@ -420,7 +429,7 @@ const Settings = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="space-y-3">
+          <div className="space-y-3" data-tutorial="quick-actions">
             <Label>Quick Actions (Max 4)</Label>
             <p className="text-sm text-muted-foreground">
               Choose up to 4 quick actions to display on your homepage
@@ -442,7 +451,7 @@ const Settings = () => {
           </div>
 
           {/* Top Notifications */}
-          <div className="space-y-3">
+          <div className="space-y-3" data-tutorial="top-notifications">
             <Label>Top Notifications (Max 2)</Label>
             <p className="text-sm text-muted-foreground">
               Choose up to 2 notification cards to display on your homepage
@@ -493,7 +502,7 @@ const Settings = () => {
           </Button>
 
           {/* Calendar Integrations */}
-          <div className="space-y-3">
+          <div className="space-y-3" data-tutorial="calendar-integrations">
             <Label>Calendar Integrations</Label>
             <p className="text-sm text-muted-foreground">Connect your external calendars</p>
             <div className="space-y-2">
@@ -521,7 +530,7 @@ const Settings = () => {
       </Card>
 
       {/* Appearance Settings */}
-      <Card className="shadow-custom-md">
+      <Card className="shadow-custom-md" data-tutorial="appearance">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
