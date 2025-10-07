@@ -72,10 +72,17 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       // Navigate to homepage before the Eazy Assistant step
       if (index === 7) {
         navigate('/app');
-        // Wait for navigation before continuing to next step
-        setTimeout(() => {
-          setStepIndex(8);
-        }, 500);
+        // Wait for the Eazy Assistant element to exist before advancing
+        let attempts = 0;
+        const maxAttempts = 30; // up to ~6s
+        const interval = setInterval(() => {
+          const el = document.querySelector('[data-tutorial="eazy-assistant"]');
+          attempts++;
+          if (el || attempts >= maxAttempts) {
+            clearInterval(interval);
+            setStepIndex(index + 1);
+          }
+        }, 200);
         return;
       }
       // For all other steps, continue normally

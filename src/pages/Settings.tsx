@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { ColorPicker } from "@/components/ui/color-picker";
-import { TutorialWalkthrough } from "@/components/TutorialWalkthrough";
 
 interface HomeConfig {
   greeting: string;
@@ -72,7 +71,6 @@ const Settings = () => {
   const [customColor, setCustomColor] = useState(() => {
     return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
   });
-  const [runTutorial, setRunTutorial] = useState(false);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -316,13 +314,13 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
-      <TutorialWalkthrough run={runTutorial} onComplete={() => setRunTutorial(false)} />
+      
       
       {/* Header */}
       <div data-tutorial="settings">
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your app preferences</p>
-        <Button onClick={() => setRunTutorial(true)} variant="outline" className="mt-3">
+        <Button onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }} variant="outline" className="mt-3">
           Start Tutorial
         </Button>
       </div>
