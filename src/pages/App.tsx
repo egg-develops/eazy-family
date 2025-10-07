@@ -393,7 +393,7 @@ const AppHome = () => {
       )}
 
       {/* Today's Highlights */}
-      {homeConfig.showCalendar && (calendarView !== 'day' || todayEvents.length > 0) && (
+      {homeConfig.showCalendar && (
         <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
