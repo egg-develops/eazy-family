@@ -8,12 +8,55 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Crown } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
 }
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleUpgrade = async () => {
+    setIsLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to upgrade to the Family Plan.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error("Error creating checkout:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const freeFeatures = [
     "Basic calendar",
     "Photo storage (limited)",
@@ -90,9 +133,14 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               <p className="text-3xl font-bold">CHF 5<span className="text-lg text-muted-foreground">/month</span></p>
               <p className="text-sm text-muted-foreground">Cancel anytime • Auto-renews after trial</p>
             </div>
-            <Button className="w-full gradient-primary text-white border-0" size="lg">
+            <Button 
+              className="w-full gradient-primary text-white border-0" 
+              size="lg"
+              onClick={handleUpgrade}
+              disabled={isLoading}
+            >
               <Crown className="h-4 w-4 mr-2" />
-              Start Free Trial
+              {isLoading ? "Loading..." : "Start Free Trial"}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               You won't be charged until your 7-day trial ends
