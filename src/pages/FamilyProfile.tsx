@@ -10,6 +10,8 @@ import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus } from "luc
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
 
 interface FamilyMember {
   id: string;
@@ -31,9 +33,19 @@ interface FamilyInvitation {
   created_at: string;
 }
 
+const inviteSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255).optional(),
+  phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/, { message: "Invalid phone number format" }).optional(),
+  role: z.enum(['parent', 'child']),
+}).refine(
+  (data) => data.email || data.phone,
+  { message: "Either email or phone is required" }
+);
+
 const FamilyProfile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,32 +58,34 @@ const FamilyProfile = () => {
   const [inviteRole, setInviteRole] = useState<string>('parent');
   const [sending, setSending] = useState(false);
 
-  const currentUserId = localStorage.getItem('eazy-family-user-id') || crypto.randomUUID();
-
   useEffect(() => {
-    localStorage.setItem('eazy-family-user-id', currentUserId);
-    loadFamilyData();
-  }, []);
+    if (user) {
+      loadFamilyData();
+    }
+  }, [user]);
 
   const loadFamilyData = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
-      // Load family members
+      // Load family members where user is part of the family
       const { data: members, error: membersError } = await supabase
         .from('family_members')
         .select('*')
-        .eq('family_id', currentUserId)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (membersError) throw membersError;
       setFamilyMembers(members || []);
 
-      // Load pending invitations (exclude token for security)
+      // Load pending invitations sent by this user
       const { data: invites, error: invitesError } = await supabase
         .from('family_invitations')
         .select('id, invitee_email, invitee_phone, role, status, expires_at, created_at')
-        .eq('family_id', currentUserId)
+        .eq('inviter_id', user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -90,12 +104,10 @@ const FamilyProfile = () => {
   };
 
   const handleInviteMember = async () => {
-    const contact = inviteMethod === 'email' ? inviteEmail : invitePhone;
-    
-    if (!contact.trim()) {
+    if (!user) {
       toast({
-        title: "Invalid input",
-        description: `Please enter a valid ${inviteMethod}`,
+        title: "Authentication required",
+        description: "You must be logged in to invite members",
         variant: "destructive",
       });
       return;
@@ -103,13 +115,20 @@ const FamilyProfile = () => {
 
     setSending(true);
     try {
+      // Validate inputs
+      const validationData = inviteSchema.parse({
+        email: inviteMethod === 'email' ? inviteEmail : undefined,
+        phone: inviteMethod === 'phone' ? invitePhone : undefined,
+        role: inviteRole,
+      });
+
       const token = crypto.randomUUID();
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
 
       const invitationData: any = {
-        family_id: currentUserId,
-        inviter_id: currentUserId,
+        family_id: user.id, // Use authenticated user's ID
+        inviter_id: user.id,
         role: inviteRole,
         status: 'pending',
         token: token,
@@ -117,9 +136,9 @@ const FamilyProfile = () => {
       };
 
       if (inviteMethod === 'email') {
-        invitationData.invitee_email = inviteEmail;
+        invitationData.invitee_email = validationData.email;
       } else {
-        invitationData.invitee_phone = invitePhone;
+        invitationData.invitee_phone = validationData.phone;
       }
 
       const { error } = await supabase
@@ -128,9 +147,13 @@ const FamilyProfile = () => {
 
       if (error) throw error;
 
+      // Generate invitation link (for future use when implementing email/SMS sending)
+      const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
+      console.log('Invitation link:', inviteLink);
+
       toast({
         title: "Invitation sent!",
-        description: `Family member invited via ${inviteMethod}`,
+        description: `Family member invited via ${inviteMethod}. Share this link: ${inviteLink}`,
       });
 
       setIsInviteDialogOpen(false);
@@ -139,23 +162,34 @@ const FamilyProfile = () => {
       setInviteRole('parent');
       loadFamilyData();
     } catch (error: any) {
-      console.error('Error sending invitation:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send invitation",
-        variant: "destructive",
-      });
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.issues[0].message,
+          variant: "destructive",
+        });
+      } else {
+        console.error('Error sending invitation:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to send invitation",
+          variant: "destructive",
+        });
+      }
     } finally {
       setSending(false);
     }
   };
 
   const handleRemoveMember = async (memberId: string) => {
+    if (!user) return;
+    
     try {
       const { error } = await supabase
         .from('family_members')
         .delete()
-        .eq('id', memberId);
+        .eq('id', memberId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -176,11 +210,14 @@ const FamilyProfile = () => {
   };
 
   const handleCancelInvitation = async (invitationId: string) => {
+    if (!user) return;
+    
     try {
       const { error } = await supabase
         .from('family_invitations')
         .delete()
-        .eq('id', invitationId);
+        .eq('id', invitationId)
+        .eq('inviter_id', user.id);
 
       if (error) throw error;
 

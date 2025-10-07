@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AcceptInvite from "./pages/AcceptInvite";
 import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
 import Calendar from "./pages/Calendar";
@@ -30,6 +31,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/accept-invite" element={<AcceptInvite />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="calendar" element={<Calendar />} />
