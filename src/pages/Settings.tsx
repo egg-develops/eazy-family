@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
+  const { signOut } = useAuth();
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
 
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
@@ -280,13 +282,12 @@ const Settings = () => {
     saveHomeConfig({ topNotifications: newNotifications });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('eazy-family-onboarding');
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Signed out",
       description: "You've been signed out successfully",
     });
-    navigate('/');
   };
 
   const handleRerunOnboarding = () => {

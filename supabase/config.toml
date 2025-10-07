@@ -4,4 +4,7 @@ project_id = "xizquwqsthjjjkujwivt"
 verify_jwt = true
 
 [functions.weather]
-verify_jwt = false
+verify_jwt = true
+
+[functions.accept-invitation]
+verify_jwt = true

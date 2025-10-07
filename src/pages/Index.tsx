@@ -1,19 +1,19 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Calendar, Users, Camera, MapPin, ShoppingCart } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Check if user has completed onboarding
-    const onboardingData = localStorage.getItem('eazy-family-onboarding');
-    if (onboardingData) {
-      navigate('/app');
+    if (!loading && user) {
+      navigate('/app/calendar');
     }
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
   const features = [
     { icon: Calendar, title: "Synced Calendars and To-Do Lists", description: "Keep everyone organized in one place" },
@@ -77,7 +77,7 @@ const Index = () => {
         {/* CTA */}
         <div className="space-y-4">
           <Button 
-            onClick={() => navigate('/onboarding')} 
+            onClick={() => navigate('/auth')} 
             className="w-full gradient-primary text-white border-0 hover:opacity-90 text-lg py-6 rounded-xl shadow-custom-lg"
           >
             Get Started - It's Free!
