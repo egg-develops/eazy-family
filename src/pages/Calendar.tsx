@@ -467,7 +467,7 @@ const Calendar = () => {
                         </div>
                         <div className="text-sm text-muted-foreground whitespace-nowrap">
                           {item.allDay ? (
-                            <span>all-day</span>
+                            <span>All day</span>
                           ) : (
                             <div className="text-right">
                               <div>{format(item.startDate, "HH:mm")}</div>
