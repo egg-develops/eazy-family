@@ -389,7 +389,7 @@ const AppHome = () => {
       )}
 
       {/* Today's Highlights */}
-      {homeConfig.showCalendar && (
+      {homeConfig.showCalendar && (calendarView !== 'day' || todayEvents.length > 0) && (
         <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -433,28 +433,22 @@ const AppHome = () => {
             </div>
           </div>
           
-          {calendarView === 'day' && (
+          {calendarView === 'day' && todayEvents.length > 0 && (
             <>
-              {todayEvents.length > 0 ? (
-                todayEvents.map((event: any) => (
-                  <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
-                    <div className="flex items-center gap-3">
-                      <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{event.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {event.allDay ? "All day" : new Date(event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                          {event.location && ` - ${event.location}`}
-                        </p>
-                      </div>
+              {todayEvents.map((event: any) => (
+                <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="font-medium">{event.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {event.allDay ? "All day" : new Date(event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        {event.location && ` - ${event.location}`}
+                      </p>
                     </div>
-                  </Card>
-                ))
-              ) : (
-                <Card className="p-4 shadow-custom-md">
-                  <p className="text-center text-muted-foreground">No events today</p>
+                  </div>
                 </Card>
-              )}
+              ))}
             </>
           )}
 

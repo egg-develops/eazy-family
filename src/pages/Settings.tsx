@@ -319,12 +319,10 @@ const Settings = () => {
       <TutorialWalkthrough run={runTutorial} onComplete={() => setRunTutorial(false)} />
       
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div data-tutorial="settings">
-          <h1 className="text-2xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage your app preferences</p>
-        </div>
-        <Button onClick={() => setRunTutorial(true)} variant="outline">
+      <div data-tutorial="settings">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">Manage your app preferences</p>
+        <Button onClick={() => setRunTutorial(true)} variant="outline" className="mt-3">
           Start Tutorial
         </Button>
       </div>
