@@ -14,23 +14,23 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
   const steps: Step[] = [
     {
       target: 'body',
-      content: 'Welcome to EaZy Family! Let\'s take a quick tour of the key features to help you get started.',
+      content: 'Welcome to Eazy Family! Let\'s take a quick tour of the key features to help you get started.',
       placement: 'center',
       disableBeacon: true,
     },
     {
       target: '[data-tutorial="settings"]',
-      content: 'Access all your settings here to customize your EaZy Family experience.',
+      content: 'Access all your settings here to customize your Eazy Family experience.',
       placement: 'bottom',
     },
     {
       target: '[data-tutorial="custom-images"]',
-      content: 'Upload custom profile and header images to personalize your family hub.',
+      content: 'Upload custom profile and header images to personalize your Eazy Family.',
       placement: 'right',
     },
     {
       target: '[data-tutorial="weather-calendar"]',
-      content: 'Toggle Weather and Calendar widgets on your homepage for quick access to important information.',
+      content: 'Toggle Weather and Calendar widgets on your homepage for quick access.',
       placement: 'right',
     },
     {
@@ -72,13 +72,16 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       // Navigate to homepage before the Eazy Assistant step
       if (index === 7) {
         navigate('/app');
-        // Wait for navigation before continuing
+        // Wait for navigation before continuing to next step
         setTimeout(() => {
-          setStepIndex(index + 1);
-        }, 300);
+          setStepIndex(8);
+        }, 500);
         return;
       }
-      setStepIndex(index + 1);
+      // For all other steps, continue normally
+      if (index < steps.length - 1) {
+        setStepIndex(index + 1);
+      }
     }
 
     if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
