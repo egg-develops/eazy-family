@@ -7,6 +7,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Check, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,13 +19,36 @@ interface UpgradeDialogProps {
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
   const { toast } = useToast();
 
+  const applyPromo = () => {
+    if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
+      localStorage.setItem("eazy-family-plan", "vip");
+      setPromoApplied(true);
+      toast({
+        title: "Promo applied",
+        description: "Family Plan activated for free. Enjoy!",
+      });
+    } else {
+      toast({
+        title: "Invalid code",
+        description: "Please check your promo code and try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpgrade = async () => {
+    if (promoApplied || promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
+      applyPromo();
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
         toast({
           title: "Authentication Required",
@@ -41,10 +65,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       });
 
       if (error) throw error;
-
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      if (data?.url) window.open(data.url, '_blank');
     } catch (error) {
       console.error("Error creating checkout:", error);
       toast({
@@ -80,20 +101,16 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Crown className="h-6 w-6 text-primary" />
             Upgrade to Family Plan
           </DialogTitle>
-          <DialogDescription>
-            Unlock all premium features for your family
-          </DialogDescription>
+          <DialogDescription>Unlock all premium features for your family</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-6 py-4">
           {/* Free Plan */}
           <div className="space-y-3">
@@ -127,24 +144,26 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           {/* Pricing */}
           <div className="space-y-4 pt-4 border-t">
             <div className="text-center space-y-2">
-              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-2">
-                7-Day Free Trial
-              </div>
-              <p className="text-3xl font-bold">CHF 5<span className="text-lg text-muted-foreground">/month</span></p>
+              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-2">7-Day Free Trial</div>
+              <p className="text-3xl font-bold">
+                CHF 5<span className="text-lg text-muted-foreground">/month</span>
+              </p>
               <p className="text-sm text-muted-foreground">Cancel anytime • Auto-renews after trial</p>
             </div>
-            <Button 
-              className="w-full gradient-primary text-white border-0" 
-              size="lg"
-              onClick={handleUpgrade}
-              disabled={isLoading}
-            >
+
+            {/* Promo code */}
+            <div className="flex gap-2 items-center">
+              <Input placeholder="Have a promo code?" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
+              <Button variant="outline" onClick={applyPromo}>
+                Apply
+              </Button>
+            </div>
+
+            <Button className="w-full gradient-primary text-white border-0" size="lg" onClick={handleUpgrade} disabled={isLoading}>
               <Crown className="h-4 w-4 mr-2" />
               {isLoading ? "Loading..." : "Start Free Trial"}
             </Button>
-            <p className="text-xs text-center text-muted-foreground">
-              You won't be charged until your 7-day trial ends
-            </p>
+            <p className="text-xs text-center text-muted-foreground">You won't be charged until your 7-day trial ends</p>
           </div>
         </div>
       </DialogContent>
