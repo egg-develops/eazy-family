@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+import { useNavigate } from 'react-router-dom';
 
 interface TutorialWalkthroughProps {
   run: boolean;
@@ -8,6 +9,7 @@ interface TutorialWalkthroughProps {
 
 export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProps) {
   const [stepIndex, setStepIndex] = useState(0);
+  const navigate = useNavigate();
 
   const steps: Step[] = [
     {
@@ -52,6 +54,11 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       placement: 'right',
     },
     {
+      target: '[data-tutorial="eazy-assistant"]',
+      content: 'Meet Eazy Assistant - your AI-powered family helper! Ask questions, get help with planning, or chat about anything. It\'s here to make managing your family life easier.',
+      placement: 'bottom',
+    },
+    {
       target: 'body',
       content: 'That\'s it! You\'re all set to start using EaZy Family. You can always restart this tour from Settings.',
       placement: 'center',
@@ -62,6 +69,15 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
     const { status, index, type } = data;
 
     if (type === 'step:after') {
+      // Navigate to homepage before the Eazy Assistant step
+      if (index === 7) {
+        navigate('/app');
+        // Wait for navigation before continuing
+        setTimeout(() => {
+          setStepIndex(index + 1);
+        }, 300);
+        return;
+      }
       setStepIndex(index + 1);
     }
 

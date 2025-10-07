@@ -311,7 +311,9 @@ const AppHome = () => {
       )}
 
       {/* Eazy Assistant */}
-      <EazyAssistant />
+      <div data-tutorial="eazy-assistant">
+        <EazyAssistant />
+      </div>
 
       {/* Quick Stats */}
       {homeConfig.topNotifications && homeConfig.topNotifications.length > 0 && (
