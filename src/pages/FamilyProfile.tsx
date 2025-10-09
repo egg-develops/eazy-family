@@ -482,7 +482,7 @@ const FamilyProfile = () => {
             <UserPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h3 className="font-medium text-lg mb-2">No Family Found</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create your family to start inviting members and sharing with your loved ones.
+              Create your family to start inviting members.
             </p>
             <Button onClick={handleCreateFamily} className="gradient-primary text-white border-0">
               <Plus className="h-4 w-4 mr-2" />

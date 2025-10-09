@@ -111,7 +111,7 @@ const AppLayout = () => {
                 const iconUrl = config.iconImage;
                 
                 return iconUrl ? (
-                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover" />
+                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">{userInitials}</span>
@@ -141,7 +141,7 @@ const AppLayout = () => {
         {/* Bottom Navigation - Mobile and Tablet */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg overflow-hidden">
           <div className="max-w-md mx-auto px-2 py-3">
-            <div className="overflow-x-auto scrollbar-hide">
+            <div className="overflow-x-auto scrollbar-hide scroll-smooth">
               <div className="flex justify-center min-w-max px-2 touch-pan-x">
                 <ExpandableTabs
                   tabs={navigationItems.map(item => ({
@@ -153,6 +153,10 @@ const AppLayout = () => {
                   className="bg-primary border-none"
                   onChange={(index) => {
                     if (index !== null) {
+                      const nav = document.querySelector('nav.lg\\:hidden .overflow-x-auto');
+                      if (nav) {
+                        nav.scrollTo({ behavior: 'smooth', left: 0 });
+                      }
                       navigate(navigationItems[index].path);
                     }
                   }}
@@ -292,7 +296,7 @@ const AppHome = () => {
           <img 
             src={homeConfig.headerImage} 
             alt="Hero" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover flex-shrink-0"
           />
           <button
             onClick={() => headerImageInputRef.current?.click()}

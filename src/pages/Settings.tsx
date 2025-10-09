@@ -353,7 +353,7 @@ const Settings = () => {
               {uploadingProfile && <span className="text-sm text-muted-foreground">Uploading...</span>}
             </div>
             {homeConfig.iconImage && (
-              <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full object-cover" />
+              <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
             )}
           </div>
 
@@ -375,57 +375,10 @@ const Settings = () => {
               {uploadingHeader && <span className="text-sm text-muted-foreground">Uploading...</span>}
             </div>
             {homeConfig.headerImage && (
-              <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg object-cover" />
+              <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg object-cover flex-shrink-0" />
             )}
           </div>
 
-          {/* Weather Card Toggle */}
-          <div className="flex items-center justify-between" data-tutorial="weather-calendar">
-            <div>
-              <Label>Weather Card</Label>
-              <p className="text-sm text-muted-foreground">Display weather information on homepage</p>
-            </div>
-            <Switch
-              checked={homeConfig.showWeather}
-              onCheckedChange={() => saveHomeConfig({ showWeather: !homeConfig.showWeather })}
-            />
-          </div>
-
-          {/* Calendar Section Toggle */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Calendar Section</Label>
-                <p className="text-sm text-muted-foreground">Show calendar with day/week/month views on homepage</p>
-              </div>
-              <Switch
-                checked={homeConfig.showCalendar}
-                onCheckedChange={handleCalendarToggle}
-              />
-            </div>
-
-            {/* Show Calendar Preview when enabled */}
-            {homeConfig.showCalendar && (
-              <div className="p-4 border rounded-lg bg-muted/20 space-y-3">
-                <p className="text-sm font-medium">Calendar Preview</p>
-                <div className="flex gap-2 pointer-events-none">
-                  <div className="flex-1 flex items-center justify-center gap-2 border rounded-md px-3 py-2 text-sm">
-                    <CalendarIcon className="w-4 h-4" />
-                    Day
-                  </div>
-                  <div className="flex-1 flex items-center justify-center border rounded-md px-3 py-2 text-sm">
-                    Week
-                  </div>
-                  <div className="flex-1 flex items-center justify-center border rounded-md px-3 py-2 text-sm">
-                    Month
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Full calendar with day, week, and month views will be shown on your homepage
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* Quick Actions */}
           <div className="space-y-3" data-tutorial="quick-actions">
