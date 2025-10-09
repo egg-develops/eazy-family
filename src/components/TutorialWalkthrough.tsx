@@ -66,7 +66,7 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
   ];
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, index, type } = data;
+    const { status, index, type, action } = data;
 
     if (type === 'step:after') {
       // Navigate to homepage before the Eazy Assistant step

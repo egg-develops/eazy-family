@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 import { Users, MessageCircle, Plus, Heart, Share2, MapPin, Clock, ShoppingCart, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,6 +111,7 @@ const mockItems: MarketItem[] = [
 
 const Community = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('messages');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
@@ -253,10 +255,12 @@ const Community = () => {
         <TabsContent value="groups" className="space-y-4 mt-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.groupsDesc')}</p>
-            <Button size="sm" className="gradient-primary text-white border-0">
-              <Plus className="w-4 h-4 mr-1" />
-              {t('community.createGroup')}
-            </Button>
+            <UpgradeDialog>
+              <Button size="sm" className="gradient-primary text-white border-0">
+                <Plus className="w-4 h-4 mr-1" />
+                {t('community.createGroup')}
+              </Button>
+            </UpgradeDialog>
           </div>
 
           {/* My Groups */}

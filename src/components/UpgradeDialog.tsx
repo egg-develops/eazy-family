@@ -23,6 +23,8 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [promoApplied, setPromoApplied] = useState(false);
   const { toast } = useToast();
 
+  const [open, setOpen] = useState(false);
+
   const applyPromo = () => {
     if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
       localStorage.setItem("eazy-family-plan", "vip");
@@ -31,6 +33,8 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         title: "Promo applied",
         description: "Family Plan activated for free. Enjoy!",
       });
+      setOpen(false);
+      window.location.reload();
     } else {
       toast({
         title: "Invalid code",
@@ -100,7 +104,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   ];
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>

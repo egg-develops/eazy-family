@@ -81,7 +81,7 @@ const Settings = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    // Apply saved color scheme on mount
+    // Apply saved color scheme on mount and when it changes
     const root = document.documentElement;
     if (colorScheme === 'custom') {
       const hsl = hexToHSL(customColor);
@@ -95,7 +95,7 @@ const Settings = () => {
       root.style.setProperty('--primary-hover', '240 5% 54%');
       root.style.setProperty('--accent', '240 5% 74%');
     }
-  }, []);
+  }, [colorScheme, customColor]);
 
   useEffect(() => {
     // Update CSS variables when custom color changes
@@ -648,24 +648,40 @@ const Settings = () => {
               <Switch checked={true} disabled />
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <Shield className="h-5 w-5 mt-0.5 text-primary" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">Two-Factor Authentication</p>
-                <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
-              </div>
-              <Button variant="outline" size="sm">Enable</Button>
-            </div>
           </div>
 
           <div className="pt-4 border-t space-y-1">
-            <Button variant="ghost" className="w-full justify-start text-sm">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sm"
+              onClick={() => navigate('/privacy')}
+            >
               View Privacy Policy
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sm">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sm"
+              onClick={() => {
+                toast({
+                  title: "Data export",
+                  description: "Your data export will be emailed to you shortly.",
+                });
+              }}
+            >
               Download My Data
             </Button>
-            <Button variant="ghost" className="w-full justify-start text-sm text-destructive">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-sm text-destructive"
+              onClick={() => {
+                if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                  toast({
+                    title: "Account deletion requested",
+                    description: "Your account will be deleted within 24 hours.",
+                  });
+                }
+              }}
+            >
               Delete Account
             </Button>
           </div>

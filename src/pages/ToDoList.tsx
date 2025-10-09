@@ -18,12 +18,14 @@ import { triggerGamification } from "@/components/GamificationToast";
 
 interface Task {
   id: string;
+  user_id: string;
   title: string;
   completed: boolean;
   type: "task" | "shopping" | "shared";
-  dueDate?: Date;
-  createdAt: Date;
-  sharedWith?: string[];
+  due_date?: string | null;
+  created_at: string;
+  updated_at: string;
+  shared_with?: string[] | null;
 }
 
 interface FamilyMember {
@@ -34,41 +36,73 @@ interface FamilyMember {
   role: string;
 }
 
-const getInitialTasks = (): Task[] => {
-  const saved = localStorage.getItem('eazy-family-todos');
-  if (saved) {
-    const parsed = JSON.parse(saved);
-    return parsed.map((task: any) => ({
-      ...task,
-      dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-      createdAt: new Date(task.createdAt),
-    }));
-  }
-  return [];
-};
-
 const ToDoList = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const [tasks, setTasks] = useState<Task[]>(getInitialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState<"task" | "shopping" | "shared">("task");
   const [filterView, setFilterView] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(undefined);
+  const [newTaskDueDate, setNewTaskDueDate] = useState<string | undefined>(undefined);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const currentUserId = localStorage.getItem('eazy-family-user-id') || crypto.randomUUID();
 
   useEffect(() => {
-    localStorage.setItem('eazy-family-todos', JSON.stringify(tasks));
-  }, [tasks]);
-
-  useEffect(() => {
     localStorage.setItem('eazy-family-user-id', currentUserId);
   }, [currentUserId]);
+
+  // Load tasks from Supabase
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  // Set up realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks'
+        },
+        () => {
+          loadTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTasks((data || []) as Task[]);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      toast({
+        title: "Error loading tasks",
+        description: "Could not load your tasks. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === "shared" && isDialogOpen) {
@@ -108,7 +142,7 @@ const ToDoList = () => {
     if (filterView === "completed") return task.completed;
     if (filterView === "pending") return !task.completed;
     if (filterView === "overdue") {
-      return task.dueDate && task.dueDate < new Date() && !task.completed;
+      return task.due_date && new Date(task.due_date) < new Date() && !task.completed;
     }
     return true;
   });
@@ -129,7 +163,7 @@ const ToDoList = () => {
   const stats = {
     total: tasks.filter(t => t.type === activeTab).length,
     completed: tasks.filter(t => t.type === activeTab && t.completed).length,
-    overdue: tasks.filter(t => t.type === activeTab && t.dueDate && t.dueDate < new Date() && !t.completed).length,
+    overdue: tasks.filter(t => t.type === activeTab && t.due_date && new Date(t.due_date) < new Date() && !t.completed).length,
     pending: tasks.filter(t => t.type === activeTab && !t.completed).length,
   };
   
@@ -140,7 +174,7 @@ const ToDoList = () => {
     active: tasks.filter(t => t.type === "shared" && !t.completed).length,
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!newTaskTitle.trim()) return;
     
     if (activeTab === "shared" && selectedMembers.length === 0) {
@@ -152,48 +186,90 @@ const ToDoList = () => {
       return;
     }
 
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: newTaskTitle,
-      completed: false,
-      type: activeTab,
-      dueDate: newTaskDueDate,
-      createdAt: new Date(),
-      sharedWith: activeTab === "shared" ? selectedMembers : undefined,
-    };
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .insert([{
+          title: newTaskTitle,
+          type: activeTab,
+          due_date: newTaskDueDate || null,
+          shared_with: activeTab === "shared" ? selectedMembers : null,
+        } as any]);
 
-    setTasks([...tasks, newTask]);
-    setNewTaskTitle("");
-    setNewTaskDueDate(undefined);
-    setSelectedMembers([]);
-    setIsDialogOpen(false);
-    
-    toast({
-      title: activeTab === "shopping" ? "Item Added" : activeTab === "shared" ? "List Created" : "Task Added",
-      description: `"${newTaskTitle}" has been ${activeTab === "shared" ? "shared with " + selectedMembers.length + " member(s)" : "added to your list"}.`,
-    });
-  };
+      if (error) throw error;
 
-  const toggleTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    const wasCompleted = task?.completed;
-    
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
-    
-    // Trigger celebration when marking as complete (not when uncompleting)
-    if (task && !wasCompleted) {
-      triggerGamification({
-        type: activeTab === 'task' ? 'list_created' : activeTab === 'shopping' ? 'photo_shared' : 'event_added',
-        title: '✨ Task Complete!',
-        points: 10
+      setNewTaskTitle("");
+      setNewTaskDueDate(undefined);
+      setSelectedMembers([]);
+      setIsDialogOpen(false);
+      
+      toast({
+        title: activeTab === "shopping" ? "Item Added" : activeTab === "shared" ? "List Created" : "Task Added",
+        description: `"${newTaskTitle}" has been ${activeTab === "shared" ? "shared with " + selectedMembers.length + " member(s)" : "added to your list"}.`,
+      });
+    } catch (error) {
+      console.error('Error adding task:', error);
+      toast({
+        title: "Error",
+        description: "Could not add task. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
+  const toggleTask = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    const wasCompleted = task.completed;
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: !task.completed })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Trigger celebration when marking as complete (not when uncompleting)
+      if (!wasCompleted) {
+        triggerGamification({
+          type: activeTab === 'task' ? 'list_created' : activeTab === 'shopping' ? 'photo_shared' : 'event_added',
+          title: '✨ Task Complete!',
+          points: 10
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      toast({
+        title: "Error",
+        description: "Could not update task. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Task deleted",
+        description: "The task has been removed.",
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "Could not delete task. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -355,12 +431,12 @@ const ToDoList = () => {
                         <span className={task.completed ? "line-through text-muted-foreground" : ""}>
                           {task.title}
                         </span>
-                        {task.dueDate && (
+                        {task.due_date && (
                           <div className="text-xs text-muted-foreground mt-1">
-                            {task.dueDate < new Date() && !task.completed ? (
-                              <span className="text-destructive font-medium">Overdue: {format(task.dueDate, "MMM d, yyyy")}</span>
+                            {new Date(task.due_date) < new Date() && !task.completed ? (
+                              <span className="text-destructive font-medium">Overdue: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
                             ) : (
-                              <span>Due: {format(task.dueDate, "MMM d, yyyy")}</span>
+                              <span>Due: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
                             )}
                           </div>
                         )}
@@ -427,8 +503,8 @@ const ToDoList = () => {
                 <Input
                   id="task-due-date"
                   type="date"
-                  value={newTaskDueDate ? format(newTaskDueDate, "yyyy-MM-dd") : ""}
-                  onChange={(e) => setNewTaskDueDate(e.target.value ? new Date(e.target.value) : undefined)}
+                  value={newTaskDueDate || ""}
+                  onChange={(e) => setNewTaskDueDate(e.target.value || undefined)}
                 />
               </div>
             )}
