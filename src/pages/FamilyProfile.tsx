@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +53,7 @@ const FamilyProfile = () => {
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [headerImage, setHeaderImage] = useState<string | null>(null);
+  const [headerImages, setHeaderImages] = useState<string[]>([]);
   const [uploadingHeader, setUploadingHeader] = useState(false);
 
   // Invite form state
@@ -68,9 +69,9 @@ const FamilyProfile = () => {
   useEffect(() => {
     if (user) {
       loadFamilyData();
-      const savedHeaderImage = localStorage.getItem(`eazy-family-profile-header-${user.id}`);
-      if (savedHeaderImage) {
-        setHeaderImage(savedHeaderImage);
+      const savedHeaderImages = localStorage.getItem(`eazy-family-profile-headers-${user.id}`);
+      if (savedHeaderImages) {
+        setHeaderImages(JSON.parse(savedHeaderImages));
       }
     }
   }, [user]);
@@ -263,42 +264,72 @@ const FamilyProfile = () => {
     }
   };
 
-  const handleHeaderImageUpload = async (file: File) => {
+  const handleHeaderImageUpload = async (files: FileList) => {
     if (!user) return;
+    
+    const remainingSlots = 5 - headerImages.length;
+    if (remainingSlots <= 0) {
+      toast({
+        title: "Maximum images reached",
+        description: "You can upload a maximum of 5 header images.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
     
     setUploadingHeader(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const uploadedUrls: string[] = [];
+      
+      for (const file of filesToUpload) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, file);
+        const { error: uploadError } = await supabase.storage
+          .from('user-uploads')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-uploads')
-        .getPublicUrl(filePath);
+        const { data: { publicUrl } } = supabase.storage
+          .from('user-uploads')
+          .getPublicUrl(filePath);
+        
+        uploadedUrls.push(publicUrl);
+      }
 
-      setHeaderImage(publicUrl);
-      localStorage.setItem(`eazy-family-profile-header-${user.id}`, publicUrl);
+      const newImages = [...headerImages, ...uploadedUrls];
+      setHeaderImages(newImages);
+      localStorage.setItem(`eazy-family-profile-headers-${user.id}`, JSON.stringify(newImages));
       
       toast({
-        title: "Header image updated",
-        description: "Your family profile header has been updated successfully.",
+        title: "Header images updated",
+        description: `${uploadedUrls.length} image(s) added successfully.`,
       });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
         title: "Upload failed",
-        description: "Could not upload header image",
+        description: "Could not upload header images",
         variant: "destructive",
       });
     } finally {
       setUploadingHeader(false);
     }
+  };
+
+  const removeHeaderImage = (index: number) => {
+    if (!user) return;
+    const newImages = headerImages.filter((_, i) => i !== index);
+    setHeaderImages(newImages);
+    localStorage.setItem(`eazy-family-profile-headers-${user.id}`, JSON.stringify(newImages));
+    toast({
+      title: "Image removed",
+      description: "Header image has been removed.",
+    });
   };
 
   const [isCreateFamilyOpen, setIsCreateFamilyOpen] = useState(false);
@@ -354,42 +385,69 @@ const FamilyProfile = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Image Section */}
-      {headerImage ? (
-        <div className="relative rounded-2xl overflow-hidden h-32 md:h-48">
-          <img 
-            src={headerImage} 
-            alt="Family Profile Header" 
-            className="w-full h-full object-cover"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            id="header-upload"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleHeaderImageUpload(file);
-            }}
-          />
-          <label
-            htmlFor="header-upload"
-            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer"
-            title="Change header image"
-          >
-            <Camera className="w-4 h-4" />
-          </label>
+      {/* Header Images Carousel Section */}
+      {headerImages.length > 0 ? (
+        <div className="relative rounded-2xl overflow-hidden">
+          <Carousel className="w-full">
+            <CarouselContent>
+              {headerImages.map((image, index) => (
+                <CarouselItem key={index}>
+                  <div className="relative h-32 md:h-48">
+                    <img 
+                      src={image} 
+                      alt={`Family Profile Header ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => removeHeaderImage(index)}
+                      className="absolute top-4 right-4 p-2 bg-red-500/70 hover:bg-red-600 rounded-full text-white transition-colors"
+                      title="Remove this image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {headerImages.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </>
+            )}
+          </Carousel>
+          {headerImages.length < 5 && (
+            <>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                id="header-upload"
+                onChange={(e) => {
+                  if (e.target.files) handleHeaderImageUpload(e.target.files);
+                }}
+              />
+              <label
+                htmlFor="header-upload"
+                className="absolute bottom-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer"
+                title={`Add more images (${headerImages.length}/5)`}
+              >
+                <Plus className="w-4 h-4" />
+              </label>
+            </>
+          )}
         </div>
       ) : (
         <>
           <input
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
             id="header-upload"
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleHeaderImageUpload(file);
+              if (e.target.files) handleHeaderImageUpload(e.target.files);
             }}
           />
           <label 
@@ -398,8 +456,8 @@ const FamilyProfile = () => {
           >
             <div className="text-center">
               <Camera className="w-12 h-12 mx-auto mb-3 opacity-50 group-hover:opacity-70 transition-opacity" />
-              <p className="font-semibold">Add Header Image</p>
-              <p className="text-sm text-muted-foreground">Click to upload</p>
+              <p className="font-semibold">Add Header Images</p>
+              <p className="text-sm text-muted-foreground">Click to upload (up to 5)</p>
             </div>
           </label>
         </>

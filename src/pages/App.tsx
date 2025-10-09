@@ -15,7 +15,8 @@ import {
   CheckSquare,
   Menu,
   Cloud,
-  X
+  X,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -151,25 +152,23 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg">
-          <div className="max-w-md mx-auto px-2 py-3">
-            <div className="flex justify-start overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory">
-              <div className="flex gap-1 px-2 min-w-max">
-                <ExpandableTabs
-                  tabs={navigationItems.map(item => ({
-                    title: item.id === "settings" ? "" : item.label,
-                    icon: item.icon,
-                  }))}
-                  activeColor="text-primary-foreground font-semibold drop-shadow-lg"
-                  inactiveColor="text-primary-foreground/80 drop-shadow-md"
-                  className="bg-primary border-none"
-                  onChange={(index) => {
-                    if (index !== null) {
-                      navigate(navigationItems[index].path);
-                    }
-                  }}
-                />
-              </div>
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg z-50">
+          <div className="w-full px-3 py-2">
+            <div className="flex justify-center items-center">
+              <ExpandableTabs
+                tabs={navigationItems.map(item => ({
+                  title: item.id === "settings" ? "" : item.label,
+                  icon: item.icon,
+                }))}
+                activeColor="text-primary-foreground font-semibold drop-shadow-lg"
+                inactiveColor="text-primary-foreground/80 drop-shadow-md"
+                className="bg-primary border-none"
+                onChange={(index) => {
+                  if (index !== null) {
+                    navigate(navigationItems[index].path);
+                  }
+                }}
+              />
             </div>
           </div>
         </nav>
@@ -633,6 +632,33 @@ const QuickToDos = () => {
     }
   };
 
+  const clearCompletedTasks = async () => {
+    const completedIds = quickTasks.filter(t => t.completed).map(t => t.id);
+    if (completedIds.length === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .in('id', completedIds);
+
+      if (error) throw error;
+      
+      loadQuickTasks();
+      toast({
+        title: "Completed tasks cleared",
+        description: `${completedIds.length} task(s) removed.`,
+      });
+    } catch (error) {
+      console.error('Error clearing completed tasks:', error);
+      toast({
+        title: "Error",
+        description: "Could not clear completed tasks.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddTask = async () => {
     if (!newTaskTitle.trim()) return;
     
@@ -664,9 +690,24 @@ const QuickToDos = () => {
     }
   };
 
+  const hasCompletedTasks = quickTasks.some(t => t.completed);
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Quick To-Do's</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Quick To-Do's</h3>
+        {hasCompletedTasks && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={clearCompletedTasks}
+            className="h-8 w-8 p-0"
+            title="Clear completed tasks"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
       
       <Card className="p-4 shadow-custom-md">
         <div className="space-y-3">
