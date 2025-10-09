@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { TutorialWalkthrough } from "@/components/TutorialWalkthrough";
 
 export const GlobalTutorial = () => {
   const [run, setRun] = useState(false);
+  const location = useLocation();
+
+  // Only show tutorial on the homepage
+  const isHomepage = location.pathname === '/app';
 
   useEffect(() => {
+    if (!isHomepage) {
+      setRun(false);
+      return;
+    }
+
     const checkFlag = () => {
       const shouldRun = localStorage.getItem('eazy-family-tutorial-run') === 'true';
       setRun(shouldRun);
@@ -18,12 +28,14 @@ export const GlobalTutorial = () => {
     return () => {
       window.removeEventListener('tutorial-start', onStart as EventListener);
     };
-  }, []);
+  }, [isHomepage]);
 
   const handleComplete = () => {
     localStorage.removeItem('eazy-family-tutorial-run');
     setRun(false);
   };
+
+  if (!isHomepage) return null;
 
   return <TutorialWalkthrough run={run} onComplete={handleComplete} />;
 };
