@@ -145,33 +145,65 @@ const AppLayout = () => {
       <GlobalTutorial />
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 pb-20 lg:pb-6 overflow-x-hidden">
+      <main className="flex-1 pt-16 pb-24 lg:pb-6 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 py-6">
           {isHomePath ? <AppHome /> : <Outlet />}
         </div>
       </main>
 
-        {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg z-50">
-          <div className="w-full px-3 py-2">
-            <div className="flex justify-center items-center">
-              <ExpandableTabs
-                tabs={navigationItems.map(item => ({
-                  title: item.id === "settings" ? "" : item.label,
-                  icon: item.icon,
-                }))}
-                activeColor="text-primary-foreground font-semibold drop-shadow-lg"
-                inactiveColor="text-primary-foreground/80 drop-shadow-md"
-                className="bg-primary border-none"
-                onChange={(index) => {
-                  if (index !== null) {
-                    navigate(navigationItems[index].path);
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </nav>
+      {/* Bottom Navigation - Mobile and Tablet */}
+      <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <div className="flex items-center gap-3 bg-card/95 backdrop-blur-md rounded-full px-4 py-3 shadow-custom-lg border border-border/50">
+          {/* Menu Icon - Opens Settings Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-12 w-12 rounded-full bg-muted/50 hover:bg-muted"
+              >
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="w-2 h-2 rounded-sm bg-primary" />
+                    <div className="w-2 h-2 rounded-sm bg-primary" />
+                    <div className="w-2 h-2 rounded-sm bg-primary" />
+                    <div className="w-2 h-2 rounded-sm bg-primary" />
+                  </div>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 bg-card border shadow-lg mb-2">
+              {navigationItems.slice(1).map((item) => {
+                const Icon = item.icon;
+                return (
+                  <DropdownMenuItem
+                    key={item.id}
+                    onClick={() => navigate(item.path)}
+                    className={isActive(item.path) ? "bg-primary/10 text-primary font-medium" : ""}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    <span>{item.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Home Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/app")}
+            className={`h-12 w-12 rounded-full transition-all ${
+              isHomePath 
+                ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                : "bg-muted/50 hover:bg-muted"
+            }`}
+          >
+            <Home className="h-5 w-5" />
+          </Button>
+        </div>
+      </nav>
     </div>
   );
 };

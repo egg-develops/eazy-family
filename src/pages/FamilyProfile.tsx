@@ -392,11 +392,11 @@ const FamilyProfile = () => {
             <CarouselContent>
               {headerImages.map((image, index) => (
                 <CarouselItem key={index}>
-                  <div className="relative h-32 md:h-48">
+                  <div className="relative h-48 md:h-64 w-full">
                     <img 
                       src={image} 
                       alt={`Family Profile Header ${index + 1}`} 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-center"
                     />
                     <button
                       onClick={() => removeHeaderImage(index)}
