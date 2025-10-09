@@ -1,11 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Privacy = () => {
+  const navigate = useNavigate();
+  
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       <section className="max-w-3xl mx-auto px-4 py-10">
-        <Card className="shadow-custom-md">
+        <Card className="shadow-custom-md relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute top-4 right-4 z-10"
+            onClick={() => navigate(-1)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           <CardHeader>
             <CardTitle>Privacy Policy</CardTitle>
             <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>

@@ -209,7 +209,7 @@ const Memories = () => {
           }}
         >
           <Upload className="w-4 h-4 mr-2" />
-          {t('memories.uploadNew')}
+          Upload Photos
         </ParticleButton>
 
         <ParticleButton 

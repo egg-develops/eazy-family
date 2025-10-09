@@ -363,31 +363,13 @@ const ToDoList = () => {
           )}
 
           {/* Add New Task/Item */}
-          {!isMobile && (
-            <Card className="shadow-custom-md">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    <span className="font-semibold">{getAddText()}</span>
-                  </div>
-                  <ParticleButton onClick={() => setIsDialogOpen(true)}>
-                    {getButtonText()}
-                  </ParticleButton>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {isMobile && (
-            <ParticleButton 
-              className="w-full gradient-primary text-white border-0"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {activeTab === "shopping" ? "New Item" : "New Task"}
-            </ParticleButton>
-          )}
+          <ParticleButton 
+            className="w-full gradient-primary text-white border-0"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {activeTab === "shopping" ? "New Item" : activeTab === "shared" ? "New List" : "New Task"}
+          </ParticleButton>
 
           {/* Filter */}
           <div className="flex items-center gap-3">

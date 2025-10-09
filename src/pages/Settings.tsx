@@ -320,7 +320,10 @@ const Settings = () => {
       <div data-tutorial="settings">
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-muted-foreground">Manage your app preferences</p>
-        <Button onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }} variant="outline" className="mt-3">
+        <Button 
+          onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }} 
+          className="mt-3 bg-primary hover:bg-primary-hover text-primary-foreground"
+        >
           Start Tutorial
         </Button>
       </div>
@@ -405,17 +408,17 @@ const Settings = () => {
             {homeConfig.showCalendar && (
               <div className="p-4 border rounded-lg bg-muted/20 space-y-3">
                 <p className="text-sm font-medium">Calendar Preview</p>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
+                <div className="flex gap-2 pointer-events-none">
+                  <div className="flex-1 flex items-center justify-center gap-2 border rounded-md px-3 py-2 text-sm">
+                    <CalendarIcon className="w-4 h-4" />
                     Day
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  </div>
+                  <div className="flex-1 flex items-center justify-center border rounded-md px-3 py-2 text-sm">
                     Week
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  </div>
+                  <div className="flex-1 flex items-center justify-center border rounded-md px-3 py-2 text-sm">
                     Month
-                  </Button>
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Full calendar with day, week, and month views will be shown on your homepage
@@ -577,10 +580,33 @@ const Settings = () => {
                   htmlFor="custom"
                   className="flex flex-col gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
                 >
-                  <ColorPicker 
-                    value={customColor} 
-                    onChange={handleCustomColorChange}
-                  />
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <label htmlFor="color-picker" className="cursor-pointer">
+                        <div
+                          className="size-8 cursor-pointer rounded-lg border-2 border-muted-foreground/20 hover:border-muted-foreground/40 transition-colors"
+                          style={{ backgroundColor: customColor }}
+                        />
+                      </label>
+                      <Input
+                        id="color-picker"
+                        type="color"
+                        value={customColor}
+                        onChange={(e) => handleCustomColorChange(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">Custom Color</span>
+                      <Input
+                        type="text"
+                        value={customColor}
+                        onChange={(e) => handleCustomColorChange(e.target.value)}
+                        placeholder="#000000"
+                        className="font-mono mt-1 h-8 text-xs"
+                      />
+                    </div>
+                  </div>
                 </Label>
               </div>
             </RadioGroup>

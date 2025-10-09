@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus } from "lucide-react";
+import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +52,8 @@ const FamilyProfile = () => {
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [headerImage, setHeaderImage] = useState<string | null>(null);
+  const [uploadingHeader, setUploadingHeader] = useState(false);
 
   // Invite form state
   const [inviteMethod, setInviteMethod] = useState<"email" | "phone">("email");
@@ -66,6 +68,10 @@ const FamilyProfile = () => {
   useEffect(() => {
     if (user) {
       loadFamilyData();
+      const savedHeaderImage = localStorage.getItem(`eazy-family-profile-header-${user.id}`);
+      if (savedHeaderImage) {
+        setHeaderImage(savedHeaderImage);
+      }
     }
   }, [user]);
 
@@ -257,23 +263,148 @@ const FamilyProfile = () => {
     }
   };
 
+  const handleHeaderImageUpload = async (file: File) => {
+    if (!user) return;
+    
+    setUploadingHeader(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('user-uploads')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-uploads')
+        .getPublicUrl(filePath);
+
+      setHeaderImage(publicUrl);
+      localStorage.setItem(`eazy-family-profile-header-${user.id}`, publicUrl);
+      
+      toast({
+        title: "Header image updated",
+        description: "Your family profile header has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "Could not upload header image",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingHeader(false);
+    }
+  };
+
+  const handleCreateFamily = async () => {
+    if (!user) return;
+    
+    try {
+      // Generate a new family ID
+      const newFamilyId = crypto.randomUUID();
+      
+      // Create a new family by inserting a family_members record
+      const { error: createError } = await supabase
+        .from('family_members')
+        .insert([{
+          family_id: newFamilyId,
+          inviter_id: user.id,
+          user_id: user.id,
+          role: 'parent',
+          is_active: true
+        }]);
+
+      if (createError) throw createError;
+
+      toast({
+        title: "Family created",
+        description: "Your family has been created successfully. You can now invite members!",
+      });
+
+      loadFamilyData();
+    } catch (error) {
+      console.error('Error creating family:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create family. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header Image Section */}
+      {headerImage ? (
+        <div className="relative rounded-2xl overflow-hidden h-32 md:h-48">
+          <img 
+            src={headerImage} 
+            alt="Family Profile Header" 
+            className="w-full h-full object-cover"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="header-upload"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleHeaderImageUpload(file);
+            }}
+          />
+          <label
+            htmlFor="header-upload"
+            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer"
+            title="Change header image"
+          >
+            <Camera className="w-4 h-4" />
+          </label>
+        </div>
+      ) : (
+        <>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="header-upload"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleHeaderImageUpload(file);
+            }}
+          />
+          <label 
+            htmlFor="header-upload"
+            className="relative rounded-2xl overflow-hidden h-32 md:h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-accent/30 transition-colors group block"
+          >
+            <div className="text-center">
+              <Camera className="w-12 h-12 mx-auto mb-3 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <p className="font-semibold">Add Header Image</p>
+              <p className="text-sm text-muted-foreground">Click to upload</p>
+            </div>
+          </label>
+        </>
+      )}
+      
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/app/settings")}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/app/settings")} className="flex-shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
-            Family Profile
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
+            <Users className="w-6 h-6 text-primary flex-shrink-0" />
+            <span>Family Profile</span>
           </h1>
-          <p className="text-muted-foreground">Manage your family members</p>
+          <p className="text-muted-foreground text-sm">Manage your family members</p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2 gradient-primary text-white border-0">
+            <Button className="gap-2 gradient-primary text-white border-0 flex-shrink-0 whitespace-nowrap">
               <Plus className="h-4 w-4" />
               Invite Member
             </Button>
@@ -345,7 +476,22 @@ const FamilyProfile = () => {
       </div>
 
       {/* Family Members */}
-      <Card className="shadow-custom-md">
+      {!familyId ? (
+        <Card className="shadow-custom-md">
+          <CardContent className="p-8 text-center">
+            <UserPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="font-medium text-lg mb-2">No Family Found</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create your family to start inviting members and sharing with your loved ones.
+            </p>
+            <Button onClick={handleCreateFamily} className="gradient-primary text-white border-0">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Family
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="shadow-custom-md">
         <CardHeader>
           <CardTitle>Family Members</CardTitle>
           <CardDescription>Active members of your family</CardDescription>
@@ -392,6 +538,7 @@ const FamilyProfile = () => {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Pending Invitations */}
       {invitations.length > 0 && (

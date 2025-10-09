@@ -139,10 +139,10 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg overflow-hidden">
           <div className="max-w-md mx-auto px-2 py-3">
             <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex justify-center min-w-max px-2">
+              <div className="flex justify-center min-w-max px-2 touch-pan-x">
                 <ExpandableTabs
                   tabs={navigationItems.map(item => ({
                     title: item.id === "settings" ? "" : item.label,

@@ -165,10 +165,12 @@ const Community = () => {
         <TabsContent value="marketplace" className="space-y-4 mt-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.marketplaceDesc')}</p>
-            <Button size="sm" className="gradient-primary text-white border-0">
-              <Plus className="w-4 h-4 mr-1" />
-              {t('community.sellItem')}
-            </Button>
+            <UpgradeDialog>
+              <Button size="sm" className="gradient-primary text-white border-0">
+                <Plus className="w-4 h-4 mr-1" />
+                {t('community.sellItem')}
+              </Button>
+            </UpgradeDialog>
           </div>
 
           {/* Search and Filters */}
