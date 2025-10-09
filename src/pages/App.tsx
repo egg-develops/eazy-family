@@ -14,7 +14,8 @@ import {
   Search,
   CheckSquare,
   Menu,
-  Cloud
+  Cloud,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { EazyAssistant } from "@/components/EazyAssistant";
 import { TextShimmer } from "@/components/ui/text-shimmer";
@@ -32,6 +42,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { NavLink } from "react-router-dom";
 import { GlobalTutorial } from "@/components/GlobalTutorial";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -139,10 +151,10 @@ const AppLayout = () => {
       </main>
 
         {/* Bottom Navigation - Mobile and Tablet */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg overflow-hidden">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-primary-hover shadow-custom-lg">
           <div className="max-w-md mx-auto px-2 py-3">
-            <div className="overflow-x-auto scrollbar-hide scroll-smooth">
-              <div className="flex justify-center min-w-max px-2 touch-pan-x">
+            <div className="flex justify-start overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory">
+              <div className="flex gap-1 px-2 min-w-max">
                 <ExpandableTabs
                   tabs={navigationItems.map(item => ({
                     title: item.id === "settings" ? "" : item.label,
@@ -153,10 +165,6 @@ const AppLayout = () => {
                   className="bg-primary border-none"
                   onChange={(index) => {
                     if (index !== null) {
-                      const nav = document.querySelector('nav.lg\\:hidden .overflow-x-auto');
-                      if (nav) {
-                        nav.scrollTo({ behavior: 'smooth', left: 0 });
-                      }
                       navigate(navigationItems[index].path);
                     }
                   }}
@@ -323,48 +331,6 @@ const AppHome = () => {
         <EazyAssistant />
       </div>
 
-      {/* Quick Stats */}
-      {homeConfig.topNotifications && homeConfig.topNotifications.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
-          {homeConfig.topNotifications.includes("Upcoming Events") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/calendar')}
-            >
-              <div className="text-2xl font-bold text-primary">3</div>
-              <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
-            </Card>
-          )}
-          {homeConfig.topNotifications.includes("New Photos") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/memories')}
-            >
-              <div className="text-2xl font-bold text-accent">12</div>
-              <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
-            </Card>
-          )}
-          {homeConfig.topNotifications.includes("Pending Tasks") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/todos')}
-            >
-              <div className="text-2xl font-bold text-orange-600">5</div>
-              <div className="text-sm text-muted-foreground">Pending Tasks</div>
-            </Card>
-          )}
-          {homeConfig.topNotifications.includes("Shopping List") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/todos')}
-            >
-              <div className="text-2xl font-bold text-blue-600">8</div>
-              <div className="text-sm text-muted-foreground">Shopping Items</div>
-            </Card>
-          )}
-        </div>
-      )}
-
       {/* Add Widget Buttons */}
       {(!homeConfig.showCalendar || !homeConfig.showWeather) && (
         <div className="grid grid-cols-2 gap-3">
@@ -493,6 +459,49 @@ const AppHome = () => {
         </Card>
       )}
 
+      {/* Quick Stats */}
+      {homeConfig.topNotifications && homeConfig.topNotifications.length > 0 && (
+        <div className="grid grid-cols-2 gap-4">
+          {homeConfig.topNotifications.includes("Upcoming Events") && (
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/calendar')}
+            >
+              <div className="text-2xl font-bold text-primary">3</div>
+              <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("New Photos") && (
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/memories')}
+            >
+              <div className="text-2xl font-bold text-accent">12</div>
+              <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("Pending Tasks") && (
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/todos')}
+            >
+              <div className="text-2xl font-bold text-orange-600">5</div>
+              <div className="text-sm text-muted-foreground">Pending Tasks</div>
+            </Card>
+          )}
+          {homeConfig.topNotifications.includes("Shopping List") && (
+            <Card 
+              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => navigate('/app/todos')}
+            >
+              <div className="text-2xl font-bold text-blue-600">8</div>
+              <div className="text-sm text-muted-foreground">Shopping Items</div>
+            </Card>
+          )}
+        </div>
+      )}
+
+
       {/* Quick Actions */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
@@ -548,42 +557,8 @@ const AppHome = () => {
         </div>
       </div>
 
-      {/* To-Do List Widget */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Quick To-Do's</h3>
-        
-        <Card className="p-4 shadow-custom-md">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Checkbox id="todo1" />
-              <label htmlFor="todo1" className="text-sm flex-1 cursor-pointer">
-                Review homework
-              </label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox id="todo2" />
-              <label htmlFor="todo2" className="text-sm flex-1 cursor-pointer">
-                Call dentist for appointment
-              </label>
-            </div>
-            <div className="flex items-center gap-3">
-              <Checkbox id="todo3" />
-              <label htmlFor="todo3" className="text-sm flex-1 cursor-pointer">
-                Pack lunch for field trip
-              </label>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="w-full justify-start gap-2"
-              onClick={() => navigate('/app/todos')}
-            >
-              <Plus className="w-4 h-4" />
-              Add To-Do
-            </Button>
-          </div>
-        </Card>
-      </div>
+      {/* Quick To-Do's Widget */}
+      <QuickToDos />
 
       {/* Community Updates */}
       <div className="space-y-4">
@@ -610,6 +585,145 @@ const AppHome = () => {
           </div>
         </Card>
       </div>
+    </div>
+  );
+};
+
+// Quick To-Do's Component
+const QuickToDos = () => {
+  const { toast } = useToast();
+  const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+
+  useEffect(() => {
+    loadQuickTasks();
+  }, []);
+
+  const loadQuickTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('type', 'task')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      setQuickTasks(data || []);
+    } catch (error) {
+      console.error('Error loading quick tasks:', error);
+    }
+  };
+
+  const toggleTask = async (id: string) => {
+    const task = quickTasks.find(t => t.id === id);
+    if (!task) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ completed: !task.completed })
+        .eq('id', id);
+
+      if (error) throw error;
+      loadQuickTasks();
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .insert([{
+          title: newTaskTitle,
+          type: 'task',
+        } as any]);
+
+      if (error) throw error;
+
+      setNewTaskTitle("");
+      setIsAddDialogOpen(false);
+      loadQuickTasks();
+      
+      toast({
+        title: "Task Added",
+        description: `"${newTaskTitle}" has been added to your list.`,
+      });
+    } catch (error) {
+      console.error('Error adding task:', error);
+      toast({
+        title: "Error",
+        description: "Could not add task. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Quick To-Do's</h3>
+      
+      <Card className="p-4 shadow-custom-md">
+        <div className="space-y-3">
+          {quickTasks.map((task) => (
+            <div key={task.id} className="flex items-center gap-3">
+              <Checkbox 
+                id={task.id} 
+                checked={task.completed}
+                onCheckedChange={() => toggleTask(task.id)}
+              />
+              <label 
+                htmlFor={task.id} 
+                className={`text-sm flex-1 cursor-pointer ${task.completed ? 'line-through text-muted-foreground' : ''}`}
+              >
+                {task.title}
+              </label>
+            </div>
+          ))}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start gap-2"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Add To-Do
+          </Button>
+        </div>
+      </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Task</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="quick-task-title">Task Title</Label>
+              <Input
+                id="quick-task-title"
+                placeholder="Enter task description..."
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddTask} disabled={!newTaskTitle.trim()}>
+              Add Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

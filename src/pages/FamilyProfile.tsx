@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -301,8 +301,20 @@ const FamilyProfile = () => {
     }
   };
 
+  const [isCreateFamilyOpen, setIsCreateFamilyOpen] = useState(false);
+  const [familyName, setFamilyName] = useState("");
+
   const handleCreateFamily = async () => {
     if (!user) return;
+    
+    if (!familyName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter a family name.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       // Generate a new family ID
@@ -316,16 +328,19 @@ const FamilyProfile = () => {
           inviter_id: user.id,
           user_id: user.id,
           role: 'parent',
-          is_active: true
+          is_active: true,
+          full_name: familyName
         }]);
 
       if (createError) throw createError;
 
       toast({
         title: "Family created",
-        description: "Your family has been created successfully. You can now invite members!",
+        description: `${familyName} family has been created successfully. You can now invite members!`,
       });
 
+      setFamilyName("");
+      setIsCreateFamilyOpen(false);
       loadFamilyData();
     } catch (error) {
       console.error('Error creating family:', error);
@@ -484,10 +499,39 @@ const FamilyProfile = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Create your family to start inviting members.
             </p>
-            <Button onClick={handleCreateFamily} className="gradient-primary text-white border-0">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Family
-            </Button>
+            <Dialog open={isCreateFamilyOpen} onOpenChange={setIsCreateFamilyOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary text-white border-0">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Family
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Your Family</DialogTitle>
+                  <DialogDescription>Choose a name for your family</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="family-name">Family Name</Label>
+                    <Input 
+                      id="family-name" 
+                      placeholder="e.g., The Johnsons" 
+                      value={familyName}
+                      onChange={(e) => setFamilyName(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleCreateFamily()}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsCreateFamilyOpen(false)}>Cancel</Button>
+                  <Button onClick={handleCreateFamily} className="gradient-primary text-white border-0">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       ) : (

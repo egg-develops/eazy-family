@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus } from "lucide-react";
+import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
@@ -15,6 +15,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
+import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
 
 interface Task {
   id: string;
@@ -313,13 +315,13 @@ const ToDoList = () => {
               <Card className="shadow-custom-md">
                 <CardContent className="p-4 text-center">
                   <div className="text-3xl font-bold text-blue-600">{sharedStats.collaborators}</div>
-                  <div className="text-sm text-muted-foreground">Collaborators</div>
+                  <div className="text-sm text-muted-foreground">Members</div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
                 <CardContent className="p-4 text-center">
                   <div className="text-3xl font-bold text-green-600">{sharedStats.completedShared}</div>
-                  <div className="text-sm text-muted-foreground">todos.shared.completed</div>
+                  <div className="text-sm text-muted-foreground">Completed</div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
@@ -396,7 +398,11 @@ const ToDoList = () => {
                     <UserPlus className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-semibold mb-1">No shared lists</h3>
-                  <p className="text-muted-foreground">Share tasks with family members to collaborate</p>
+                  <p className="text-muted-foreground mb-4">Create a shared list to invite members.</p>
+                  <Button onClick={() => setIsDialogOpen(true)} className="gradient-primary text-white border-0">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Shared List
+                  </Button>
                 </div>
               ) : filteredTasks.length > 0 ? (
                 <div className="space-y-3">
@@ -456,7 +462,7 @@ const ToDoList = () => {
             </DialogTitle>
             {activeTab === "shared" && (
               <DialogDescription>
-                Create a shared list and select family members to collaborate with
+                Create a shared list to invite members.
               </DialogDescription>
             )}
           </DialogHeader>
@@ -501,11 +507,7 @@ const ToDoList = () => {
                     Loading family members...
                   </div>
                 ) : familyMembers.length === 0 ? (
-                  <div className="text-center py-4 border rounded-lg bg-muted/20">
-                    <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm text-muted-foreground">No family members found</p>
-                    <p className="text-xs text-muted-foreground">Add family members in Settings</p>
-                  </div>
+                  <InlineFamilyInvite onMemberAdded={loadFamilyMembers} />
                 ) : (
                   <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2">
                     {familyMembers.map((member) => (
@@ -548,6 +550,172 @@ const ToDoList = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+// Inline Family Invite Component
+const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [inviteMethod, setInviteMethod] = useState<"email" | "phone">("email");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitePhone, setInvitePhone] = useState("");
+  const [inviteRole, setInviteRole] = useState<"parent" | "child" | "grandparent" | "caretaker" | "other">("parent");
+  const [sending, setSending] = useState(false);
+  const [familyId, setFamilyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadFamilyId();
+    }
+  }, [user]);
+
+  const loadFamilyId = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from("family_members")
+        .select("family_id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      setFamilyId(data?.family_id || null);
+    } catch (error) {
+      console.error("Error loading family ID:", error);
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!user || !familyId) return;
+
+    const inviteSchema = z.object({
+      email: z.string().trim().email().optional(),
+      phone: z.string().trim().regex(/^\+?[1-9]\d{1,14}$/u).optional(),
+    }).refine((data) => data.email || data.phone);
+
+    try {
+      const validatedData = inviteSchema.parse({
+        email: inviteMethod === "email" ? inviteEmail : undefined,
+        phone: inviteMethod === "phone" ? invitePhone : undefined,
+      });
+
+      setSending(true);
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      const { error } = await supabase.from("family_invitations").insert([
+        {
+          family_id: familyId,
+          inviter_id: user.id,
+          invitee_email: validatedData.email || null,
+          invitee_phone: validatedData.phone || null,
+          role: inviteRole,
+          expires_at: expiresAt.toISOString(),
+          token: crypto.randomUUID(),
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Invitation sent",
+        description: `Invitation sent to ${validatedData.email || validatedData.phone}`,
+      });
+
+      setInviteEmail("");
+      setInvitePhone("");
+      onMemberAdded();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.issues[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send invitation",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
+      <div className="text-center mb-2">
+        <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
+        <p className="text-sm font-medium">Invite a family member</p>
+      </div>
+      
+      <div className="space-y-3">
+        <Select value={inviteMethod} onValueChange={(value: "email" | "phone") => setInviteMethod(value)}>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="email">
+              <div className="flex items-center gap-2">
+                <Mail className="h-3 w-3" />
+                Email
+              </div>
+            </SelectItem>
+            <SelectItem value="phone">
+              <div className="flex items-center gap-2">
+                <Phone className="h-3 w-3" />
+                Phone
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        {inviteMethod === "email" ? (
+          <Input 
+            type="email" 
+            placeholder="family@example.com" 
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            className="h-9"
+          />
+        ) : (
+          <Input 
+            type="tel" 
+            placeholder="+1 234 567 8900" 
+            value={invitePhone}
+            onChange={(e) => setInvitePhone(e.target.value)}
+            className="h-9"
+          />
+        )}
+
+        <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as "parent" | "child" | "grandparent" | "caretaker" | "other")}>
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="parent">Parent</SelectItem>
+            <SelectItem value="child">Child</SelectItem>
+            <SelectItem value="grandparent">Grandparent</SelectItem>
+            <SelectItem value="caretaker">Caretaker</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button 
+          onClick={handleInvite} 
+          disabled={sending}
+          size="sm"
+          className="w-full gradient-primary text-white border-0"
+        >
+          <Send className="h-3 w-3 mr-2" />
+          {sending ? "Sending..." : "Send Invitation"}
+        </Button>
+      </div>
     </div>
   );
 };
