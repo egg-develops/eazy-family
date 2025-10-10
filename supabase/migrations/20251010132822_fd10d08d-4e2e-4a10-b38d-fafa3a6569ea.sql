@@ -1,0 +1,3 @@
+-- Enable leaked password protection in auth configuration
+-- This is done via auth config settings, not SQL migration
+-- The password strength requirements are configured in the auth config

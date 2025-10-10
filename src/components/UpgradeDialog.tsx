@@ -25,16 +25,43 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   const [open, setOpen] = useState(false);
 
-  const applyPromo = () => {
+  const applyPromo = async () => {
     if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
-      localStorage.setItem("eazy-family-plan", "vip");
-      setPromoApplied(true);
-      toast({
-        title: "Promo applied",
-        description: "Family Plan activated for free. Enjoy!",
-      });
-      setOpen(false);
-      window.location.reload();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          toast({
+            title: "Authentication Required",
+            description: "Please sign in first.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Store in database instead of localStorage
+        const { error } = await supabase
+          .from('profiles')
+          .update({ subscription_tier: 'family' })
+          .eq('user_id', session.user.id);
+
+        if (error) throw error;
+
+        localStorage.setItem("eazy-family-plan", "vip");
+        setPromoApplied(true);
+        toast({
+          title: "Promo applied",
+          description: "Family Plan activated for free. Enjoy!",
+        });
+        setOpen(false);
+        window.location.reload();
+      } catch (error) {
+        console.error('Error applying promo:', error);
+        toast({
+          title: "Error",
+          description: "Failed to apply promo code.",
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Invalid code",
@@ -45,9 +72,14 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   };
 
   const handleUpgrade = async () => {
-    if (promoApplied || promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
-      applyPromo();
+    // Check if promo code is entered - if so, apply it instead of payment
+    if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
+      await applyPromo();
       return;
+    }
+
+    if (promoApplied) {
+      return; // Already applied
     }
 
     setIsLoading(true);

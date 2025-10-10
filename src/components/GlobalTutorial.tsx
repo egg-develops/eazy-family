@@ -16,8 +16,9 @@ export const GlobalTutorial = () => {
     }
 
     const checkFlag = () => {
+      const completed = localStorage.getItem('eazy-family-tutorial-completed') === 'true';
       const shouldRun = localStorage.getItem('eazy-family-tutorial-run') === 'true';
-      setRun(shouldRun);
+      setRun(shouldRun && !completed);
     };
 
     checkFlag();
@@ -32,6 +33,7 @@ export const GlobalTutorial = () => {
 
   const handleComplete = () => {
     localStorage.removeItem('eazy-family-tutorial-run');
+    localStorage.setItem('eazy-family-tutorial-completed', 'true');
     setRun(false);
   };
 

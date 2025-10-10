@@ -71,6 +71,8 @@ const Settings = () => {
   const [customColor, setCustomColor] = useState(() => {
     return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
   });
+  const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -79,6 +81,32 @@ const Settings = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    // Fetch subscription status
+    const fetchSubscription = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (data) {
+            setSubscriptionTier(data.subscription_tier || 'free');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+    
+    fetchSubscription();
+  }, []);
 
   useEffect(() => {
     // Apply saved color scheme on mount and when it changes
@@ -438,12 +466,32 @@ const Settings = () => {
           <CardDescription>Manage your subscription and family</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <UpgradeDialog>
-            <Button className="w-full gap-2 gradient-primary text-white border-0">
-              <Crown className="h-4 w-4" />
-              Upgrade to Family Plan
-            </Button>
-          </UpgradeDialog>
+          {/* Subscription Status */}
+          <div className="p-4 rounded-lg border bg-muted/50">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Current Plan</span>
+              {subscriptionTier === 'family' && (
+                <Crown className="h-4 w-4 text-primary" />
+              )}
+            </div>
+            <p className="text-2xl font-bold capitalize">
+              {loadingSubscription ? 'Loading...' : subscriptionTier} Plan
+            </p>
+            {subscriptionTier === 'family' && (
+              <p className="text-sm text-muted-foreground mt-1">
+                All premium features unlocked
+              </p>
+            )}
+          </div>
+
+          {subscriptionTier === 'free' && (
+            <UpgradeDialog>
+              <Button className="w-full gap-2 gradient-primary text-white border-0">
+                <Crown className="h-4 w-4" />
+                Upgrade to Family Plan
+              </Button>
+            </UpgradeDialog>
+          )}
           
           <Button 
             variant="outline" 
