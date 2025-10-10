@@ -416,26 +416,49 @@ const FamilyProfile = () => {
     }
     
     try {
-      // Generate a new family ID
-      const newFamilyId = crypto.randomUUID();
-      
-      // Create a new family by inserting a family_members record
-      const { error: createError } = await supabase
-        .from('family_members')
-        .insert([{
-          family_id: newFamilyId,
-          inviter_id: user.id,
-          user_id: user.id,
-          role: 'parent',
-          is_active: true,
-          full_name: familyName
-        }]);
+      // Generate invite code
+      const { data: inviteCode, error: codeError } = await supabase
+        .rpc('generate_family_invite_code');
 
-      if (createError) throw createError;
+      if (codeError) throw codeError;
+
+      // Create family
+      const newFamilyId = crypto.randomUUID();
+      const { error: familyError } = await supabase
+        .from("families")
+        .insert({
+          id: newFamilyId,
+          name: familyName,
+          invite_code: inviteCode,
+          created_by: user.id,
+        });
+
+      if (familyError) throw familyError;
+
+      // Add user as family member with profile info
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('email, phone, full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const { error: memberError } = await supabase
+        .from("family_members")
+        .insert({
+          family_id: newFamilyId,
+          user_id: user.id,
+          role: "parent",
+          inviter_id: user.id,
+          email: profileData?.email,
+          phone: profileData?.phone,
+          full_name: profileData?.full_name,
+        });
+
+      if (memberError) throw memberError;
 
       toast({
-        title: "Family created",
-        description: `${familyName} family has been created successfully. You can now invite members!`,
+        title: "Family created! 🎉",
+        description: "You can now invite family members using your invite code",
       });
 
       setFamilyName("");
