@@ -419,10 +419,30 @@ const FamilyProfile = () => {
   const handleCreateFamily = async () => {
     if (!user) return;
     
-    if (!familyName.trim()) {
+    // Validate family name
+    const trimmedName = familyName.trim();
+    if (!trimmedName) {
       toast({
-        title: "Name required",
-        description: "Please enter a family name.",
+        title: "Family name required",
+        description: "Please enter a name for your family",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedName.length > 100) {
+      toast({
+        title: "Name too long",
+        description: "Family name must be less than 100 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9\s'-]+$/.test(trimmedName)) {
+      toast({
+        title: "Invalid characters",
+        description: "Family name can only contain letters, numbers, spaces, hyphens, and apostrophes",
         variant: "destructive",
       });
       return;
@@ -441,7 +461,7 @@ const FamilyProfile = () => {
         .from("families")
         .insert({
           id: newFamilyId,
-          name: familyName,
+          name: trimmedName,
           invite_code: inviteCode,
           created_by: user.id,
         });

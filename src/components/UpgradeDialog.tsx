@@ -26,27 +26,30 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [open, setOpen] = useState(false);
 
   const applyPromo = async () => {
-    if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-          toast({
-            title: "Authentication Required",
-            description: "Please sign in first.",
-            variant: "destructive",
-          });
-          return;
-        }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in first.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-        // Store in database instead of localStorage
-        const { error } = await supabase
-          .from('profiles')
-          .update({ subscription_tier: 'family' })
-          .eq('user_id', session.user.id);
+      setIsLoading(true);
 
-        if (error) throw error;
+      // Call server-side validation
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: { promo_code: promoCode.trim() },
+      });
 
-        localStorage.setItem("eazy-family-plan", "vip");
+      if (error) throw error;
+
+      if (data?.valid) {
         setPromoApplied(true);
         toast({
           title: "Promo applied",
@@ -54,26 +57,28 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         });
         setOpen(false);
         window.location.reload();
-      } catch (error) {
-        console.error('Error applying promo:', error);
+      } else {
         toast({
-          title: "Error",
-          description: "Failed to apply promo code.",
+          title: "Invalid code",
+          description: data?.error || "Please check your promo code and try again.",
           variant: "destructive",
         });
       }
-    } else {
+    } catch (error) {
+      console.error('Error applying promo:', error);
       toast({
-        title: "Invalid code",
-        description: "Please check your promo code and try again.",
+        title: "Error",
+        description: "Failed to apply promo code.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleUpgrade = async () => {
     // Check if promo code is entered - if so, apply it instead of payment
-    if (promoCode.trim().toUpperCase() === "EZ-FAMILY-VIP") {
+    if (promoCode.trim()) {
       await applyPromo();
       return;
     }

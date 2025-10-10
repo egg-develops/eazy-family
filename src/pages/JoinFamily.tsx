@@ -31,7 +31,9 @@ const JoinFamily = () => {
       return;
     }
 
-    if (!inviteCode.trim()) {
+    // Validate invite code format
+    const trimmedCode = inviteCode.trim().toUpperCase();
+    if (!trimmedCode) {
       toast({
         title: "Enter invite code",
         description: "Please enter a valid invite code",
@@ -40,10 +42,28 @@ const JoinFamily = () => {
       return;
     }
 
+    if (trimmedCode.length !== 6) {
+      toast({
+        title: "Invalid code length",
+        description: "Invite codes must be exactly 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!/^[A-Z0-9]{6}$/.test(trimmedCode)) {
+      toast({
+        title: "Invalid code format",
+        description: "Invite codes can only contain letters and numbers",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.rpc('join_family_with_code', {
-        _invite_code: inviteCode.trim().toUpperCase(),
+        _invite_code: trimmedCode,
         _user_id: user.id
       });
 
