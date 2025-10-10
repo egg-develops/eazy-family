@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera, X } from "lucide-react";
+import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera, X, Copy, RefreshCw, Share2, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +55,8 @@ const FamilyProfile = () => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [headerImages, setHeaderImages] = useState<string[]>([]);
   const [uploadingHeader, setUploadingHeader] = useState(false);
+  const [familyInfo, setFamilyInfo] = useState<{ name: string; invite_code: string } | null>(null);
+  const [regeneratingCode, setRegeneratingCode] = useState(false);
 
   // Invite form state
   const [inviteMethod, setInviteMethod] = useState<"email" | "phone">("email");
@@ -96,8 +98,19 @@ const FamilyProfile = () => {
       const currentFamilyId = myMembership?.family_id ?? null;
       setFamilyId(currentFamilyId);
 
-      // 2) Load active members of this family (if any)
+      // 2) Load family info and active members
       if (currentFamilyId) {
+        // Load family details including invite code
+        const { data: familyData, error: familyError } = await supabase
+          .from("families")
+          .select("name, invite_code")
+          .eq("id", currentFamilyId)
+          .single();
+        
+        if (familyError) throw familyError;
+        setFamilyInfo(familyData);
+
+        // Load family members
         const { data: members, error: membersError } = await supabase
           .from("family_members")
           .select("*")
@@ -108,6 +121,7 @@ const FamilyProfile = () => {
         setFamilyMembers(members || []);
       } else {
         setFamilyMembers([]);
+        setFamilyInfo(null);
       }
 
       // 3) Load pending invitations sent by this user (tokens are never exposed)
@@ -332,6 +346,60 @@ const FamilyProfile = () => {
     });
   };
 
+  const copyInviteCode = () => {
+    if (!familyInfo) return;
+    navigator.clipboard.writeText(familyInfo.invite_code);
+    toast({
+      title: "Copied!",
+      description: "Invite code copied to clipboard",
+    });
+  };
+
+  const shareInviteLink = () => {
+    if (!familyInfo) return;
+    const inviteUrl = `${window.location.origin}/join-family`;
+    navigator.clipboard.writeText(`Join our family on Eazy.Family! Use code: ${familyInfo.invite_code}\n\n${inviteUrl}`);
+    toast({
+      title: "Share link copied!",
+      description: "Share this with your family members",
+    });
+  };
+
+  const regenerateInviteCode = async () => {
+    if (!familyId || !user) return;
+    
+    setRegeneratingCode(true);
+    try {
+      // Generate new code
+      const { data: newCode, error: codeError } = await supabase.rpc('generate_family_invite_code');
+      if (codeError) throw codeError;
+
+      // Update family with new code
+      const { error: updateError } = await supabase
+        .from('families')
+        .update({ invite_code: newCode })
+        .eq('id', familyId);
+      
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Code regenerated",
+        description: "New invite code created. Old code is now invalid.",
+      });
+
+      loadFamilyData();
+    } catch (error) {
+      console.error('Error regenerating code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to regenerate invite code",
+        variant: "destructive",
+      });
+    } finally {
+      setRegeneratingCode(false);
+    }
+  };
+
   const [isCreateFamilyOpen, setIsCreateFamilyOpen] = useState(false);
   const [familyName, setFamilyName] = useState("");
 
@@ -547,6 +615,76 @@ const FamilyProfile = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Family Invite Code Section */}
+      {familyId && familyInfo && (
+        <Card className="shadow-custom-lg border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Invite Family Members
+            </CardTitle>
+            <CardDescription>
+              Share this code for anyone to join {familyInfo.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Invite Code Display */}
+            <div className="space-y-3">
+              <Label>Family Invite Code</Label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-card p-4 rounded-lg border-2 border-dashed border-primary/30">
+                  <p className="text-3xl font-mono font-bold text-center tracking-widest text-primary">
+                    {familyInfo.invite_code}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                onClick={copyInviteCode}
+                className="gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                Copy Code
+              </Button>
+              <Button
+                variant="outline"
+                onClick={shareInviteLink}
+                className="gap-2"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Link
+              </Button>
+            </div>
+
+            {/* Regenerate Code */}
+            <div className="pt-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={regenerateInviteCode}
+                disabled={regeneratingCode}
+                className="w-full text-muted-foreground hover:text-destructive gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${regeneratingCode ? 'animate-spin' : ''}`} />
+                {regeneratingCode ? 'Regenerating...' : 'Regenerate Code (old code will stop working)'}
+              </Button>
+            </div>
+
+            {/* Join URL */}
+            <div className="text-center text-sm text-muted-foreground">
+              <p>Or share this link:</p>
+              <code className="text-xs bg-muted px-2 py-1 rounded mt-1 inline-block">
+                {window.location.origin}/join-family
+              </code>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Family Members */}
       {!familyId ? (

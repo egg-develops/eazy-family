@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AcceptInvite from "./pages/AcceptInvite";
+import JoinFamily from "./pages/JoinFamily";
 import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
 import Calendar from "./pages/Calendar";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/accept-invite" element={<AcceptInvite />} />
+            <Route path="/join-family" element={<JoinFamily />} />
 <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

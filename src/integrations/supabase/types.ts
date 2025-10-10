@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      families: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          invite_code: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          invite_code: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          invite_code?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       family_invitations: {
         Row: {
           accepted_at: string | null
@@ -188,6 +215,14 @@ export type Database = {
     Functions: {
       accept_family_invitation: {
         Args: { _accepting_user_id: string; _invitation_token: string }
+        Returns: Json
+      }
+      generate_family_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      join_family_with_code: {
+        Args: { _invite_code: string; _user_id: string }
         Returns: Json
       }
       user_belongs_to_family: {
