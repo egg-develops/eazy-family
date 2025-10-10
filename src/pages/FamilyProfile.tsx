@@ -100,15 +100,28 @@ const FamilyProfile = () => {
 
       // 2) Load family info and active members
       if (currentFamilyId) {
-        // Load family details including invite code
+        // Load family details including invite code (use maybeSingle for backwards compatibility)
         const { data: familyData, error: familyError } = await supabase
           .from("families")
           .select("name, invite_code")
           .eq("id", currentFamilyId)
-          .single();
+          .maybeSingle();
         
         if (familyError) throw familyError;
-        setFamilyInfo(familyData);
+        
+        // If no family record exists, create one for backwards compatibility
+        if (!familyData) {
+          const { data: newCode } = await supabase.rpc('generate_family_invite_code');
+          await supabase.from('families').insert({
+            id: currentFamilyId,
+            name: "My Family",
+            invite_code: newCode || 'ERROR',
+            created_by: user.id
+          });
+          setFamilyInfo({ name: "My Family", invite_code: newCode || 'ERROR' });
+        } else {
+          setFamilyInfo(familyData);
+        }
 
         // Load family members
         const { data: members, error: membersError } = await supabase
