@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,10 @@ const JoinFamily = () => {
   const { toast } = useToast();
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = "Join Your Eazy Family";
+  }, []);
 
   const handleJoinFamily = async () => {
     if (!user) {
@@ -82,7 +86,7 @@ const JoinFamily = () => {
           <div className="w-20 h-20 mx-auto gradient-primary rounded-3xl flex items-center justify-center shadow-custom-lg mb-4">
             <Users className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold">Join a Family</h1>
+          <h1 className="text-3xl font-bold">Join Your Eazy Family</h1>
           <p className="text-muted-foreground mt-2">
             Enter the invite code shared with you
           </p>
@@ -90,12 +94,6 @@ const JoinFamily = () => {
 
         {/* Join Card */}
         <Card className="shadow-custom-lg">
-          <CardHeader>
-            <CardTitle>Family Invite Code</CardTitle>
-            <CardDescription>
-              Ask your family member for the 6-character code
-            </CardDescription>
-          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="invite-code">Invite Code</Label>

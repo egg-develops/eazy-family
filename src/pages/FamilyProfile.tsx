@@ -370,7 +370,7 @@ const FamilyProfile = () => {
 
   const shareInviteLink = () => {
     if (!familyInfo) return;
-    const inviteUrl = `${window.location.origin}/join-family`;
+    const inviteUrl = `https://eazy.family/join-family`;
     navigator.clipboard.writeText(`Join our family on Eazy.Family! Use code: ${familyInfo.invite_code}\n\n${inviteUrl}`);
     toast({
       title: "Share link copied!",
@@ -715,7 +715,7 @@ const FamilyProfile = () => {
             <div className="text-center text-sm text-muted-foreground">
               <p>Or share this link:</p>
               <code className="text-xs bg-muted px-2 py-1 rounded mt-1 inline-block">
-                {window.location.origin}/join-family
+                https://eazy.family/join-family
               </code>
             </div>
           </CardContent>
