@@ -16,13 +16,15 @@ import { z } from "zod";
 
 interface FamilyMember {
   id: string;
-  full_name: string | null;
+  display_name: string;
   email: string | null;
   phone: string | null;
   role: string;
   is_active: boolean;
   joined_at: string | null;
   family_id: string;
+  share_email: boolean | null;
+  share_phone: boolean | null;
 }
 
 interface FamilyInvitation {
@@ -123,9 +125,9 @@ const FamilyProfile = () => {
           setFamilyInfo(familyData);
         }
 
-        // Load family members
+        // Load family members using the safe view that respects privacy
         const { data: members, error: membersError } = await supabase
-          .from("family_members")
+          .from("family_members_safe")
           .select("*")
           .eq("family_id", currentFamilyId)
           .eq("is_active", true)
@@ -807,7 +809,7 @@ const FamilyProfile = () => {
                 <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium">{member.full_name || "No name"}</p>
+                      <p className="font-medium">{member.display_name || "Family Member"}</p>
                       <Badge variant={getRoleBadgeColor(member.role)}>{member.role}</Badge>
                     </div>
                     <div className="space-y-1">
@@ -821,6 +823,11 @@ const FamilyProfile = () => {
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                           <Phone className="h-3 w-3" />
                           {member.phone}
+                        </p>
+                      )}
+                      {!member.email && !member.phone && (
+                        <p className="text-xs text-muted-foreground italic">
+                          Contact details not shared
                         </p>
                       )}
                     </div>

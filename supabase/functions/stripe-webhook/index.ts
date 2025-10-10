@@ -35,35 +35,35 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       
-      if (session.mode === "subscription" && session.customer_email) {
-        // Update user's subscription tier
+      if (session.mode === "subscription" && session.customer) {
+        const customerId = session.customer as string;
+        
+        // Update user's subscription tier using stripe_customer_id
         const { error } = await supabaseClient
           .from("profiles")
           .update({ subscription_tier: "family" })
-          .eq("email", session.customer_email);
+          .eq("stripe_customer_id", customerId);
 
         if (error) {
           console.error("Error updating subscription:", error);
         } else {
-          console.log(`Subscription activated for ${session.customer_email}`);
+          console.log(`Subscription activated for customer ${customerId}`);
         }
       }
     } else if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
-      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      const customerId = subscription.customer as string;
       
-      if (customer && !customer.deleted && customer.email) {
-        // Downgrade user to free tier
-        const { error } = await supabaseClient
-          .from("profiles")
-          .update({ subscription_tier: "free" })
-          .eq("email", customer.email);
+      // Downgrade user to free tier using stripe_customer_id
+      const { error } = await supabaseClient
+        .from("profiles")
+        .update({ subscription_tier: "free" })
+        .eq("stripe_customer_id", customerId);
 
-        if (error) {
-          console.error("Error downgrading subscription:", error);
-        } else {
-          console.log(`Subscription cancelled for ${customer.email}`);
-        }
+      if (error) {
+        console.error("Error downgrading subscription:", error);
+      } else {
+        console.log(`Subscription cancelled for customer ${customerId}`);
       }
     }
 

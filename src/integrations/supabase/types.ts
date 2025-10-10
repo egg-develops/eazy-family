@@ -89,6 +89,7 @@ export type Database = {
       family_members: {
         Row: {
           created_at: string | null
+          display_name: string | null
           email: string | null
           family_id: string
           full_name: string | null
@@ -103,6 +104,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          display_name?: string | null
           email?: string | null
           family_id: string
           full_name?: string | null
@@ -117,6 +119,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          display_name?: string | null
           email?: string | null
           family_id?: string
           full_name?: string | null
@@ -142,33 +145,81 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
-          email: string | null
+          display_name: string | null
+          email: string
           full_name: string | null
           id: string
           phone: string | null
+          share_email: boolean | null
+          share_phone: boolean | null
+          stripe_customer_id: string | null
           subscription_tier: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
-          email?: string | null
+          display_name?: string | null
+          email: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          share_email?: boolean | null
+          share_phone?: boolean | null
+          stripe_customer_id?: string | null
           subscription_tier?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
-          email?: string | null
+          display_name?: string | null
+          email?: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          share_email?: boolean | null
+          share_phone?: boolean | null
+          stripe_customer_id?: string | null
           subscription_tier?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          subscription_tier: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          subscription_tier: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          subscription_tier?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -210,7 +261,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      family_members_safe: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          email: string | null
+          family_id: string | null
+          id: string | null
+          inviter_id: string | null
+          is_active: boolean | null
+          joined_at: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["family_member_role"] | null
+          share_email: boolean | null
+          share_phone: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_family_invitation: {

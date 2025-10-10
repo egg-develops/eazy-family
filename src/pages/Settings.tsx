@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { PrivacySettings } from "@/components/PrivacySettings";
 
 interface HomeConfig {
   greeting: string;
@@ -528,6 +529,9 @@ const Settings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Privacy Settings */}
+      <PrivacySettings />
 
       {/* Appearance Settings */}
       <Card className="shadow-custom-md" data-tutorial="appearance">

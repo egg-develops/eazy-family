@@ -44,10 +44,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .maybeSingle()
               .then(({ data }) => {
                 if (!data) {
+                  const fullName = session.user.user_metadata?.full_name;
                   supabase.from('profiles').insert({
                     user_id: session.user.id,
                     email: session.user.email,
-                    full_name: session.user.user_metadata?.full_name,
+                    full_name: fullName,
+                    display_name: fullName,
+                    share_email: false,
+                    share_phone: false,
                   }).then(() => console.log('Profile created'));
                 }
               });

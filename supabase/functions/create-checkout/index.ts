@@ -30,19 +30,33 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil" 
     });
 
-    // Check if customer exists
+    // Check if customer exists in Stripe
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+    } else {
+      // Create new customer with user_id in metadata
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: {
+          supabase_user_id: user.id,
+        },
+      });
+      customerId = customer.id;
     }
+
+    // Store stripe_customer_id in profile for reliable webhook lookups
+    await supabaseClient
+      .from("profiles")
+      .update({ stripe_customer_id: customerId })
+      .eq("user_id", user.id);
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
     // Create checkout session with 7-day trial
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [
         {
           price: "price_1SFWcRCo7UjVZgagNv4fs0o5",
@@ -52,6 +66,9 @@ serve(async (req) => {
       mode: "subscription",
       subscription_data: {
         trial_period_days: 7,
+        metadata: {
+          supabase_user_id: user.id,
+        },
       },
       success_url: `${origin}/app`,
       cancel_url: `${origin}/app/community`,

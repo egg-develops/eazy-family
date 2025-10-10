@@ -28,13 +28,37 @@ serve(async (req) => {
     const { promo_code } = await req.json();
     if (!promo_code) throw new Error("Promo code is required");
 
-    // Server-side validation of promo codes
-    const validPromoCodes = ["EZ-FAMILY-VIP"];
     const normalizedCode = promo_code.trim().toUpperCase();
 
-    if (!validPromoCodes.includes(normalizedCode)) {
+    // Validate promo code from database
+    const { data: promoData, error: promoError } = await supabaseClient
+      .from("promo_codes")
+      .select("*")
+      .eq("code", normalizedCode)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (promoError) throw promoError;
+
+    if (!promoData) {
       return new Response(
         JSON.stringify({ valid: false, error: "Invalid promo code" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Check if promo code has expired
+    if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Promo code has expired" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // Check if max uses reached
+    if (promoData.max_uses && promoData.current_uses >= promoData.max_uses) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Promo code has reached maximum uses" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
@@ -42,13 +66,22 @@ serve(async (req) => {
     // Update user's subscription tier
     const { error: updateError } = await supabaseClient
       .from("profiles")
-      .update({ subscription_tier: "family" })
+      .update({ subscription_tier: promoData.subscription_tier })
       .eq("user_id", user.id);
 
     if (updateError) throw updateError;
 
+    // Increment promo code usage count
+    await supabaseClient
+      .from("promo_codes")
+      .update({ 
+        current_uses: promoData.current_uses + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", promoData.id);
+
     return new Response(
-      JSON.stringify({ valid: true, subscription_tier: "family" }),
+      JSON.stringify({ valid: true, subscription_tier: promoData.subscription_tier }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
