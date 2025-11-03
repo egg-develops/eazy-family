@@ -17,7 +17,12 @@ serve(async (req) => {
       throw new Error("No audio data provided");
     }
 
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
+    }
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -26,7 +31,7 @@ serve(async (req) => {
     const audioData = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
     const audioBlob = new Blob([audioData], { type: "audio/webm" });
 
-    // First, transcribe the audio using Lovable AI
+    // First, transcribe the audio using OpenAI's Whisper
     const formData = new FormData();
     formData.append("file", audioBlob, "audio.webm");
     formData.append("model", "whisper-1");
@@ -34,7 +39,7 @@ serve(async (req) => {
     const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: formData,
     });
