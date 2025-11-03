@@ -69,37 +69,56 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
     try {
       // Convert blob to base64
       const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
+      
+      reader.onerror = () => {
+        setIsProcessing(false);
+        toast({
+          title: "Error reading audio",
+          description: "Failed to process the audio file. Please try again.",
+          variant: "destructive",
+        });
+      };
       
       reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-        const base64Data = base64Audio.split(',')[1];
+        try {
+          const base64Audio = reader.result as string;
+          const base64Data = base64Audio.split(',')[1];
 
-        // Call the edge function
-        const { data, error } = await supabase.functions.invoke('shopping-voice-assistant', {
-          body: { audioBase64: base64Data }
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data.items && data.items.length > 0) {
-          onItemsAdded(data.items);
-          toast({
-            title: "Items added!",
-            description: `Added ${data.items.length} item(s) to your shopping list: ${data.items.join(', ')}`,
+          // Call the edge function
+          const { data, error } = await supabase.functions.invoke('shopping-voice-assistant', {
+            body: { audioBase64: base64Data }
           });
-        } else {
+
+          if (error) {
+            throw error;
+          }
+
+          if (data.items && data.items.length > 0) {
+            onItemsAdded(data.items);
+            toast({
+              title: "Items added!",
+              description: `Added ${data.items.length} item(s) to your shopping list: ${data.items.join(', ')}`,
+            });
+          } else {
+            toast({
+              title: "No items detected",
+              description: data.transcription ? `I heard: "${data.transcription}"` : "Please try speaking more clearly.",
+              variant: "destructive",
+            });
+          }
+        } catch (error: any) {
+          console.error('Error processing audio:', error);
           toast({
-            title: "No items detected",
-            description: data.transcription ? `I heard: "${data.transcription}"` : "Please try speaking more clearly.",
+            title: "Error processing audio",
+            description: error.message || "Please try again.",
             variant: "destructive",
           });
+        } finally {
+          setIsProcessing(false);
         }
-
-        setIsProcessing(false);
       };
+      
+      reader.readAsDataURL(audioBlob);
     } catch (error: any) {
       console.error('Error processing audio:', error);
       setIsProcessing(false);
