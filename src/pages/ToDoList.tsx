@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
+import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
 interface Task {
   id: string;
@@ -174,6 +175,40 @@ const ToDoList = () => {
     collaborators: 0,
     completedShared: tasks.filter(t => t.type === "shared" && t.completed).length,
     active: tasks.filter(t => t.type === "shared" && !t.completed).length,
+  };
+
+  const handleVoiceItemsAdded = async (items: string[]) => {
+    try {
+      const insertPromises = items.map(item => 
+        supabase
+          .from('tasks')
+          .insert([{
+            title: item,
+            type: 'shopping',
+            due_date: null,
+            shared_with: null,
+          } as any])
+      );
+
+      const results = await Promise.all(insertPromises);
+      
+      const hasErrors = results.some(result => result.error);
+      if (hasErrors) {
+        throw new Error("Some items failed to add");
+      }
+
+      toast({
+        title: "Items Added",
+        description: `${items.length} item(s) added to your shopping list.`,
+      });
+    } catch (error) {
+      console.error('Error adding voice items:', error);
+      toast({
+        title: "Error",
+        description: "Could not add all items. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddTask = async () => {
@@ -364,14 +399,26 @@ const ToDoList = () => {
             </div>
           )}
 
-          {/* Add New Task/Item */}
-          <ParticleButton 
-            className="w-full gradient-primary text-white border-0"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {activeTab === "shopping" ? "New Item" : activeTab === "shared" ? "New List" : "New Task"}
-          </ParticleButton>
+          {/* Add New Task/Item and Voice Assistant */}
+          <div className="space-y-4">
+            <ParticleButton 
+              className="w-full gradient-primary text-white border-0"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {activeTab === "shopping" ? "New Item" : activeTab === "shared" ? "New List" : "New Task"}
+            </ParticleButton>
+            
+            {activeTab === "shopping" && (
+              <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
+                <div className="flex-1">
+                  <p className="text-sm font-medium mb-1">Voice Assistant</p>
+                  <p className="text-xs text-muted-foreground">Tap the mic and say your shopping items</p>
+                </div>
+                <VoiceShoppingAssistant onItemsAdded={handleVoiceItemsAdded} />
+              </div>
+            )}
+          </div>
 
           {/* Filter */}
           <div className="flex items-center gap-3">

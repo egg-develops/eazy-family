@@ -18,7 +18,14 @@ export const GlobalTutorial = () => {
     const checkFlag = () => {
       const completed = localStorage.getItem('eazy-family-tutorial-completed') === 'true';
       const shouldRun = localStorage.getItem('eazy-family-tutorial-run') === 'true';
-      setRun(shouldRun && !completed);
+      
+      // Only run if explicitly triggered AND not completed
+      if (completed) {
+        localStorage.removeItem('eazy-family-tutorial-run');
+        setRun(false);
+      } else {
+        setRun(shouldRun);
+      }
     };
 
     checkFlag();

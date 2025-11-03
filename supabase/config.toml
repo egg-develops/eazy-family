@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.accept-invitation]
 verify_jwt = true
+
+[functions.shopping-voice-assistant]
+verify_jwt = false
+
+[functions.eazy-chat]
+verify_jwt = false
