@@ -1,9 +1,42 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Decode large base64 strings in chunks to avoid memory issues
+function processBase64Chunks(base64String: string, chunkSize = 32768) {
+  const chunks: Uint8Array[] = [];
+  let position = 0;
+
+  while (position < base64String.length) {
+    const chunk = base64String.slice(position, position + chunkSize);
+    const binaryChunk = atob(chunk);
+    const bytes = new Uint8Array(binaryChunk.length);
+    for (let i = 0; i < binaryChunk.length; i++) {
+      bytes[i] = binaryChunk.charCodeAt(i);
+    }
+    chunks.push(bytes);
+    position += chunkSize;
+  }
+
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
+}
+
+function padBase64(input: string) {
+  const cleaned = input.replace(/\s/g, "");
+  const padLen = (4 - (cleaned.length % 4)) % 4;
+  return cleaned + "=".repeat(padLen);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,8 +60,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Convert base64 to blob for transcription
-    const audioData = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
+    // Convert base64 to blob for transcription (robust decoder)
+    const padded = padBase64(audioBase64);
+    const audioData = processBase64Chunks(padded);
     const audioBlob = new Blob([audioData], { type: "audio/webm" });
 
     // First, transcribe the audio using OpenAI's Whisper
@@ -45,9 +79,13 @@ serve(async (req) => {
     });
 
     if (!transcriptionResponse.ok) {
-      const error = await transcriptionResponse.text();
-      console.error("Transcription error:", error);
-      throw new Error("Failed to transcribe audio");
+      const errorText = await transcriptionResponse.text();
+      console.error("Transcription error:", transcriptionResponse.status, errorText);
+      const status = transcriptionResponse.status === 429 ? 429 : 400;
+      return new Response(
+        JSON.stringify({ error: "Transcription failed", details: errorText }),
+        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const { text: transcription } = await transcriptionResponse.json();
