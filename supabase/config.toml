@@ -10,7 +10,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.shopping-voice-assistant]
-verify_jwt = false
+verify_jwt = true
 
 [functions.eazy-chat]
-verify_jwt = false
+verify_jwt = true

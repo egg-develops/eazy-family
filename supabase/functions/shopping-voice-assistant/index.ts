@@ -1,10 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// 10MB max audio size (base64 encoded is ~33% larger than raw)
+const MAX_AUDIO_BASE64_SIZE = 13 * 1024 * 1024;
 
 // Decode large base64 strings in chunks to avoid memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
@@ -44,10 +48,51 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { audioBase64 } = await req.json();
     
+    // Validate input
     if (!audioBase64) {
-      throw new Error("No audio data provided");
+      return new Response(
+        JSON.stringify({ error: "No audio data provided" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (typeof audioBase64 !== 'string') {
+      return new Response(
+        JSON.stringify({ error: "Audio data must be a base64 string" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (audioBase64.length > MAX_AUDIO_BASE64_SIZE) {
+      return new Response(
+        JSON.stringify({ error: "Audio file too large. Maximum 10MB allowed" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");

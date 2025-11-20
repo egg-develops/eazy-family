@@ -261,6 +261,48 @@ export type Database = {
       }
     }
     Views: {
+      family_invitations_safe: {
+        Row: {
+          accepted_at: string | null
+          created_at: string | null
+          expires_at: string | null
+          family_id: string | null
+          id: string | null
+          invitee_email: string | null
+          invitee_phone: string | null
+          inviter_id: string | null
+          role: Database["public"]["Enums"]["family_member_role"] | null
+          status: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string | null
+          invitee_email?: string | null
+          invitee_phone?: string | null
+          inviter_id?: string | null
+          role?: Database["public"]["Enums"]["family_member_role"] | null
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          family_id?: string | null
+          id?: string | null
+          invitee_email?: string | null
+          invitee_phone?: string | null
+          inviter_id?: string | null
+          role?: Database["public"]["Enums"]["family_member_role"] | null
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       family_members_safe: {
         Row: {
           created_at: string | null
@@ -294,10 +336,7 @@ export type Database = {
         Args: { _accepting_user_id: string; _invitation_token: string }
         Returns: Json
       }
-      generate_family_invite_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_family_invite_code: { Args: never; Returns: string }
       join_family_with_code: {
         Args: { _invite_code: string; _user_id: string }
         Returns: Json
