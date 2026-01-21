@@ -498,7 +498,7 @@ const AppHome = () => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/calendar')}
             >
-              <div className="text-2xl font-bold text-primary">3</div>
+              <div className="text-2xl font-bold text-primary">0</div>
               <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
             </Card>
           )}
@@ -507,7 +507,7 @@ const AppHome = () => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/memories')}
             >
-              <div className="text-2xl font-bold text-accent">12</div>
+              <div className="text-2xl font-bold text-accent">0</div>
               <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
             </Card>
           )}
@@ -516,7 +516,7 @@ const AppHome = () => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/todos')}
             >
-              <div className="text-2xl font-bold text-orange-600">5</div>
+              <div className="text-2xl font-bold text-orange-600">0</div>
               <div className="text-sm text-muted-foreground">Pending Tasks</div>
             </Card>
           )}
@@ -525,7 +525,7 @@ const AppHome = () => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/todos')}
             >
-              <div className="text-2xl font-bold text-blue-600">8</div>
+              <div className="text-2xl font-bold text-blue-600">0</div>
               <div className="text-sm text-muted-foreground">Shopping Items</div>
             </Card>
           )}
@@ -599,20 +599,23 @@ const AppHome = () => {
           className="p-4 shadow-custom-md cursor-pointer hover:shadow-custom-lg transition-shadow"
           onClick={() => navigate('/app/community')}
         >
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 gradient-cool rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">MK</span>
-            </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-sm">Maria K. {t('home.sharedIn')} Daddy Day</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                "Great playground at Seefeld Park! Kids loved the new equipment 🎪"
-              </p>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">Daddy Day</Badge>
-                <span className="text-xs text-muted-foreground">2h ago</span>
-              </div>
-            </div>
+          <div className="flex flex-col items-center text-center py-4">
+            <Users className="w-10 h-10 text-muted-foreground mb-3" />
+            <h4 className="font-medium text-sm mb-1">No community updates yet</h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Join groups to connect with other families
+            </p>
+            <Button 
+              size="sm" 
+              className="gradient-primary text-white border-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/app/community');
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Explore Community
+            </Button>
           </div>
         </Card>
       </div>

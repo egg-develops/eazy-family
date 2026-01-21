@@ -51,63 +51,11 @@ interface MarketItem {
   postedAt: string;
 }
 
-const mockGroups: Group[] = [
-  {
-    id: '1',
-    name: 'Daddy Day',
-    description: 'Dads sharing experiences and planning activities',
-    memberCount: 124,
-    category: 'parenting',
-    isJoined: true
-  },
-  {
-    id: '2',
-    name: "Mother's Corner",
-    description: 'A supportive space for moms to connect and share',
-    memberCount: 89,
-    category: 'parenting',
-    isJoined: true
-  },
-  {
-    id: '3',
-    name: 'Play Dates Zurich',
-    description: 'Organizing fun playdates for kids in Zurich area',
-    memberCount: 67,
-    category: 'playdates',
-    isJoined: false
-  },
-];
+const mockGroups: Group[] = [];
 
-const mockPosts: Post[] = [
-  {
-    id: '1',
-    author: { initials: 'MK', name: 'Maria K.' },
-    group: 'Daddy Day',
-    content: 'Great playground at Seefeld Park! Kids loved the new equipment. Highly recommend for ages 3-8 🎪',
-    timestamp: '2h ago',
-    likes: 12,
-    comments: 5,
-    location: 'Seefeld Park'
-  },
-];
+const mockPosts: Post[] = [];
 
-const mockItems: MarketItem[] = [
-  {
-    id: '1',
-    title: 'LEGO Classic Building Set',
-    description: 'Complete set with all pieces. Great condition, barely used.',
-    price: 'CHF 45',
-    condition: 'like-new',
-    category: 'toys',
-    seller: {
-      initials: 'MK',
-      name: 'Maria K.',
-      location: 'Zurich Center'
-    },
-    images: ['bg-gradient-to-br from-red-400 to-red-600'],
-    postedAt: '2h ago'
-  },
-];
+const mockItems: MarketItem[] = [];
 
 const Community = () => {
   const { t } = useTranslation();
@@ -217,39 +165,57 @@ const Community = () => {
 
           {/* Items Grid */}
           <div className="space-y-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="shadow-custom-md">
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className={`w-20 h-20 rounded-lg ${item.images[0]} flex-shrink-0`} />
-                    
-                    <div className="flex-1 space-y-2">
-                      <h4 className="font-semibold text-sm leading-tight">{item.title}</h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <Card key={item.id} className="shadow-custom-md">
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
+                      <div className={`w-20 h-20 rounded-lg ${item.images[0]} flex-shrink-0`} />
+                      
+                      <div className="flex-1 space-y-2">
+                        <h4 className="font-semibold text-sm leading-tight">{item.title}</h4>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
 
-                      <div className="flex items-center gap-2">
-                        <Badge className={`text-xs ${getConditionColor(item.condition)}`}>
-                          {t(`marketplace.condition.${item.condition}`)}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">{item.category}</Badge>
-                      </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={`text-xs ${getConditionColor(item.condition)}`}>
+                            {t(`marketplace.condition.${item.condition}`)}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                        </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="text-lg font-bold text-primary">{item.price}</div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Avatar className="w-5 h-5">
-                            <AvatarFallback className="gradient-cool text-white text-xs">
-                              {item.seller.initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{item.seller.location}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="text-lg font-bold text-primary">{item.price}</div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Avatar className="w-5 h-5">
+                              <AvatarFallback className="gradient-cool text-white text-xs">
+                                {item.seller.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{item.seller.location}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="shadow-custom-md">
+                <CardContent className="p-8 text-center">
+                  <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-medium mb-2">No items for sale yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Be the first to list family items in your community
+                  </p>
+                  <UpgradeDialog>
+                    <Button className="gradient-primary text-white border-0">
+                      <Plus className="w-4 h-4 mr-1" />
+                      List Your First Item
+                    </Button>
+                  </UpgradeDialog>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 
@@ -267,24 +233,42 @@ const Community = () => {
 
           {/* My Groups */}
           <div className="space-y-3">
-            {joinedGroups.map((group) => (
-              <Card key={group.id} className="shadow-custom-md">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{group.name}</h4>
-                      <p className="text-sm text-muted-foreground">{group.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {group.memberCount} {t('community.members')}
-                        </Badge>
+            {joinedGroups.length > 0 ? (
+              joinedGroups.map((group) => (
+                <Card key={group.id} className="shadow-custom-md">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{group.name}</h4>
+                        <p className="text-sm text-muted-foreground">{group.description}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {group.memberCount} {t('community.members')}
+                          </Badge>
+                        </div>
                       </div>
+                      <Button variant="outline" size="sm">{t('community.view')}</Button>
                     </div>
-                    <Button variant="outline" size="sm">{t('community.view')}</Button>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="shadow-custom-md">
+                <CardContent className="p-8 text-center">
+                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-medium mb-2">No groups joined yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create or join groups to connect with other families
+                  </p>
+                  <UpgradeDialog>
+                    <Button className="gradient-primary text-white border-0">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Create Your First Group
+                    </Button>
+                  </UpgradeDialog>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
 

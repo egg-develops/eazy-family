@@ -19,44 +19,7 @@ interface Event {
   image: string;
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Interactive Science Workshop',
-    description: 'Hands-on experiments and discoveries for curious minds',
-    date: 'Today',
-    time: '10:00 AM',
-    location: 'Science Museum Zurich',
-    type: 'Educational',
-    ageRange: '4-8 years',
-    price: 'CHF 15',
-    image: 'bg-gradient-to-br from-blue-400 to-purple-600'
-  },
-  {
-    id: '2',
-    title: 'Family Art & Craft Day',
-    description: 'Create beautiful memories together with arts and crafts',
-    date: 'Tomorrow',
-    time: '2:00 PM',
-    location: 'Community Center',
-    type: 'Creative',
-    ageRange: '2-10 years',
-    price: 'Free',
-    image: 'bg-gradient-to-br from-pink-400 to-orange-500'
-  },
-  {
-    id: '3',
-    title: 'Nature Adventure Walk',
-    description: 'Explore local wildlife and learn about nature',
-    date: 'This Weekend',
-    time: '9:00 AM',
-    location: 'Zurich Forest Park',
-    type: 'Outdoor',
-    ageRange: '3-10 years',
-    price: 'CHF 8',
-    image: 'bg-gradient-to-br from-green-400 to-blue-500'
-  },
-];
+const mockEvents: Event[] = [];
 
 const Events = () => {
   const { t } = useTranslation();
@@ -131,87 +94,105 @@ const Events = () => {
           {t('events.featuredToday')}
         </h3>
         
-        <Card className="shadow-custom-lg overflow-hidden">
-          <div className={`h-32 ${mockEvents[0].image} flex items-end p-4`}>
-            <Badge className="bg-white/90 text-primary">{t('events.featured')}</Badge>
-          </div>
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-semibold text-lg">{mockEvents[0].title}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {mockEvents[0].description}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {mockEvents[0].time}
-                </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {mockEvents[0].location}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <Badge variant="secondary">{mockEvents[0].ageRange}</Badge>
-                  <Badge variant="outline">{mockEvents[0].price}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <Button className="w-full gradient-primary text-white border-0">
-                {t('events.viewDetails')}
-              </Button>
+        {filteredEvents.length > 0 ? (
+          <Card className="shadow-custom-lg overflow-hidden">
+            <div className={`h-32 ${filteredEvents[0].image} flex items-end p-4`}>
+              <Badge className="bg-white/90 text-primary">{t('events.featured')}</Badge>
             </div>
-          </CardContent>
-        </Card>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-lg">{filteredEvents[0].title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {filteredEvents[0].description}
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {filteredEvents[0].time}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {filteredEvents[0].location}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{filteredEvents[0].ageRange}</Badge>
+                    <Badge variant="outline">{filteredEvents[0].price}</Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Heart className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm">
+                      <Share2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <Button className="w-full gradient-primary text-white border-0">
+                  {t('events.viewDetails')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="shadow-custom-lg">
+            <CardContent className="p-8 text-center">
+              <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-medium mb-2">No events nearby</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Discover family-friendly events in your area or create your own
+              </p>
+              <Button className="gradient-primary text-white border-0">
+                <MapPin className="w-4 h-4 mr-1" />
+                Find Events Near Me
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* More Events */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('events.moreEvents')}</h3>
-        
+      {filteredEvents.length > 1 && (
         <div className="space-y-4">
-          {filteredEvents.slice(1).map((event) => (
-            <Card key={event.id} className="shadow-custom-md">
-              <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className={`w-20 h-20 rounded-lg ${event.image} flex-shrink-0`} />
-                  
-                  <div className="flex-1 space-y-2">
-                    <div>
-                      <h4 className="font-semibold">{event.title}</h4>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{event.date}</span>
-                        <span>•</span>
-                        <span>{event.time}</span>
+          <h3 className="text-lg font-semibold">{t('events.moreEvents')}</h3>
+          
+          <div className="space-y-4">
+            {filteredEvents.slice(1).map((event) => (
+              <Card key={event.id} className="shadow-custom-md">
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <div className={`w-20 h-20 rounded-lg ${event.image} flex-shrink-0`} />
+                    
+                    <div className="flex-1 space-y-2">
+                      <div>
+                        <h4 className="font-semibold">{event.title}</h4>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{event.date}</span>
+                          <span>•</span>
+                          <span>{event.time}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="text-xs">
+                          {event.ageRange}
+                        </Badge>
+                        <span className="font-medium text-primary">{event.price}</span>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs">
-                        {event.ageRange}
-                      </Badge>
-                      <span className="font-medium text-primary">{event.price}</span>
-                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Map View Toggle */}
       <Button variant="outline" className="w-full">
