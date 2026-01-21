@@ -20,59 +20,7 @@ interface Photo {
   aiEnhanced?: boolean;
 }
 
-const mockPhotos: Photo[] = [
-  {
-    id: '1',
-    src: 'bg-gradient-to-br from-yellow-400 to-orange-500',
-    title: 'Family picnic at the park',
-    date: '2024-01-15',
-    location: 'Seefeld Park',
-    tags: ['outdoor', 'family'],
-    aiEnhanced: true
-  },
-  {
-    id: '2',
-    src: 'bg-gradient-to-br from-blue-400 to-purple-600',
-    title: 'Birthday celebration',
-    date: '2024-01-10',
-    location: 'Home',
-    tags: ['birthday', 'celebration'],
-  },
-  {
-    id: '3',
-    src: 'bg-gradient-to-br from-green-400 to-blue-500',
-    title: 'Swimming lesson',
-    date: '2024-01-08',
-    location: 'Aquatic Center',
-    tags: ['sport', 'learning'],
-    aiEnhanced: true
-  },
-  {
-    id: '4',
-    src: 'bg-gradient-to-br from-pink-400 to-red-500',
-    title: 'Art workshop',
-    date: '2024-01-05',
-    location: 'Community Center',
-    tags: ['creative', 'workshop'],
-  },
-  {
-    id: '5',
-    src: 'bg-gradient-to-br from-purple-400 to-pink-500',
-    title: 'Museum visit',
-    date: '2024-01-03',
-    location: 'Natural History Museum',
-    tags: ['educational', 'museum'],
-  },
-  {
-    id: '6',
-    src: 'bg-gradient-to-br from-indigo-400 to-blue-600',
-    title: 'Playground fun',
-    date: '2024-01-01',
-    location: 'Local Playground',
-    tags: ['playground', 'fun'],
-    aiEnhanced: true
-  },
-];
+const mockPhotos: Photo[] = [];
 
 const Memories = () => {
   const { t } = useTranslation();
@@ -280,71 +228,98 @@ const Memories = () => {
       {/* Photos Grid */}
       {viewMode === 'grid' && (
         <div className="space-y-6">
-          {/* Recent Photos - Marquee */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">{t('memories.recent')}</h3>
-            
-            <div className="space-y-4 overflow-hidden">
-              <Marquee speed={30} pauseOnHover className="[--gap:0.5rem]">
-                {filteredPhotos.map((photo) => (
-                  <div key={photo.id} className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                    <div className={`w-full h-full ${photo.src}`} />
-                    {photo.aiEnhanced && (
-                      <div className="absolute top-1 right-1">
-                        <Sparkles className="w-3 h-3 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </Marquee>
-            </div>
-          </div>
-
-          {/* Photo Details */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold">{t('memories.details')}</h3>
-            
-            {filteredPhotos.slice(0, 3).map((photo) => (
-              <Card key={photo.id} className="shadow-custom-md">
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <div className={`w-16 h-16 rounded-lg ${photo.src} flex-shrink-0`}>
-                      {photo.aiEnhanced && (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex-1 space-y-2">
-                      <h4 className="font-semibold text-sm">{photo.title}</h4>
-                      
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(photo.date).toLocaleDateString()}
-                        </div>
-                        {photo.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {photo.location}
+          {filteredPhotos.length > 0 ? (
+            <>
+              {/* Recent Photos - Marquee */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">{t('memories.recent')}</h3>
+                
+                <div className="space-y-4 overflow-hidden">
+                  <Marquee speed={30} pauseOnHover className="[--gap:0.5rem]">
+                    {filteredPhotos.map((photo) => (
+                      <div key={photo.id} className="relative w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className={`w-full h-full ${photo.src}`} />
+                        {photo.aiEnhanced && (
+                          <div className="absolute top-1 right-1">
+                            <Sparkles className="w-3 h-3 text-white" />
                           </div>
                         )}
                       </div>
+                    ))}
+                  </Marquee>
+                </div>
+              </div>
 
-                      <div className="flex gap-1 flex-wrap">
-                        {photo.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+              {/* Photo Details */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">{t('memories.details')}</h3>
+                
+                {filteredPhotos.slice(0, 3).map((photo) => (
+                  <Card key={photo.id} className="shadow-custom-md">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <div className={`w-16 h-16 rounded-lg ${photo.src} flex-shrink-0`}>
+                          {photo.aiEnhanced && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Sparkles className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 space-y-2">
+                          <h4 className="font-semibold text-sm">{photo.title}</h4>
+                          
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(photo.date).toLocaleDateString()}
+                            </div>
+                            {photo.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {photo.location}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-1 flex-wrap">
+                            {photo.tags.map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          ) : (
+            <Card className="shadow-custom-md">
+              <CardContent className="p-8 text-center">
+                <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-medium mb-2">No memories yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Start capturing family moments by uploading photos
+                </p>
+                <Button 
+                  className="gradient-primary text-white border-0"
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.multiple = true;
+                    input.click();
+                  }}
+                >
+                  <Upload className="w-4 h-4 mr-1" />
+                  Upload Your First Photos
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
