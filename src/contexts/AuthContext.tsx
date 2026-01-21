@@ -33,6 +33,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Skip auth setup entirely when bypass is enabled
+    if (DEV_BYPASS_AUTH) {
+      return;
+    }
+
     // Check for existing session FIRST
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
