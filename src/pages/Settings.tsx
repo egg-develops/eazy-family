@@ -502,31 +502,37 @@ const Settings = () => {
             Manage Family Members
           </Button>
 
-          {/* Calendar Integrations */}
-          <div className="space-y-3" data-tutorial="calendar-integrations">
-            <Label>Calendar Integrations</Label>
-            <p className="text-sm text-muted-foreground">Connect your external calendars</p>
-            <div className="space-y-2">
-              <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  Apple Calendar (Premium)
-                </Button>
-              </UpgradeDialog>
-              <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  Google Calendar (Premium)
-                </Button>
-              </UpgradeDialog>
-              <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  Outlook Calendar (Premium)
-                </Button>
-              </UpgradeDialog>
-            </div>
-          </div>
+        </CardContent>
+      </Card>
+
+      {/* Calendar Integrations */}
+      <Card className="shadow-custom-md" data-tutorial="calendar-integrations">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Calendar Integrations
+          </CardTitle>
+          <CardDescription>Connect your external calendars</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <UpgradeDialog>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <CalendarIcon className="w-4 h-4" />
+              Apple Calendar (Premium)
+            </Button>
+          </UpgradeDialog>
+          <UpgradeDialog>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <CalendarIcon className="w-4 h-4" />
+              Google Calendar (Premium)
+            </Button>
+          </UpgradeDialog>
+          <UpgradeDialog>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <CalendarIcon className="w-4 h-4" />
+              Outlook Calendar (Premium)
+            </Button>
+          </UpgradeDialog>
         </CardContent>
       </Card>
 
