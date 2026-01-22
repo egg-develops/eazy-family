@@ -5,13 +5,14 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
 
 interface Event {
   id: string;
@@ -95,6 +96,9 @@ const Calendar = () => {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
+  const [showSyncBanner, setShowSyncBanner] = useState(() => {
+    return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
+  });
   
   // Save items to localStorage whenever they change
   useEffect(() => {
@@ -122,6 +126,11 @@ const Calendar = () => {
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
+
+  const handleDismissSyncBanner = () => {
+    localStorage.setItem('eazy-calendar-sync-dismissed', 'true');
+    setShowSyncBanner(false);
+  };
 
   const getItemsForDate = (date: Date) => {
     return items.filter(item => {
@@ -406,6 +415,42 @@ const Calendar = () => {
 
   return (
     <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+      {/* Calendar Sync Banner */}
+      {showSyncBanner && (
+        <Card className="border-primary/30 bg-primary/5 shadow-custom-md">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <RefreshCw className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm">Sync Your Calendars</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Connect Google, Apple, or Outlook to see all events in one place
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <UpgradeDialog>
+                  <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap">
+                    Connect
+                  </Button>
+                </UpgradeDialog>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={handleDismissSyncBanner}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
