@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
-import { ColorPicker } from "@/components/ui/color-picker";
 import { PrivacySettings } from "@/components/PrivacySettings";
 
 interface HomeConfig {
@@ -49,7 +48,6 @@ const Settings = () => {
       iconImage: undefined,
       headerImage: undefined,
     };
-    // Ensure arrays are always initialized
     return {
       ...parsed,
       topNotifications: parsed.topNotifications || [],
@@ -84,7 +82,6 @@ const Settings = () => {
   }, [isDarkMode]);
 
   useEffect(() => {
-    // Fetch subscription status
     const fetchSubscription = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -110,7 +107,6 @@ const Settings = () => {
   }, []);
 
   useEffect(() => {
-    // Apply saved color scheme on mount and when it changes
     const root = document.documentElement;
     if (colorScheme === 'custom') {
       const hsl = hexToHSL(customColor);
@@ -127,7 +123,6 @@ const Settings = () => {
   }, [colorScheme, customColor]);
 
   useEffect(() => {
-    // Update CSS variables when custom color changes
     if (colorScheme === 'custom') {
       const root = document.documentElement;
       const hsl = hexToHSL(customColor);
@@ -144,16 +139,13 @@ const Settings = () => {
     setIsDarkMode(newValue);
     localStorage.setItem('eazy-family-dark-mode', newValue.toString());
     toast({
-      title: newValue ? "Dark mode enabled" : "Light mode enabled",
-      description: "Your theme preference has been saved.",
+      title: newValue ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled'),
+      description: t('settings.language.description'),
     });
   };
 
   const hexToHSL = (hex: string) => {
-    // Remove # if present
     hex = hex.replace('#', '');
-    
-    // Convert hex to RGB
     const r = parseInt(hex.substring(0, 2), 16) / 255;
     const g = parseInt(hex.substring(2, 4), 16) / 255;
     const b = parseInt(hex.substring(4, 6), 16) / 255;
@@ -180,7 +172,6 @@ const Settings = () => {
     setColorScheme(scheme);
     localStorage.setItem('eazy-family-color-scheme', scheme);
     
-    // Update CSS variables based on color scheme
     const root = document.documentElement;
     if (scheme === 'gray') {
       root.style.setProperty('--primary', '240 5% 64%');
@@ -189,31 +180,30 @@ const Settings = () => {
     } else if (scheme === 'custom') {
       const hsl = hexToHSL(customColor);
       const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
-      const hoverL = Math.max(l - 10, 10); // Darken by 10% for hover
+      const hoverL = Math.max(l - 10, 10);
       root.style.setProperty('--primary', hsl);
       root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
       root.style.setProperty('--accent', hsl);
     }
     
     toast({
-      title: "Color scheme updated",
-      description: scheme === 'gray' ? 'Switched to gray theme.' : 'Using custom color.',
+      title: t('settings.appearance.colorScheme'),
+      description: t('settings.appearance.colorSchemeDesc'),
     });
   };
 
   const handleCustomColorChange = (color: string) => {
     setCustomColor(color);
     localStorage.setItem('eazy-family-custom-color', color);
-    // No need to update CSS here - the useEffect will handle it
   };
 
   const availableQuickActions = [
-    { id: "Find Events", label: "Find Events" },
-    { id: "Add Photos", label: "Add Photos" },
-    { id: "Calendar", label: "Calendar" },
-    { id: "Community", label: "Community" },
-    { id: "To-Do List", label: "To-Do List" },
-    { id: "Shopping List", label: "Shopping List" },
+    { id: "Find Events", label: t('events.findEvents') },
+    { id: "Add Photos", label: t('memories.uploadNew') },
+    { id: "Calendar", label: t('nav.calendar') },
+    { id: "Community", label: t('nav.community') },
+    { id: "To-Do List", label: t('calendar.todoList') },
+    { id: "Shopping List", label: t('home.shoppingList') },
   ];
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
@@ -221,8 +211,8 @@ const Settings = () => {
     setHomeConfig(newConfig);
     localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
     toast({
-      title: "Settings saved",
-      description: "Your homepage has been updated",
+      title: t('common.success'),
+      description: t('settings.homepage.description'),
     });
   };
 
@@ -261,8 +251,8 @@ const Settings = () => {
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: "Could not upload image",
+        title: t('common.error'),
+        description: t('common.error'),
         variant: "destructive",
       });
     } finally {
@@ -280,11 +270,10 @@ const Settings = () => {
       ? [...homeConfig.quickActions, actionId]
       : homeConfig.quickActions.filter(a => a !== actionId);
     
-    // Limit to 4 actions
     if (newActions.length > 4) {
       toast({
-        title: "Limit reached",
-        description: "You can only have up to 4 quick actions.",
+        title: t('common.error'),
+        description: t('settings.homepage.quickActionsDesc'),
         variant: "destructive",
       });
       return;
@@ -298,11 +287,10 @@ const Settings = () => {
       ? [...homeConfig.topNotifications, notificationId]
       : homeConfig.topNotifications.filter(n => n !== notificationId);
     
-    // Limit to 2 notifications
     if (newNotifications.length > 2) {
       toast({
-        title: "Limit reached",
-        description: "You can only have up to 2 top notifications.",
+        title: t('common.error'),
+        description: t('settings.homepage.topNotificationsDesc'),
         variant: "destructive",
       });
       return;
@@ -314,8 +302,8 @@ const Settings = () => {
   const handleLogout = async () => {
     await signOut();
     toast({
-      title: "Signed out",
-      description: "You've been signed out successfully",
+      title: t('settings.actions.signOut'),
+      description: t('common.success'),
     });
   };
 
@@ -329,44 +317,42 @@ const Settings = () => {
     i18n.changeLanguage(newLanguage);
     localStorage.setItem('eazy-family-language', newLanguage);
     toast({
-      title: "Language updated",
-      description: "Your language preference has been saved.",
+      title: t('settings.language.title'),
+      description: t('settings.language.description'),
     });
   };
 
   const handleUpgrade = () => {
     toast({
-      title: "Upgrade to Pro",
-      description: "Pro features coming soon!",
+      title: t('settings.account.upgradePro'),
+      description: t('upgrade.description'),
     });
   };
 
   return (
     <div className="space-y-6">
-      
-      
       {/* Header */}
       <div data-tutorial="settings">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your app preferences</p>
+        <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
+        <p className="text-muted-foreground">{t('settings.subtitle')}</p>
         <Button 
           onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }} 
           className="mt-3 bg-primary hover:bg-primary-hover text-primary-foreground"
         >
-          Start Tutorial
+          {t('settings.startTutorial')}
         </Button>
       </div>
 
       {/* Homepage Customization */}
       <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>Homepage Customization</CardTitle>
-          <CardDescription>Personalize your home screen</CardDescription>
+          <CardTitle>{t('settings.homepage.title')}</CardTitle>
+          <CardDescription>{t('settings.homepage.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Profile Icon Upload */}
           <div className="space-y-2" data-tutorial="custom-images">
-            <Label htmlFor="profile-icon">Profile Icon</Label>
+            <Label htmlFor="profile-icon">{t('settings.homepage.profileIcon')}</Label>
             <div className="flex gap-2 items-center">
               <Input
                 id="profile-icon"
@@ -379,7 +365,7 @@ const Settings = () => {
                 disabled={uploadingProfile}
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium"
               />
-              {uploadingProfile && <span className="text-sm text-muted-foreground">Uploading...</span>}
+              {uploadingProfile && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.iconImage && (
               <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
@@ -388,7 +374,7 @@ const Settings = () => {
 
           {/* Header Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="header-image">Header Image</Label>
+            <Label htmlFor="header-image">{t('settings.homepage.headerImage')}</Label>
             <div className="flex gap-2 items-center">
               <Input
                 id="header-image"
@@ -401,19 +387,18 @@ const Settings = () => {
                 disabled={uploadingHeader}
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium"
               />
-              {uploadingHeader && <span className="text-sm text-muted-foreground">Uploading...</span>}
+              {uploadingHeader && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.headerImage && (
               <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg object-cover flex-shrink-0" />
             )}
           </div>
 
-
           {/* Quick Actions */}
           <div className="space-y-3" data-tutorial="quick-actions">
-            <Label>Quick Actions (Max 4)</Label>
+            <Label>{t('settings.homepage.quickActionsMax')}</Label>
             <p className="text-sm text-muted-foreground">
-              Choose up to 4 quick actions to display on your homepage
+              {t('settings.homepage.quickActionsDesc')}
             </p>
             <div className="grid grid-cols-1 gap-3">
               {availableQuickActions.map((action) => (
@@ -433,16 +418,16 @@ const Settings = () => {
 
           {/* Top Notifications */}
           <div className="space-y-3" data-tutorial="top-notifications">
-            <Label>Top Notifications (Max 2)</Label>
+            <Label>{t('settings.homepage.topNotifications')}</Label>
             <p className="text-sm text-muted-foreground">
-              Choose up to 2 notification cards to display on your homepage
+              {t('settings.homepage.topNotificationsDesc')}
             </p>
             <div className="grid grid-cols-1 gap-3">
               {[
-                { id: "Upcoming Events", label: "Upcoming Events" },
-                { id: "New Photos", label: "New Photos" },
-                { id: "Pending Tasks", label: "Pending Tasks" },
-                { id: "Shopping List", label: "Shopping List" },
+                { id: "Upcoming Events", label: t('home.upcomingEvents') },
+                { id: "New Photos", label: t('home.newPhotos') },
+                { id: "Pending Tasks", label: t('home.pendingTasks') },
+                { id: "Shopping List", label: t('home.shoppingList') },
               ].map((notification) => (
                 <div key={notification.id} className="flex items-center gap-3 p-3 border rounded-lg">
                   <Checkbox
@@ -463,24 +448,24 @@ const Settings = () => {
       {/* Account Settings */}
       <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>Manage your subscription and family</CardDescription>
+          <CardTitle>{t('settings.account.title')}</CardTitle>
+          <CardDescription>{t('settings.account.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Subscription Status */}
           <div className="p-4 rounded-lg border bg-muted/50">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Current Plan</span>
+              <span className="text-sm font-medium">{t('settings.account.subscription')}</span>
               {subscriptionTier === 'family' && (
                 <Crown className="h-4 w-4 text-primary" />
               )}
             </div>
             <p className="text-2xl font-bold capitalize">
-              {loadingSubscription ? 'Loading...' : subscriptionTier} Plan
+              {loadingSubscription ? t('common.loading') : `${subscriptionTier} Plan`}
             </p>
             {subscriptionTier === 'family' && (
               <p className="text-sm text-muted-foreground mt-1">
-                All premium features unlocked
+                {t('settings.account.allFeaturesUnlocked')}
               </p>
             )}
           </div>
@@ -489,7 +474,7 @@ const Settings = () => {
             <UpgradeDialog>
               <Button className="w-full gap-2 gradient-primary text-white border-0">
                 <Crown className="h-4 w-4" />
-                Upgrade to Family Plan
+                {t('settings.account.upgradeFamily')}
               </Button>
             </UpgradeDialog>
           )}
@@ -499,7 +484,7 @@ const Settings = () => {
             className="w-full"
             onClick={() => navigate('/app/family')}
           >
-            Manage Family Members
+            {t('settings.account.manageFamily')}
           </Button>
 
         </CardContent>
@@ -510,27 +495,27 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarIcon className="h-5 w-5" />
-            Calendar Integrations
+            {t('calendarIntegrations.title')}
           </CardTitle>
-          <CardDescription>Connect your external calendars</CardDescription>
+          <CardDescription>{t('calendarIntegrations.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           <UpgradeDialog>
             <Button variant="outline" className="w-full justify-start gap-2">
               <CalendarIcon className="w-4 h-4" />
-              Apple Calendar (Premium)
+              {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
             </Button>
           </UpgradeDialog>
           <UpgradeDialog>
             <Button variant="outline" className="w-full justify-start gap-2">
               <CalendarIcon className="w-4 h-4" />
-              Google Calendar (Premium)
+              {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
             </Button>
           </UpgradeDialog>
           <UpgradeDialog>
             <Button variant="outline" className="w-full justify-start gap-2">
               <CalendarIcon className="w-4 h-4" />
-              Outlook Calendar (Premium)
+              {t('calendarIntegrations.outlookCalendar')} ({t('calendarIntegrations.premium')})
             </Button>
           </UpgradeDialog>
         </CardContent>
@@ -544,9 +529,9 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
-            Appearance
+            {t('settings.appearance.title')}
           </CardTitle>
-          <CardDescription>Customize how the app looks</CardDescription>
+          <CardDescription>{t('settings.appearance.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Dark Mode Toggle */}
@@ -554,9 +539,9 @@ const Settings = () => {
             <div className="flex items-center gap-3">
               {isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               <div>
-                <Label>Dark Mode</Label>
+                <Label>{t('settings.appearance.darkMode')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  {isDarkMode ? "Dark theme enabled" : "Light theme enabled"}
+                  {isDarkMode ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled')}
                 </p>
               </div>
             </div>
@@ -569,8 +554,8 @@ const Settings = () => {
           {/* Color Scheme Selection */}
           <div className="space-y-4">
             <div>
-              <Label>Color Scheme</Label>
-              <p className="text-sm text-muted-foreground">Choose your preferred color accent</p>
+              <Label>{t('settings.appearance.colorScheme')}</Label>
+              <p className="text-sm text-muted-foreground">{t('settings.appearance.colorSchemeDesc')}</p>
             </div>
             
             <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="space-y-3">
@@ -608,7 +593,7 @@ const Settings = () => {
                       />
                     </div>
                     <div className="flex-1">
-                      <span className="text-sm font-medium">Custom Color</span>
+                      <span className="text-sm font-medium">{t('settings.appearance.customColor')}</span>
                       <Input
                         type="text"
                         value={customColor}
@@ -630,27 +615,27 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Languages className="h-5 w-5" />
-            Language
+            {t('settings.language.title')}
           </CardTitle>
-          <CardDescription>Choose your preferred language</CardDescription>
+          <CardDescription>{t('settings.language.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <RadioGroup value={language} onValueChange={handleLanguageChange} className="space-y-3">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="en" id="en" />
-              <Label htmlFor="en" className="cursor-pointer">English</Label>
+              <Label htmlFor="en" className="cursor-pointer">{t('settings.language.english')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="de" id="de" />
-              <Label htmlFor="de" className="cursor-pointer">Deutsch (German)</Label>
+              <Label htmlFor="de" className="cursor-pointer">{t('settings.language.german')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="fr" id="fr" />
-              <Label htmlFor="fr" className="cursor-pointer">Français (French)</Label>
+              <Label htmlFor="fr" className="cursor-pointer">{t('settings.language.french')}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="it" id="it" />
-              <Label htmlFor="it" className="cursor-pointer">Italiano (Italian)</Label>
+              <Label htmlFor="it" className="cursor-pointer">{t('settings.language.italian')}</Label>
             </div>
           </RadioGroup>
         </CardContent>
@@ -661,17 +646,17 @@ const Settings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Privacy & Security
+            {t('settings.privacy.title')}
           </CardTitle>
-          <CardDescription>Control your data and privacy</CardDescription>
+          <CardDescription>{t('settings.privacy.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-4">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <Lock className="h-5 w-5 mt-0.5 text-primary" />
               <div className="flex-1">
-                <p className="font-medium text-sm">End-to-End Encryption</p>
-                <p className="text-xs text-muted-foreground">Your data is encrypted and secure</p>
+                <p className="font-medium text-sm">{t('settings.privacy.encryption')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings.privacy.encryptionDesc')}</p>
               </div>
               <Switch checked={true} disabled />
             </div>
@@ -679,8 +664,8 @@ const Settings = () => {
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
               <Eye className="h-5 w-5 mt-0.5 text-primary" />
               <div className="flex-1">
-                <p className="font-medium text-sm">Data Visibility</p>
-                <p className="text-xs text-muted-foreground">Only you and your family can see your data</p>
+                <p className="font-medium text-sm">{t('settings.privacy.dataVisibility')}</p>
+                <p className="text-xs text-muted-foreground">{t('settings.privacy.dataVisibilityDesc')}</p>
               </div>
               <Switch checked={true} disabled />
             </div>
@@ -693,33 +678,33 @@ const Settings = () => {
               className="w-full justify-start text-sm"
               onClick={() => navigate('/privacy')}
             >
-              View Privacy Policy
+              {t('settings.privacy.privacyPolicy')}
             </Button>
             <Button 
               variant="ghost" 
               className="w-full justify-start text-sm"
               onClick={() => {
                 toast({
-                  title: "Data export",
-                  description: "Your data export will be emailed to you shortly.",
+                  title: t('settings.privacy.downloadData'),
+                  description: t('common.success'),
                 });
               }}
             >
-              Download My Data
+              {t('settings.privacy.downloadData')}
             </Button>
             <Button 
               variant="ghost" 
               className="w-full justify-start text-sm text-destructive"
               onClick={() => {
-                if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                if (confirm(t('settings.privacy.deleteAccount') + "?")) {
                   toast({
-                    title: "Account deletion requested",
-                    description: "Your account will be deleted within 24 hours.",
+                    title: t('settings.privacy.deleteAccount'),
+                    description: t('common.success'),
                   });
                 }
               }}
             >
-              Delete Account
+              {t('settings.privacy.deleteAccount')}
             </Button>
           </div>
         </CardContent>
@@ -728,16 +713,16 @@ const Settings = () => {
       {/* App Settings */}
       <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Manage how you receive updates</CardDescription>
+          <CardTitle>{t('settings.notifications.title')}</CardTitle>
+          <CardDescription>{t('settings.notifications.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5 text-muted-foreground" />
               <div>
-                <Label>Push Notifications</Label>
-                <p className="text-sm text-muted-foreground">Get instant updates</p>
+                <Label>{t('settings.notifications.pushNotifications')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settings.notifications.pushDesc')}</p>
               </div>
             </div>
             <Switch
@@ -750,8 +735,8 @@ const Settings = () => {
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5 text-muted-foreground" />
               <div>
-                <Label>Email Notifications</Label>
-                <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                <Label>{t('settings.notifications.emailNotifications')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settings.notifications.emailDesc')}</p>
               </div>
             </div>
             <Switch
@@ -773,7 +758,7 @@ const Settings = () => {
           onClick={handleRerunOnboarding}
         >
           <RefreshCw className="h-4 w-4" />
-          Re-run Onboarding
+          {t('settings.actions.rerunOnboarding')}
         </Button>
         <Button
           variant="destructive"
@@ -781,7 +766,7 @@ const Settings = () => {
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
-          Sign Out
+          {t('settings.actions.signOut')}
         </Button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, Loader2 } from "lucide-react";
 
 export const PrivacySettings = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,6 @@ export const PrivacySettings = () => {
 
       if (error) throw error;
 
-      // Update family_members records to reflect new privacy settings
       await supabase
         .from("family_members")
         .update({
@@ -71,14 +72,14 @@ export const PrivacySettings = () => {
         .eq("user_id", user.id);
 
       toast({
-        title: "Privacy settings saved",
-        description: "Your privacy preferences have been updated.",
+        title: t('privacySettings.saved'),
+        description: t('privacySettings.savedDesc'),
       });
     } catch (error) {
       console.error("Error saving privacy settings:", error);
       toast({
-        title: "Error",
-        description: "Failed to save privacy settings. Please try again.",
+        title: t('privacySettings.error'),
+        description: t('privacySettings.errorDesc'),
         variant: "destructive",
       });
     } finally {
@@ -101,33 +102,33 @@ export const PrivacySettings = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Privacy Settings
+          {t('privacySettings.title')}
         </CardTitle>
         <CardDescription>
-          Control what information you share with your family members
+          {t('privacySettings.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="display-name">Display Name</Label>
+          <Label htmlFor="display-name">{t('privacySettings.displayName')}</Label>
           <Input
             id="display-name"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="How you want to be called"
+            placeholder={t('privacySettings.displayNamePlaceholder')}
             maxLength={100}
           />
           <p className="text-xs text-muted-foreground">
-            This is the name family members will see. If empty, they'll see "Family Member".
+            {t('privacySettings.displayNameHint')}
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="share-email">Share Email Address</Label>
+              <Label htmlFor="share-email">{t('privacySettings.shareEmail')}</Label>
               <p className="text-sm text-muted-foreground">
-                Allow family members to see your email address
+                {t('privacySettings.shareEmailDesc')}
               </p>
             </div>
             <Switch
@@ -139,9 +140,9 @@ export const PrivacySettings = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="share-phone">Share Phone Number</Label>
+              <Label htmlFor="share-phone">{t('privacySettings.sharePhone')}</Label>
               <p className="text-sm text-muted-foreground">
-                Allow family members to see your phone number
+                {t('privacySettings.sharePhoneDesc')}
               </p>
             </div>
             <Switch
@@ -161,19 +162,17 @@ export const PrivacySettings = () => {
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {t('common.loading')}
               </>
             ) : (
-              "Save Privacy Settings"
+              t('common.save')
             )}
           </Button>
         </div>
 
         <div className="bg-muted/50 rounded-lg p-4">
           <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Your display name is always visible to family members.
-            Email and phone are only shown if you enable sharing. Even with sharing disabled,
-            family admins can still manage your membership.
+            <strong>{t('privacySettings.displayName')}:</strong> {t('privacySettings.displayNameHint')}
           </p>
         </div>
       </CardContent>

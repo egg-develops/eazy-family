@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ const authSchema = z.object({
 });
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +29,6 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate inputs
       const validatedData = authSchema.parse({
         email,
         password,
@@ -46,33 +47,33 @@ const Auth = () => {
       if (error) {
         if (error.message.includes('already registered')) {
           toast({
-            title: "Account exists",
-            description: "This email is already registered. Please sign in instead.",
+            title: t('auth.error'),
+            description: t('auth.invalidCredentialsDesc'),
             variant: "destructive",
           });
         } else if (error.message.includes('Invalid login credentials')) {
           toast({
-            title: "Invalid credentials",
-            description: "The email or password you entered is incorrect.",
+            title: t('auth.invalidCredentials'),
+            description: t('auth.invalidCredentialsDesc'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Error",
+            title: t('auth.error'),
             description: error.message,
             variant: "destructive",
           });
         }
       } else if (isSignUp) {
         toast({
-          title: "Success!",
-          description: "Your account has been created. Redirecting...",
+          title: t('common.success'),
+          description: t('common.success'),
         });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Validation Error",
+          title: t('auth.error'),
           description: error.issues[0].message,
           variant: "destructive",
         });
@@ -87,23 +88,23 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
+            {isSignUp ? t('auth.signUp') : t('auth.signIn')}
           </CardTitle>
           <CardDescription className="text-center">
             {isSignUp
-              ? 'Sign up to get started with Eazy Family'
-              : 'Sign in to continue to your family dashboard'}
+              ? t('app.name')
+              : t('app.name')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{t('auth.fullName')}</Label>
                 <Input
                   id="fullName"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder={t('auth.namePlaceholder')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
@@ -112,7 +113,7 @@ const Auth = () => {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -124,7 +125,7 @@ const Auth = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -135,14 +136,9 @@ const Auth = () => {
                 minLength={6}
                 maxLength={100}
               />
-              {isSignUp && (
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters long
-                </p>
-              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Sign In'}
+              {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
@@ -152,8 +148,8 @@ const Auth = () => {
               className="text-primary hover:underline"
             >
               {isSignUp
-                ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"}
+                ? t('auth.signIn')
+                : t('auth.signUp')}
             </button>
           </div>
         </CardContent>
