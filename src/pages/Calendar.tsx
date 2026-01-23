@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
@@ -52,12 +53,11 @@ const getInitialItems = (): CalendarItem[] => {
     }));
   }
   
-  // Default items for October 2025
   return [
     { 
       id: "1", 
       title: "Swimming Lesson", 
-      startDate: new Date(2025, 9, 2, 14, 0), // Oct 2, 2025, 2:00 PM
+      startDate: new Date(2025, 9, 2, 14, 0),
       endDate: new Date(2025, 9, 2, 15, 0), 
       allDay: false, 
       location: "Aquatic Center",
@@ -67,7 +67,7 @@ const getInitialItems = (): CalendarItem[] => {
     { 
       id: "2", 
       title: "Children's Museum", 
-      startDate: new Date(2025, 9, 3, 10, 0), // Oct 3, 2025, 10:00 AM
+      startDate: new Date(2025, 9, 3, 10, 0),
       endDate: new Date(2025, 9, 3, 12, 0), 
       allDay: false, 
       location: "Interactive Art Exhibition",
@@ -93,6 +93,7 @@ const getInitialItems = (): CalendarItem[] => {
 };
 
 const Calendar = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
@@ -100,7 +101,6 @@ const Calendar = () => {
     return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
   });
   
-  // Save items to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
   }, [items]);
@@ -110,7 +110,6 @@ const Calendar = () => {
   const [customRepeatNumber, setCustomRepeatNumber] = useState("1");
   const [customRepeatUnit, setCustomRepeatUnit] = useState<"days" | "weeks" | "months">("weeks");
   
-  // Form states for Event
   const [eventTitle, setEventTitle] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventAllDay, setEventAllDay] = useState(false);
@@ -121,7 +120,6 @@ const Calendar = () => {
   const [eventRepeat, setEventRepeat] = useState("never");
   const [eventTravelTime, setEventTravelTime] = useState("none");
   
-  // Form states for Reminder
   const [reminderTitle, setReminderTitle] = useState("");
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
@@ -199,15 +197,14 @@ const Calendar = () => {
   const handleDeleteItem = (id: string) => {
     setItems(items.filter(item => item.id !== id));
     toast({
-      title: "Deleted",
-      description: "Item has been removed from your calendar.",
+      title: t('calendar.deleted'),
+      description: t('calendar.itemRemoved'),
     });
   };
 
   const handleAddEvent = () => {
     if (!eventTitle.trim()) return;
     
-    // Parse times and dates
     const [startHours, startMinutes] = eventStartTime.split(':').map(Number);
     const [endHours, endMinutes] = eventEndTime.split(':').map(Number);
     
@@ -222,11 +219,10 @@ const Calendar = () => {
     }
     
     const repeatValue = eventRepeat === "custom" 
-      ? `Every ${customRepeatNumber} ${customRepeatUnit}`
+      ? `${t('calendar.every')} ${customRepeatNumber} ${t(`calendar.${customRepeatUnit}`)}`
       : eventRepeat !== "never" ? eventRepeat : undefined;
     
     if (editingItemId) {
-      // Update existing event
       setItems(items.map(item => 
         item.id === editingItemId && item.type === "event"
           ? {
@@ -242,11 +238,10 @@ const Calendar = () => {
           : item
       ));
       toast({
-        title: "Event Updated",
-        description: `${eventTitle} has been updated.`,
+        title: t('calendar.eventUpdated'),
+        description: `${eventTitle} ${t('calendar.hasBeenUpdated')}`,
       });
     } else {
-      // Add new event
       const newEvent: Event = {
         id: Date.now().toString(),
         title: eventTitle,
@@ -262,8 +257,8 @@ const Calendar = () => {
       
       setItems([...items, newEvent]);
       toast({
-        title: "Event Added",
-        description: `${eventTitle} has been added to your calendar.`,
+        title: t('calendar.eventAdded'),
+        description: `${eventTitle} ${t('calendar.hasBeenAdded')}`,
       });
     }
     
@@ -275,7 +270,6 @@ const Calendar = () => {
     if (!reminderTitle.trim()) return;
     
     if (editingItemId) {
-      // Update existing reminder
       setItems(items.map(item => 
         item.id === editingItemId && item.type === "reminder"
           ? {
@@ -288,11 +282,10 @@ const Calendar = () => {
           : item
       ));
       toast({
-        title: "Reminder Updated",
-        description: `${reminderTitle} has been updated.`,
+        title: t('calendar.reminderUpdated'),
+        description: `${reminderTitle} ${t('calendar.hasBeenUpdated')}`,
       });
     } else {
-      // Add new reminder
       const newReminder: Reminder = {
         id: Date.now().toString(),
         title: reminderTitle,
@@ -305,8 +298,8 @@ const Calendar = () => {
       
       setItems([...items, newReminder]);
       toast({
-        title: "Reminder Added",
-        description: `${reminderTitle} has been added to your reminders.`,
+        title: t('calendar.reminderAdded'),
+        description: `${reminderTitle} ${t('calendar.hasBeenAdded')}`,
       });
     }
     
@@ -334,7 +327,7 @@ const Calendar = () => {
                 size="sm"
                 onClick={() => setSelectedDate(new Date())}
               >
-                Today
+                {t('calendar.today')}
               </Button>
               <div className="flex gap-1">
                 <Button
@@ -425,16 +418,16 @@ const Calendar = () => {
                   <RefreshCw className="w-5 h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">Sync Your Calendars</h3>
+                  <h3 className="font-semibold text-sm">{t('calendar.syncYourCalendars')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    Connect Google, Apple, or Outlook to see all events in one place
+                    {t('calendar.syncDescription')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <UpgradeDialog>
                   <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap">
-                    Connect
+                    {t('calendar.connect')}
                   </Button>
                 </UpgradeDialog>
                 <Button 
@@ -456,9 +449,9 @@ const Calendar = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <CalendarIcon className="w-6 h-6 text-primary" />
-            Calendar
+            {t('calendar.title')}
           </h1>
-          <p className="text-muted-foreground">Manage your family schedule</p>
+          <p className="text-muted-foreground">{t('calendar.subtitle')}</p>
         </div>
         <ParticleButton 
           className="gap-2 gradient-primary text-white border-0"
@@ -468,7 +461,7 @@ const Calendar = () => {
           }}
         >
           <Plus className="h-4 w-4" />
-          New
+          {t('calendar.new')}
         </ParticleButton>
       </div>
 
@@ -506,13 +499,13 @@ const Calendar = () => {
                           )}
                           {item.repeat && (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              Repeats: {item.repeat}
+                              {t('calendar.repeats')}: {item.repeat}
                             </p>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground whitespace-nowrap">
                           {item.allDay ? (
-                            <span>All day</span>
+                            <span>{t('calendar.allDay')}</span>
                           ) : (
                             <div className="text-right">
                               <div>{format(item.startDate, "HH:mm")}</div>
@@ -531,7 +524,7 @@ const Calendar = () => {
                       }}
                       className="text-destructive hover:text-destructive"
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </>
                 ) : (
@@ -559,14 +552,14 @@ const Calendar = () => {
                       }}
                       className="text-destructive hover:text-destructive"
                     >
-                      Delete
+                      {t('common.delete')}
                     </Button>
                   </>
                 )}
               </div>
             ))
           ) : (
-            <p className="text-center text-muted-foreground py-8">No events or reminders</p>
+            <p className="text-center text-muted-foreground py-8">{t('calendar.noEventsForDay')}</p>
           )}
         </CardContent>
       </Card>
@@ -575,19 +568,19 @@ const Calendar = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>New</DialogTitle>
+            <DialogTitle>{t('calendar.new')}</DialogTitle>
           </DialogHeader>
           
           <Tabs value={dialogTab} onValueChange={(v) => setDialogTab(v as "event" | "reminder")} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="event">Event</TabsTrigger>
-              <TabsTrigger value="reminder">Reminder</TabsTrigger>
+              <TabsTrigger value="event">{t('calendar.event')}</TabsTrigger>
+              <TabsTrigger value="reminder">{t('calendar.reminder')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="event" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Input
-                  placeholder="Title"
+                  placeholder={t('calendar.eventTitle')}
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   className="text-base"
@@ -596,7 +589,7 @@ const Calendar = () => {
 
               <div className="space-y-2">
                 <Input
-                  placeholder="Location or Video Call"
+                  placeholder={t('calendar.location')}
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
                   className="text-base"
@@ -604,7 +597,7 @@ const Calendar = () => {
               </div>
 
               <div className="flex items-center justify-between py-2">
-                <Label htmlFor="all-day">All-day</Label>
+                <Label htmlFor="all-day">{t('calendar.allDay')}</Label>
                 <Switch
                   id="all-day"
                   checked={eventAllDay}
@@ -614,7 +607,7 @@ const Calendar = () => {
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label>Starts</Label>
+                  <Label>{t('calendar.starts')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="date"
@@ -634,7 +627,7 @@ const Calendar = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Ends</Label>
+                  <Label>{t('calendar.ends')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="date"
@@ -655,41 +648,41 @@ const Calendar = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Travel Time</Label>
+                <Label>{t('calendar.travelTime')}</Label>
                 <Select value={eventTravelTime} onValueChange={setEventTravelTime}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="15min">15 minutes</SelectItem>
-                    <SelectItem value="30min">30 minutes</SelectItem>
-                    <SelectItem value="1hour">1 hour</SelectItem>
-                    <SelectItem value="2hours">2 hours</SelectItem>
+                    <SelectItem value="none">{t('calendar.none')}</SelectItem>
+                    <SelectItem value="15min">15 {t('calendar.minutes')}</SelectItem>
+                    <SelectItem value="30min">30 {t('calendar.minutes')}</SelectItem>
+                    <SelectItem value="1hour">1 {t('calendar.hour')}</SelectItem>
+                    <SelectItem value="2hours">2 {t('calendar.hours')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Repeat</Label>
+                <Label>{t('calendar.repeat')}</Label>
                 <Select value={eventRepeat} onValueChange={setEventRepeat}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="never">Never</SelectItem>
-                    <SelectItem value="daily">Every Day</SelectItem>
-                    <SelectItem value="weekly">Every Week</SelectItem>
-                    <SelectItem value="monthly">Every Month</SelectItem>
-                    <SelectItem value="yearly">Every Year</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
+                    <SelectItem value="never">{t('calendar.never')}</SelectItem>
+                    <SelectItem value="daily">{t('calendar.daily')}</SelectItem>
+                    <SelectItem value="weekly">{t('calendar.weekly')}</SelectItem>
+                    <SelectItem value="monthly">{t('calendar.monthly')}</SelectItem>
+                    <SelectItem value="yearly">{t('calendar.yearly')}</SelectItem>
+                    <SelectItem value="custom">{t('calendar.custom')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {eventRepeat === "custom" && (
                 <div className="space-y-2">
-                  <Label>Custom Repeat</Label>
+                  <Label>{t('calendar.custom')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="number"
@@ -703,9 +696,9 @@ const Calendar = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="days">Days</SelectItem>
-                        <SelectItem value="weeks">Weeks</SelectItem>
-                        <SelectItem value="months">Months</SelectItem>
+                        <SelectItem value="days">{t('calendar.days')}</SelectItem>
+                        <SelectItem value="weeks">{t('calendar.weeks')}</SelectItem>
+                        <SelectItem value="months">{t('calendar.months')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -721,13 +714,13 @@ const Calendar = () => {
                     setIsDialogOpen(false);
                   }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <ParticleButton
                   className="flex-1 gradient-primary text-white border-0"
                   onClick={handleAddEvent}
                 >
-                  Add
+                  {editingItemId ? t('calendar.updateEvent') : t('calendar.addEvent2')}
                 </ParticleButton>
               </div>
             </TabsContent>
@@ -735,7 +728,7 @@ const Calendar = () => {
             <TabsContent value="reminder" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Input
-                  placeholder="Title"
+                  placeholder={t('calendar.reminderTitle')}
                   value={reminderTitle}
                   onChange={(e) => setReminderTitle(e.target.value)}
                   className="text-base"
@@ -743,7 +736,7 @@ const Calendar = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Due Date (Optional)</Label>
+                <Label>{t('calendar.dueDate')}</Label>
                 <Input
                   type="date"
                   value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
@@ -753,7 +746,7 @@ const Calendar = () => {
 
               {reminderDate && (
                 <div className="space-y-2">
-                  <Label>Due Time (Optional)</Label>
+                  <Label>{t('calendar.time')}</Label>
                   <Input
                     type="time"
                     value={reminderTime}
@@ -763,15 +756,15 @@ const Calendar = () => {
               )}
 
               <div className="space-y-2">
-                <Label>Priority</Label>
+                <Label>{t('calendar.priority')}</Label>
                 <Select value={reminderPriority} onValueChange={(v) => setReminderPriority(v as "low" | "medium" | "high")}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="low">{t('calendar.low')}</SelectItem>
+                    <SelectItem value="medium">{t('calendar.medium')}</SelectItem>
+                    <SelectItem value="high">{t('calendar.high')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -785,13 +778,13 @@ const Calendar = () => {
                     setIsDialogOpen(false);
                   }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <ParticleButton
                   className="flex-1 gradient-primary text-white border-0"
                   onClick={handleAddReminder}
                 >
-                  Add
+                  {editingItemId ? t('calendar.updateReminder') : t('calendar.addReminder')}
                 </ParticleButton>
               </div>
             </TabsContent>
