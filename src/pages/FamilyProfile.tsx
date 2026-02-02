@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
+import { validateImageFile, validateImageFiles } from "@/lib/fileValidation";
 
 interface FamilyMember {
   id: string;
@@ -313,6 +314,17 @@ const FamilyProfile = () => {
       const uploadedUrls: string[] = [];
       
       for (const file of filesToUpload) {
+        // Validate file before upload
+        const validationResult = validateImageFile(file);
+        if (!validationResult.valid) {
+          toast({
+            title: "Invalid file",
+            description: validationResult.error,
+            variant: "destructive",
+          });
+          continue;
+        }
+
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;

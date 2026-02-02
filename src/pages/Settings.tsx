@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { PrivacySettings } from "@/components/PrivacySettings";
+import { validateImageFile } from "@/lib/fileValidation";
 
 interface HomeConfig {
   greeting: string;
@@ -225,6 +226,17 @@ const Settings = () => {
   };
 
   const handleFileUpload = async (file: File, type: 'profile' | 'header') => {
+    // Validate file before upload
+    const validationResult = validateImageFile(file);
+    if (!validationResult.valid) {
+      toast({
+        title: t('common.error'),
+        description: validationResult.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (type === 'profile') setUploadingProfile(true);
     else setUploadingHeader(true);
 

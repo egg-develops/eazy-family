@@ -45,6 +45,7 @@ import { NavLink } from "react-router-dom";
 import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { validateImageFile } from "@/lib/fileValidation";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -293,6 +294,13 @@ const AppHome = () => {
   };
 
   const handleHeaderImageUpload = async (file: File) => {
+    // Validate file before upload
+    const validationResult = validateImageFile(file);
+    if (!validationResult.valid) {
+      console.error('File validation failed:', validationResult.error);
+      return;
+    }
+
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const fileExt = file.name.split('.').pop();
