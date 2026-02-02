@@ -6,7 +6,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Event {
   id: string;
@@ -95,11 +96,13 @@ const getInitialItems = (): CalendarItem[] => {
 const Calendar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { isPremium } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
   const [showSyncBanner, setShowSyncBanner] = useState(() => {
     return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
   });
+  const [showCalendarSyncDialog, setShowCalendarSyncDialog] = useState(false);
   
   useEffect(() => {
     localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
@@ -425,11 +428,21 @@ const Calendar = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <UpgradeDialog>
-                  <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap">
+                {isPremium ? (
+                  <Button 
+                    size="sm" 
+                    className="gradient-primary text-white border-0 whitespace-nowrap"
+                    onClick={() => setShowCalendarSyncDialog(true)}
+                  >
                     {t('calendar.connect')}
                   </Button>
-                </UpgradeDialog>
+                ) : (
+                  <UpgradeDialog>
+                    <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap">
+                      {t('calendar.connect')}
+                    </Button>
+                  </UpgradeDialog>
+                )}
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -443,6 +456,59 @@ const Calendar = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Calendar Sync Dialog for Premium Users */}
+      <Dialog open={showCalendarSyncDialog} onOpenChange={setShowCalendarSyncDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-primary" />
+              {t('calendar.syncYourCalendars')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              {t('calendar.selectCalendarToSync')}
+            </p>
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3 h-12"
+                onClick={() => {
+                  toast({ title: "Google Calendar", description: "Coming soon! We're working on this integration." });
+                }}
+              >
+                <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">G</div>
+                Google Calendar
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3 h-12"
+                onClick={() => {
+                  toast({ title: "Apple Calendar", description: "Coming soon! We're working on this integration." });
+                }}
+              >
+                <div className="w-6 h-6 rounded bg-gray-800 flex items-center justify-center text-white text-xs font-bold"></div>
+                Apple Calendar
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-3 h-12"
+                onClick={() => {
+                  toast({ title: "Outlook Calendar", description: "Coming soon! We're working on this integration." });
+                }}
+              >
+                <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">O</div>
+                Outlook Calendar
+              </Button>
+            </div>
+            <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
+              <Check className="h-4 w-4 text-primary" />
+              <span>Premium feature unlocked</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
