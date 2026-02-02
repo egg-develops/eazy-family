@@ -52,15 +52,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshSubscription = async () => {
     if (DEV_BYPASS_AUTH) {
-      // In dev mode, check for demo user's subscription
-      const { data } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .limit(1)
-        .maybeSingle();
-      if (data?.subscription_tier) {
-        setSubscriptionTier(data.subscription_tier);
-      }
+      // In dev mode, set premium tier for testing
+      setSubscriptionTier('family');
       return;
     }
     
