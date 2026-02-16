@@ -512,24 +512,43 @@ const Settings = () => {
           <CardDescription>{t('calendarIntegrations.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <UpgradeDialog>
-            <Button variant="outline" className="w-full justify-start gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
-            </Button>
-          </UpgradeDialog>
-          <UpgradeDialog>
-            <Button variant="outline" className="w-full justify-start gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
-            </Button>
-          </UpgradeDialog>
-          <UpgradeDialog>
-            <Button variant="outline" className="w-full justify-start gap-2">
-              <CalendarIcon className="w-4 h-4" />
-              {t('calendarIntegrations.outlookCalendar')} ({t('calendarIntegrations.premium')})
-            </Button>
-          </UpgradeDialog>
+          {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
+            <>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.appleCalendar'), description: "Coming soon! We're working on this integration." })}>
+                <CalendarIcon className="w-4 h-4" />
+                {t('calendarIntegrations.appleCalendar')}
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Coming soon! We're working on this integration." })}>
+                <CalendarIcon className="w-4 h-4" />
+                {t('calendarIntegrations.googleCalendar')}
+              </Button>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.outlookCalendar'), description: "Coming soon! We're working on this integration." })}>
+                <CalendarIcon className="w-4 h-4" />
+                {t('calendarIntegrations.outlookCalendar')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
+                </Button>
+              </UpgradeDialog>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
+                </Button>
+              </UpgradeDialog>
+              <UpgradeDialog>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  {t('calendarIntegrations.outlookCalendar')} ({t('calendarIntegrations.premium')})
+                </Button>
+              </UpgradeDialog>
+            </>
+          )}
         </CardContent>
       </Card>
 
