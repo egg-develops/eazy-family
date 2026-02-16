@@ -12,18 +12,24 @@ import { Check, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
 }
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
+  const { isPremium } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const { toast } = useToast();
-
   const [open, setOpen] = useState(false);
+
+  // If user is already premium, don't wrap in upgrade dialog - just render children directly
+  if (isPremium) {
+    return <>{children}</>;
+  }
 
   const applyPromo = async () => {
     try {

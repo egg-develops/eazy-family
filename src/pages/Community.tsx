@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Users, MessageCircle, Plus, Heart, Share2, MapPin, Clock, ShoppingCart, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,14 +53,13 @@ interface MarketItem {
 }
 
 const mockGroups: Group[] = [];
-
 const mockPosts: Post[] = [];
-
 const mockItems: MarketItem[] = [];
 
 const Community = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { isPremium } = useAuth();
   const [activeTab, setActiveTab] = useState('messages');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
@@ -79,6 +79,17 @@ const Community = () => {
       case 'good': return 'bg-yellow-100 text-yellow-700';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const PremiumGate = ({ children, fallbackAction }: { children: React.ReactNode; fallbackAction?: string }) => {
+    if (isPremium) {
+      return <>{children}</>;
+    }
+    return (
+      <UpgradeDialog>
+        {children}
+      </UpgradeDialog>
+    );
   };
 
   return (
@@ -113,12 +124,12 @@ const Community = () => {
         <TabsContent value="marketplace" className="space-y-4 mt-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.marketplaceDesc')}</p>
-            <UpgradeDialog>
-              <Button size="sm" className="gradient-primary text-white border-0">
+            <PremiumGate>
+              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Marketplace listing is coming soon!" }) : undefined}>
                 <Plus className="w-4 h-4 mr-1" />
                 {t('community.sellItem')}
               </Button>
-            </UpgradeDialog>
+            </PremiumGate>
           </div>
 
           {/* Search and Filters */}
@@ -207,12 +218,12 @@ const Community = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Be the first to list family items in your community
                   </p>
-                  <UpgradeDialog>
-                    <Button className="gradient-primary text-white border-0">
+                  <PremiumGate>
+                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Marketplace listing is coming soon!" }) : undefined}>
                       <Plus className="w-4 h-4 mr-1" />
                       List Your First Item
                     </Button>
-                  </UpgradeDialog>
+                  </PremiumGate>
                 </CardContent>
               </Card>
             )}
@@ -223,12 +234,12 @@ const Community = () => {
         <TabsContent value="groups" className="space-y-4 mt-6">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.groupsDesc')}</p>
-            <UpgradeDialog>
-              <Button size="sm" className="gradient-primary text-white border-0">
+            <PremiumGate>
+              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Group creation is coming soon!" }) : undefined}>
                 <Plus className="w-4 h-4 mr-1" />
                 {t('community.createGroup')}
               </Button>
-            </UpgradeDialog>
+            </PremiumGate>
           </div>
 
           {/* My Groups */}
@@ -260,12 +271,12 @@ const Community = () => {
                   <p className="text-sm text-muted-foreground mb-4">
                     Create or join groups to connect with other families
                   </p>
-                  <UpgradeDialog>
-                    <Button className="gradient-primary text-white border-0">
+                  <PremiumGate>
+                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Group creation is coming soon!" }) : undefined}>
                       <Plus className="w-4 h-4 mr-1" />
                       Create Your First Group
                     </Button>
-                  </UpgradeDialog>
+                  </PremiumGate>
                 </CardContent>
               </Card>
             )}
@@ -281,11 +292,17 @@ const Community = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 {t('community.messagingDesc')}
               </p>
-              <UpgradeDialog>
-                <Button className="gradient-primary text-white border-0">
-                  Upgrade to Family Plan
+              {isPremium ? (
+                <Button className="gradient-primary text-white border-0" onClick={() => toast({ title: "Coming soon", description: "Messaging is coming soon!" })}>
+                  Start Messaging
                 </Button>
-              </UpgradeDialog>
+              ) : (
+                <UpgradeDialog>
+                  <Button className="gradient-primary text-white border-0">
+                    Upgrade to Family Plan
+                  </Button>
+                </UpgradeDialog>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
