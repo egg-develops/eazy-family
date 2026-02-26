@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, Loader2 } from "lucide-react";
+import { error as logError } from "@/lib/logger";
 
 export const PrivacySettings = () => {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export const PrivacySettings = () => {
         setSharePhone(data.share_phone || false);
       }
     } catch (error) {
-      console.error("Error loading privacy settings:", error);
+      logError("Error loading privacy settings:", error);
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ export const PrivacySettings = () => {
         description: t('privacySettings.savedDesc'),
       });
     } catch (error) {
-      console.error("Error saving privacy settings:", error);
+      logError("Error saving privacy settings:", error);
       toast({
         title: t('privacySettings.error'),
         description: t('privacySettings.errorDesc'),

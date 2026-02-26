@@ -46,12 +46,27 @@ const getInitialItems = (): CalendarItem[] => {
   const saved = localStorage.getItem('eazy-family-calendar-items');
   if (saved) {
     const parsed = JSON.parse(saved);
-    return parsed.map((item: any) => ({
+    return parsed.map((item: unknown) => {
+  if (typeof item === "object" && item !== null) {
+    const e = item as {
+  id?: string;
+  title?: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  dueDate?: string | Date;
+  [key: string]: unknown;
+};
+
+    return {
       ...item,
-      startDate: item.startDate ? new Date(item.startDate) : undefined,
-      endDate: item.endDate ? new Date(item.endDate) : undefined,
-      dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
-    }));
+      startDate: e.startDate ? new Date(e.startDate) : undefined,
+      endDate: e.endDate ? new Date(e.endDate) : undefined,
+      dueDate: e.dueDate ? new Date(e.dueDate) : undefined,
+        };
+  }
+
+  return null;
+}).filter(Boolean);
   }
   
   return [

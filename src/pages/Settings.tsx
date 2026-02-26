@@ -16,6 +16,7 @@ import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { validateImageFile } from "@/lib/fileValidation";
+import { error as logError } from "@/lib/logger";
 
 interface HomeConfig {
   greeting: string;
@@ -98,7 +99,7 @@ const Settings = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching subscription:', error);
+        logError('Error fetching subscription:', error);
       } finally {
         setLoadingSubscription(false);
       }
@@ -153,7 +154,9 @@ const Settings = () => {
     
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
+    let h = 0;
+let s = 0;
+const l = (max + min) / 2;
     
     if (max !== min) {
       const d = max - min;
@@ -261,7 +264,7 @@ const Settings = () => {
         saveHomeConfig({ headerImage: publicUrl });
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      logError('Upload error:', error);
       toast({
         title: t('common.error'),
         description: t('common.error'),
@@ -278,7 +281,7 @@ const Settings = () => {
   };
 
   const handleQuickActionToggle = (actionId: string, enabled: boolean) => {
-    let newActions = enabled 
+    const newActions = enabled 
       ? [...homeConfig.quickActions, actionId]
       : homeConfig.quickActions.filter(a => a !== actionId);
     
@@ -295,7 +298,7 @@ const Settings = () => {
   };
 
   const handleNotificationToggle = (notificationId: string, enabled: boolean) => {
-    let newNotifications = enabled 
+    const newNotifications = enabled 
       ? [...homeConfig.topNotifications, notificationId]
       : homeConfig.topNotifications.filter(n => n !== notificationId);
     

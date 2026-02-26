@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { error as logError } from "@/lib/logger";
+
 
 // Dev bypass - set to true to skip authentication
 const DEV_BYPASS_AUTH = false;
@@ -20,8 +22,8 @@ interface AuthContextType {
   session: Session | null;
   subscriptionTier: string | null;
   isPremium: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: unknown }>;
+  signIn: (email: string, password: string) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
   refreshSubscription: () => Promise<void>;
   loading: boolean;
@@ -109,7 +111,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     display_name: fullName,
                     share_email: false,
                     share_phone: false,
-                  }).then(() => console.log('Profile created'));
+                  }).then(({ error }) => {
+ 		    if (error) logError('Profile insert failed', error.message);
+		  });
                 }
               });
           }, 0);

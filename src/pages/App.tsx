@@ -46,6 +46,7 @@ import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
+import { error as logError } from "@/lib/logger";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -254,20 +255,38 @@ const AppHome = () => {
     const saved = localStorage.getItem('eazy-family-calendar-items');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map((item: any) => ({
+      return parsed.map((item: unknown) => ({
         ...item,
         startDate: item.startDate ? new Date(item.startDate) : undefined,
         endDate: item.endDate ? new Date(item.endDate) : undefined,
-      })).filter((item: any) => item.type === "event");
+      })).filter((item: unknown) => {
+    if (typeof item === "object" && item !== null && "type" in item) {
+    return (item as { type?: string }).type === "event";
+    }
+    return false;
+});
     }
     return [];
   };
   
-  const todayEvents = getCalendarItems().filter((event: any) => {
+const todayEvents = getCalendarItems().filter((event: unknown) => {
+  if (
+    typeof event === "object" &&
+    event !== null &&
+    "startDate" in event
+  ) {
+    const e = event as { startDate?: string | Date };
+
+    if (!e.startDate) return false;
+
     const today = new Date();
-    const eventDate = new Date(event.startDate);
+    const eventDate = new Date(e.startDate);
+
     return eventDate.toDateString() === today.toDateString();
-  });
+  }
+
+  return false;
+});
 
   const removeCalendar = () => {
     const newConfig = { ...homeConfig, showCalendar: false };
@@ -297,7 +316,7 @@ const AppHome = () => {
     // Validate file before upload
     const validationResult = validateImageFile(file);
     if (!validationResult.valid) {
-      console.error('File validation failed:', validationResult.error);
+      logError('File validation failed:', validationResult.error);
       return;
     }
 
@@ -321,7 +340,7 @@ const AppHome = () => {
       setHomeConfig(newConfig);
       localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
     } catch (error) {
-      console.error('Upload error:', error);
+      logError('Upload error:', error);
     }
   };
 
@@ -448,20 +467,39 @@ const AppHome = () => {
           
           {calendarView === 'day' && todayEvents.length > 0 && (
             <>
-              {todayEvents.map((event: any) => (
+              {todayEvents.map((event) => {
+  if (
+    typeof event === "object" &&
+    event !== null &&
+    "startDate" in event
+  ) {
+    const e = event as {
+  id?: string;
+  title?: string;
+  startDate?: string | Date;
+  allDay?: boolean;
+  location?: string;
+  [key: string]: unknown;
+};
+
+    return (
                 <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div className="flex-1">
-                      <h4 className="font-medium">{event.title}</h4>
+                      <h4 className="font-medium">{e.title}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {event.allDay ? "All day" : new Date(event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        {event.location && ` - ${event.location}`}
+                        {e.allDay ? "All day" : new Date(e.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        {e.location && ` - ${e.location}`}
                       </p>
                     </div>
                   </div>
                 </Card>
-              ))}
+                  );
+  }
+
+  return null;
+})}
             </>
           )}
 
@@ -654,7 +692,7 @@ const QuickToDos = () => {
       if (error) throw error;
       setQuickTasks(data || []);
     } catch (error) {
-      console.error('Error loading quick tasks:', error);
+      logError('Error loading quick tasks:', error);
     }
   };
 
@@ -671,7 +709,7 @@ const QuickToDos = () => {
       if (error) throw error;
       loadQuickTasks();
     } catch (error) {
-      console.error('Error toggling task:', error);
+      logError('Error toggling task:', error);
     }
   };
 
@@ -693,7 +731,7 @@ const QuickToDos = () => {
         description: `${completedIds.length} task(s) removed.`,
       });
     } catch (error) {
-      console.error('Error clearing completed tasks:', error);
+      logError('Error clearing completed tasks:', error);
       toast({
         title: "Error",
         description: "Could not clear completed tasks.",
@@ -711,7 +749,7 @@ const QuickToDos = () => {
         .insert([{
           title: newTaskTitle,
           type: 'task',
-        } as any]);
+        } as unknown]);
 
       if (error) throw error;
 
@@ -724,7 +762,7 @@ const QuickToDos = () => {
         description: `"${newTaskTitle}" has been added to your list.`,
       });
     } catch (error) {
-      console.error('Error adding task:', error);
+      logError('Error adding task:', error);
       toast({
         title: "Error",
         description: "Could not add task. Please try again.",

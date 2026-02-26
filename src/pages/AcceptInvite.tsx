@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { error as logError } from "@/lib/logger";
 
 const AcceptInvite = () => {
   const [searchParams] = useSearchParams();
@@ -69,8 +70,8 @@ const AcceptInvite = () => {
       } else {
         throw new Error(data?.error || 'Failed to accept invitation');
       }
-    } catch (error: any) {
-      console.error('Error accepting invitation:', error);
+    } catch (error: unknown) {
+      logError('Error accepting invitation:', error);
       setStatus('error');
       setMessage(error.message || 'Failed to accept invitation. The link may be expired or invalid.');
       

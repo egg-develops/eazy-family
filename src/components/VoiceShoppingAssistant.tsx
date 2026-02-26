@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { error as logError } from "@/lib/logger";
+import { error as logError } from "@/lib/logger";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
@@ -47,7 +49,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
         description: "Speak your shopping items...",
       });
     } catch (error) {
-      console.error('Error starting recording:', error);
+      logError('Error starting recording:', error);
       toast({
         title: "Error",
         description: "Could not access microphone. Please check permissions.",
@@ -106,8 +108,8 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
               variant: "destructive",
             });
           }
-        } catch (error: any) {
-          console.error('Error processing audio:', error);
+        } catch (error: unknown) {
+          logError('Error processing audio:', error);
           toast({
             title: "Error processing audio",
             description: error.message || "Please try again.",
@@ -119,8 +121,8 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
       };
       
       reader.readAsDataURL(audioBlob);
-    } catch (error: any) {
-      console.error('Error processing audio:', error);
+    } catch (error: unknown) {
+      logError('Error processing audio:', error);
       setIsProcessing(false);
       
       toast({

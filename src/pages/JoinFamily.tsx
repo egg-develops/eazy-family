@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Users, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { error as logError } from "@/lib/logger";
 
 const JoinFamily = () => {
   const navigate = useNavigate();
@@ -87,7 +88,7 @@ const JoinFamily = () => {
 
       navigate("/app/family");
     } catch (error) {
-      console.error("Error joining family:", error);
+      logError("Error joining family:", error);
       toast({
         title: "Error",
         description: "Failed to join family. Please try again.",

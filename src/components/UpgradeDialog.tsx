@@ -13,6 +13,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { error as logError } from "@/lib/logger";
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
@@ -71,7 +72,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         });
       }
     } catch (error) {
-      console.error('Error applying promo:', error);
+      logError('Error applying promo:', error);
       toast({
         title: "Error",
         description: "Failed to apply promo code.",
@@ -114,7 +115,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank');
     } catch (error) {
-      console.error("Error creating checkout:", error);
+      logError("Error creating checkout:", error);
       toast({
         title: "Error",
         description: "Failed to start checkout. Please try again.",

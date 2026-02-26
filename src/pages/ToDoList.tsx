@@ -187,7 +187,7 @@ const ToDoList = () => {
             type: 'shopping',
             due_date: null,
             shared_with: null,
-          } as any])
+          } as unknown])
       );
 
       const results = await Promise.all(insertPromises);
@@ -231,7 +231,7 @@ const ToDoList = () => {
           type: activeTab,
           due_date: newTaskDueDate || null,
           shared_with: activeTab === "shared" ? selectedMembers : null,
-        } as any]);
+        } as unknown]);
 
       if (error) throw error;
 
@@ -321,7 +321,14 @@ const ToDoList = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+      <Tabs
+  value={activeTab}
+  onValueChange={(v) => {
+    if (v === "task" || v === "shopping" || v === "shared") {
+      setActiveTab(v);
+    }
+  }}
+>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="task" className="gap-2">
             <CheckSquare className="w-4 h-4" />
@@ -675,7 +682,7 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
       setInviteEmail("");
       setInvitePhone("");
       onMemberAdded();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast({
           title: "Validation Error",
@@ -683,12 +690,13 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to send invitation",
-          variant: "destructive",
-        });
-      }
+  toast({
+    title: "Error",
+    description:
+      error instanceof Error ? error.message : "Failed to send invitation",
+    variant: "destructive",
+  });
+}
     } finally {
       setSending(false);
     }

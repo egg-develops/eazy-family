@@ -7,6 +7,7 @@ import { MapPin, Cloud } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { error as logError } from "@/lib/logger";
 
 interface WeatherLocation {
   id: string;
@@ -53,7 +54,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           fetchLocationName(latitude, longitude);
         },
         (error) => {
-          console.error("Error getting location:", error);
+          logError("Error getting location:", error);
           toast.error("Unable to detect location. Please add manually.");
           setLoading(false);
         }
@@ -86,7 +87,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         fetchWeather(lat, lon);
       }
     } catch (error) {
-      console.error("Error fetching location name:", error);
+      logError("Error fetching location name:", error);
       toast.error("Error loading weather data");
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         });
       }
     } catch (error) {
-      console.error("Error fetching weather:", error);
+      logError("Error fetching weather:", error);
       toast.error("Error loading weather data");
     } finally {
       setLoading(false);
@@ -146,7 +147,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         toast.error("Location not found");
       }
     } catch (error) {
-      console.error("Error searching location:", error);
+      logError("Error searching location:", error);
       toast.error("Error searching location");
     } finally {
       setIsAddingLocation(false);

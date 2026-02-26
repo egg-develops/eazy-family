@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { TextLoop } from "@/components/ui/text-loop";
+import { error as logError } from "@/lib/logger";
 
 interface Message {
   role: "user" | "assistant";
@@ -107,7 +108,7 @@ export const EazyAssistant = () => {
         }
       }
     } catch (error) {
-      console.error("Chat error:", error);
+      logError("Chat error:", error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",

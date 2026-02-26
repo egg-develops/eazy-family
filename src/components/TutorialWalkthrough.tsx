@@ -91,7 +91,7 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       }
     }
 
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setStepIndex(0);
       onComplete();
     }

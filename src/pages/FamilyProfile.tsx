@@ -14,6 +14,11 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 import { validateImageFile, validateImageFiles } from "@/lib/fileValidation";
+import { log, error as logError } from "@/lib/logger";
+import { Database } from "@/integrations/supabase/types";
+
+type FamilyInvitationInsert =
+  Database["public"]["Tables"]["family_invitations"]["Insert"];
 
 interface FamilyMember {
   id: string;
@@ -151,7 +156,7 @@ const FamilyProfile = () => {
       if (invitesError) throw invitesError;
       setInvitations(invites || []);
     } catch (error) {
-      console.error("Error loading family data:", error);
+      logError("Error loading family data:", error);
       toast({
         title: "Error",
         description: "Failed to load family members",
@@ -194,10 +199,10 @@ const FamilyProfile = () => {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
 
-      const invitationData: any = {
+      const invitationData: FamilyInvitationInsert = {
         family_id: familyId, // IMPORTANT: use the actual family id for RLS policy
         inviter_id: user.id,
-        role: inviteRole,
+        role: inviteRole as FamilyInvitationInsert["role"],
         status: "pending",
         token,
         expires_at: expiresAt.toISOString(),
@@ -209,11 +214,14 @@ const FamilyProfile = () => {
         invitationData.invitee_phone = validationData.phone;
       }
 
-      const { error } = await supabase.from("family_invitations").insert([invitationData]);
-      if (error) throw error;
+      const { error } = await supabase
+  .from("family_invitations")
+  .insert(invitationData);
+
+if (error) throw error;
 
       const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
-      console.log("Invitation link:", inviteLink);
+      log("Invitation link:", inviteLink);
 
       toast({
         title: "Invitation sent!",
@@ -225,7 +233,7 @@ const FamilyProfile = () => {
       setInvitePhone("");
       setInviteRole("parent");
       loadFamilyData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast({
           title: "Validation Error",
@@ -233,10 +241,10 @@ const FamilyProfile = () => {
           variant: "destructive",
         });
       } else {
-        console.error("Error sending invitation:", error);
+        logError("Error sending invitation:", error);
         toast({
           title: "Error",
-          description: error.message || "Failed to send invitation",
+          description: error instanceof Error ? error.message : "Failed to send invitation",
           variant: "destructive",
         });
       }
@@ -257,7 +265,7 @@ const FamilyProfile = () => {
       toast({ title: "Member removed", description: "Family member has been removed" });
       loadFamilyData();
     } catch (error) {
-      console.error("Error removing member:", error);
+      logError("Error removing member:", error);
       toast({ title: "Error", description: "Failed to remove family member", variant: "destructive" });
     }
   };
@@ -274,7 +282,7 @@ const FamilyProfile = () => {
       toast({ title: "Invitation cancelled", description: "Invitation has been cancelled" });
       loadFamilyData();
     } catch (error) {
-      console.error("Error cancelling invitation:", error);
+      logError("Error cancelling invitation:", error);
       toast({ title: "Error", description: "Failed to cancel invitation", variant: "destructive" });
     }
   };
@@ -351,7 +359,7 @@ const FamilyProfile = () => {
         description: `${uploadedUrls.length} image(s) added successfully.`,
       });
     } catch (error) {
-      console.error('Upload error:', error);
+      logError('Upload error:', error);
       toast({
         title: "Upload failed",
         description: "Could not upload header images",
@@ -416,7 +424,7 @@ const FamilyProfile = () => {
 
       loadFamilyData();
     } catch (error) {
-      console.error('Error regenerating code:', error);
+      logError('Error regenerating code:', error);
       toast({
         title: "Error",
         description: "Failed to regenerate invite code",
@@ -512,7 +520,7 @@ const FamilyProfile = () => {
       setIsCreateFamilyOpen(false);
       loadFamilyData();
     } catch (error) {
-      console.error('Error creating family:', error);
+      logError('Error creating family:', error);
       toast({
         title: "Error",
         description: "Failed to create family. Please try again.",
