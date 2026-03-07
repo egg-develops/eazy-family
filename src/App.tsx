@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,15 +12,24 @@ import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
 import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
-import Calendar from "./pages/Calendar";
-import ToDoList from "./pages/ToDoList";
-import Events from "./pages/Events";
-import Memories from "./pages/Memories";
-import Community from "./pages/Community";
-import Settings from "./pages/Settings";
-import FamilyProfile from "./pages/FamilyProfile";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+
+// Lazy load heavy pages
+const Calendar = lazy(() => import("./pages/Calendar"));
+const ToDoList = lazy(() => import("./pages/ToDoList"));
+const Events = lazy(() => import("./pages/Events"));
+const Memories = lazy(() => import("./pages/Memories"));
+const Community = lazy(() => import("./pages/Community"));
+const Settings = lazy(() => import("./pages/Settings"));
+const FamilyProfile = lazy(() => import("./pages/FamilyProfile"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -38,13 +48,13 @@ const App = () => (
 <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="calendar" element={<Calendar />} />
-              <Route path="todos" element={<ToDoList />} />
-              <Route path="events" element={<Events />} />
-              <Route path="memories" element={<Memories />} />
-              <Route path="community" element={<Community />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="family" element={<FamilyProfile />} />
+              <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+              <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
+              <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
+              <Route path="memories" element={<Suspense fallback={<PageLoader />}><Memories /></Suspense>} />
+              <Route path="community" element={<Suspense fallback={<PageLoader />}><Community /></Suspense>} />
+              <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+              <Route path="family" element={<Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense>} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
