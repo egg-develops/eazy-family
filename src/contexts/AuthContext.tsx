@@ -93,30 +93,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSubscriptionTier(null);
         }
 
-        // Create profile if it doesn't exist
+        // Create profile if it doesn't exist (atomic upsert to prevent race condition)
         if (session?.user && event === 'SIGNED_IN') {
-          setTimeout(() => {
-            supabase
-              .from('profiles')
-              .select('id')
-              .eq('user_id', session.user.id)
-              .maybeSingle()
-              .then(({ data }) => {
-                if (!data) {
-                  const fullName = session.user.user_metadata?.full_name;
-                  supabase.from('profiles').insert({
-                    user_id: session.user.id,
-                    email: session.user.email,
-                    full_name: fullName,
-                    display_name: fullName,
-                    share_email: false,
-                    share_phone: false,
-                  }).then(({ error }) => {
- 		    if (error) logError('Profile insert failed', error.message);
-		  });
-                }
-              });
-          }, 0);
+          const fullName = session.user.user_metadata?.full_name;
+          supabase.from('profiles').upsert(
+            {
+              user_id: session.user.id,
+              email: session.user.email,
+              full_name: fullName,
+              display_name: fullName,
+              share_email: false,
+              share_phone: false,
+            },
+            { onConflict: 'user_id' }
+          ).then(({ error }) => {
+            if (error) {
+              logError('Profile upsert failed', error.message);
+            }
+          });
         }
       }
     );
