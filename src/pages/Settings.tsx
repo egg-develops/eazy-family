@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,10 +63,8 @@ const Settings = () => {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
+  const { theme, setTheme, isDark } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('eazy-family-dark-mode') === 'true';
-  });
   const [colorScheme, setColorScheme] = useState(() => {
     return localStorage.getItem('eazy-family-color-scheme') || 'gray';
   });
@@ -74,14 +73,6 @@ const Settings = () => {
   });
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [loadingSubscription, setLoadingSubscription] = useState(true);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -137,11 +128,10 @@ const Settings = () => {
   }, [customColor, colorScheme]);
 
   const handleDarkModeToggle = () => {
-    const newValue = !isDarkMode;
-    setIsDarkMode(newValue);
-    localStorage.setItem('eazy-family-dark-mode', newValue.toString());
+    const newTheme = isDark ? 'light' : 'dark';
+    setTheme(newTheme);
     toast({
-      title: newValue ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled'),
+      title: isDark ? t('settings.appearance.lightEnabled') : t('settings.appearance.darkEnabled'),
       description: t('settings.language.description'),
     });
   };
@@ -575,12 +565,12 @@ const l = (max + min) / 2;
               <div>
                 <Label>{t('settings.appearance.darkMode')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  {isDarkMode ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled')}
+                  {isDark ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled')}
                 </p>
               </div>
             </div>
             <Switch
-              checked={isDarkMode}
+              checked={isDark}
               onCheckedChange={handleDarkModeToggle}
             />
           </div>
