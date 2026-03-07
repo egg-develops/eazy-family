@@ -39,29 +39,50 @@ serve(async (req) => {
         const customerId = session.customer as string;
         
         // Update user's subscription tier using stripe_customer_id
-        const { error } = await supabaseClient
+        const { error, count } = await supabaseClient
           .from("profiles")
           .update({ subscription_tier: "family" })
-          .eq("stripe_customer_id", customerId);
+          .eq("stripe_customer_id", customerId)
+          .select();
 
-        if (error) {
-          console.error("Error updating subscription:", error);
+        if (error || !count || count === 0) {
+          console.error(`Failed to update subscription for customer ${customerId}:`, error || "No rows matched");
+          return new Response(JSON.stringify({ error: "Update failed" }), { status: 500 });
         } else {
           console.log(`Subscription activated for customer ${customerId}`);
         }
+      }
+    } else if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      
+      // Activate subscription on creation or update
+      const { error, count } = await supabaseClient
+        .from("profiles")
+        .update({ subscription_tier: "family" })
+        .eq("stripe_customer_id", customerId)
+        .select();
+
+      if (error || !count || count === 0) {
+        console.error(`Failed to update subscription for customer ${customerId}:`, error || "No rows matched");
+        return new Response(JSON.stringify({ error: "Update failed" }), { status: 500 });
+      } else {
+        console.log(`Subscription updated for customer ${customerId}`);
       }
     } else if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
       
       // Downgrade user to free tier using stripe_customer_id
-      const { error } = await supabaseClient
+      const { error, count } = await supabaseClient
         .from("profiles")
         .update({ subscription_tier: "free" })
-        .eq("stripe_customer_id", customerId);
+        .eq("stripe_customer_id", customerId)
+        .select();
 
-      if (error) {
-        console.error("Error downgrading subscription:", error);
+      if (error || !count || count === 0) {
+        console.error(`Failed to downgrade subscription for customer ${customerId}:`, error || "No rows matched");
+        return new Response(JSON.stringify({ error: "Downgrade failed" }), { status: 500 });
       } else {
         console.log(`Subscription cancelled for customer ${customerId}`);
       }
