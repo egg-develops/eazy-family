@@ -18,47 +18,53 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Authentication required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
+    const { data: userData, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !userData.user) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Authentication required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
 
+    const user = userData.user;
     const { promo_code } = await req.json();
-    if (!promo_code) throw new Error("Promo code is required");
+    
+    if (!promo_code) {
+      return new Response(
+        JSON.stringify({ valid: false, error: "Promo code is required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
 
     const normalizedCode = promo_code.trim().toUpperCase();
 
-    // Validate promo code from database
-    const { data: promoData, error: promoError } = await supabaseClient
-      .from("promo_codes")
-      .select("*")
-      .eq("code", normalizedCode)
-      .eq("is_active", true)
-      .maybeSingle();
+    // Call atomic stored procedure that validates and increments in a single transaction
+    const { data: validationResult, error: rpcError } = await supabaseClient
+      .rpc("validate_and_increment_promo_code", {
+        _code: normalizedCode,
+        _user_id: user.id
+      });
 
-    if (promoError) throw promoError;
-
-    if (!promoData) {
+    if (rpcError) {
+      console.error("RPC error:", rpcError);
       return new Response(
-        JSON.stringify({ valid: false, error: "Invalid promo code" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        JSON.stringify({ valid: false, error: "Unable to validate promo code" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    // Check if promo code has expired
-    if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
+    if (!validationResult.valid) {
       return new Response(
-        JSON.stringify({ valid: false, error: "Promo code has expired" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
-
-    // Check if max uses reached
-    if (promoData.max_uses && promoData.current_uses >= promoData.max_uses) {
-      return new Response(
-        JSON.stringify({ valid: false, error: "Promo code has reached maximum uses" }),
+        JSON.stringify(validationResult),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
@@ -66,28 +72,29 @@ serve(async (req) => {
     // Update user's subscription tier
     const { error: updateError } = await supabaseClient
       .from("profiles")
-      .update({ subscription_tier: promoData.subscription_tier })
+      .update({ subscription_tier: validationResult.subscription_tier })
       .eq("user_id", user.id);
 
-    if (updateError) throw updateError;
-
-    // Increment promo code usage count
-    await supabaseClient
-      .from("promo_codes")
-      .update({ 
-        current_uses: promoData.current_uses + 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", promoData.id);
+    if (updateError) {
+      console.error("Profile update error:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Unable to apply promo code" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
 
     return new Response(
-      JSON.stringify({ valid: true, subscription_tier: promoData.subscription_tier }),
+      JSON.stringify({ 
+        valid: true, 
+        subscription_tier: validationResult.subscription_tier 
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
+    // Log full error server-side, return generic error to client
     console.error("Error validating promo code:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Something went wrong" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

@@ -77,8 +77,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Weather function error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Unable to fetch weather data' }),
       { 
         status: 500,
         headers: { 
