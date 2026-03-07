@@ -1,0 +1,11 @@
+{
+	"appId": "eazy.family.app",
+	"appName": "Eazy Family",
+	"webDir": "dist",
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0
+		}
+	},
+	"packageClassList": []
+}

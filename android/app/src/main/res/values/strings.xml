@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Eazy Family</string>
+    <string name="title_activity_main">Eazy Family</string>
+    <string name="package_name">eazy.family.app</string>
+    <string name="custom_url_scheme">eazy.family.app</string>
+</resources>

@@ -1,0 +1,19 @@
+{
+  "name": "Eazy.Family - Ultimate Family Hub",
+  "short_name": "Eazy.Family",
+  "description": "Simplify family life with calendar sync, event discovery, photo management, and community connections",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfcfd",
+  "theme_color": "#4f8cff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["lifestyle", "productivity", "social"],
+  "lang": "en-US"
+}
