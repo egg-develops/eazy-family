@@ -38,6 +38,34 @@ serve(async (req) => {
       throw new Error('Invitation token is required');
     }
 
+    // Validate invitation token expiration (7 days)
+    const { data: invitation, error: inviteCheckError } = await supabaseClient
+      .from('family_invitations')
+      .select('created_at, accepted_at')
+      .eq('invitation_token', invitation_token)
+      .maybeSingle();
+
+    if (inviteCheckError) {
+      throw new Error('Failed to verify invitation');
+    }
+
+    if (!invitation) {
+      throw new Error('token_invalid');
+    }
+
+    if (invitation.accepted_at) {
+      throw new Error('token_already_used');
+    }
+
+    // Check if invitation has expired (7 days = 604800 seconds)
+    const createdAt = new Date(invitation.created_at).getTime();
+    const nowMs = Date.now();
+    const expirationMs = 7 * 24 * 60 * 60 * 1000;
+    
+    if (nowMs - createdAt > expirationMs) {
+      throw new Error('token_expired');
+    }
+
     // Use the database function to securely accept the invitation
     const { data, error } = await supabaseClient.rpc('accept_family_invitation', {
       _invitation_token: invitation_token,
@@ -58,9 +86,13 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error accepting invitation:', error);
+    
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    const statusCode = errorMsg === 'token_invalid' || errorMsg === 'token_expired' || errorMsg === 'token_already_used' ? 400 : 400;
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ error: errorMsg }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: statusCode }
     );
   }
 });

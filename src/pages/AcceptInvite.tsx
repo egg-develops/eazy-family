@@ -23,7 +23,7 @@ const AcceptInvite = () => {
 
     if (!user) {
       // Redirect to auth page, then come back here
-      navigate(`/auth?redirect=/accept-invite?token=${token}`);
+      navigate(`/auth?redirect=${encodeURIComponent(`/accept-invite?token=${token}`)}`);
       return;
     }
 
@@ -72,12 +72,29 @@ const AcceptInvite = () => {
       }
     } catch (error: unknown) {
       logError('Error accepting invitation:', error);
-      setStatus('error');
-      setMessage(error.message || 'Failed to accept invitation. The link may be expired or invalid.');
+
+      let msg = 'Failed to accept invitation. The link may be expired or invalid.';
       
+      if (error instanceof Error) {
+        if (error.message === 'token_expired') {
+          msg = 'This invitation link has expired (7 days). Please ask the family admin to send you a new invite.';
+        } else if (error.message === 'token_invalid') {
+          msg = 'This invitation link is invalid.';
+        } else if (error.message === 'token_already_used') {
+          msg = 'This invitation link has already been used.';
+        } else {
+          msg = error.message;
+        }
+      } else if (typeof error === 'string') {
+        msg = error;
+      }
+
+      setStatus('error');
+      setMessage(msg);
+
       toast({
         title: "Error",
-        description: error.message || 'Failed to accept invitation',
+        description: msg,
         variant: "destructive",
       });
     }
