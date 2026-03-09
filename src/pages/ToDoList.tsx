@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
-import { z } from "zod";
+import { useAuth } from "@/contexts/AuthContext";
 import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
 interface Task {
@@ -187,7 +187,7 @@ const ToDoList = () => {
             type: 'shopping',
             due_date: null,
             shared_with: null,
-          } as unknown])
+          } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }])
       );
 
       const results = await Promise.all(insertPromises);
@@ -231,7 +231,7 @@ const ToDoList = () => {
           type: activeTab,
           due_date: newTaskDueDate || null,
           shared_with: activeTab === "shared" ? selectedMembers : null,
-        } as unknown]);
+        } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }]);
 
       if (error) throw error;
 

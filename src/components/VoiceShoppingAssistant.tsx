@@ -4,7 +4,6 @@ import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
-import { error as logError } from "@/lib/logger";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
@@ -112,7 +111,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
           logError('Error processing audio:', error);
           toast({
             title: "Error processing audio",
-            description: error.message || "Please try again.",
+            description: error instanceof Error ? error.message : "Please try again.",
             variant: "destructive",
           });
         } finally {
@@ -127,7 +126,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
       
       toast({
         title: "Error processing audio",
-        description: error.message || "Please try again.",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
     }

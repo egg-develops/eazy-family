@@ -47,6 +47,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
 import { error as logError } from "@/lib/logger";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -225,6 +226,7 @@ interface HomeConfig {
 const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
@@ -255,11 +257,11 @@ const AppHome = () => {
     const saved = localStorage.getItem('eazy-family-calendar-items');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map((item: unknown) => ({
+      return parsed.map((item: Record<string, unknown>) => ({
         ...item,
-        startDate: item.startDate ? new Date(item.startDate) : undefined,
-        endDate: item.endDate ? new Date(item.endDate) : undefined,
-      })).filter((item: unknown) => {
+        startDate: item.startDate ? new Date(item.startDate as string) : undefined,
+        endDate: item.endDate ? new Date(item.endDate as string) : undefined,
+      })).filter((item: Record<string, unknown>) => {
     if (typeof item === "object" && item !== null && "type" in item) {
     return (item as { type?: string }).type === "event";
     }
@@ -749,7 +751,8 @@ const QuickToDos = () => {
         .insert([{
           title: newTaskTitle,
           type: 'task',
-        } as unknown]);
+          user_id: user?.id || '',
+        }]);
 
       if (error) throw error;
 
