@@ -674,6 +674,7 @@ const todayEvents = getCalendarItems().filter((event: unknown) => {
 // Quick To-Do's Component
 const QuickToDos = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
