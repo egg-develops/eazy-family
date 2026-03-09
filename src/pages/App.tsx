@@ -254,41 +254,53 @@ const AppHome = () => {
   
   // Get calendar items from localStorage
   const getCalendarItems = () => {
-    const saved = localStorage.getItem('eazy-family-calendar-items');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map((item: Record<string, unknown>) => ({
-        ...item,
-        startDate: item.startDate ? new Date(item.startDate as string) : undefined,
-        endDate: item.endDate ? new Date(item.endDate as string) : undefined,
-      })).filter((item: Record<string, unknown>) => {
-    if (typeof item === "object" && item !== null && "type" in item) {
-    return (item as { type?: string }).type === "event";
-    }
-    return false;
-});
-    }
-    return [];
-  };
-  
-const todayEvents = getCalendarItems().filter((event: unknown) => {
-  if (
-    typeof event === "object" &&
-    event !== null &&
-    "startDate" in event
-  ) {
-    const e = event as { startDate?: string | Date };
+    try {
+      const saved = localStorage.getItem('eazy-family-calendar-items');
+      if (!saved) return [];
 
-    if (!e.startDate) return false;
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .map((item: Record<string, unknown>) => {
+          const startDateValue = item.startDate as string | undefined;
+          const endDateValue = item.endDate as string | undefined;
+          const startDate = startDateValue ? new Date(startDateValue) : undefined;
+          const endDate = endDateValue ? new Date(endDateValue) : undefined;
+
+          return {
+            ...item,
+            startDate,
+            endDate,
+          };
+        })
+        .filter((item: Record<string, unknown>) => {
+          if (item.type !== "event") return false;
+          if (!(item.startDate instanceof Date)) return false;
+          return !Number.isNaN(item.startDate.getTime());
+        });
+    } catch {
+      return [];
+    }
+  };
+
+  const calendarEvents = getCalendarItems();
+
+  const todayEvents = calendarEvents.filter((event: Record<string, unknown>) => {
+    const startDate = event.startDate as Date | undefined;
+    if (!startDate) return false;
 
     const today = new Date();
-    const eventDate = new Date(e.startDate);
+    return startDate.toDateString() === today.toDateString();
+  });
 
-    return eventDate.toDateString() === today.toDateString();
-  }
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
 
-  return false;
-});
+  const upcomingEventsCount = calendarEvents.filter((event: Record<string, unknown>) => {
+    const startDate = event.startDate as Date | undefined;
+    return !!startDate && startDate >= startOfToday;
+  }).length;
 
   const removeCalendar = () => {
     const newConfig = { ...homeConfig, showCalendar: false };
