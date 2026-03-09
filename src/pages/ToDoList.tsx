@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
 import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
 interface Task {
@@ -42,6 +42,7 @@ interface FamilyMember {
 const ToDoList = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState<"task" | "shopping" | "shared">("task");
   const [filterView, setFilterView] = useState("all");
@@ -53,10 +54,10 @@ const ToDoList = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const currentUserId = localStorage.getItem('eazy-family-user-id') || crypto.randomUUID();
+  const currentUserId = user?.id || '';
 
   useEffect(() => {
-    localStorage.setItem('eazy-family-user-id', currentUserId);
+    if (currentUserId) localStorage.setItem('eazy-family-user-id', currentUserId);
   }, [currentUserId]);
 
   // Load tasks from Supabase
@@ -185,9 +186,10 @@ const ToDoList = () => {
           .insert([{
             title: item,
             type: 'shopping',
+            user_id: user?.id || '',
             due_date: null,
             shared_with: null,
-          } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }])
+          }])
       );
 
       const results = await Promise.all(insertPromises);
@@ -229,9 +231,10 @@ const ToDoList = () => {
         .insert([{
           title: newTaskTitle,
           type: activeTab,
+          user_id: user?.id || '',
           due_date: newTaskDueDate || null,
           shared_with: activeTab === "shared" ? selectedMembers : null,
-        } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }]);
+        }]);
 
       if (error) throw error;
 
