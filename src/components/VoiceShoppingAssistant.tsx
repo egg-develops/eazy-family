@@ -111,7 +111,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
           logError('Error processing audio:', error);
           toast({
             title: "Error processing audio",
-            description: error.message || "Please try again.",
+            description: error instanceof Error ? error.message : "Please try again.",
             variant: "destructive",
           });
         } finally {
