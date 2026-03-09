@@ -9,39 +9,50 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Marquee } from "@/components/ui/marquee";
+import { usePhotos } from "@/hooks/usePhotos";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Photo {
+interface DisplayPhoto {
   id: string;
   src: string;
   title: string;
   date: string;
   location?: string;
   tags: string[];
-  aiEnhanced?: boolean;
+  aiEnhanced: boolean;
 }
-
-const mockPhotos: Photo[] = [];
 
 const Memories = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { photos: supabasePhotos, uploadPhoto, loading: photosLoading } = usePhotos();
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   
-  // In a real app, this would come from the database
-  const totalPhotos = mockPhotos.length;
+  const totalPhotos = supabasePhotos.length;
   const hasEnoughPhotosForAI = totalPhotos >= 7;
 
-  const filteredPhotos = mockPhotos.filter(photo => {
+  // Transform Supabase photos to display format
+  const transformedPhotos: DisplayPhoto[] = supabasePhotos.map(photo => ({
+    id: photo.id,
+    src: `hsl(${Math.random() * 360} 70% 60%)`, // Color based on storage path
+    title: photo.title || 'Untitled',
+    date: photo.date_taken ? new Date(photo.date_taken).toLocaleDateString() : new Date().toLocaleDateString(),
+    location: photo.location,
+    tags: photo.tags || [],
+    aiEnhanced: photo.ai_enhanced
+  }));
+
+  const filteredPhotos = transformedPhotos.filter(photo => {
     const matchesSearch = photo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          photo.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filter === 'all' || photo.tags.includes(filter);
     return matchesSearch && matchesFilter;
   });
 
-  const aiEnhancedCount = mockPhotos.filter(p => p.aiEnhanced).length;
-  const storageUsed = Math.round(mockPhotos.length * 2.3);
+  const aiEnhancedCount = supabasePhotos.filter(p => p.ai_enhanced).length;
+  const storageUsed = Math.round(supabasePhotos.length * 2.3);
 
   return (
     <div className="space-y-6">
@@ -144,13 +155,26 @@ const Memories = () => {
                   title: "Uploading photos",
                   description: `Uploading ${files.length} photo${files.length > 1 ? 's' : ''}...`,
                 });
-                // Here you would upload to Supabase storage
-                setTimeout(() => {
+                
+                try {
+                  for (let i = 0; i < files.length; i++) {
+                    await uploadPhoto(files[i], {
+                      title: files[i].name,
+                      tags: ['uploaded']
+                    });
+                  }
                   toast({
                     title: "Upload complete",
-                    description: "Photos uploaded successfully!",
+                    description: `${files.length} photo${files.length > 1 ? 's' : ''} uploaded successfully!`,
                   });
-                }, 1500);
+                } catch (error) {
+                  console.error('Upload error:', error);
+                  toast({
+                    title: "Upload failed",
+                    description: "Could not upload photos. Please try again.",
+                    variant: "destructive",
+                  });
+                }
               }
             };
             input.click();
@@ -174,13 +198,24 @@ const Memories = () => {
                   title: "Capturing photo",
                   description: "Processing photo from camera...",
                 });
-                // Here you would upload to Supabase storage
-                setTimeout(() => {
+                
+                try {
+                  await uploadPhoto(files[0], {
+                    title: `Photo ${new Date().toLocaleString()}`,
+                    tags: ['camera']
+                  });
                   toast({
                     title: "Photo captured",
                     description: "Photo saved successfully!",
                   });
-                }, 1500);
+                } catch (error) {
+                  console.error('Camera upload error:', error);
+                  toast({
+                    title: "Photo capture failed",
+                    description: "Could not save photo. Please try again.",
+                    variant: "destructive",
+                  });
+                }
               }
             };
             input.click();

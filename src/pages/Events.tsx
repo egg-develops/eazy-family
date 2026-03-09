@@ -5,77 +5,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEvents } from "@/hooks/useEvents";
+import { format } from "date-fns";
 
-interface Event {
+interface DisplayEvent {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   date: string;
   time: string;
-  location: string;
+  location?: string;
   type: string;
-  ageRange: string;
-  price: string;
+  price?: string;
   image: string;
 }
-
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Children's Science Workshop",
-    description: "Explore the wonders of science with hands-on experiments",
-    date: "2025-10-15",
-    time: "14:00 - 16:00",
-    location: "Zurich Science Center",
-    type: "educational",
-    ageRange: "6-12 years",
-    price: "CHF 15",
-    image: "bg-blue-200"
-  },
-  {
-    id: "2",
-    title: "Family Painting Class",
-    description: "Create beautiful artwork together as a family",
-    date: "2025-10-18",
-    time: "10:00 - 12:00",
-    location: "Art Studio Zurich",
-    type: "creative",
-    ageRange: "4+ years",
-    price: "CHF 20",
-    image: "bg-pink-200"
-  },
-  {
-    id: "3",
-    title: "Outdoor Adventure Day",
-    description: "Hiking and nature exploration for families",
-    date: "2025-10-20",
-    time: "09:00 - 17:00",
-    location: "Uetliberg, Zurich",
-    type: "outdoor",
-    ageRange: "5+ years",
-    price: "Free",
-    image: "bg-green-200"
-  },
-  {
-    id: "4",
-    title: "Movie Night: Family Edition",
-    description: "Watch a fun family-friendly movie together",
-    date: "2025-10-22",
-    time: "18:00 - 20:00",
-    location: "Kino Zurich",
-    type: "entertainment",
-    ageRange: "All ages",
-    price: "CHF 12",
-    image: "bg-purple-200"
-  }
-];
 
 const Events = () => {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<string>('all');
   const [distance, setDistance] = useState<string>('10km');
+  const { events: supabaseEvents, loading } = useEvents();
 
-  const filteredEvents = mockEvents.filter(event => 
+  // Transform Supabase events to display format
+  const transformedEvents: DisplayEvent[] = supabaseEvents.map(event => ({
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    date: format(new Date(event.start_date), 'yyyy-MM-dd'),
+    time: `${format(new Date(event.start_date), 'HH:mm')} - ${format(new Date(event.end_date), 'HH:mm')}`,
+    location: event.location,
+    type: 'family-event',
+    image: event.color ? `${event.color}` : 'bg-blue-200'
+  }));
+
+  const filteredEvents = transformedEvents.filter(event => 
     filter === 'all' || event.type.toLowerCase() === filter.toLowerCase()
   );
 

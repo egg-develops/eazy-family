@@ -11,17 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useGroups } from "@/hooks/useGroups";
+import { useMarketplaceItems } from "@/hooks/useMarketplaceItems";
 
 // Interfaces and mock data
-interface Group {
-  id: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  category: string;
-  isJoined: boolean;
-}
-
 interface Post {
   id: string;
   author: {
@@ -36,41 +31,72 @@ interface Post {
   location?: string;
 }
 
-interface MarketItem {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  condition: 'new' | 'like-new' | 'good' | 'fair';
-  category: string;
-  seller: {
-    initials: string;
-    name: string;
-    location: string;
-  };
-  images: string[];
-  postedAt: string;
-}
-
-const mockGroups: Group[] = [];
 const mockPosts: Post[] = [];
-const mockItems: MarketItem[] = [];
 
 const Community = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { isPremium } = useAuth();
+  const { groups, createGroup } = useGroups();
+  const { items, createItem } = useMarketplaceItems();
+  
   const [activeTab, setActiveTab] = useState('messages');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
+  const [isMarketplaceDialogOpen, setIsMarketplaceDialogOpen] = useState(false);
+  const [groupForm, setGroupForm] = useState({ name: '', description: '', category: 'general', is_public: false });
+  const [marketplaceForm, setMarketplaceForm] = useState({ title: '', description: '', price: '', condition: 'good', category: 'other' });
 
-  const joinedGroups = mockGroups.filter(group => group.isJoined);
-  const filteredItems = mockItems.filter(item => {
+  const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.description.toLowerCase().includes(searchQuery.toLowerCase());
+                         (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = category === 'all' || item.category === category;
     return matchesSearch && matchesCategory;
   });
+
+  const handleCreateGroup = async () => {
+    if (!groupForm.name.trim()) {
+      toast({ title: "Error", description: "Group name is required", variant: "destructive" });
+      return;
+    }
+    try {
+      await createGroup({
+        name: groupForm.name,
+        description: groupForm.description,
+        category: groupForm.category,
+        is_public: groupForm.is_public
+      });
+      toast({ title: "Success", description: "Group created successfully!" });
+      setIsGroupDialogOpen(false);
+      setGroupForm({ name: '', description: '', category: 'general', is_public: false });
+    } catch (error) {
+      console.error('Error creating group:', error);
+      toast({ title: "Error", description: "Failed to create group", variant: "destructive" });
+    }
+  };
+
+  const handleCreateMarketplaceItem = async () => {
+    if (!marketplaceForm.title.trim()) {
+      toast({ title: "Error", description: "Item title is required", variant: "destructive" });
+      return;
+    }
+    try {
+      await createItem({
+        title: marketplaceForm.title,
+        description: marketplaceForm.description,
+        price: marketplaceForm.price,
+        condition: marketplaceForm.condition as 'new' | 'like-new' | 'good' | 'fair',
+        category: marketplaceForm.category
+      });
+      toast({ title: "Success", description: "Item listed successfully!" });
+      setIsMarketplaceDialogOpen(false);
+      setMarketplaceForm({ title: '', description: '', price: '', condition: 'good', category: 'other' });
+    } catch (error) {
+      console.error('Error creating marketplace item:', error);
+      toast({ title: "Error", description: "Failed to list item", variant: "destructive" });
+    }
+  };
 
   const getConditionColor = (condition: string) => {
     switch (condition) {
@@ -125,7 +151,7 @@ const Community = () => {
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.marketplaceDesc')}</p>
             <PremiumGate>
-              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Marketplace listing is coming soon!" }) : undefined}>
+              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => setIsMarketplaceDialogOpen(true) : undefined}>
                 <Plus className="w-4 h-4 mr-1" />
                 {t('community.sellItem')}
               </Button>
@@ -181,7 +207,7 @@ const Community = () => {
                 <Card key={item.id} className="shadow-custom-md">
                   <CardContent className="p-4">
                     <div className="flex gap-4">
-                      <div className={`w-20 h-20 rounded-lg ${item.images[0]} flex-shrink-0`} />
+                      <div className={`w-20 h-20 rounded-lg bg-gradient-to-br from-blue-200 to-purple-200 flex-shrink-0`} />
                       
                       <div className="flex-1 space-y-2">
                         <h4 className="font-semibold text-sm leading-tight">{item.title}</h4>
@@ -196,14 +222,6 @@ const Community = () => {
 
                         <div className="flex items-center justify-between">
                           <div className="text-lg font-bold text-primary">{item.price}</div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Avatar className="w-5 h-5">
-                              <AvatarFallback className="gradient-cool text-white text-xs">
-                                {item.seller.initials}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{item.seller.location}</span>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -219,7 +237,7 @@ const Community = () => {
                     Be the first to list family items in your community
                   </p>
                   <PremiumGate>
-                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Marketplace listing is coming soon!" }) : undefined}>
+                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => setIsMarketplaceDialogOpen(true) : undefined}>
                       <Plus className="w-4 h-4 mr-1" />
                       List Your First Item
                     </Button>
@@ -235,17 +253,17 @@ const Community = () => {
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('community.groupsDesc')}</p>
             <PremiumGate>
-              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Group creation is coming soon!" }) : undefined}>
+              <Button size="sm" className="gradient-primary text-white border-0" onClick={isPremium ? () => setIsGroupDialogOpen(true) : undefined}>
                 <Plus className="w-4 h-4 mr-1" />
                 {t('community.createGroup')}
               </Button>
             </PremiumGate>
           </div>
 
-          {/* My Groups */}
+          {/* Groups List */}
           <div className="space-y-3">
-            {joinedGroups.length > 0 ? (
-              joinedGroups.map((group) => (
+            {groups.length > 0 ? (
+              groups.map((group) => (
                 <Card key={group.id} className="shadow-custom-md">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
@@ -254,7 +272,7 @@ const Community = () => {
                         <p className="text-sm text-muted-foreground">{group.description}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="secondary" className="text-xs">
-                            {group.memberCount} {t('community.members')}
+                            {group.member_count} {t('community.members')}
                           </Badge>
                         </div>
                       </div>
@@ -267,12 +285,12 @@ const Community = () => {
               <Card className="shadow-custom-md">
                 <CardContent className="p-8 text-center">
                   <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-medium mb-2">No groups joined yet</h3>
+                  <h3 className="font-medium mb-2">No groups yet</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Create or join groups to connect with other families
+                    Create a group to connect with other families
                   </p>
                   <PremiumGate>
-                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => toast({ title: "Coming soon", description: "Group creation is coming soon!" }) : undefined}>
+                    <Button className="gradient-primary text-white border-0" onClick={isPremium ? () => setIsGroupDialogOpen(true) : undefined}>
                       <Plus className="w-4 h-4 mr-1" />
                       Create Your First Group
                     </Button>
@@ -307,6 +325,134 @@ const Community = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Group Dialog */}
+      <Dialog open={isGroupDialogOpen} onOpenChange={setIsGroupDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create a New Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="group-name">Group Name</Label>
+              <Input
+                id="group-name"
+                placeholder="e.g., Parents of Zurich"
+                value={groupForm.name}
+                onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="group-description">Description</Label>
+              <Input
+                id="group-description"
+                placeholder="What's this group about?"
+                value={groupForm.description}
+                onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="group-category">Category</Label>
+              <Select value={groupForm.category} onValueChange={(value) => setGroupForm({ ...groupForm, category: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="activities">Activities</SelectItem>
+                  <SelectItem value="parenting">Parenting</SelectItem>
+                  <SelectItem value="education">Education</SelectItem>
+                  <SelectItem value="sports">Sports</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGroupDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="gradient-primary text-white border-0" onClick={handleCreateGroup}>
+              Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Marketplace Item Dialog */}
+      <Dialog open={isMarketplaceDialogOpen} onOpenChange={setIsMarketplaceDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>List an Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="item-title">Item Title</Label>
+              <Input
+                id="item-title"
+                placeholder="e.g., Child's Bicycle"
+                value={marketplaceForm.title}
+                onChange={(e) => setMarketplaceForm({ ...marketplaceForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-description">Description</Label>
+              <Input
+                id="item-description"
+                placeholder="Describe the item..."
+                value={marketplaceForm.description}
+                onChange={(e) => setMarketplaceForm({ ...marketplaceForm, description: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-price">Price (CHF)</Label>
+              <Input
+                id="item-price"
+                placeholder="e.g., 50"
+                value={marketplaceForm.price}
+                onChange={(e) => setMarketplaceForm({ ...marketplaceForm, price: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-condition">Condition</Label>
+              <Select value={marketplaceForm.condition} onValueChange={(value) => setMarketplaceForm({ ...marketplaceForm, condition: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="like-new">Like New</SelectItem>
+                  <SelectItem value="good">Good</SelectItem>
+                  <SelectItem value="fair">Fair</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="item-category">Category</Label>
+              <Select value={marketplaceForm.category} onValueChange={(value) => setMarketplaceForm({ ...marketplaceForm, category: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="toys">Toys</SelectItem>
+                  <SelectItem value="baby-gear">Baby Gear</SelectItem>
+                  <SelectItem value="books">Books</SelectItem>
+                  <SelectItem value="clothing">Clothing</SelectItem>
+                  <SelectItem value="outdoor">Outdoor</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMarketplaceDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="gradient-primary text-white border-0" onClick={handleCreateMarketplaceItem}>
+              List Item
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
