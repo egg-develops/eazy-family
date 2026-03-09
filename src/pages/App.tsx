@@ -500,39 +500,22 @@ const AppHome = () => {
           
           {calendarView === 'day' && todayEvents.length > 0 && (
             <>
-              {todayEvents.map((event) => {
-  if (
-    typeof event === "object" &&
-    event !== null &&
-    "startDate" in event
-  ) {
-    const e = event as {
-  id?: string;
-  title?: string;
-  startDate?: string | Date;
-  allDay?: boolean;
-  location?: string;
-  [key: string]: unknown;
-};
-
-    return (
+              {todayEvents.map((event) => (
                 <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div className="flex-1">
-                      <h4 className="font-medium">{e.title}</h4>
+                      <h4 className="font-medium">{event.title}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {e.allDay ? "All day" : new Date(e.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        {e.location && ` - ${e.location}`}
+                        {event.allDay
+                          ? "All day"
+                          : event.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        {event.location && ` - ${event.location}`}
                       </p>
                     </div>
                   </div>
                 </Card>
-                  );
-  }
-
-  return null;
-})}
+              ))}
             </>
           )}
 
