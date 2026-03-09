@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export const GoogleCalendarCallback = () => {
   const navigate = useNavigate();
@@ -61,7 +60,9 @@ export const GoogleCalendarCallback = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md p-8 text-center space-y-4">
-        <LoadingSpinner />
+        <div className="flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
         <h1 className="text-xl font-semibold">{t('common.connecting') || 'Connecting...'}</h1>
         <p className="text-sm text-muted-foreground">
           {t('settings.googleCalendar.connecting') || 'Connecting your Google Calendar'}
