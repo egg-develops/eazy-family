@@ -42,6 +42,7 @@ interface FamilyMember {
 const ToDoList = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState<"task" | "shopping" | "shared">("task");
   const [filterView, setFilterView] = useState("all");
@@ -52,8 +53,6 @@ const ToDoList = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  const currentUserId = localStorage.getItem('eazy-family-user-id') || crypto.randomUUID();
 
   useEffect(() => {
     localStorage.setItem('eazy-family-user-id', currentUserId);
