@@ -255,11 +255,11 @@ const AppHome = () => {
     const saved = localStorage.getItem('eazy-family-calendar-items');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map((item: unknown) => ({
+      return parsed.map((item: Record<string, unknown>) => ({
         ...item,
-        startDate: item.startDate ? new Date(item.startDate) : undefined,
-        endDate: item.endDate ? new Date(item.endDate) : undefined,
-      })).filter((item: unknown) => {
+        startDate: item.startDate ? new Date(item.startDate as string) : undefined,
+        endDate: item.endDate ? new Date(item.endDate as string) : undefined,
+      })).filter((item: Record<string, unknown>) => {
     if (typeof item === "object" && item !== null && "type" in item) {
     return (item as { type?: string }).type === "event";
     }
