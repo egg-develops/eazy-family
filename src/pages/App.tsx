@@ -47,6 +47,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
 import { error as logError } from "@/lib/logger";
+import { useAuth } from "@/contexts/AuthContext";
 
 const AppLayout = () => {
   const { t } = useTranslation();
