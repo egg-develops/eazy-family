@@ -4,7 +4,6 @@ import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
-import { error as logError } from "@/lib/logger";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
