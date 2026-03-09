@@ -229,9 +229,10 @@ const ToDoList = () => {
         .insert([{
           title: newTaskTitle,
           type: activeTab,
+          user_id: user?.id || '',
           due_date: newTaskDueDate || null,
           shared_with: activeTab === "shared" ? selectedMembers : null,
-        } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }]);
+        }]);
 
       if (error) throw error;
 
