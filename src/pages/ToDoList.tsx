@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
-import { z } from "zod";
+import { useAuth } from "@/contexts/AuthContext";
 import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
 interface Task {
