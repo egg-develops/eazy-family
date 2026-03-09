@@ -226,6 +226,7 @@ interface HomeConfig {
 const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
