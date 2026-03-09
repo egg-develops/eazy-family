@@ -184,9 +184,10 @@ const ToDoList = () => {
           .insert([{
             title: item,
             type: 'shopping',
+            user_id: user?.id || '',
             due_date: null,
             shared_with: null,
-          } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }])
+          }])
       );
 
       const results = await Promise.all(insertPromises);
