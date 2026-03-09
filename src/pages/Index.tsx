@@ -5,11 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Heart, Calendar, MapPin, Camera, Users, ShoppingCart, ChevronRight } from "lucide-react";
 
 const features = [
-  { icon: Calendar, title: "Shared Calendars & Lists", description: "Sync schedules, to-do's and shopping lists across the family" },
+  { icon: Calendar, title: "Shared Calendars & Lists", description: "Sync schedules, to-do's and shopping lists" },
   { icon: MapPin, title: "Local Event Discovery", description: "Find family-friendly activities happening near you" },
-  { icon: Camera, title: "AI Photo Organizer", description: "Automatically sort and tag your family memories" },
+  { icon: Camera, title: "AI Photo Organizer", description: "Automatically sort and tag your memories" },
   { icon: Users, title: "Parent Community", description: "Connect with nearby parents and arrange playdates" },
-  { icon: ShoppingCart, title: "Family Marketplace", description: "Buy and sell pre-loved kids' items locally" },
+  { icon: ShoppingCart, title: "Family Marketplace", description: "Buy and sell pre-loved kids' items" },
 ];
 
 const Index = () => {

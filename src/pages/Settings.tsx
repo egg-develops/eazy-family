@@ -483,6 +483,23 @@ const l = (max + min) / 2;
               </Button>
             </UpgradeDialog>
           )}
+
+          {(subscriptionTier === 'family' || subscriptionTier === 'premium') && (
+            <Button 
+              variant="outline" 
+              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={() => {
+                if (confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
+                  toast({
+                    title: "Subscription Cancellation",
+                    description: "Please contact us at support@eazy.family to cancel or downgrade your plan.",
+                  });
+                }
+              }}
+            >
+              Cancel / Downgrade Subscription
+            </Button>
+          )}
           
           <Button 
             variant="outline" 
@@ -715,20 +732,6 @@ const l = (max + min) / 2;
               }}
             >
               {t('settings.privacy.downloadData')}
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sm text-destructive"
-              onClick={() => {
-                if (confirm(t('settings.privacy.deleteAccount') + "?")) {
-                  toast({
-                    title: t('settings.privacy.deleteAccount'),
-                    description: t('common.success'),
-                  });
-                }
-              }}
-            >
-              {t('settings.privacy.deleteAccount')}
             </Button>
           </div>
         </CardContent>
