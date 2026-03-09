@@ -187,7 +187,7 @@ const ToDoList = () => {
             type: 'shopping',
             due_date: null,
             shared_with: null,
-          } as unknown])
+          } as { title: string; type: string; user_id: string; due_date: string | null; shared_with: string[] | null }])
       );
 
       const results = await Promise.all(insertPromises);
