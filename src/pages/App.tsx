@@ -749,7 +749,7 @@ const QuickToDos = () => {
         .insert([{
           title: newTaskTitle,
           type: 'task',
-        } as unknown]);
+        } as { title: string; type: string; user_id: string }]);
 
       if (error) throw error;
 
