@@ -733,20 +733,6 @@ const l = (max + min) / 2;
             >
               {t('settings.privacy.downloadData')}
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sm text-destructive"
-              onClick={() => {
-                if (confirm(t('settings.privacy.deleteAccount') + "?")) {
-                  toast({
-                    title: t('settings.privacy.deleteAccount'),
-                    description: t('common.success'),
-                  });
-                }
-              }}
-            >
-              {t('settings.privacy.deleteAccount')}
-            </Button>
           </div>
         </CardContent>
       </Card>

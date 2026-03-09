@@ -48,13 +48,13 @@ const languages = [
 ];
 
 const features = [
-  { id: "calendar", label: "Synced Calendars", icon: Calendar },
-  { id: "shopping", label: "Synced Shopping & To-Do Lists", icon: ShoppingCart },
-  { id: "events", label: "Finding Family-Friendly Events", icon: MapPin },
-  { id: "playdates", label: "Playdates for Children", icon: Users },
-  { id: "community", label: "Connecting with Parents", icon: Heart },
-  { id: "marketplace", label: "Marketplace: to buy and sell", icon: ShoppingCart },
-  { id: "photos", label: "AI Photo Management & Editing", icon: Camera },
+  { id: "calendar", label: "Shared Calendars & Lists", icon: Calendar },
+  { id: "shopping", label: "Sync schedules, to-do's and shopping lists", icon: ShoppingCart },
+  { id: "events", label: "Local Event Discovery", icon: MapPin },
+  { id: "playdates", label: "Parent Community", icon: Users },
+  { id: "community", label: "Connect with nearby parents and arrange playdates", icon: Heart },
+  { id: "marketplace", label: "Family Marketplace", icon: ShoppingCart },
+  { id: "photos", label: "AI Photo Organizer", icon: Camera },
 ];
 
 const Onboarding = () => {
