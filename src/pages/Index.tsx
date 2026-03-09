@@ -2,8 +2,15 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Heart, Calendar, Users, Camera, MapPin, ShoppingCart } from "lucide-react";
+import { Heart, Calendar, MapPin, Camera, Users, ShoppingCart, ChevronRight } from "lucide-react";
+
+const features = [
+  { icon: Calendar, title: "Shared Calendars & Lists", description: "Sync schedules, to-do's and shopping lists across the family" },
+  { icon: MapPin, title: "Local Event Discovery", description: "Find family-friendly activities happening near you" },
+  { icon: Camera, title: "AI Photo Organizer", description: "Automatically sort and tag your family memories" },
+  { icon: Users, title: "Parent Community", description: "Connect with nearby parents and arrange playdates" },
+  { icon: ShoppingCart, title: "Family Marketplace", description: "Buy and sell pre-loved kids' items locally" },
+];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -15,72 +22,66 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
-  const features = [
-    { icon: Calendar, title: "Synced Calendars and To-Do Lists", description: "Keep everyone organized in one place" },
-    { icon: MapPin, title: "Event Discovery", description: "Find family-friendly activities nearby" },
-    { icon: Camera, title: "AI Photo Management", description: "Organize memories automatically" },
-    { icon: Users, title: "Community", description: "Connect with parents, schedule playdates" },
-    { icon: ShoppingCart, title: "Marketplace", description: "Buy & sell family items" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
-      <div className="max-w-md mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center space-y-6 mb-12">
-          <div className="w-24 h-24 mx-auto gradient-primary rounded-3xl flex items-center justify-center shadow-custom-lg">
-            <Heart className="w-12 h-12 text-white" />
-          </div>
-          
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold font-poppins bg-background px-2 py-1 rounded-lg inline-block">
-              Eazy.Family
-            </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Sync your calendars, to-do's and shopping lists, plan events, connect with parents, and create memories.
-            </p>
+    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,20%,96%)] via-[hsl(240,15%,97%)] to-[hsl(0,0%,100%)]">
+      <div className="max-w-md mx-auto px-5 py-10">
+
+        {/* Hero */}
+        <div className="text-center space-y-5 mb-14">
+          <div className="w-[88px] h-[88px] mx-auto rounded-[22px] flex items-center justify-center shadow-lg"
+            style={{ background: "var(--gradient-primary)" }}>
+            <Heart className="w-11 h-11 text-white" strokeWidth={1.8} />
           </div>
 
-          <div className="bg-muted rounded-2xl p-6 shadow-custom-lg">
-            <p className="font-medium">
-              The Perfect App to Make Your Family Life Eazy
-            </p>
-          </div>
+          <h1 className="text-[2.25rem] font-bold tracking-tight leading-tight font-poppins text-foreground">
+            Eazy.Family
+          </h1>
+
+          <p className="text-base text-muted-foreground leading-relaxed max-w-[320px] mx-auto">
+            The all-in-one app that keeps your family organized, connected, and making memories.
+          </p>
         </div>
 
         {/* Features */}
-        <div className="space-y-6 mb-12">
-          <h2 className="text-2xl font-bold text-center">Everything families need</h2>
-          
-          <div className="space-y-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card key={index} className="shadow-custom-md hover:shadow-custom-lg transition-all duration-300 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 gradient-cool rounded-xl flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{feature.title}</h3>
-                        <p className="text-sm text-muted-foreground">{feature.description}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        <div className="space-y-3 mb-12">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={index}
+                className="flex items-center gap-4 bg-card rounded-2xl p-4 shadow-sm border border-border/40 animate-fade-in"
+                style={{ animationDelay: `${index * 0.06}s` }}
+              >
+                <div className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
+                  style={{ background: "var(--gradient-cool)" }}>
+                  <Icon className="w-5 h-5 text-white" strokeWidth={2} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-foreground leading-snug">{feature.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-snug mt-0.5">{feature.description}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* CTA */}
-        <div className="space-y-4">
-          <Button 
-            onClick={() => navigate('/auth')} 
-            className="w-full gradient-primary text-white border-0 hover:opacity-90 text-lg py-6 rounded-xl shadow-custom-lg"
+        {/* CTAs */}
+        <div className="space-y-3">
+          <Button
+            onClick={() => navigate('/onboarding')}
+            className="w-full text-white border-0 hover:opacity-90 text-base py-6 rounded-xl shadow-lg font-semibold"
+            style={{ background: "var(--gradient-primary)" }}
           >
-            Get Started - It's Free!
+            Get Started — It's Free
+            <ChevronRight className="w-5 h-5 ml-1" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/auth')}
+            className="w-full text-sm text-muted-foreground hover:text-foreground py-5 rounded-xl"
+          >
+            Already have an account? <span className="font-semibold text-primary ml-1">Sign in</span>
           </Button>
         </div>
       </div>
