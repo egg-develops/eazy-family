@@ -223,6 +223,15 @@ interface HomeConfig {
   headerImage?: string;
 }
 
+interface HomeCalendarEvent {
+  id: string;
+  title: string;
+  startDate: Date;
+  endDate?: Date;
+  allDay?: boolean;
+  location?: string;
+}
+
 const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -253,42 +262,64 @@ const AppHome = () => {
   });
   
   // Get calendar items from localStorage
-  const getCalendarItems = () => {
-    const saved = localStorage.getItem('eazy-family-calendar-items');
-    if (saved) {
+  const getCalendarItems = (): HomeCalendarEvent[] => {
+    try {
+      const saved = localStorage.getItem('eazy-family-calendar-items');
+      if (!saved) return [];
+
       const parsed = JSON.parse(saved);
-      return parsed.map((item: Record<string, unknown>) => ({
-        ...item,
-        startDate: item.startDate ? new Date(item.startDate as string) : undefined,
-        endDate: item.endDate ? new Date(item.endDate as string) : undefined,
-      })).filter((item: Record<string, unknown>) => {
-    if (typeof item === "object" && item !== null && "type" in item) {
-    return (item as { type?: string }).type === "event";
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .map((item: unknown): HomeCalendarEvent | null => {
+          if (!item || typeof item !== "object") return null;
+          const record = item as Record<string, unknown>;
+          if (record.type !== "event") return null;
+
+          const rawStartDate = record.startDate;
+          const startDate =
+            rawStartDate instanceof Date
+              ? rawStartDate
+              : typeof rawStartDate === "string"
+                ? new Date(rawStartDate)
+                : null;
+
+          if (!startDate || Number.isNaN(startDate.getTime())) return null;
+
+          const rawEndDate = record.endDate;
+          const endDate =
+            rawEndDate instanceof Date
+              ? rawEndDate
+              : typeof rawEndDate === "string"
+                ? new Date(rawEndDate)
+                : undefined;
+
+          return {
+            id: typeof record.id === "string" ? record.id : `${startDate.toISOString()}-${record.title ?? "event"}`,
+            title: typeof record.title === "string" ? record.title : "Event",
+            startDate,
+            endDate: endDate && !Number.isNaN(endDate.getTime()) ? endDate : undefined,
+            allDay: typeof record.allDay === "boolean" ? record.allDay : false,
+            location: typeof record.location === "string" ? record.location : undefined,
+          };
+        })
+        .filter((event): event is HomeCalendarEvent => event !== null);
+    } catch {
+      return [];
     }
-    return false;
-});
-    }
-    return [];
   };
-  
-const todayEvents = getCalendarItems().filter((event: unknown) => {
-  if (
-    typeof event === "object" &&
-    event !== null &&
-    "startDate" in event
-  ) {
-    const e = event as { startDate?: string | Date };
 
-    if (!e.startDate) return false;
+  const calendarEvents = getCalendarItems();
 
+  const todayEvents = calendarEvents.filter((event) => {
     const today = new Date();
-    const eventDate = new Date(e.startDate);
+    return event.startDate.toDateString() === today.toDateString();
+  });
 
-    return eventDate.toDateString() === today.toDateString();
-  }
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
 
-  return false;
-});
+  const upcomingEventsCount = calendarEvents.filter((event) => event.startDate >= startOfToday).length;
 
   const removeCalendar = () => {
     const newConfig = { ...homeConfig, showCalendar: false };
@@ -469,39 +500,22 @@ const todayEvents = getCalendarItems().filter((event: unknown) => {
           
           {calendarView === 'day' && todayEvents.length > 0 && (
             <>
-              {todayEvents.map((event) => {
-  if (
-    typeof event === "object" &&
-    event !== null &&
-    "startDate" in event
-  ) {
-    const e = event as {
-  id?: string;
-  title?: string;
-  startDate?: string | Date;
-  allDay?: boolean;
-  location?: string;
-  [key: string]: unknown;
-};
-
-    return (
+              {todayEvents.map((event) => (
                 <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
                     <div className="flex-1">
-                      <h4 className="font-medium">{e.title}</h4>
+                      <h4 className="font-medium">{event.title}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {e.allDay ? "All day" : new Date(e.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        {e.location && ` - ${e.location}`}
+                        {event.allDay
+                          ? "All day"
+                          : event.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                        {event.location && ` - ${event.location}`}
                       </p>
                     </div>
                   </div>
                 </Card>
-                  );
-  }
-
-  return null;
-})}
+              ))}
             </>
           )}
 
@@ -546,7 +560,7 @@ const todayEvents = getCalendarItems().filter((event: unknown) => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/calendar')}
             >
-              <div className="text-2xl font-bold text-primary">0</div>
+              <div className="text-2xl font-bold text-primary">{upcomingEventsCount}</div>
               <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
             </Card>
           )}
