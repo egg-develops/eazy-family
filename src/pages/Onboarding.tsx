@@ -59,8 +59,9 @@ const features = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
+  const [languageKey, setLanguageKey] = useState(0); // Force re-render on language change
   const [data, setData] = useState<OnboardingData>({
     userName: "",
     children: [{ initials: "", age: "" }],
@@ -201,15 +202,16 @@ const Onboarding = () => {
 
       case 3:
         return (
-          <div className="space-y-6">
+          <div key={languageKey} className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Choose your language</h2>
-              <p className="text-muted-foreground">We'll customize the app experience for you</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.language.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.language.description')}</p>
             </div>
             <Select value={data.language} onValueChange={(value) => {
               setData(prev => ({ ...prev, language: value }));
               i18n.changeLanguage(value);
               localStorage.setItem('eazy-family-language', value);
+              setLanguageKey(prev => prev + 1); // Force re-render on language change
             }}>
               <SelectTrigger className="text-lg">
                 <SelectValue placeholder="Select your language" />

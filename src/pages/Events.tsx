@@ -19,7 +19,56 @@ interface Event {
   image: string;
 }
 
-const mockEvents: Event[] = [];
+const mockEvents: Event[] = [
+  {
+    id: "1",
+    title: "Children's Science Workshop",
+    description: "Explore the wonders of science with hands-on experiments",
+    date: "2025-10-15",
+    time: "14:00 - 16:00",
+    location: "Zurich Science Center",
+    type: "educational",
+    ageRange: "6-12 years",
+    price: "CHF 15",
+    image: "bg-blue-200"
+  },
+  {
+    id: "2",
+    title: "Family Painting Class",
+    description: "Create beautiful artwork together as a family",
+    date: "2025-10-18",
+    time: "10:00 - 12:00",
+    location: "Art Studio Zurich",
+    type: "creative",
+    ageRange: "4+ years",
+    price: "CHF 20",
+    image: "bg-pink-200"
+  },
+  {
+    id: "3",
+    title: "Outdoor Adventure Day",
+    description: "Hiking and nature exploration for families",
+    date: "2025-10-20",
+    time: "09:00 - 17:00",
+    location: "Uetliberg, Zurich",
+    type: "outdoor",
+    ageRange: "5+ years",
+    price: "Free",
+    image: "bg-green-200"
+  },
+  {
+    id: "4",
+    title: "Movie Night: Family Edition",
+    description: "Watch a fun family-friendly movie together",
+    date: "2025-10-22",
+    time: "18:00 - 20:00",
+    location: "Kino Zurich",
+    type: "entertainment",
+    ageRange: "All ages",
+    price: "CHF 12",
+    image: "bg-purple-200"
+  }
+];
 
 const Events = () => {
   const { t } = useTranslation();
@@ -144,11 +193,14 @@ const Events = () => {
           <Card className="shadow-custom-lg">
             <CardContent className="p-8 text-center">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">No events nearby</h3>
+              <h3 className="font-medium mb-2">Discover events in your area</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Discover family-friendly events in your area or create your own
+                Family-friendly events and activities available near you
               </p>
-              <Button className="gradient-primary text-white border-0">
+              <Button 
+                className="gradient-primary text-white border-0"
+                onClick={() => setFilter('all')}
+              >
                 <MapPin className="w-4 h-4 mr-1" />
                 Find Events Near Me
               </Button>

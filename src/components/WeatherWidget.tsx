@@ -188,23 +188,55 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
     return conditions[condition] || "🌤️";
   };
 
-  if (loading && !weatherData) {
+  const currentLocation = locations[currentLocationIndex];
+
+  if (loading && !weatherData && locations.length === 0) {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
-        <div className="flex items-center justify-between">
+        <button 
+          onClick={onRemove}
+          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
+          aria-label="Remove weather"
+        >
+          ×
+        </button>
+        <div className="space-y-4">
           <div className="flex items-center gap-3">
             <Cloud className="w-8 h-8 text-cyan-500" />
             <div>
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
-              <p className="text-sm opacity-70">Loading...</p>
+              <p className="text-sm opacity-70">{t('home.detectingLocation')}</p>
             </div>
           </div>
+          <Dialog open={true}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                {t('home.addLocation')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t('home.addLocation')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter city name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+                  />
+                  <Button onClick={searchLocation} disabled={isAddingLocation}>
+                    {isAddingLocation ? "Adding..." : "Add"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </Card>
     );
   }
-
-  const currentLocation = locations[currentLocationIndex];
 
   return (
     <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">

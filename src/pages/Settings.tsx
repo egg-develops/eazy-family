@@ -561,7 +561,7 @@ const l = (max + min) / 2;
           {/* Dark Mode Toggle */}
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="flex items-center gap-3">
-              {isDarkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               <div>
                 <Label>{t('settings.appearance.darkMode')}</Label>
                 <p className="text-sm text-muted-foreground">

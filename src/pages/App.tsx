@@ -544,7 +544,7 @@ const todayEvents = getCalendarItems().filter((event: unknown) => {
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/calendar')}
             >
-              <div className="text-2xl font-bold text-primary">0</div>
+              <div className="text-2xl font-bold text-primary">{todayEvents.length}</div>
               <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
             </Card>
           )}
