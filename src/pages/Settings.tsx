@@ -488,16 +488,36 @@ const l = (max + min) / 2;
             <Button 
               variant="outline" 
               className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => {
-                if (confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
-                  toast({
-                    title: "Subscription Cancellation",
-                    description: "Please contact us at support@eazy.family to cancel or downgrade your plan.",
-                  });
+              onClick={async () => {
+                if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error('Not authenticated');
+                    
+                    const { error } = await supabase
+                      .from('profiles')
+                      .update({ subscription_tier: 'free' })
+                      .eq('user_id', user.id);
+                    
+                    if (error) throw error;
+                    
+                    setSubscriptionTier('free');
+                    toast({
+                      title: "Subscription Cancelled",
+                      description: "Your plan has been downgraded to Free.",
+                    });
+                  } catch (err) {
+                    logError('Cancel subscription error:', err);
+                    toast({
+                      title: "Error",
+                      description: "Failed to cancel subscription. Please try again.",
+                      variant: "destructive",
+                    });
+                  }
                 }
               }}
             >
-              Cancel / Downgrade Subscription
+              Cancel / Downgrade to Free
             </Button>
           )}
           
