@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { PrivacySettings } from "@/components/PrivacySettings";
+import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { validateImageFile } from "@/lib/fileValidation";
 import { error as logError } from "@/lib/logger";
 
@@ -770,6 +771,9 @@ const l = (max + min) / 2;
           </div>
         </CardContent>
       </Card>
+
+      {/* Google Calendar Integration */}
+      <GoogleCalendarSettings />
 
       {/* Referral System */}
       <ReferralSystem />

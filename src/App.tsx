@@ -15,6 +15,7 @@ import Onboarding from "./pages/Onboarding";
 import AppLayout from "./pages/App";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import { GoogleCalendarCallback } from "./pages/GoogleCalendarCallback";
 
 // Lazy load heavy pages
 const Calendar = lazy(() => import("./pages/Calendar"));
@@ -47,7 +48,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/accept-invite" element={<AcceptInvite />} />
             <Route path="/join-family" element={<JoinFamily />} />
-<Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/auth/google-calendar" element={<GoogleCalendarCallback />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
