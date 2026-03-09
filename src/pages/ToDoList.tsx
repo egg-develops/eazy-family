@@ -54,8 +54,10 @@ const ToDoList = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const currentUserId = user?.id || '';
+
   useEffect(() => {
-    localStorage.setItem('eazy-family-user-id', currentUserId);
+    if (currentUserId) localStorage.setItem('eazy-family-user-id', currentUserId);
   }, [currentUserId]);
 
   // Load tasks from Supabase
