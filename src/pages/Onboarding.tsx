@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,7 +61,14 @@ const features = [
 const Onboarding = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/app/calendar');
+    }
+  }, [user, authLoading, navigate]);
   const [data, setData] = useState<OnboardingData>({
     userName: "",
     children: [{ initials: "", age: "" }],
