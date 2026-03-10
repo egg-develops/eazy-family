@@ -402,7 +402,6 @@ const Onboarding = () => {
               <ArrowRight className="w-4 h-4" />
             </Button>
         </div>
-      </div>
 
         {/* Sign in link */}
         <div className="text-center mt-4">
