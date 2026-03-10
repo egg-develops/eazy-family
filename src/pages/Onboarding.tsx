@@ -403,6 +403,21 @@ const Onboarding = () => {
             </Button>
         </div>
       </div>
+
+        {/* Sign in link */}
+        <div className="text-center mt-4">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Button
+              variant="link"
+              className="p-0 h-auto text-sm"
+              onClick={() => navigate("/auth")}
+            >
+              Sign in
+            </Button>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
