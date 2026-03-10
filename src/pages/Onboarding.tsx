@@ -61,7 +61,14 @@ const features = [
 const Onboarding = () => {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/app/calendar');
+    }
+  }, [user, authLoading, navigate]);
   const [data, setData] = useState<OnboardingData>({
     userName: "",
     children: [{ initials: "", age: "" }],
