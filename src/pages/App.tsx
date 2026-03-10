@@ -66,16 +66,13 @@ const AppLayout = () => {
   ];
 
   useEffect(() => {
-    // Check if user has completed onboarding
+    // Check if user has completed onboarding (skip for authenticated users)
     const onboardingData = localStorage.getItem('eazy-family-onboarding');
-    if (!onboardingData) {
-      navigate('/onboarding');
-      return;
+    if (onboardingData) {
+      const data = JSON.parse(onboardingData);
+      setUserInitials(data.userInitials || "EF");
     }
-
-    const data = JSON.parse(onboardingData);
-    setUserInitials(data.userInitials || "EF");
-  }, [navigate]);
+  }, []);
 
   const currentPath = location.pathname;
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
