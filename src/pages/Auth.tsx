@@ -28,7 +28,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/app/calendar');
+      navigate('/app');
     }
   }, [user, authLoading, navigate]);
 
