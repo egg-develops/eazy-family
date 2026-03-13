@@ -16,8 +16,7 @@ interface DisplayEvent {
   time: string;
   location?: string;
   type: string;
-  price?: string;
-  image: string;
+  bgColor: string;
 }
 
 const Events = () => {
@@ -31,14 +30,14 @@ const Events = () => {
     id: event.id,
     title: event.title,
     description: event.description,
-    date: format(new Date(event.start_date), 'yyyy-MM-dd'),
+    date: format(new Date(event.start_date), 'MMM dd, yyyy'),
     time: `${format(new Date(event.start_date), 'HH:mm')} - ${format(new Date(event.end_date), 'HH:mm')}`,
-    location: event.location,
+    location: event.location || 'Location TBA',
     type: 'family-event',
-    image: event.color ? `${event.color}` : 'bg-blue-200'
+    bgColor: event.color || 'hsl(220 70% 60%)'
   }));
 
-  const filteredEvents = transformedEvents.filter(event => 
+  const filteredEvents = transformedEvents.filter(event =>
     filter === 'all' || event.type.toLowerCase() === filter.toLowerCase()
   );
 
@@ -105,21 +104,25 @@ const Events = () => {
           <Heart className="w-5 h-5 text-accent" />
           {t('events.featuredToday')}
         </h3>
-        
+
         {filteredEvents.length > 0 ? (
           <Card className="shadow-custom-lg overflow-hidden">
-            <div className={`h-32 ${filteredEvents[0].image} flex items-end p-4`}>
+            {/* Featured Event Color Banner */}
+            <div
+              className="h-32 flex items-end p-4"
+              style={{ backgroundColor: filteredEvents[0].bgColor }}
+            >
               <Badge className="bg-white/90 text-primary">{t('events.featured')}</Badge>
             </div>
             <CardContent className="p-4">
               <div className="space-y-3">
                 <div>
                   <h4 className="font-semibold text-lg">{filteredEvents[0].title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {filteredEvents[0].description}
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {filteredEvents[0].description || 'No description provided'}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
@@ -127,15 +130,12 @@ const Events = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
-                    {filteredEvents[0].location}
+                    <span className="truncate">{filteredEvents[0].location}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">{filteredEvents[0].ageRange}</Badge>
-                    <Badge variant="outline">{filteredEvents[0].price}</Badge>
-                  </div>
+                <div className="flex items-center justify-between pt-2">
+                  <Badge variant="secondary">{filteredEvents[0].date}</Badge>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm">
                       <Heart className="w-4 h-4" />
@@ -156,11 +156,11 @@ const Events = () => {
           <Card className="shadow-custom-lg">
             <CardContent className="p-8 text-center">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">Discover events in your area</h3>
+              <h3 className="font-medium mb-2">No events found</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Family-friendly events and activities available near you
               </p>
-              <Button 
+              <Button
                 className="gradient-primary text-white border-0"
                 onClick={() => setFilter('all')}
               >
@@ -176,29 +176,35 @@ const Events = () => {
       {filteredEvents.length > 1 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">{t('events.moreEvents')}</h3>
-          
+
           <div className="space-y-4">
             {filteredEvents.slice(1).map((event) => (
-              <Card key={event.id} className="shadow-custom-md">
+              <Card key={event.id} className="shadow-custom-md hover:shadow-lg transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
-                    <div className={`w-20 h-20 rounded-lg ${event.image} flex-shrink-0`} />
-                    
+                    {/* Event Color Indicator */}
+                    <div
+                      className="w-20 h-20 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: event.bgColor }}
+                    />
+
                     <div className="flex-1 space-y-2">
                       <div>
-                        <h4 className="font-semibold">{event.title}</h4>
+                        <h4 className="font-semibold line-clamp-1">{event.title}</h4>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <span>{event.date}</span>
                           <span>•</span>
                           <span>{event.time}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs">
-                          {event.ageRange}
-                        </Badge>
-                        <span className="font-medium text-primary">{event.price}</span>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {event.location}
+                        </div>
+                        <Button variant="ghost" size="sm" className="h-auto p-1">
+                          <Heart className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
