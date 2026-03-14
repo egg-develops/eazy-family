@@ -373,7 +373,7 @@ const l = (max + min) / 2;
               {uploadingProfile && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.iconImage && (
-              <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
+              <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full img-cover flex-shrink-0 img-responsive" />
             )}
           </div>
 
@@ -395,7 +395,7 @@ const l = (max + min) / 2;
               {uploadingHeader && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.headerImage && (
-              <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg object-cover flex-shrink-0" />
+              <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg img-cover flex-shrink-0 img-responsive" />
             )}
           </div>
 

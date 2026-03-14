@@ -388,11 +388,11 @@ const AppHome = () => {
         }}
       />
       {homeConfig.headerImage ? (
-        <div className="relative rounded-2xl overflow-hidden h-48 md:h-64">
+        <div className="carousel-image-container relative rounded-2xl overflow-hidden h-48 md:h-64">
           <img 
             src={homeConfig.headerImage} 
             alt="Hero" 
-            className="w-full h-full object-cover flex-shrink-0"
+            className="carousel-image w-full h-full"
           />
           <button
             onClick={() => headerImageInputRef.current?.click()}

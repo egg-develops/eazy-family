@@ -538,11 +538,11 @@ if (error) throw error;
             <CarouselContent>
               {headerImages.map((image, index) => (
                 <CarouselItem key={index}>
-                  <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
+                  <div className="carousel-image-container relative w-full aspect-header overflow-hidden rounded-lg">
                     <img 
                       src={image} 
                       alt={`Family Profile Header ${index + 1}`} 
-                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      className="carousel-image absolute inset-0 w-full h-full"
                     />
                     <button
                       onClick={() => removeHeaderImage(index)}
