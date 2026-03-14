@@ -323,4 +323,35 @@
   .calendar-integration-text {
     @apply font-medium text-sm;
   }
+
+  /* Accessibility: Focus states for keyboard navigation */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* Ensure all interactive elements are keyboard accessible */
+  button {
+    @apply outline-none transition-all duration-200;
+  }
+
+  input, textarea, select {
+    @apply outline-none transition-all duration-200;
+  }
+
+  /* Screen reader text - visually hidden but accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 }
