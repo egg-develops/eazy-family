@@ -55,7 +55,6 @@ const features = [
   { id: "playdates", label: "Parent Community", icon: Users },
   { id: "community", label: "Connect with nearby parents and arrange playdates", icon: Heart },
   { id: "marketplace", label: "Family Marketplace", icon: ShoppingCart },
-  { id: "photos", label: "AI Photo Organizer", icon: Camera },
 ];
 
 const Onboarding = () => {
