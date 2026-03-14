@@ -486,36 +486,33 @@ const Calendar = () => {
               {t('calendar.selectCalendarToSync')}
             </p>
             <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-3 h-12"
+              <button
+                className="calendar-integration-card"
                 onClick={() => {
                   toast({ title: "Google Calendar", description: "Coming soon! We're working on this integration." });
                 }}
               >
-                <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">G</div>
-                Google Calendar
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-3 h-12"
+                <div className="calendar-integration-icon bg-red-500">G</div>
+                <span className="calendar-integration-text">Google Calendar</span>
+              </button>
+              <button
+                className="calendar-integration-card"
                 onClick={() => {
                   toast({ title: "Apple Calendar", description: "Coming soon! We're working on this integration." });
                 }}
               >
-                <div className="w-6 h-6 rounded bg-gray-800 flex items-center justify-center text-white text-xs font-bold"></div>
-                Apple Calendar
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-3 h-12"
+                <div className="calendar-integration-icon bg-gray-800"></div>
+                <span className="calendar-integration-text">Apple Calendar</span>
+              </button>
+              <button
+                className="calendar-integration-card"
                 onClick={() => {
                   toast({ title: "Outlook Calendar", description: "Coming soon! We're working on this integration." });
                 }}
               >
-                <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">O</div>
-                Outlook Calendar
-              </Button>
+                <div className="calendar-integration-icon bg-blue-600">O</div>
+                <span className="calendar-integration-text">Outlook Calendar</span>
+              </button>
             </div>
             <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <Check className="h-4 w-4 text-primary" />

@@ -306,4 +306,21 @@
     background-position: center;
     background-repeat: no-repeat;
   }
+
+  /* Calendar integration card styling */
+  .calendar-integration-card {
+    @apply w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground transition-all duration-200 flex items-center gap-3 cursor-pointer;
+  }
+
+  .calendar-integration-card:hover {
+    @apply bg-accent/10 border-primary/30 shadow-custom-sm;
+  }
+
+  .calendar-integration-icon {
+    @apply w-8 h-8 rounded flex items-center justify-center text-xs font-bold text-white flex-shrink-0;
+  }
+
+  .calendar-integration-text {
+    @apply font-medium text-sm;
+  }
 }
