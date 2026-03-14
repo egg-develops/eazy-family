@@ -583,6 +583,7 @@ if (error) throw error;
               </label>
             </>
           )}
+          </div>
         </div>
       ) : (
         <>
