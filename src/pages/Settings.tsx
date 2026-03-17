@@ -538,17 +538,19 @@ const l = (max + min) / 2;
         <CardContent className="space-y-2">
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
             <>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.appleCalendar'), description: "Coming soon! We're working on this integration." })}>
+              <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
                 <CalendarIcon className="w-4 h-4" />
                 {t('calendarIntegrations.appleCalendar')}
+                <span className="coming-soon-badge ml-auto">Coming Soon</span>
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Coming soon! We're working on this integration." })}>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Google Calendar sync is available!" })}>
                 <CalendarIcon className="w-4 h-4" />
                 {t('calendarIntegrations.googleCalendar')}
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.outlookCalendar'), description: "Coming soon! We're working on this integration." })}>
+              <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
                 <CalendarIcon className="w-4 h-4" />
                 {t('calendarIntegrations.outlookCalendar')}
+                <span className="coming-soon-badge ml-auto">Coming Soon</span>
               </Button>
             </>
           ) : (
