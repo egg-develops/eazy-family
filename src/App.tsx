@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 const Calendar = lazy(() => import("./pages/Calendar"));
 const ToDoList = lazy(() => import("./pages/ToDoList"));
 const Events = lazy(() => import("./pages/Events"));
-const Memories = lazy(() => import("./pages/Memories"));
+
 const Community = lazy(() => import("./pages/Community"));
 const Messaging = lazy(() => import("./pages/Messaging"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -54,7 +54,7 @@ const App = () => (
               <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
               <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
               <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
-              <Route path="memories" element={<Suspense fallback={<PageLoader />}><Memories /></Suspense>} />
+              
               <Route path="community" element={<Suspense fallback={<PageLoader />}><Community /></Suspense>} />
               <Route path="messaging" element={<Suspense fallback={<PageLoader />}><Messaging /></Suspense>} />
               <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />

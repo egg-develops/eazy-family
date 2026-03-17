@@ -1,0 +1,72 @@
+/* Phase 6: Dark Mode Contrast — WCAG AA compliant */
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Ensure sufficient contrast for text on dark backgrounds */
+.dark .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Card surfaces need clear separation */
+.dark .shadow-custom-md,
+.dark .shadow-custom-lg {
+  box-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 2px 6px -1px hsl(0 0% 0% / 0.2);
+}
+
+/* Glass effect with proper dark mode opacity */
+.dark .glass-effect {
+  background: hsl(var(--background) / 0.85);
+  border-color: hsl(var(--border) / 0.3);
+}
+
+/* Gradient adjustments for dark mode readability */
+.dark .gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.dark .gradient-warm {
+  background: var(--gradient-warm);
+}
+
+.dark .gradient-cool {
+  background: var(--gradient-cool);
+}
+
+/* Focus ring visibility */
+.dark *:focus-visible {
+  outline-color: hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Badge contrast in dark mode */
+.dark .bg-green-100 { background: hsl(145 40% 20%); }
+.dark .text-green-700 { color: hsl(145 60% 70%); }
+.dark .bg-blue-100 { background: hsl(220 40% 20%); }
+.dark .text-blue-700 { color: hsl(220 60% 70%); }
+.dark .bg-yellow-100 { background: hsl(45 40% 20%); }
+.dark .text-yellow-700 { color: hsl(45 60% 70%); }
+
+/* Input fields */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+/* Scrollbar dark mode */
+.dark ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}

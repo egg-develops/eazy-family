@@ -18,8 +18,16 @@ export const GlobalTutorial = () => {
     const checkFlag = () => {
       const completed = localStorage.getItem('eazy-family-tutorial-completed') === 'true';
       const shouldRun = localStorage.getItem('eazy-family-tutorial-run') === 'true';
+      const hasLaunched = localStorage.getItem('eazy-family-first-launch');
       
-      // Only run if explicitly triggered AND not completed
+      // Auto-play on first launch
+      if (!hasLaunched && !completed) {
+        localStorage.setItem('eazy-family-first-launch', 'true');
+        localStorage.setItem('eazy-family-tutorial-run', 'true');
+        setRun(true);
+        return;
+      }
+      
       if (completed) {
         localStorage.removeItem('eazy-family-tutorial-run');
         setRun(false);
