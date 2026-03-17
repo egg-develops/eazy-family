@@ -161,13 +161,85 @@ const Calendar = () => {
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
 
+  // Handle Google Calendar OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if (code && state === 'google_calendar_sync') {
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      handleGoogleCallback(code);
+    }
+  }, []);
+
+  const handleGoogleConnect = async () => {
+    setIsSyncing(true);
+    try {
+      const redirectUri = window.location.origin + '/app/calendar';
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'get_auth_url', redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+      setIsSyncing(false);
+    }
+  };
+
+  const handleGoogleCallback = async (code: string) => {
+    setIsSyncing(true);
+    try {
+      const redirectUri = window.location.origin + '/app/calendar';
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'exchange_code', code, redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.events) {
+        const mapped: CalendarItem[] = data.events.map((e: any) => ({
+          id: `gcal-${e.id}`,
+          title: e.title,
+          startDate: new Date(e.start),
+          endDate: new Date(e.end),
+          allDay: e.allDay || false,
+          location: e.location,
+          type: 'event' as const,
+          color: 'hsl(142 70% 45%)',
+        }));
+        setGoogleEvents(mapped);
+        localStorage.setItem('eazy-google-calendar-events', JSON.stringify(mapped));
+        localStorage.setItem('eazy-google-calendar-synced', 'true');
+        setGoogleSynced(true);
+        setShowCalendarSyncDialog(false);
+        toast({ title: t('calendar.syncSuccess') || 'Google Calendar synced!', description: `${mapped.length} events imported.` });
+      }
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDisconnectGoogle = () => {
+    setGoogleEvents([]);
+    setGoogleSynced(false);
+    localStorage.removeItem('eazy-google-calendar-events');
+    localStorage.removeItem('eazy-google-calendar-synced');
+    toast({ title: 'Google Calendar disconnected' });
+  };
+
   const handleDismissSyncBanner = () => {
     localStorage.setItem('eazy-calendar-sync-dismissed', 'true');
     setShowSyncBanner(false);
   };
 
+  const allItems = [...items, ...googleEvents];
+
   const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
+    return allItems.filter(item => {
       if (item.type === "event") {
         return isSameDay(item.startDate, date);
       } else {
