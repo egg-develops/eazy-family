@@ -576,16 +576,41 @@ const Calendar = () => {
               {t('calendar.selectCalendarToSync')}
             </p>
             <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Google Calendar", description: "Coming soon! We're working on this integration." });
-                }}
-              >
-                <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">G</div>
-                Google Calendar
-              </Button>
+              {googleSynced ? (
+                <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded bg-destructive flex items-center justify-center text-destructive-foreground text-xs font-bold">G</div>
+                    <div>
+                      <p className="text-sm font-medium">Google Calendar</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Check className="h-3 w-3 text-green-500" /> Connected · {googleEvents.length} events
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleGoogleConnect} disabled={isSyncing}>
+                      {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDisconnectGoogle}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-3 h-12"
+                  onClick={handleGoogleConnect}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <div className="w-6 h-6 rounded bg-destructive flex items-center justify-center text-destructive-foreground text-xs font-bold">G</div>
+                  )}
+                  {isSyncing ? 'Connecting...' : 'Google Calendar'}
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 className="w-full justify-start gap-3 h-12"
