@@ -238,6 +238,7 @@ const AppHome = () => {
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const headerImageInputRef = useRef<HTMLInputElement>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     if (saved) {
