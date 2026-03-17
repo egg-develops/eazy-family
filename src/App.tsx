@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 const Calendar = lazy(() => import("./pages/Calendar"));
 const ToDoList = lazy(() => import("./pages/ToDoList"));
 const Events = lazy(() => import("./pages/Events"));
-const Memories = lazy(() => import("./pages/Memories"));
+
 const Community = lazy(() => import("./pages/Community"));
 const Messaging = lazy(() => import("./pages/Messaging"));
 const Settings = lazy(() => import("./pages/Settings"));
