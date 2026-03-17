@@ -340,12 +340,6 @@ const l = (max + min) / 2;
       <div data-tutorial="settings">
         <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
         <p className="text-muted-foreground">{t('settings.subtitle')}</p>
-        <Button 
-          onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }} 
-          className="mt-3 bg-primary hover:bg-primary-hover text-primary-foreground"
-        >
-          {t('settings.startTutorial')}
-        </Button>
       </div>
 
       {/* Homepage Customization */}
