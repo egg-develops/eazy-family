@@ -1,6 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
+
+/* Sprint 1 CSS Phases */
+@import "./styles/phase1-image-responsiveness.css";
+@import "./styles/phase2-coming-soon.css";
+@import "./styles/phase3-marketplace-gallery.css";
+@import "./styles/phase4-carousel-animation.css";
+@import "./styles/phase6-dark-mode-contrast.css";
+@import "./styles/phase7-accessibility.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

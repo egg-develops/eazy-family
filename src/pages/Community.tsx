@@ -11,6 +11,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import CommunityGroupList from "@/components/CommunityGroupList";
+import CommunityGroupChat from "@/components/CommunityGroupChat";
+import MarketplaceListingCard from "@/components/MarketplaceListingCard";
+import MarketplaceListingForm from "@/components/MarketplaceListingForm";
 
 // Interfaces and mock data
 interface Group {

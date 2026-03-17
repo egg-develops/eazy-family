@@ -16,7 +16,8 @@ import {
   Menu,
   Cloud,
   X,
-  RefreshCw
+  RefreshCw,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,6 +63,7 @@ const AppLayout = () => {
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
+    { id: "messaging", label: "Messages", icon: MessageCircle, path: "/app/messaging" },
     { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ];
 

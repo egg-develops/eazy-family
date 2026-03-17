@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import GoogleCalendarView from "@/components/GoogleCalendarView";
 
 interface Event {
   id: string;
