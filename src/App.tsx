@@ -54,7 +54,7 @@ const App = () => (
               <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
               <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
               <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
-              <Route path="memories" element={<Suspense fallback={<PageLoader />}><Memories /></Suspense>} />
+              
               <Route path="community" element={<Suspense fallback={<PageLoader />}><Community /></Suspense>} />
               <Route path="messaging" element={<Suspense fallback={<PageLoader />}><Messaging /></Suspense>} />
               <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />

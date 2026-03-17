@@ -563,15 +563,6 @@ const AppHome = () => {
               <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
             </Card>
           )}
-          {homeConfig.topNotifications.includes("New Photos") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/memories')}
-            >
-              <div className="text-2xl font-bold text-accent">0</div>
-              <div className="text-sm text-muted-foreground">{t('home.newPhotos')}</div>
-            </Card>
-          )}
           {homeConfig.topNotifications.includes("Pending Tasks") && (
             <Card 
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
