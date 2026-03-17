@@ -356,6 +356,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          referral_code: string | null
           share_email: boolean | null
           share_phone: boolean | null
           stripe_customer_id: string | null
@@ -370,6 +371,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
           share_email?: boolean | null
           share_phone?: boolean | null
           stripe_customer_id?: string | null
@@ -384,6 +386,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          referral_code?: string | null
           share_email?: boolean | null
           share_phone?: boolean | null
           stripe_customer_id?: string | null
@@ -426,6 +429,39 @@ export type Database = {
           max_uses?: number | null
           subscription_tier?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_applied: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_user_id: string
+          referrer_user_id: string
+          reward_applied?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          reward_applied?: boolean
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
