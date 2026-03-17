@@ -613,23 +613,21 @@ const Calendar = () => {
               )}
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Apple Calendar", description: "Coming soon! We're working on this integration." });
-                }}
+                className="w-full justify-start gap-3 h-12 opacity-60 cursor-not-allowed"
+                disabled
               >
-                <div className="w-6 h-6 rounded bg-gray-800 flex items-center justify-center text-white text-xs font-bold"></div>
+                <div className="w-6 h-6 rounded bg-muted-foreground flex items-center justify-center text-muted text-xs font-bold"></div>
                 Apple Calendar
+                <span className="ml-auto text-xs text-muted-foreground">Coming Soon</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Outlook Calendar", description: "Coming soon! We're working on this integration." });
-                }}
+                className="w-full justify-start gap-3 h-12 opacity-60 cursor-not-allowed"
+                disabled
               >
-                <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">O</div>
+                <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">O</div>
                 Outlook Calendar
+                <span className="ml-auto text-xs text-muted-foreground">Coming Soon</span>
               </Button>
             </div>
             <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
