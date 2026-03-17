@@ -625,7 +625,7 @@ const AppHome = () => {
             const getIcon = (actionName: string) => {
               switch (actionName) {
                 case "Find Events": return Search;
-                case "Add Photos": return Camera;
+                case "Add Photos": return Camera; // kept for backwards compat
                 case "Calendar": return Calendar;
                 case "Community": return Users;
                 case "To-Do List": return Calendar;
