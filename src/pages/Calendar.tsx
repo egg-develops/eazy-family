@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { useAuth } from "@/contexts/AuthContext";
-import GoogleCalendarView from "@/components/GoogleCalendarView";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Event {
   id: string;
@@ -119,6 +119,23 @@ const Calendar = () => {
     return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
   });
   const [showCalendarSyncDialog, setShowCalendarSyncDialog] = useState(false);
+  const [googleSynced, setGoogleSynced] = useState(() => {
+    return localStorage.getItem('eazy-google-calendar-synced') === 'true';
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState<CalendarItem[]>(() => {
+    const saved = localStorage.getItem('eazy-google-calendar-events');
+    if (saved) {
+      try {
+        return JSON.parse(saved).map((e: any) => ({
+          ...e,
+          startDate: new Date(e.startDate),
+          endDate: new Date(e.endDate),
+        }));
+      } catch { return []; }
+    }
+    return [];
+  });
   
   useEffect(() => {
     localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
@@ -144,13 +161,85 @@ const Calendar = () => {
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
 
+  // Handle Google Calendar OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const state = params.get('state');
+    if (code && state === 'google_calendar_sync') {
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      handleGoogleCallback(code);
+    }
+  }, []);
+
+  const handleGoogleConnect = async () => {
+    setIsSyncing(true);
+    try {
+      const redirectUri = window.location.origin + '/app/calendar';
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'get_auth_url', redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+      setIsSyncing(false);
+    }
+  };
+
+  const handleGoogleCallback = async (code: string) => {
+    setIsSyncing(true);
+    try {
+      const redirectUri = window.location.origin + '/app/calendar';
+      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
+        body: { action: 'exchange_code', code, redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.events) {
+        const mapped: CalendarItem[] = data.events.map((e: any) => ({
+          id: `gcal-${e.id}`,
+          title: e.title,
+          startDate: new Date(e.start),
+          endDate: new Date(e.end),
+          allDay: e.allDay || false,
+          location: e.location,
+          type: 'event' as const,
+          color: 'hsl(142 70% 45%)',
+        }));
+        setGoogleEvents(mapped);
+        localStorage.setItem('eazy-google-calendar-events', JSON.stringify(mapped));
+        localStorage.setItem('eazy-google-calendar-synced', 'true');
+        setGoogleSynced(true);
+        setShowCalendarSyncDialog(false);
+        toast({ title: t('calendar.syncSuccess') || 'Google Calendar synced!', description: `${mapped.length} events imported.` });
+      }
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDisconnectGoogle = () => {
+    setGoogleEvents([]);
+    setGoogleSynced(false);
+    localStorage.removeItem('eazy-google-calendar-events');
+    localStorage.removeItem('eazy-google-calendar-synced');
+    toast({ title: 'Google Calendar disconnected' });
+  };
+
   const handleDismissSyncBanner = () => {
     localStorage.setItem('eazy-calendar-sync-dismissed', 'true');
     setShowSyncBanner(false);
   };
 
+  const allItems = [...items, ...googleEvents];
+
   const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
+    return allItems.filter(item => {
       if (item.type === "event") {
         return isSameDay(item.startDate, date);
       } else {
@@ -487,35 +576,58 @@ const Calendar = () => {
               {t('calendar.selectCalendarToSync')}
             </p>
             <div className="space-y-3">
+              {googleSynced ? (
+                <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded bg-destructive flex items-center justify-center text-destructive-foreground text-xs font-bold">G</div>
+                    <div>
+                      <p className="text-sm font-medium">Google Calendar</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Check className="h-3 w-3 text-green-500" /> Connected · {googleEvents.length} events
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleGoogleConnect} disabled={isSyncing}>
+                      {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDisconnectGoogle}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-3 h-12"
+                  onClick={handleGoogleConnect}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <div className="w-6 h-6 rounded bg-destructive flex items-center justify-center text-destructive-foreground text-xs font-bold">G</div>
+                  )}
+                  {isSyncing ? 'Connecting...' : 'Google Calendar'}
+                </Button>
+              )}
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Google Calendar", description: "Coming soon! We're working on this integration." });
-                }}
+                className="w-full justify-start gap-3 h-12 opacity-60 cursor-not-allowed"
+                disabled
               >
-                <div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">G</div>
-                Google Calendar
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Apple Calendar", description: "Coming soon! We're working on this integration." });
-                }}
-              >
-                <div className="w-6 h-6 rounded bg-gray-800 flex items-center justify-center text-white text-xs font-bold"></div>
+                <div className="w-6 h-6 rounded bg-muted-foreground flex items-center justify-center text-muted text-xs font-bold"></div>
                 Apple Calendar
+                <span className="ml-auto text-xs text-muted-foreground">Coming Soon</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-3 h-12"
-                onClick={() => {
-                  toast({ title: "Outlook Calendar", description: "Coming soon! We're working on this integration." });
-                }}
+                className="w-full justify-start gap-3 h-12 opacity-60 cursor-not-allowed"
+                disabled
               >
-                <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-xs font-bold">O</div>
+                <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">O</div>
                 Outlook Calendar
+                <span className="ml-auto text-xs text-muted-foreground">Coming Soon</span>
               </Button>
             </div>
             <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
