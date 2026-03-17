@@ -347,7 +347,6 @@ const AppHome = () => {
   };
 
   const handleHeaderImageUpload = async (file: File) => {
-    // Validate file before upload
     const validationResult = validateImageFile(file);
     if (!validationResult.valid) {
       logError('File validation failed:', validationResult.error);
@@ -370,7 +369,9 @@ const AppHome = () => {
         .from('user-uploads')
         .getPublicUrl(filePath);
 
-      const newConfig = { ...homeConfig, headerImage: publicUrl };
+      const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+      const updatedImages = [...currentImages, publicUrl].slice(-4); // max 4
+      const newConfig = { ...homeConfig, headerImage: updatedImages[0], headerImages: updatedImages };
       setHomeConfig(newConfig);
       localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
     } catch (error) {
@@ -378,9 +379,20 @@ const AppHome = () => {
     }
   };
 
+  // Header carousel rotation
+  const headerImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+
+  useEffect(() => {
+    if (headerImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % headerImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [headerImages.length]);
+
   return (
     <div className="space-y-6">
-      {/* Hero Image Section */}
+      {/* Hero Image Carousel */}
       <input
         ref={headerImageInputRef}
         type="file"
@@ -391,17 +403,34 @@ const AppHome = () => {
           if (file) handleHeaderImageUpload(file);
         }}
       />
-      {homeConfig.headerImage ? (
+      {headerImages.length > 0 ? (
         <div className="relative rounded-2xl overflow-hidden h-48 md:h-64">
-          <img 
-            src={homeConfig.headerImage} 
-            alt="Hero" 
-            className="w-full h-full object-cover flex-shrink-0"
-          />
+          {headerImages.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              alt={`Hero ${i + 1}`}
+              className={`carousel-image ${i === carouselIndex % headerImages.length ? 'active' : ''}`}
+              loading={i === 0 ? "eager" : "lazy"}
+            />
+          ))}
+          {headerImages.length > 1 && (
+            <div className="carousel-dots">
+              {headerImages.map((_, i) => (
+                <button
+                  key={i}
+                  className={`carousel-dot ${i === carouselIndex % headerImages.length ? 'active' : ''}`}
+                  onClick={() => setCarouselIndex(i)}
+                  aria-label={`Show image ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
           <button
             onClick={() => headerImageInputRef.current?.click()}
-            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-            title="Change hero image"
+            className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
+            title={headerImages.length >= 4 ? "Max 4 images" : "Add hero image"}
+            disabled={headerImages.length >= 4}
           >
             <Camera className="w-4 h-4" />
           </button>
@@ -409,7 +438,7 @@ const AppHome = () => {
       ) : (
         <div 
           onClick={() => headerImageInputRef.current?.click()}
-          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:bg-primary-hover transition-colors group"
+          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group"
         >
           <div className="text-center text-primary-foreground">
             <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />

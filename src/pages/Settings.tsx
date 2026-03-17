@@ -799,13 +799,25 @@ const l = (max + min) / 2;
           onClick={handleRerunOnboarding}
         >
           <RefreshCw className="h-4 w-4" />
-          {t('settings.actions.rerunOnboarding')}
+          Re-run Onboarding
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full justify-start gap-2"
+          onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }}
+        >
+          <RefreshCw className="h-4 w-4" />
+          Re-run Tutorial
         </Button>
         <Button
           variant="destructive"
           className="w-full justify-start gap-2"
           onClick={handleLogout}
         >
+          <LogOut className="h-4 w-4" />
+          {t('settings.actions.signOut')}
+        </Button>
+      </div>
           <LogOut className="h-4 w-4" />
           {t('settings.actions.signOut')}
         </Button>
