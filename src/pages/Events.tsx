@@ -90,13 +90,15 @@ const Events = () => {
           document.head.appendChild(link);
         }
 
-        const mapboxKey = import.meta.env.VITE_MAPBOX_API_KEY;
-        if (!mapboxKey) {
-          toast({ title: "Map unavailable", description: "Mapbox API key not configured", variant: "destructive" });
+        // Fetch Mapbox token from edge function
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('mapbox-token');
+        if (tokenError || !tokenData?.token) {
+          toast({ title: "Map unavailable", description: "Could not load map token", variant: "destructive" });
           return;
         }
 
-        mapboxgl.accessToken = mapboxKey;
+        mapboxgl.accessToken = tokenData.token;
 
         const map = new mapboxgl.Map({
           container: mapContainerRef.current!,
