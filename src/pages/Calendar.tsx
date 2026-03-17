@@ -119,6 +119,23 @@ const Calendar = () => {
     return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
   });
   const [showCalendarSyncDialog, setShowCalendarSyncDialog] = useState(false);
+  const [googleSynced, setGoogleSynced] = useState(() => {
+    return localStorage.getItem('eazy-google-calendar-synced') === 'true';
+  });
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState<CalendarItem[]>(() => {
+    const saved = localStorage.getItem('eazy-google-calendar-events');
+    if (saved) {
+      try {
+        return JSON.parse(saved).map((e: any) => ({
+          ...e,
+          startDate: new Date(e.startDate),
+          endDate: new Date(e.endDate),
+        }));
+      } catch { return []; }
+    }
+    return [];
+  });
   
   useEffect(() => {
     localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
