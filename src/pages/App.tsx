@@ -220,6 +220,7 @@ interface HomeConfig {
   quickActions: string[];
   iconImage?: string;
   headerImage?: string;
+  headerImages?: string[];
 }
 
 interface HomeCalendarEvent {
