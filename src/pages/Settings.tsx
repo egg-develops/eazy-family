@@ -818,10 +818,6 @@ const l = (max + min) / 2;
           {t('settings.actions.signOut')}
         </Button>
       </div>
-          <LogOut className="h-4 w-4" />
-          {t('settings.actions.signOut')}
-        </Button>
-      </div>
     </div>
   );
 };
