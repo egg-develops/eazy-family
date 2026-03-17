@@ -641,7 +641,7 @@ const AppHome = () => {
                   navigate('/app/events');
                   break;
                 case "Add Photos":
-                  navigate('/app/memories');
+                  navigate('/app/community');
                   break;
                 case "Calendar":
                   navigate('/app/calendar');
