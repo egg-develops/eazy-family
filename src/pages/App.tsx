@@ -61,7 +61,7 @@ const AppLayout = () => {
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
     { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/todos" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
-    { id: "memories", label: t('nav.memories'), icon: Camera, path: "/app/memories" },
+    
     { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
     { id: "messaging", label: "Messages", icon: MessageCircle, path: "/app/messaging" },
     { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
