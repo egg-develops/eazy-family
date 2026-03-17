@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,73 +19,66 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
     },
     {
+      target: '[data-tutorial="eazy-assistant"]',
+      content: 'Meet Eazy Assistant - your AI-powered family helper! Ask questions, add items to your shopping list by voice, or get help planning.',
+      placement: 'bottom',
+    },
+    {
       target: '[data-tutorial="settings"]',
       content: 'Access all your settings here to customize your Eazy Family experience.',
       placement: 'bottom',
     },
     {
       target: '[data-tutorial="custom-images"]',
-      content: 'Upload custom profile and header images to personalize your Eazy Family.',
-      placement: 'right',
-    },
-    {
-      target: '[data-tutorial="weather-calendar"]',
-      content: 'Toggle Weather and Calendar widgets on your homepage for quick access.',
-      placement: 'right',
-    },
-    {
-      target: '[data-tutorial="quick-actions"]',
-      content: 'Choose which Quick Actions appear on your homepage for easy access to frequently used features.',
-      placement: 'right',
-    },
-    {
-      target: '[data-tutorial="top-notifications"]',
-      content: 'Select Top Notifications to display on your homepage so you never miss important updates.',
+      content: 'Upload custom profile and header images to personalize your homepage.',
       placement: 'right',
     },
     {
       target: '[data-tutorial="calendar-integrations"]',
-      content: 'Connect your external calendars (Google, Outlook) to sync all your events in one place.',
+      content: 'Connect your Google Calendar to sync all your events in one place. Apple and Outlook coming soon!',
       placement: 'right',
     },
     {
       target: '[data-tutorial="appearance"]',
-      content: 'Customize your app\'s appearance with themes, colors, and display preferences.',
+      content: 'Customize your app\'s appearance with dark mode, custom colors, and more.',
       placement: 'right',
     },
     {
-      target: '[data-tutorial="eazy-assistant"]',
-      content: 'Meet Eazy Assistant - your AI-powered family helper! Ask questions, get help with planning, or chat about anything. It\'s here to make managing your family life easier.',
-      placement: 'bottom',
+      target: '[data-tutorial="referral-system"]',
+      content: '🎁 Share Eazy.Family with friends! You both get 1 free month of Premium when they sign up with your code.',
+      placement: 'top',
     },
     {
       target: 'body',
-      content: 'That\'s it! You\'re all set to start using EaZy Family. You can always restart this tour from Settings.',
+      content: 'That\'s it! You\'re all set to start using Eazy Family. Share your referral code with friends to earn free Premium! You can always restart this tour from Settings.',
       placement: 'center',
     },
   ];
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, index, type, action } = data;
+    const { status, index, type } = data;
 
     if (type === 'step:after') {
-      // Navigate to homepage before the Eazy Assistant step
-      if (index === 7) {
-        navigate('/app');
-        // Wait for the Eazy Assistant element to exist before advancing
+      // Navigate to settings before the settings steps
+      if (index === 1) {
+        navigate('/app/settings');
         let attempts = 0;
-        const maxAttempts = 30; // up to ~6s
         const interval = setInterval(() => {
-          const el = document.querySelector('[data-tutorial="eazy-assistant"]');
+          const el = document.querySelector('[data-tutorial="settings"]');
           attempts++;
-          if (el || attempts >= maxAttempts) {
+          if (el || attempts >= 30) {
             clearInterval(interval);
             setStepIndex(index + 1);
           }
         }, 200);
         return;
       }
-      // For all other steps, continue normally
+      // Navigate back to homepage before the final step
+      if (index === 6) {
+        navigate('/app');
+        setTimeout(() => setStepIndex(index + 1), 500);
+        return;
+      }
       if (index < steps.length - 1) {
         setStepIndex(index + 1);
       }
@@ -115,22 +108,15 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
           arrowColor: 'hsl(var(--background))',
           zIndex: 10000,
         },
-        tooltip: {
-          borderRadius: '8px',
-          padding: '16px',
-        },
+        tooltip: { borderRadius: '8px', padding: '16px' },
         buttonNext: {
           backgroundColor: 'hsl(var(--primary))',
           color: 'hsl(var(--primary-foreground))',
           borderRadius: '6px',
           padding: '8px 16px',
         },
-        buttonBack: {
-          color: 'hsl(var(--muted-foreground))',
-        },
-        buttonSkip: {
-          color: 'hsl(var(--muted-foreground))',
-        },
+        buttonBack: { color: 'hsl(var(--muted-foreground))' },
+        buttonSkip: { color: 'hsl(var(--muted-foreground))' },
       }}
       locale={{
         back: 'Back',
