@@ -2,6 +2,7 @@
   "name": "eazy-family",
   "private": true,
   "version": "1.0.0",
+  "description": "Family organization app - organize your day-to-day, create memories, and connect with other parents",
   "type": "module",
   "scripts": {
     "dev": "vite",
