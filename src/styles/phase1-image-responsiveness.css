@@ -1,0 +1,61 @@
+/* Phase 1: Image Responsiveness — object-fit: cover across all images, 320px–1440px+ */
+
+/* Global responsive image defaults */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure all images within cards/containers use cover fit */
+.object-cover {
+  object-fit: cover;
+}
+
+/* Hero / Header images */
+[class*="h-48"],
+[class*="h-64"],
+[class*="h-32"] {
+  overflow: hidden;
+}
+
+[class*="h-48"] > img,
+[class*="h-64"] > img,
+[class*="h-32"] > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Avatar images */
+.rounded-full > img {
+  object-fit: cover;
+}
+
+/* Marketplace / listing thumbnails */
+[class*="w-20"][class*="h-20"] > img,
+[class*="w-16"][class*="h-16"] > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Aspect-ratio containers */
+[class*="aspect-"] > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 320px) {
+  .max-w-md {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .max-w-7xl {
+    max-width: 90rem;
+  }
+}

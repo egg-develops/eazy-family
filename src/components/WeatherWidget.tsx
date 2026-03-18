@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Cloud } from "lucide-react";
+import { MapPin, Cloud, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
@@ -32,37 +32,49 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingLocation, setIsAddingLocation] = useState(false);
+  const [manualEntry, setManualEntry] = useState(false);
+  const [locationError, setLocationError] = useState(false);
 
   useEffect(() => {
     const savedLocations = localStorage.getItem('weather-locations');
     if (savedLocations) {
-      const parsed = JSON.parse(savedLocations);
-      setLocations(parsed);
-      if (parsed.length > 0) {
-        fetchWeather(parsed[0].lat, parsed[0].lon);
+      try {
+        const parsed = JSON.parse(savedLocations);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLocations(parsed);
+          fetchWeather(parsed[0].lat, parsed[0].lon);
+          return;
+        }
+      } catch {
+        // Invalid saved data, fall through to detect
       }
-    } else {
-      detectLocation();
     }
+    detectLocation();
   }, []);
 
   const detectLocation = () => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          fetchLocationName(latitude, longitude);
-        },
-        (error) => {
-          logError("Error getting location:", error);
-          toast.error("Unable to detect location. Please add manually.");
-          setLoading(false);
-        }
-      );
-    } else {
-      toast.error("Geolocation not supported");
+    if (!("geolocation" in navigator)) {
+      setLocationError(true);
+      setManualEntry(true);
       setLoading(false);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationError(false);
+        fetchLocationName(latitude, longitude);
+      },
+      (error) => {
+        logError("Geolocation error:", error);
+        setLocationError(true);
+        setManualEntry(true);
+        setLoading(false);
+        // Don't show error toast - show inline fallback instead
+      },
+      { timeout: 10000, maximumAge: 300000 }
+    );
   };
 
   const fetchLocationName = async (lat: number, lon: number) => {
@@ -72,23 +84,30 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       });
 
       if (error) throw error;
-      
-      if (data && data.length > 0) {
+
+      if (data && Array.isArray(data) && data.length > 0 && data[0]?.name) {
         const location: WeatherLocation = {
           id: `${lat}-${lon}`,
           name: data[0].name,
           lat,
           lon
         };
-        
+
         const newLocations = [location];
         setLocations(newLocations);
         localStorage.setItem('weather-locations', JSON.stringify(newLocations));
+        setLocationError(false);
         fetchWeather(lat, lon);
+      } else {
+        // API returned no results - show manual entry
+        setLocationError(true);
+        setManualEntry(true);
+        setLoading(false);
       }
     } catch (error) {
-      logError("Error fetching location name:", error);
-      toast.error("Error loading weather data");
+      logError("Reverse geocoding error:", error);
+      setLocationError(true);
+      setManualEntry(true);
       setLoading(false);
     }
   };
@@ -101,8 +120,8 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       });
 
       if (error) throw error;
-      
-      if (data.main) {
+
+      if (data?.main) {
         setWeatherData({
           temp: Math.round(data.main.temp),
           description: data.weather[0].description,
@@ -110,10 +129,14 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           humidity: data.main.humidity,
           windSpeed: data.wind.speed
         });
+        setLocationError(false);
+      } else {
+        throw new Error("Invalid weather response");
       }
     } catch (error) {
-      logError("Error fetching weather:", error);
-      toast.error("Error loading weather data");
+      logError("Weather fetch error:", error);
+      toast.error("Error loading weather data. Try adding your location manually.");
+      setLocationError(true);
     } finally {
       setLoading(false);
     }
@@ -121,7 +144,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const searchLocation = async () => {
     if (!searchQuery.trim()) return;
-    
+
     setIsAddingLocation(true);
     try {
       const { data, error } = await supabase.functions.invoke('weather', {
@@ -129,25 +152,29 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       });
 
       if (error) throw error;
-      
-      if (data && data.length > 0) {
+
+      if (data && Array.isArray(data) && data.length > 0 && data[0]?.lat) {
         const location: WeatherLocation = {
           id: `${data[0].lat}-${data[0].lon}`,
           name: data[0].name,
           lat: data[0].lat,
           lon: data[0].lon
         };
-        
-        const newLocations = [...locations, location];
+
+        const newLocations = [...locations.filter(l => l.id !== location.id), location];
         setLocations(newLocations);
         localStorage.setItem('weather-locations', JSON.stringify(newLocations));
         setSearchQuery("");
+        setManualEntry(false);
+        setLocationError(false);
+        setCurrentLocationIndex(newLocations.length - 1);
+        fetchWeather(location.lat, location.lon);
         toast.success(`Added ${location.name}`);
       } else {
-        toast.error("Location not found");
+        toast.error("Location not found. Try a different city name.");
       }
     } catch (error) {
-      logError("Error searching location:", error);
+      logError("Search location error:", error);
       toast.error("Error searching location");
     } finally {
       setIsAddingLocation(false);
@@ -158,10 +185,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
     const newLocations = locations.filter(loc => loc.id !== id);
     setLocations(newLocations);
     localStorage.setItem('weather-locations', JSON.stringify(newLocations));
-    
+
     if (newLocations.length === 0) {
       setWeatherData(null);
-      detectLocation();
+      setManualEntry(true);
     } else if (currentLocationIndex >= newLocations.length) {
       setCurrentLocationIndex(0);
       fetchWeather(newLocations[0].lat, newLocations[0].lon);
@@ -175,47 +202,73 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const getWeatherEmoji = (condition: string) => {
     const conditions: Record<string, string> = {
-      Clear: "☀️",
-      Clouds: "☁️",
-      Rain: "🌧️",
-      Drizzle: "🌦️",
-      Thunderstorm: "⛈️",
-      Snow: "❄️",
-      Mist: "🌫️",
-      Fog: "🌫️",
-      Haze: "🌫️"
+      Clear: "☀️", Clouds: "☁️", Rain: "🌧️", Drizzle: "🌦️",
+      Thunderstorm: "⛈️", Snow: "❄️", Mist: "🌫️", Fog: "🌫️", Haze: "🌫️"
     };
     return conditions[condition] || "🌤️";
   };
 
+  const currentLocation = locations[currentLocationIndex];
+
+  // Show manual entry fallback when location detection fails
+  if ((locationError || manualEntry) && !weatherData) {
+    return (
+      <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
+        <button
+          onClick={onRemove}
+          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
+          aria-label="Remove weather"
+        >×</button>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-5 h-5 text-cyan-500" />
+            <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            We couldn't detect your location. Enter your city to see weather:
+          </p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter city name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+            />
+            <Button onClick={searchLocation} disabled={isAddingLocation}>
+              {isAddingLocation ? "..." : "Go"}
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm" onClick={detectLocation} className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Retry auto-detect
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   if (loading && !weatherData) {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Cloud className="w-8 h-8 text-cyan-500" />
-            <div>
-              <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
-              <p className="text-sm opacity-70">Loading...</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <Cloud className="w-8 h-8 text-cyan-500" />
+          <div>
+            <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
+            <p className="text-sm opacity-70">Loading...</p>
           </div>
         </div>
       </Card>
     );
   }
 
-  const currentLocation = locations[currentLocationIndex];
-
   return (
     <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
-      <button 
+      <button
         onClick={onRemove}
         className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
         aria-label="Remove weather"
-      >
-        ×
-      </button>
-      
+      >×</button>
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex-1">
@@ -236,9 +289,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
               </>
             )}
           </div>
-          {weatherData && (
-            <div className="text-3xl">{weatherData.icon}</div>
-          )}
+          {weatherData && <div className="text-3xl">{weatherData.icon}</div>}
         </div>
 
         {locations.length > 1 && (
@@ -254,14 +305,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                   {loc.name}
                 </Button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeLocation(loc.id);
-                  }}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
-                >
-                  ×
-                </button>
+                  onClick={(e) => { e.stopPropagation(); removeLocation(loc.id); }}
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
+                  aria-label={`Remove ${loc.name}`}
+                >×</button>
               </div>
             ))}
           </div>
@@ -269,11 +316,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-muted gap-2"
-            >
+            <Button variant="ghost" size="sm" className="hover:bg-muted gap-2">
               <Cloud className="w-4 h-4" />
               {t('home.addLocation')}
             </Button>

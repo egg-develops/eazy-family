@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Sparkles } from "lucide-react";
+import { X, Send, Sparkles, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { TextLoop } from "@/components/ui/text-loop";
 import { error as logError } from "@/lib/logger";
 
@@ -19,8 +20,11 @@ export const EazyAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -28,10 +32,75 @@ export const EazyAssistant = () => {
     }
   }, [messages]);
 
+  // Web Speech API setup
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Not supported", description: "Voice input is not supported in this browser.", variant: "destructive" });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => prev + (prev ? ' ' : '') + transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  };
+
+  // Check if message is a shopping list action
+  const handleShoppingListAction = async (content: string): Promise<boolean> => {
+    const addPatterns = [
+      /add (.+) to (?:the |my |our )?shopping list/i,
+      /put (.+) on (?:the |my |our )?shopping list/i,
+      /shopping list:?\s*(.+)/i,
+    ];
+
+    for (const pattern of addPatterns) {
+      const match = content.match(pattern);
+      if (match && user?.id) {
+        const items = match[1].split(/,|and/).map(i => i.trim()).filter(Boolean);
+        for (const item of items) {
+          await supabase.from('tasks').insert({
+            title: item,
+            type: 'shopping',
+            user_id: user.id,
+          });
+        }
+        return true;
+      }
+    }
+    return false;
+  };
+
   const streamChat = async (userMessage: string) => {
     const newMessages = [...messages, { role: "user" as const, content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+
+    // Check for shopping list actions
+    const isShoppingAction = await handleShoppingListAction(userMessage);
 
     try {
       const response = await fetch(
@@ -42,23 +111,16 @@ export const EazyAssistant = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({ messages: newMessages }),
+          body: JSON.stringify({
+            messages: newMessages,
+            context: isShoppingAction ? "User added items to shopping list. Confirm the action." : undefined,
+          }),
         }
       );
 
       if (!response.ok || !response.body) {
         if (response.status === 429) {
-          toast({
-            title: "Rate limit exceeded",
-            description: "Please try again in a moment.",
-            variant: "destructive",
-          });
-        } else if (response.status === 402) {
-          toast({
-            title: "Service unavailable",
-            description: "Please contact support.",
-            variant: "destructive",
-          });
+          toast({ title: "Rate limit exceeded", description: "Please try again in a moment.", variant: "destructive" });
         }
         throw new Error("Failed to start stream");
       }
@@ -94,7 +156,7 @@ export const EazyAssistant = () => {
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
-                  return prev.map((m, i) => 
+                  return prev.map((m, i) =>
                     i === prev.length - 1 ? { ...m, content: assistantContent } : m
                   );
                 }
@@ -109,11 +171,7 @@ export const EazyAssistant = () => {
       }
     } catch (error) {
       logError("Chat error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -128,9 +186,11 @@ export const EazyAssistant = () => {
 
   if (!isOpen) {
     return (
-      <Card 
+      <Card
         className="p-6 shadow-custom-lg cursor-pointer hover:shadow-custom-xl transition-shadow bg-primary relative overflow-hidden"
         onClick={() => setIsOpen(true)}
+        role="button"
+        aria-label="Open Eazy Assistant"
       >
         <div className="flex items-center justify-between text-primary-foreground">
           <div className="space-y-1 flex-1 min-w-0">
@@ -141,15 +201,13 @@ export const EazyAssistant = () => {
             <div className="text-primary-foreground/90 text-sm min-h-[40px] pt-3">
               <TextLoop interval={3}>
                 {[
+                  "Add milk and eggs to our shopping list",
+                  "Best family friendly restaurants nearby?",
                   "Rainy day activities with two children",
-                  "Best family friendly restaurants in my area?",
-                  "Add these items to our shopping list",
+                  "Quick dinner recipe with 5 ingredients",
                   "Add an event to our family calendar",
-                  "Quick dinner recipe with 5 ingredients"
                 ].map((text) => (
-                  <span key={text} className="block">
-                    {text}
-                  </span>
+                  <span key={text} className="block">{text}</span>
                 ))}
               </TextLoop>
             </div>
@@ -171,6 +229,7 @@ export const EazyAssistant = () => {
           size="icon"
           onClick={() => setIsOpen(false)}
           className="text-primary-foreground hover:bg-primary-foreground/20"
+          aria-label="Close assistant"
         >
           <X className="w-5 h-5" />
         </Button>
@@ -181,21 +240,12 @@ export const EazyAssistant = () => {
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
               <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Ask me anything about organizing your family life!</p>
+              <p>Ask me anything! Try "Add milk to shopping list" 🛒</p>
             </div>
           )}
           {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  msg.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
-                }`}
-              >
+            <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               </div>
             </div>
@@ -216,11 +266,19 @@ export const EazyAssistant = () => {
 
       <div className="border-t p-4">
         <div className="flex gap-2">
+          <Button
+            onClick={isListening ? stopListening : startListening}
+            size="icon"
+            variant={isListening ? "destructive" : "outline"}
+            aria-label={isListening ? "Stop listening" : "Start voice input"}
+          >
+            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </Button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
-            placeholder="How can I help you?"
+            placeholder={isListening ? "Listening..." : "How can I help you?"}
             disabled={isLoading}
             className="flex-1 bg-background"
           />
@@ -229,6 +287,7 @@ export const EazyAssistant = () => {
             disabled={!input.trim() || isLoading}
             size="icon"
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
+            aria-label="Send message"
           >
             <Send className="w-4 h-4" />
           </Button>
