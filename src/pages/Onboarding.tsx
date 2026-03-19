@@ -26,12 +26,11 @@ interface OnboardingData {
 
 const steps = [
   { id: 1, title: "Welcome!", description: "Your daily app to stay organized" },
-  { id: 2, title: "About You", description: "Tell us your name" },
-  { id: 3, title: "Language", description: "Choose your preferred language" },
+  { id: 2, title: "Language", description: "Choose your preferred language" },
+  { id: 3, title: "About You", description: "Tell us your name" },
   { id: 4, title: "Your Children", description: "Tell us about your little ones" },
   { id: 5, title: "Location", description: "Where are you based?" },
   { id: 6, title: "Features", description: "What excites you most?" },
-  { id: 7, title: "Premium", description: "Start your free trial" },
 ];
 
 const locations = [
@@ -52,10 +51,8 @@ const features = [
   { id: "calendar", label: "Shared Calendars & Lists", icon: Calendar },
   { id: "shopping", label: "Sync schedules, to-do's and shopping lists", icon: ShoppingCart },
   { id: "events", label: "Local Event Discovery", icon: MapPin },
-  { id: "playdates", label: "Parent Community", icon: Users },
-  { id: "community", label: "Connect with nearby parents and arrange playdates", icon: Heart },
+  { id: "community", label: "Parent Community & Playdates", icon: Users },
   { id: "marketplace", label: "Family Marketplace", icon: ShoppingCart },
-  { id: "photos", label: "AI Photo Organizer", icon: Camera },
 ];
 
 const Onboarding = () => {
@@ -154,17 +151,15 @@ const Onboarding = () => {
       case 1:
         return true; // Welcome screen
       case 2:
-        return data.userName.trim().length > 0;
+        return data.language.length > 0; // Language selection
       case 3:
-        return data.language.length > 0;
+        return data.userName.trim().length > 0; // Name
       case 4:
         return true; // Allow skipping children
       case 5:
         return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
-        case 6:
-          return true;
-      case 7:
-        return true; // Paywall screen
+      case 6:
+        return true; // Features
       default:
         return false;
     }
@@ -191,26 +186,6 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What is your name?</h2>
-              <p className="text-muted-foreground">Help us personalize your experience</p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Your name</Label>
-              <Input
-                id="name"
-                placeholder="e.g., John Doe"
-                value={data.userName}
-                onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
-                className="text-lg"
-              />
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold">Choose your language</h2>
               <p className="text-muted-foreground">We'll customize the app experience for you</p>
             </div>
@@ -230,6 +205,26 @@ const Onboarding = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold">What is your name?</h2>
+              <p className="text-muted-foreground">Help us personalize your experience</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Your name</Label>
+              <Input
+                id="name"
+                placeholder="e.g., John Doe"
+                value={data.userName}
+                onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
+                className="text-lg"
+              />
+            </div>
           </div>
         );
 
@@ -406,7 +401,7 @@ const Onboarding = () => {
               disabled={!canProceed()}
               className="flex items-center gap-2 gradient-primary text-white border-0 hover:opacity-90"
             >
-              {currentStep === steps.length ? 'Start Free Trial' : 'Next'}
+              {currentStep === steps.length ? 'Get Started' : 'Next'}
               <ArrowRight className="w-4 h-4" />
             </Button>
         </div>

@@ -26,6 +26,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [referralCode, setReferralCode] = useState('');
+  const [referralValid, setReferralValid] = useState(false);
+  const [validatingReferral, setValidatingReferral] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp, signIn, user, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -46,9 +48,37 @@ const Auth = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Validate referral code
+  const validateReferralCode = async (code: string) => {
+    if (!code.trim()) {
+      setReferralValid(false);
+      return;
+    }
+
+    setValidatingReferral(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('referral_code', code.trim())
+        .single();
+
+      if (error || !data) {
+        setReferralValid(false);
+      } else {
+        setReferralValid(true);
+      }
+    } catch (error) {
+      logError('Referral validation error:', error);
+      setReferralValid(false);
+    } finally {
+      setValidatingReferral(false);
+    }
+  };
+
   // Process referral after successful signup
   const processReferral = async (newUserId: string) => {
-    if (!referralCode.trim()) return;
+    if (!referralCode.trim() || !referralValid) return;
     
     try {
       // Find the referrer by referral code
@@ -82,6 +112,17 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Validate referral code if provided
+      if (isSignUp && referralCode.trim() && !referralValid) {
+        toast({ 
+          title: "Invalid Referral Code", 
+          description: "Please enter a valid referral code or leave it empty.", 
+          variant: "destructive" 
+        });
+        setLoading(false);
+        return;
+      }
+
       const validatedData = authSchema.parse({
         email,
         password,
@@ -94,7 +135,7 @@ const Auth = () => {
         error = result.error;
         
         // Process referral on successful signup
-        if (!error && referralCode.trim()) {
+        if (!error && referralCode.trim() && referralValid) {
           // We'll process after user confirms email and signs in
           localStorage.setItem('pending-referral-code', referralCode.trim());
         }
@@ -201,11 +242,20 @@ const Auth = () => {
                   type="text"
                   placeholder="Enter referral code"
                   value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
+                  onChange={(e) => {
+                    setReferralCode(e.target.value);
+                    validateReferralCode(e.target.value);
+                  }}
                   maxLength={20}
                 />
-                {referralCode && (
-                  <p className="text-xs text-primary">🎁 You'll get 1 free month of Premium!</p>
+                {validatingReferral && referralCode && (
+                  <p className="text-xs text-muted-foreground">Validating...</p>
+                )}
+                {referralValid && referralCode && !validatingReferral && (
+                  <p className="text-xs text-green-600">✓ Valid referral code! You'll get 1 free month of Premium!</p>
+                )}
+                {!referralValid && referralCode && !validatingReferral && (
+                  <p className="text-xs text-red-600">✗ Invalid referral code</p>
                 )}
               </div>
             )}

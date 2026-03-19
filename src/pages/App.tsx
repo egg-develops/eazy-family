@@ -43,7 +43,6 @@ import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Checkbox } from "@/components/ui/checkbox";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { NavLink } from "react-router-dom";
-import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
@@ -142,9 +141,6 @@ const AppLayout = () => {
           </div>
         </div>
       </header>
-
-      {/* Global Tutorial Runner */}
-      <GlobalTutorial />
 
       {/* Main Content */}
       <main className="flex-1 pt-16 pb-24 lg:pb-6 overflow-x-hidden">
