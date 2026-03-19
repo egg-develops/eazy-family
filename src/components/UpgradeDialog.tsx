@@ -128,9 +128,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   const freeFeatures = [
     "Basic calendar",
-    "Photo storage (limited)",
     "Task management",
     "Community access",
+    "Shopping lists",
   ];
 
   const familyFeatures = [
@@ -138,12 +138,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     "Unlimited calendar syncs",
     "Shared lists across family",
     "Private messaging",
-    "Create groups",
+    "Create custom groups",
     "EazyAI Assistant",
-    "Unlimited photo storage",
-    "AI photo editing & management",
-    "Photo tagging by location",
-    "Create memory books",
+    "Sell items on marketplace",
     "Priority support",
   ];
 
@@ -192,11 +189,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           {/* Pricing */}
           <div className="space-y-4 pt-4 border-t">
             <div className="text-center space-y-2">
-              <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-2">7-Day Free Trial</div>
               <p className="text-3xl font-bold">
                 CHF 5<span className="text-lg text-muted-foreground">/month</span>
               </p>
-              <p className="text-sm text-muted-foreground">Cancel anytime • Auto-renews after trial</p>
+              <p className="text-sm text-muted-foreground">Cancel anytime</p>
             </div>
 
             {/* Promo code */}
@@ -209,9 +205,8 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
             <Button className="w-full gradient-primary text-white border-0" size="lg" onClick={handleUpgrade} disabled={isLoading}>
               <Crown className="h-4 w-4 mr-2" />
-              {isLoading ? "Loading..." : "Start Free Trial"}
+              {isLoading ? "Loading..." : "Upgrade to Family Plan"}
             </Button>
-            <p className="text-xs text-center text-muted-foreground">You won't be charged until your 7-day trial ends</p>
           </div>
         </div>
       </DialogContent>

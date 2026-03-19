@@ -538,14 +538,14 @@ const l = (max + min) / 2;
         <CardContent className="space-y-2">
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
             <>
+              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Google Calendar sync is available!" })}>
+                <CalendarIcon className="w-4 h-4" />
+                {t('calendarIntegrations.googleCalendar')}
+              </Button>
               <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
                 <CalendarIcon className="w-4 h-4" />
                 {t('calendarIntegrations.appleCalendar')}
                 <span className="coming-soon-badge ml-auto">Coming Soon</span>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Google Calendar sync is available!" })}>
-                <CalendarIcon className="w-4 h-4" />
-                {t('calendarIntegrations.googleCalendar')}
               </Button>
               <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
                 <CalendarIcon className="w-4 h-4" />
@@ -558,13 +558,13 @@ const l = (max + min) / 2;
               <UpgradeDialog>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <CalendarIcon className="w-4 h-4" />
-                  {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
+                  {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
                 </Button>
               </UpgradeDialog>
               <UpgradeDialog>
                 <Button variant="outline" className="w-full justify-start gap-2">
                   <CalendarIcon className="w-4 h-4" />
-                  {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
+                  {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
                 </Button>
               </UpgradeDialog>
               <UpgradeDialog>
