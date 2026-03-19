@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SplashThemeProvider } from "./contexts/SplashThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -43,26 +44,55 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/accept-invite" element={<AcceptInvite />} />
-            <Route path="/join-family" element={<JoinFamily />} />
-<Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
-              <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
-              <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
+            <Routes>
+              {/* Splash Pages - Dark Navy + Warm Coral Theme */}
+              <Route 
+                path="/" 
+                element={
+                  <SplashThemeProvider>
+                    <Index />
+                  </SplashThemeProvider>
+                } 
+              />
+              <Route 
+                path="/auth" 
+                element={
+                  <SplashThemeProvider>
+                    <Auth />
+                  </SplashThemeProvider>
+                } 
+              />
               
-              <Route path="community" element={<Suspense fallback={<PageLoader />}><Community /></Suspense>} />
-              <Route path="messaging" element={<Suspense fallback={<PageLoader />}><Messaging /></Suspense>} />
-              <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
-              <Route path="family" element={<Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense>} />
-            </Route>
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Onboarding - Also uses splash theme */}
+              <Route 
+                path="/onboarding" 
+                element={
+                  <SplashThemeProvider>
+                    <Onboarding />
+                  </SplashThemeProvider>
+                } 
+              />
+              
+              {/* Other Pages - Default theme */}
+              <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/join-family" element={<JoinFamily />} />
+              <Route path="/privacy" element={<Privacy />} />
+              
+              {/* Main App - User's custom theme */}
+              <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+                <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
+                <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
+                
+                <Route path="community" element={<Suspense fallback={<PageLoader />}><Community /></Suspense>} />
+                <Route path="messaging" element={<Suspense fallback={<PageLoader />}><Messaging /></Suspense>} />
+                <Route path="settings" element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+                <Route path="family" element={<Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense>} />
+              </Route>
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
