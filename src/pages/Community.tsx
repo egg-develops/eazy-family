@@ -37,6 +37,10 @@ const Community = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [joinedGroupIds, setJoinedGroupIds] = useState<Set<string>>(new Set());
   const [loadingGroups, setLoadingGroups] = useState(true);
+  const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
 
   // Marketplace state
   const [marketItems, setMarketItems] = useState<any[]>([]);
@@ -127,8 +131,41 @@ const Community = () => {
     }
   };
 
-  const handleCreateGroup = async () => {
-    toast({ title: "Create Group", description: "Group creation form coming soon!" });
+  const handleCreateGroup = () => {
+    // Creating custom groups requires premium
+    if (!isPremium) {
+      setShowUpgradeDialog(true);
+      return;
+    }
+    
+    setShowCreateGroupDialog(true);
+  };
+
+  const handleCreateGroupSubmit = async () => {
+    if (!user?.id || !newGroupName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('groups')
+        .insert({
+          name: newGroupName,
+          description: newGroupDesc,
+          category: 'custom',
+          created_by: user.id,
+          is_public: true,
+        });
+
+      if (error) throw error;
+      
+      setShowCreateGroupDialog(false);
+      setNewGroupName("");
+      setNewGroupDesc("");
+      loadGroups();
+      toast({ title: "Group Created!", description: `"${newGroupName}" is now ready for members.` });
+    } catch (error) {
+      logError('Error creating group:', error);
+      toast({ title: "Error", description: "Could not create group.", variant: "destructive" });
+    }
   };
 
   const handleCreateListing = async () => {
@@ -451,6 +488,48 @@ const Community = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Group Dialog */}
+      <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create a New Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Group Name</Label>
+              <Input
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="e.g., Zurich Parents"
+                maxLength={50}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea
+                value={newGroupDesc}
+                onChange={(e) => setNewGroupDesc(e.target.value)}
+                placeholder="What's this group about?"
+                maxLength={200}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateGroupDialog(false)}>Cancel</Button>
+            <Button onClick={handleCreateGroupSubmit} disabled={!newGroupName.trim()} className="gradient-primary text-white border-0">
+              Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upgrade Dialog for Group Creation */}
+      {showUpgradeDialog && (
+        <UpgradeDialog onClose={() => setShowUpgradeDialog(false)}>
+          <div />
+        </UpgradeDialog>
+      )}
     </div>
   );
 };
