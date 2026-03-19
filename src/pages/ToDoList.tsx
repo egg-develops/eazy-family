@@ -216,6 +216,15 @@ const ToDoList = () => {
   const handleAddTask = async () => {
     if (!newTaskTitle.trim()) return;
     
+    if (!user?.id) {
+      toast({
+        title: "Not authenticated",
+        description: "Please sign in to create tasks.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (activeTab === "shared" && selectedMembers.length === 0) {
       toast({
         title: "No members selected",
@@ -226,17 +235,22 @@ const ToDoList = () => {
     }
 
     try {
+      const taskData = {
+        title: newTaskTitle.trim(),
+        type: activeTab,
+        user_id: user.id,
+        due_date: newTaskDueDate || null,
+        shared_with: activeTab === "shared" ? selectedMembers : null,
+      };
+
       const { error } = await supabase
         .from('tasks')
-        .insert([{
-          title: newTaskTitle,
-          type: activeTab,
-          user_id: user?.id || '',
-          due_date: newTaskDueDate || null,
-          shared_with: activeTab === "shared" ? selectedMembers : null,
-        }]);
+        .insert([taskData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       setNewTaskTitle("");
       setNewTaskDueDate(undefined);
@@ -249,9 +263,10 @@ const ToDoList = () => {
       });
     } catch (error) {
       console.error('Error adding task:', error);
+      const errorMsg = (error as any)?.message || "Could not add task";
       toast({
         title: "Error",
-        description: "Could not add task. Please try again.",
+        description: errorMsg,
         variant: "destructive",
       });
     }
