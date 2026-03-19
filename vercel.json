@@ -2,8 +2,5 @@
   "buildCommand": "npm run build",
   "framework": "vite",
   "outputDirectory": "dist",
-  "installCommand": "npm install --legacy-peer-deps",
-  "buildCache": {
-    "enabled": false
-  }
+  "installCommand": "npm install --legacy-peer-deps"
 }
