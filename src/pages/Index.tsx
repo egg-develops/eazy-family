@@ -23,7 +23,7 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,20%,96%)] via-[hsl(240,15%,97%)] to-[hsl(0,0%,100%)]">
+    <div className="min-h-screen" style={{ backgroundColor: "hsl(var(--background))" }}>
       <div className="max-w-md mx-auto px-5 py-10">
 
         {/* Hero */}
@@ -33,11 +33,11 @@ const Index = () => {
             <Heart className="w-11 h-11 text-white" strokeWidth={1.8} />
           </div>
 
-          <h1 className="text-[2.25rem] font-bold tracking-tight leading-tight font-poppins text-foreground">
+          <h1 className="text-[2.25rem] font-bold tracking-tight leading-tight font-poppins" style={{ color: "hsl(var(--foreground))" }}>
             Eazy.Family
           </h1>
 
-          <p className="text-base text-muted-foreground leading-relaxed max-w-[320px] mx-auto">
+          <p className="text-base leading-relaxed max-w-[320px] mx-auto" style={{ color: "hsl(var(--foreground))", opacity: 0.85 }}>
             The all-in-one app that keeps your family organized, connected, and making memories.
           </p>
         </div>
