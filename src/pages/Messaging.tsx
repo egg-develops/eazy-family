@@ -132,13 +132,13 @@ const Messaging = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <MessageCircle className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">Messages</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl font-bold">Messages</h1>
         </div>
         {!isPremium && (
-          <Badge variant="outline" className="text-xs gap-1">
+          <Badge variant="outline" className="text-xs gap-1 whitespace-nowrap">
             <Lock className="w-3 h-3" />
             Family Only
           </Badge>
@@ -169,9 +169,9 @@ const Messaging = () => {
         </UpgradeDialog>
       )}
 
-      <div className="flex gap-4 h-[calc(100vh-280px)]">
-        {/* Conversation List */}
-        <div className="w-full md:w-1/3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-280px)] md:h-[calc(100vh-200px)]">
+        {/* Conversation List - Hidden on mobile when conversation selected */}
+        <div className={`${selectedConversation ? 'hidden md:block' : 'block'} md:col-span-1`}>
           {conversations.length > 0 ? (
             <MessagingConversationList
               conversations={conversations}
@@ -182,9 +182,9 @@ const Messaging = () => {
             />
           ) : (
             <Card>
-              <CardContent className="p-6 text-center">
-                <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-4 sm:p-6 text-center">
+                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Join a family to start messaging family members
                 </p>
               </CardContent>
@@ -192,9 +192,19 @@ const Messaging = () => {
           )}
         </div>
 
-        {/* Chat Thread */}
+        {/* Chat Thread - Full width on mobile when selected, 2/3 on desktop */}
         {selectedConversation && currentConversation ? (
-          <div className="w-full md:w-2/3 flex flex-col gap-4">
+          <div className={`${selectedConversation ? 'block' : 'hidden'} md:block md:col-span-2 flex flex-col gap-3 sm:gap-4`}>
+            <div className="flex items-center gap-2 md:hidden pb-2 border-b">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedConversation(null)}
+                className="p-1"
+              >
+                ← Back
+              </Button>
+            </div>
             <MessagingChatThread
               userName={currentConversation.userName}
               userAvatar={currentConversation.userAvatar}
@@ -216,11 +226,11 @@ const Messaging = () => {
             />
           </div>
         ) : (
-          <div className="hidden md:flex w-2/3 items-center justify-center">
+          <div className="hidden md:flex md:col-span-2 items-center justify-center">
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground text-center">
+              <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+                <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-3" />
+                <p className="text-xs sm:text-sm text-muted-foreground text-center">
                   Select a conversation to start messaging
                 </p>
               </CardContent>
