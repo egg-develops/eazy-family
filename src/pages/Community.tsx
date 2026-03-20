@@ -210,62 +210,66 @@ const Community = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('community.hub')}</h1>
+        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+          <Users className="w-5 sm:w-6 h-5 sm:h-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold">{t('community.hub')}</h1>
         </div>
-        <p className="text-sm text-muted-foreground">{t('community.hubDesc')}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground">{t('community.hubDesc')}</p>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="groups">
-            <Users className="w-4 h-4 mr-2" />
-            Groups
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="groups" className="text-xs sm:text-sm">
+            <Users className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Groups</span>
           </TabsTrigger>
-          <TabsTrigger value="marketplace">
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Marketplace
+          <TabsTrigger value="marketplace" className="text-xs sm:text-sm">
+            <ShoppingCart className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Market</span>
+            <span className="sm:hidden">M</span>
           </TabsTrigger>
-          <TabsTrigger value="messages">
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Messages
+          <TabsTrigger value="messages" className="text-xs sm:text-sm">
+            <MessageCircle className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Messages</span>
+            <span className="sm:hidden">Chat</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Groups Tab */}
-        <TabsContent value="groups" className="space-y-4 mt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Join or create community groups</p>
+        <TabsContent value="groups" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <p className="text-xs sm:text-sm text-muted-foreground">Join or create community groups</p>
             {isPremium ? (
-              <Button size="sm" className="gradient-primary text-white border-0" onClick={handleCreateGroup}>
+              <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto" onClick={handleCreateGroup}>
                 <Plus className="w-4 h-4 mr-1" />
-                Create Group
+                <span className="hidden sm:inline">Create Group</span>
+                <span className="sm:hidden">Create</span>
               </Button>
             ) : (
               <UpgradeDialog>
-                <Button size="sm" className="gradient-primary text-white border-0">
+                <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto">
                   <Lock className="w-4 h-4 mr-1" />
-                  Create Group
+                  <span className="hidden sm:inline">Create Group</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </UpgradeDialog>
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {groups.length > 0 ? (
               groups.map((group) => (
                 <Card key={group.id} className="shadow-custom-md">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{group.name}</h4>
-                        <p className="text-sm text-muted-foreground">{group.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm sm:text-base truncate">{group.name}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{group.description}</p>
+                        <div className="flex items-center gap-1 sm:gap-2 mt-2 flex-wrap">
                           <Badge variant="secondary" className="text-xs">
                             {group.member_count || 0} members
                           </Badge>
@@ -275,11 +279,11 @@ const Community = () => {
                         </div>
                       </div>
                       {joinedGroupIds.has(group.id) ? (
-                        <Button variant="outline" size="sm" onClick={() => handleLeaveGroup(group.id)}>
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => handleLeaveGroup(group.id)}>
                           Leave
                         </Button>
                       ) : (
-                        <Button size="sm" className="gradient-primary text-white border-0" onClick={() => handleJoinGroup(group.id)}>
+                        <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto" onClick={() => handleJoinGroup(group.id)}>
                           Join
                         </Button>
                       )}
@@ -289,10 +293,10 @@ const Community = () => {
               ))
             ) : (
               <Card className="shadow-custom-md">
-                <CardContent className="p-8 text-center">
-                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-medium mb-2">No groups available yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <CardContent className="p-6 sm:p-8 text-center">
+                  <Users className="w-10 sm:w-12 h-10 sm:h-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                  <h3 className="font-medium text-sm sm:text-base mb-2">No groups available yet</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-4">
                     Be the first to create a group in your community
                   </p>
                 </CardContent>
