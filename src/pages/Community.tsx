@@ -213,44 +213,49 @@ const Community = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <Users className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('community.hub')}</h1>
+        <div className="flex items-center gap-2 mb-2">
+          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl font-bold">{t('community.hub')}</h1>
         </div>
-        <p className="text-sm text-muted-foreground">{t('community.hubDesc')}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground">{t('community.hubDesc')}</p>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="groups">
-            <Users className="w-4 h-4 mr-2" />
-            Groups
+        <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-0 h-auto">
+          <TabsTrigger value="groups" className="text-xs sm:text-sm">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Groups</span>
+            <span className="sm:hidden">G</span>
           </TabsTrigger>
-          <TabsTrigger value="marketplace">
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Marketplace
+          <TabsTrigger value="marketplace" className="text-xs sm:text-sm">
+            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Marketplace</span>
+            <span className="sm:hidden">M</span>
           </TabsTrigger>
-          <TabsTrigger value="messages">
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Messages
+          <TabsTrigger value="messages" className="text-xs sm:text-sm">
+            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Messages</span>
+            <span className="sm:hidden">Msg</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Groups Tab */}
         <TabsContent value="groups" className="space-y-4 mt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Join or create community groups</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs sm:text-sm text-muted-foreground">Join or create community groups</p>
             {isPremium ? (
-              <Button size="sm" className="gradient-primary text-white border-0" onClick={handleCreateGroup}>
+              <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto" onClick={handleCreateGroup}>
                 <Plus className="w-4 h-4 mr-1" />
-                Create Group
+                <span className="hidden sm:inline">Create Group</span>
+                <span className="sm:hidden">New Group</span>
               </Button>
             ) : (
               <UpgradeDialog>
-                <Button size="sm" className="gradient-primary text-white border-0">
+                <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto">
                   <Lock className="w-4 h-4 mr-1" />
-                  Create Group
+                  <span className="hidden sm:inline">Create Group</span>
+                  <span className="sm:hidden">New Group</span>
                 </Button>
               </UpgradeDialog>
             )}
@@ -303,27 +308,28 @@ const Community = () => {
 
         {/* Marketplace Tab */}
         <TabsContent value="marketplace" className="space-y-4 mt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Give away or sell family items</p>
-            <Button size="sm" className="gradient-primary text-white border-0" onClick={() => setShowListingForm(true)}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-xs sm:text-sm text-muted-foreground">Give away or sell family items</p>
+            <Button size="sm" className="gradient-primary text-white border-0 w-full sm:w-auto" onClick={() => setShowListingForm(true)}>
               <Plus className="w-4 h-4 mr-1" />
-              List Item
+              <span className="hidden sm:inline">List Item</span>
+              <span className="sm:hidden">New Item</span>
             </Button>
           </div>
 
           {/* Search and Filters */}
-          <div className="space-y-3">
-            <div className="relative">
+          <div className="space-y-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative sm:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-10"
               />
             </div>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -339,43 +345,41 @@ const Community = () => {
           </div>
 
           {/* Items Grid */}
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
-                <Card key={item.id} className="shadow-custom-md">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                <Card key={item.id} className="shadow-custom-md flex flex-col">
+                  <CardContent className="p-4 flex flex-col flex-1">
+                    <div className="w-full h-40 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mb-3">
+                      <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 space-y-2 flex flex-col">
+                      <h4 className="font-semibold text-sm line-clamp-2">{item.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 flex-1">{item.description}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {item.condition && (
+                          <Badge variant="secondary" className="text-xs">{item.condition}</Badge>
+                        )}
+                        {item.category && (
+                          <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                        )}
                       </div>
-                      <div className="flex-1 space-y-2">
-                        <h4 className="font-semibold text-sm">{item.title}</h4>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-                        <div className="flex items-center gap-2">
-                          {item.condition && (
-                            <Badge variant="secondary" className="text-xs">{item.condition}</Badge>
-                          )}
-                          {item.category && (
-                            <Badge variant="outline" className="text-xs">{item.category}</Badge>
-                          )}
-                        </div>
-                        <div className="text-lg font-bold text-primary">
-                          {item.price === 0 || !item.price ? (
-                            <span className="flex items-center gap-1">
-                              <Gift className="w-4 h-4" /> Free
-                            </span>
-                          ) : (
-                            `CHF ${item.price}`
-                          )}
-                        </div>
+                      <div className="text-lg font-bold text-primary mt-auto pt-2">
+                        {item.price === 0 || !item.price ? (
+                          <span className="flex items-center gap-1">
+                            <Gift className="w-4 h-4" /> Free
+                          </span>
+                        ) : (
+                          `CHF ${item.price}`
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))
             ) : (
-              <Card className="shadow-custom-md">
-                <CardContent className="p-8 text-center">
+              <Card className="shadow-custom-md col-span-full">
+                <CardContent className="p-6 sm:p-8 text-center">
                   <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-medium mb-2">No items listed yet</h3>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -403,7 +407,7 @@ const Community = () => {
 
       {/* Listing Form Dialog */}
       <Dialog open={showListingForm} onOpenChange={setShowListingForm}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95%] sm:w-full">
           <DialogHeader>
             <DialogTitle>List an Item</DialogTitle>
           </DialogHeader>
@@ -452,7 +456,7 @@ const Community = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={listingCategory} onValueChange={setListingCategory}>
