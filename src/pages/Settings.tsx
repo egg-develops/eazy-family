@@ -335,24 +335,24 @@ const l = (max + min) / 2;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div data-tutorial="settings">
-        <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
-        <p className="text-muted-foreground">{t('settings.subtitle')}</p>
+        <h1 className="text-xl sm:text-2xl font-bold">{t('settings.title')}</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
       {/* Homepage Customization */}
       <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle>{t('settings.homepage.title')}</CardTitle>
-          <CardDescription>{t('settings.homepage.description')}</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">{t('settings.homepage.title')}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">{t('settings.homepage.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
           {/* Profile Icon Upload */}
           <div className="space-y-2" data-tutorial="custom-images">
-            <Label htmlFor="profile-icon">{t('settings.homepage.profileIcon')}</Label>
-            <div className="flex gap-2 items-center">
+            <Label htmlFor="profile-icon" className="text-sm sm:text-base">{t('settings.homepage.profileIcon')}</Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <Input
                 id="profile-icon"
                 type="file"
@@ -362,19 +362,19 @@ const l = (max + min) / 2;
                   if (file) handleFileUpload(file, 'profile');
                 }}
                 disabled={uploadingProfile}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium"
+                className="flex-1 file:mr-2 sm:file:mr-4 file:py-2 file:px-2 sm:file:px-4 file:rounded-md file:border-0 file:text-xs sm:file:text-sm file:font-medium h-10 sm:h-11"
               />
-              {uploadingProfile && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
+              {uploadingProfile && <span className="text-xs sm:text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.iconImage && (
-              <img src={homeConfig.iconImage} alt="Profile" className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
+              <img src={homeConfig.iconImage} alt="Profile" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover flex-shrink-0" />
             )}
           </div>
 
           {/* Header Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="header-image">{t('settings.homepage.headerImage')}</Label>
-            <div className="flex gap-2 items-center">
+            <Label htmlFor="header-image" className="text-sm sm:text-base">{t('settings.homepage.headerImage')}</Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <Input
                 id="header-image"
                 type="file"
@@ -384,32 +384,33 @@ const l = (max + min) / 2;
                   if (file) handleFileUpload(file, 'header');
                 }}
                 disabled={uploadingHeader}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium"
+                className="flex-1 file:mr-2 sm:file:mr-4 file:py-2 file:px-2 sm:file:px-4 file:rounded-md file:border-0 file:text-xs sm:file:text-sm file:font-medium h-10 sm:h-11"
               />
-              {uploadingHeader && <span className="text-sm text-muted-foreground">{t('common.loading')}</span>}
+              {uploadingHeader && <span className="text-xs sm:text-sm text-muted-foreground">{t('common.loading')}</span>}
             </div>
             {homeConfig.headerImage && (
-              <img src={homeConfig.headerImage} alt="Header" className="w-full h-32 rounded-lg object-cover flex-shrink-0" />
+              <img src={homeConfig.headerImage} alt="Header" className="w-full h-24 sm:h-32 rounded-lg object-cover flex-shrink-0" />
             )}
           </div>
 
           {/* Quick Actions */}
           <div className="space-y-3" data-tutorial="quick-actions">
-            <Label>{t('settings.homepage.quickActionsMax')}</Label>
-            <p className="text-sm text-muted-foreground">
+            <Label className="text-sm sm:text-base">{t('settings.homepage.quickActionsMax')}</Label>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {t('settings.homepage.quickActionsDesc')}
             </p>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
               {availableQuickActions.map((action) => (
-                <div key={action.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                <div key={action.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
                   <Checkbox
                     checked={homeConfig.quickActions.includes(action.id)}
                     onCheckedChange={(checked) => 
                       handleQuickActionToggle(action.id, checked as boolean)
                     }
                     disabled={!homeConfig.quickActions.includes(action.id) && homeConfig.quickActions.length >= 4}
+                    className="flex-shrink-0"
                   />
-                  <span className="font-medium">{action.label}</span>
+                  <span className="font-medium text-sm">{action.label}</span>
                 </div>
               ))}
             </div>
@@ -417,26 +418,27 @@ const l = (max + min) / 2;
 
           {/* Top Notifications */}
           <div className="space-y-3" data-tutorial="top-notifications">
-            <Label>{t('settings.homepage.topNotifications')}</Label>
-            <p className="text-sm text-muted-foreground">
+            <Label className="text-sm sm:text-base">{t('settings.homepage.topNotifications')}</Label>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {t('settings.homepage.topNotificationsDesc')}
             </p>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
               {[
                 { id: "Upcoming Events", label: t('home.upcomingEvents') },
                 { id: "New Photos", label: t('home.newPhotos') },
                 { id: "Pending Tasks", label: t('home.pendingTasks') },
                 { id: "Shopping List", label: t('home.shoppingList') },
               ].map((notification) => (
-                <div key={notification.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                <div key={notification.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
                   <Checkbox
                     checked={homeConfig.topNotifications.includes(notification.id)}
                     onCheckedChange={(checked) => 
                       handleNotificationToggle(notification.id, checked as boolean)
                     }
                     disabled={!homeConfig.topNotifications.includes(notification.id) && homeConfig.topNotifications.length >= 2}
+                    className="flex-shrink-0"
                   />
-                  <span className="font-medium">{notification.label}</span>
+                  <span className="font-medium text-sm">{notification.label}</span>
                 </div>
               ))}
             </div>
@@ -446,24 +448,24 @@ const l = (max + min) / 2;
 
       {/* Account Settings */}
       <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle>{t('settings.account.title')}</CardTitle>
-          <CardDescription>{t('settings.account.description')}</CardDescription>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">{t('settings.account.title')}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">{t('settings.account.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
           {/* Subscription Status */}
-          <div className="p-4 rounded-lg border bg-muted/50">
+          <div className="p-3 sm:p-4 rounded-lg border bg-muted/50">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">{t('settings.account.subscription')}</span>
+              <span className="text-xs sm:text-sm font-medium">{t('settings.account.subscription')}</span>
               {subscriptionTier === 'family' && (
-                <Crown className="h-4 w-4 text-primary" />
+                <Crown className="h-4 w-4 text-primary flex-shrink-0" />
               )}
             </div>
-            <p className="text-2xl font-bold capitalize">
+            <p className="text-xl sm:text-2xl font-bold capitalize">
               {loadingSubscription ? t('common.loading') : `${subscriptionTier} Plan`}
             </p>
             {subscriptionTier === 'family' && (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {t('settings.account.allFeaturesUnlocked')}
               </p>
             )}
@@ -471,8 +473,8 @@ const l = (max + min) / 2;
 
           {subscriptionTier === 'free' && (
             <UpgradeDialog>
-              <Button className="w-full gap-2 gradient-primary text-white border-0">
-                <Crown className="h-4 w-4" />
+              <Button className="w-full gap-2 gradient-primary text-white border-0 h-10 sm:h-11">
+                <Crown className="h-4 w-4 flex-shrink-0" />
                 {t('settings.account.upgradeFamily')}
               </Button>
             </UpgradeDialog>
@@ -481,7 +483,7 @@ const l = (max + min) / 2;
           {(subscriptionTier === 'family' || subscriptionTier === 'premium') && (
             <Button 
               variant="outline" 
-              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 h-10 sm:h-11 text-sm"
               onClick={async () => {
                 if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
                   try {
@@ -517,7 +519,7 @@ const l = (max + min) / 2;
           
           <Button 
             variant="outline" 
-            className="w-full"
+            className="w-full h-10 sm:h-11 text-sm"
             onClick={() => navigate('/app/family')}
           >
             {t('settings.account.manageFamily')}
