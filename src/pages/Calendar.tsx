@@ -422,17 +422,19 @@ const Calendar = () => {
     const endDate = endOfWeek(monthEnd);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
     
-    const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    const weekDaysLong = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
       <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">{format(selectedDate, "MMMM yyyy")}</CardTitle>
-            <div className="flex gap-2">
+        <CardHeader className="pb-2 sm:pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <CardTitle className="text-lg sm:text-xl">{format(selectedDate, "MMMM yyyy")}</CardTitle>
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
+                className="text-xs sm:text-sm h-8 sm:h-9"
                 onClick={() => setSelectedDate(new Date())}
               >
                 {t('calendar.today')}
@@ -466,11 +468,12 @@ const Calendar = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pb-3">
-          <div className="grid grid-cols-7 gap-2">
+        <CardContent className="pb-2 sm:pb-3 overflow-x-auto">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 min-w-full">
             {weekDays.map((day, idx) => (
-              <div key={idx} className="text-center text-sm font-semibold text-foreground p-2">
-                {day}
+              <div key={idx} className="text-center text-xs sm:text-sm font-semibold text-foreground p-1 sm:p-2">
+                <span className="sm:hidden">{day}</span>
+                <span className="hidden sm:inline">{weekDaysLong[idx]}</span>
               </div>
             ))}
             {days.map((day) => {
@@ -484,8 +487,8 @@ const Calendar = () => {
                 <button
                   key={day.toISOString()}
                   className={`
-                    aspect-square p-2 flex flex-col items-center justify-center 
-                    cursor-pointer transition-all rounded-lg relative
+                    aspect-square p-0.5 sm:p-2 flex flex-col items-center justify-center 
+                    cursor-pointer transition-all rounded-lg relative text-xs sm:text-base
                     ${!isCurrentMonth ? "text-muted-foreground/40" : "text-foreground"}
                     ${isTodayDate ? "bg-primary text-primary-foreground font-bold ring-2 ring-primary" : ""}
                     ${isSelected && !isTodayDate ? "bg-accent" : ""}
@@ -493,13 +496,13 @@ const Calendar = () => {
                   `}
                   onClick={() => setSelectedDate(day)}
                 >
-                  <span className="text-base">{format(day, "d")}</span>
+                  <span className="text-sm sm:text-base">{format(day, "d")}</span>
                   {hasItems && (
-                    <div className="flex gap-1 mt-1 absolute bottom-1">
+                    <div className="flex gap-0.5 sm:gap-1 mt-0.5 sm:mt-1 absolute bottom-0.5 sm:bottom-1">
                       {dayItems.slice(0, 3).map((item, idx) => (
                         <div 
                           key={idx} 
-                          className="w-1.5 h-1.5 rounded-full"
+                          className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
                           style={{ backgroundColor: item.type === "event" ? item.color : "hsl(var(--primary))" }}
                         />
                       ))}
@@ -519,31 +522,31 @@ const Calendar = () => {
       {/* Calendar Sync Banner */}
       {showSyncBanner && (
         <Card className="border-primary/30 bg-primary/5 shadow-custom-md">
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <RefreshCw className="w-5 h-5 text-primary" />
+          <CardContent className="py-3 px-3 sm:px-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                <div className="p-2 rounded-full bg-primary/10 flex-shrink-0">
+                  <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm">{t('calendar.syncYourCalendars')}</h3>
+                  <h3 className="font-semibold text-xs sm:text-sm">{t('calendar.syncYourCalendars')}</h3>
                   <p className="text-xs text-muted-foreground">
                     {t('calendar.syncDescription')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {isPremium ? (
                   <Button 
                     size="sm" 
-                    className="gradient-primary text-white border-0 whitespace-nowrap"
+                    className="gradient-primary text-white border-0 whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9"
                     onClick={() => setShowCalendarSyncDialog(true)}
                   >
                     {t('calendar.connect')}
                   </Button>
                 ) : (
                   <UpgradeDialog>
-                    <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap">
+                    <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9">
                       {t('calendar.connect')}
                     </Button>
                   </UpgradeDialog>
@@ -564,7 +567,7 @@ const Calendar = () => {
 
       {/* Calendar Sync Dialog for Premium Users */}
       <Dialog open={showCalendarSyncDialog} onOpenChange={setShowCalendarSyncDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[95%] sm:w-full">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5 text-primary" />
@@ -639,23 +642,24 @@ const Calendar = () => {
       </Dialog>
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarIcon className="w-6 h-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
             {t('calendar.title')}
           </h1>
-          <p className="text-muted-foreground">{t('calendar.subtitle')}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
         </div>
         <ParticleButton 
-          className="gap-2 gradient-primary text-white border-0"
+          className="gap-2 gradient-primary text-white border-0 w-full sm:w-auto"
           onClick={() => {
             setDialogTab("event");
             setIsDialogOpen(true);
           }}
         >
           <Plus className="h-4 w-4" />
-          {t('calendar.new')}
+          <span className="hidden sm:inline">{t('calendar.new')}</span>
+          <span className="sm:hidden">New</span>
         </ParticleButton>
       </div>
 
@@ -664,10 +668,10 @@ const Calendar = () => {
 
       {/* Events & Reminders List */}
       <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{format(selectedDate, "EEEE, MMMM d, yyyy")}</CardTitle>
+        <CardHeader className="pb-2 sm:pb-3">
+          <CardTitle className="text-base sm:text-lg">{format(selectedDate, "EEEE, MMMM d, yyyy")}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 p-4 sm:p-6">
           {getItemsForDate(selectedDate).length > 0 ? (
             getItemsForDate(selectedDate).map((item) => (
               <div
@@ -760,7 +764,7 @@ const Calendar = () => {
 
       {/* Add Event/Reminder Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95%] sm:w-full">
           <DialogHeader>
             <DialogTitle>{t('calendar.new')}</DialogTitle>
           </DialogHeader>
