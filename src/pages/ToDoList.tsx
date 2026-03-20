@@ -331,11 +331,11 @@ const ToDoList = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <CheckSquare className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">To-Do Lists</h1>
+        <div className="flex items-center gap-2 mb-2">
+          <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+          <h1 className="text-xl sm:text-2xl font-bold">To-Do Lists</h1>
         </div>
-        <p className="text-muted-foreground">Organize your family tasks and shopping lists</p>
+        <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
       </div>
 
       {/* Tabs */}
@@ -347,87 +347,90 @@ const ToDoList = () => {
     }
   }}
 >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="task" className="gap-2">
-            <CheckSquare className="w-4 h-4" />
-            Tasks
+        <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-0 h-auto">
+          <TabsTrigger value="task" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Tasks</span>
+            <span className="sm:hidden">T</span>
           </TabsTrigger>
-          <TabsTrigger value="shopping" className="gap-2">
-            <ShoppingCart className="w-4 h-4" />
-            Shopping
+          <TabsTrigger value="shopping" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Shopping</span>
+            <span className="sm:hidden">S</span>
           </TabsTrigger>
-          <TabsTrigger value="shared" className="gap-2">
-            <Users className="w-4 h-4" />
-            Shared
+          <TabsTrigger value="shared" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Shared</span>
+            <span className="sm:hidden">Sh</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-6 mt-6">
           {/* Stats Cards */}
           {activeTab === "shared" ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold">{sharedStats.sharedLists}</div>
-                  <div className="text-sm text-muted-foreground">Shared Lists</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold">{sharedStats.sharedLists}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Shared Lists</div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-600">{sharedStats.collaborators}</div>
-                  <div className="text-sm text-muted-foreground">Members</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">{sharedStats.collaborators}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Members</div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-green-600">{sharedStats.completedShared}</div>
-                  <div className="text-sm text-muted-foreground">Completed</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{sharedStats.completedShared}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-orange-600">{sharedStats.active}</div>
-                  <div className="text-sm text-muted-foreground">Active</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-orange-600">{sharedStats.active}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Active</div>
                 </CardContent>
               </Card>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold">{stats.total}</div>
-                  <div className="text-sm text-muted-foreground">
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold">{stats.total}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
                     {activeTab === "shopping" ? "Total Items" : "Total Tasks"}
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
-                  <div className="text-sm text-muted-foreground">Completed</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.completed}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
                 </CardContent>
               </Card>
               {activeTab !== "shopping" && (
                 <Card className="shadow-custom-md">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl font-bold text-orange-600">{stats.overdue}</div>
-                    <div className="text-sm text-muted-foreground">Overdue</div>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <div className="text-2xl sm:text-3xl font-bold text-orange-600">{stats.overdue}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Overdue</div>
                   </CardContent>
                 </Card>
               )}
               <Card className="shadow-custom-md">
-                <CardContent className="p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-600">{stats.pending}</div>
-                  <div className="text-sm text-muted-foreground">Pending</div>
+                <CardContent className="p-3 sm:p-4 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.pending}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
                 </CardContent>
               </Card>
             </div>
           )}
 
           {/* Add New Task/Item and Voice Assistant */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <ParticleButton 
-              className="w-full gradient-primary text-white border-0"
+              className="w-full gradient-primary text-white border-0 h-10 sm:h-11"
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -435,9 +438,9 @@ const ToDoList = () => {
             </ParticleButton>
             
             {activeTab === "shopping" && (
-              <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg bg-muted/50">
                 <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">Voice Assistant</p>
+                  <p className="text-xs sm:text-sm font-medium mb-1">Voice Assistant</p>
                   <p className="text-xs text-muted-foreground">Tap the mic and say your shopping items</p>
                 </div>
                 <VoiceShoppingAssistant onItemsAdded={handleVoiceItemsAdded} />
@@ -446,10 +449,10 @@ const ToDoList = () => {
           </div>
 
           {/* Filter */}
-          <div className="flex items-center gap-3">
-            <Filter className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             <Select value={filterView} onValueChange={setFilterView}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="h-10 w-full sm:w-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -463,7 +466,7 @@ const ToDoList = () => {
 
           {/* Tasks List */}
           <Card className="shadow-custom-md min-h-[300px]">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               {activeTab === "shared" && filteredTasks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -477,18 +480,19 @@ const ToDoList = () => {
                   </Button>
                 </div>
               ) : filteredTasks.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {filteredTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors"
                     >
                       <Checkbox
                         checked={task.completed}
                         onCheckedChange={() => toggleTask(task.id)}
+                        className="flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <span className={task.completed ? "line-through text-muted-foreground" : ""}>
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : ""}`}>
                           {task.title}
                         </span>
                         {task.due_date && (
@@ -505,7 +509,7 @@ const ToDoList = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteTask(task.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto"
                       >
                         Delete
                       </Button>
@@ -527,7 +531,7 @@ const ToDoList = () => {
 
       {/* Add Task/Item Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto w-[95%] sm:w-full p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {activeTab === "shopping" ? "Add New Item" : activeTab === "shared" ? "Create Shared List" : "Add New Task"}
@@ -538,9 +542,9 @@ const ToDoList = () => {
               </DialogDescription>
             )}
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-3 sm:py-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title">
+              <Label htmlFor="task-title" className="text-sm sm:text-base">
                 {activeTab === "shopping" ? "Item Name" : activeTab === "shared" ? "List Name" : "Task Title"}
               </Label>
               <Input
@@ -555,50 +559,53 @@ const ToDoList = () => {
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && activeTab !== "shared" && !newTaskDueDate && handleAddTask()}
+                className="h-10 sm:h-11"
               />
             </div>
             {activeTab === "task" && (
               <div className="space-y-2">
-                <Label htmlFor="task-due-date">Due Date (Optional)</Label>
+                <Label htmlFor="task-due-date" className="text-sm sm:text-base">Due Date (Optional)</Label>
                 <Input
                   id="task-due-date"
                   type="date"
                   value={newTaskDueDate || ""}
                   onChange={(e) => setNewTaskDueDate(e.target.value || undefined)}
+                  className="h-10 sm:h-11"
                 />
               </div>
             )}
             {activeTab === "shared" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>Select Family Members</Label>
-                  <Badge variant="secondary">{selectedMembers.length} selected</Badge>
+                  <Label className="text-sm sm:text-base">Select Family Members</Label>
+                  <Badge variant="secondary" className="text-xs">{selectedMembers.length} selected</Badge>
                 </div>
                 {loadingMembers ? (
-                  <div className="text-center py-4 text-sm text-muted-foreground">
+                  <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
                     Loading family members...
                   </div>
                 ) : familyMembers.length === 0 ? (
                   <InlineFamilyInvite onMemberAdded={loadFamilyMembers} />
                 ) : (
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto border rounded-lg p-2 sm:p-3">
                     {familyMembers.map((member) => (
                       <div
                         key={member.id}
-                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                        className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
                         onClick={() => toggleMemberSelection(member.id)}
                       >
                         <Checkbox
                           checked={selectedMembers.includes(member.id)}
                           onCheckedChange={() => toggleMemberSelection(member.id)}
+                          className="flex-shrink-0"
                         />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{member.full_name || "No name"}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-xs sm:text-sm truncate">{member.full_name || "No name"}</p>
+                          <p className="text-xs text-muted-foreground truncate">
                             {member.email || member.phone || "No contact"}
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-xs">{member.role}</Badge>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">{member.role}</Badge>
                       </div>
                     ))}
                   </div>
@@ -606,16 +613,21 @@ const ToDoList = () => {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsDialogOpen(false);
-              setSelectedMembers([]);
-            }}>
+          <DialogFooter className="flex gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsDialogOpen(false);
+                setSelectedMembers([]);
+              }}
+              className="h-10 sm:h-11 flex-1 sm:flex-none"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleAddTask} 
               disabled={!newTaskTitle.trim() || (activeTab === "shared" && selectedMembers.length === 0)}
+              className="h-10 sm:h-11 flex-1 sm:flex-none"
             >
               {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Create List" : "Add Task"}
             </Button>
