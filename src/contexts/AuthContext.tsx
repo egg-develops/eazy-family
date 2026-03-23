@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/app/calendar`;
+    const redirectUrl = `${window.location.origin}/app`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     
     if (!error) {
-      navigate('/app/calendar');
+      navigate('/app');
     }
     
     return { error };
