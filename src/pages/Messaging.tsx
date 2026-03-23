@@ -130,15 +130,15 @@ const Messaging = () => {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4 p-3 sm:p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-          <h1 className="text-xl sm:text-2xl font-bold">Messages</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
+          <h1 className="text-lg sm:text-2xl font-bold">Messages</h1>
         </div>
         {!isPremium && (
-          <Badge variant="outline" className="text-xs gap-1 whitespace-nowrap">
+          <Badge variant="outline" className="text-xs sm:text-sm gap-1 whitespace-nowrap min-h-[32px] flex items-center">
             <Lock className="w-3 h-3" />
             Family Only
           </Badge>
@@ -147,21 +147,21 @@ const Messaging = () => {
 
       {/* External User Search - Premium Only */}
       {isPremium ? (
-        <div className="relative">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search external users..."
             value={searchExternal}
             onChange={(e) => setSearchExternal(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full text-xs sm:text-sm min-h-[44px]"
           />
         </div>
       ) : (
         <UpgradeDialog>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
-            <CardContent className="p-3 flex items-center gap-3">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow w-full">
+            <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+              <Lock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 Upgrade to search and message external users
               </span>
             </CardContent>
@@ -169,7 +169,7 @@ const Messaging = () => {
         </UpgradeDialog>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-280px)] md:h-[calc(100vh-200px)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 h-[calc(100vh-280px)] md:h-[calc(100vh-200px)]">
         {/* Conversation List - Hidden on mobile when conversation selected */}
         <div className={`${selectedConversation ? 'hidden md:block' : 'block'} md:col-span-1`}>
           {conversations.length > 0 ? (
@@ -181,9 +181,9 @@ const Messaging = () => {
               }
             />
           ) : (
-            <Card>
+            <Card className="w-full">
               <CardContent className="p-4 sm:p-6 text-center">
-                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground mx-auto mb-3" />
+                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground mx-auto mb-3 sm:mb-4" />
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   Join a family to start messaging family members
                 </p>
@@ -195,12 +195,12 @@ const Messaging = () => {
         {/* Chat Thread - Full width on mobile when selected, 2/3 on desktop */}
         {selectedConversation && currentConversation ? (
           <div className={`${selectedConversation ? 'block' : 'hidden'} md:block md:col-span-2 flex flex-col gap-3 sm:gap-4`}>
-            <div className="flex items-center gap-2 md:hidden pb-2 border-b">
+            <div className="flex items-center gap-2 sm:gap-3 md:hidden pb-2 sm:pb-3 border-b min-h-[44px]">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedConversation(null)}
-                className="p-1"
+                className="p-2 min-h-[44px] min-w-[44px]"
               >
                 ← Back
               </Button>
@@ -227,9 +227,9 @@ const Messaging = () => {
           </div>
         ) : (
           <div className="hidden md:flex md:col-span-2 items-center justify-center">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
-                <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-3" />
+            <Card className="w-full">
+              <CardContent className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-12">
+                <MessageCircle className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mb-4 sm:mb-6" />
                 <p className="text-xs sm:text-sm text-muted-foreground text-center">
                   Select a conversation to start messaging
                 </p>

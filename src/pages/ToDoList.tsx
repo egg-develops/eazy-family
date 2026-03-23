@@ -328,12 +328,12 @@ const ToDoList = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 mb-2">
-          <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-          <h1 className="text-xl sm:text-2xl font-bold">To-Do Lists</h1>
+        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+          <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
+          <h1 className="text-lg sm:text-2xl font-bold">To-Do Lists</h1>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
       </div>
@@ -544,7 +544,7 @@ const ToDoList = () => {
           </DialogHeader>
           <div className="space-y-4 py-3 sm:py-4">
             <div className="space-y-2">
-              <Label htmlFor="task-title" className="text-sm sm:text-base">
+              <Label htmlFor="task-title" className="text-xs sm:text-sm font-medium">
                 {activeTab === "shopping" ? "Item Name" : activeTab === "shared" ? "List Name" : "Task Title"}
               </Label>
               <Input
@@ -559,18 +559,18 @@ const ToDoList = () => {
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && activeTab !== "shared" && !newTaskDueDate && handleAddTask()}
-                className="h-10 sm:h-11"
+                className="w-full h-10 sm:h-11 text-xs sm:text-sm min-h-[44px]"
               />
             </div>
             {activeTab === "task" && (
               <div className="space-y-2">
-                <Label htmlFor="task-due-date" className="text-sm sm:text-base">Due Date (Optional)</Label>
+                <Label htmlFor="task-due-date" className="text-xs sm:text-sm font-medium">Due Date (Optional)</Label>
                 <Input
                   id="task-due-date"
                   type="date"
                   value={newTaskDueDate || ""}
                   onChange={(e) => setNewTaskDueDate(e.target.value || undefined)}
-                  className="h-10 sm:h-11"
+                  className="w-full h-10 sm:h-11 text-xs sm:text-sm min-h-[44px]"
                 />
               </div>
             )}

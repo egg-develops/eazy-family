@@ -518,7 +518,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 w-full max-w-full overflow-x-hidden">
       {/* Calendar Sync Banner */}
       {showSyncBanner && (
         <Card className="border-primary/30 bg-primary/5 shadow-custom-md">
@@ -781,7 +781,7 @@ const Calendar = () => {
                   placeholder={t('calendar.eventTitle')}
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="text-base"
+                  className="w-full text-xs sm:text-sm min-h-[44px]"
                 />
               </div>
 
@@ -790,7 +790,7 @@ const Calendar = () => {
                   placeholder={t('calendar.location')}
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
-                  className="text-base"
+                  className="w-full text-xs sm:text-sm min-h-[44px]"
                 />
               </div>
 
@@ -906,7 +906,7 @@ const Calendar = () => {
               <div className="flex gap-2 pt-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm min-h-[44px]"
                   onClick={() => {
                     resetEventForm();
                     setIsDialogOpen(false);
@@ -915,7 +915,7 @@ const Calendar = () => {
                   {t('common.cancel')}
                 </Button>
                 <ParticleButton
-                  className="flex-1 gradient-primary text-white border-0"
+                  className="flex-1 gradient-primary text-white border-0 text-xs sm:text-sm min-h-[44px]"
                   onClick={handleAddEvent}
                 >
                   {editingItemId ? t('calendar.updateEvent') : t('calendar.addEvent2')}
@@ -929,7 +929,7 @@ const Calendar = () => {
                   placeholder={t('calendar.reminderTitle')}
                   value={reminderTitle}
                   onChange={(e) => setReminderTitle(e.target.value)}
-                  className="text-base"
+                  className="w-full text-xs sm:text-sm min-h-[44px]"
                 />
               </div>
 
@@ -970,7 +970,7 @@ const Calendar = () => {
               <div className="flex gap-2 pt-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm min-h-[44px]"
                   onClick={() => {
                     resetReminderForm();
                     setIsDialogOpen(false);
@@ -979,7 +979,7 @@ const Calendar = () => {
                   {t('common.cancel')}
                 </Button>
                 <ParticleButton
-                  className="flex-1 gradient-primary text-white border-0"
+                  className="flex-1 gradient-primary text-white border-0 text-xs sm:text-sm min-h-[44px]"
                   onClick={handleAddReminder}
                 >
                   {editingItemId ? t('calendar.updateReminder') : t('calendar.addReminder')}

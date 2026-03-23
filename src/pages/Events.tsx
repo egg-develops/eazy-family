@@ -145,39 +145,39 @@ const Events = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <MapPin className="w-6 h-6 text-primary" />
-          <h1 className="text-2xl font-bold">{t('events.title')}</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
+          <h1 className="text-lg sm:text-2xl font-bold">{t('events.title')}</h1>
         </div>
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
           {filteredEvents.length} events
         </Badge>
       </div>
 
       {/* Location Banner */}
       <Card className="shadow-custom-md gradient-primary text-white">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div>
-              <h3 className="font-semibold">
+              <h3 className="font-semibold text-sm sm:text-base">
                 {userLocation ? "Your Area" : "Detecting location..."}
               </h3>
-              <p className="text-white/90 text-sm">
+              <p className="text-white/90 text-xs sm:text-sm">
                 Showing events within {distance}km
               </p>
             </div>
-            <Navigation className="w-8 h-8 text-white/80" />
+            <Navigation className="w-6 h-6 sm:w-8 sm:h-8 text-white/80 flex-shrink-0" />
           </div>
         </CardContent>
       </Card>
 
       {/* Filters */}
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="flex-1">
+          <SelectTrigger className="w-full sm:flex-1 min-h-[44px] text-xs sm:text-sm">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue />
           </SelectTrigger>
@@ -191,7 +191,7 @@ const Events = () => {
         </Select>
 
         <Select value={distance} onValueChange={setDistance}>
-          <SelectTrigger className="w-24">
+          <SelectTrigger className="w-full sm:w-32 min-h-[44px] text-xs sm:text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -220,51 +220,51 @@ const Events = () => {
       )}
 
       {/* Events List */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Heart className="w-5 h-5 text-accent" />
+      <div className="space-y-3 sm:space-y-4">
+        <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+          <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
           Events Near You
         </h3>
 
         {filteredEvents.length > 0 ? (
           filteredEvents.map((event) => (
             <Card key={event.id} className="shadow-custom-md">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-semibold">{event.title}</h4>
-                      <p className="text-sm text-muted-foreground">{event.description}</p>
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm sm:text-base">{event.title}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{event.description}</p>
                     </div>
                     {event.distance && (
-                      <Badge variant="outline" className="text-xs whitespace-nowrap ml-2">
+                      <Badge variant="outline" className="text-xs whitespace-nowrap flex-shrink-0">
                         {event.distance}
                       </Badge>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {event.date} • {event.time}
+                      <Clock className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{event.date} • {event.time}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {event.location}
+                      <MapPin className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{event.location}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                    <div className="flex gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-xs">{event.ageRange}</Badge>
                       <Badge variant="outline" className="text-xs">{event.price}</Badge>
                       <Badge variant="outline" className="text-xs">{event.type}</Badge>
                     </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" aria-label="Favorite">
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button variant="ghost" size="sm" aria-label="Favorite" className="min-h-[44px] min-w-[44px]">
                         <Heart className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" aria-label="Share">
+                      <Button variant="ghost" size="sm" aria-label="Share" className="min-h-[44px] min-w-[44px]">
                         <Share2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -275,10 +275,10 @@ const Events = () => {
           ))
         ) : (
           <Card className="shadow-custom-lg">
-            <CardContent className="p-8 text-center">
-              <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium mb-2">No events nearby</h3>
-              <p className="text-sm text-muted-foreground">
+            <CardContent className="p-6 sm:p-8 text-center">
+              <MapPin className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+              <h3 className="font-medium text-sm sm:text-base mb-2">No events nearby</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Try increasing the distance or changing filters
               </p>
             </CardContent>
@@ -289,7 +289,7 @@ const Events = () => {
       {/* Map View Toggle */}
       <Button
         variant="outline"
-        className="w-full"
+        className="w-full text-xs sm:text-sm min-h-[44px]"
         onClick={() => setShowMap(!showMap)}
       >
         <MapPin className="w-4 h-4 mr-2" />

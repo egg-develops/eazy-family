@@ -530,10 +530,10 @@ if (error) throw error;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header Images Carousel Section */}
       {headerImages.length > 0 ? (
-        <div className="relative rounded-2xl overflow-hidden">
+        <div className="relative rounded-lg sm:rounded-2xl overflow-hidden">
           <Carousel className="w-full">
             <CarouselContent>
               {headerImages.map((image, index) => (
@@ -546,7 +546,7 @@ if (error) throw error;
                     />
                     <button
                       onClick={() => removeHeaderImage(index)}
-                      className="absolute top-4 right-4 p-2 bg-red-500/70 hover:bg-red-600 rounded-full text-white transition-colors z-10"
+                      className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 bg-red-500/70 hover:bg-red-600 rounded-full text-white transition-colors z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       title="Remove this image"
                     >
                       <X className="w-4 h-4" />
@@ -557,8 +557,8 @@ if (error) throw error;
             </CarouselContent>
             {headerImages.length > 1 && (
               <>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious className="left-1 sm:left-2" />
+                <CarouselNext className="right-1 sm:right-2" />
               </>
             )}
           </Carousel>
@@ -576,7 +576,7 @@ if (error) throw error;
               />
               <label
                 htmlFor="header-upload"
-                className="absolute bottom-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer"
+                className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title={`Add more images (${headerImages.length}/5)`}
               >
                 <Plus className="w-4 h-4" />
@@ -598,28 +598,28 @@ if (error) throw error;
           />
           <label 
             htmlFor="header-upload"
-            className="relative rounded-2xl overflow-hidden h-32 md:h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-accent/30 transition-colors group block"
+            className="relative rounded-lg sm:rounded-2xl overflow-hidden h-24 sm:h-32 md:h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-accent/30 transition-colors group block"
           >
-            <div className="text-center">
-              <Camera className="w-12 h-12 mx-auto mb-3 opacity-50 group-hover:opacity-70 transition-opacity" />
-              <p className="font-semibold">Add Header Images</p>
-              <p className="text-sm text-muted-foreground">Click to upload (up to 5)</p>
+            <div className="text-center px-4">
+              <Camera className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50 group-hover:opacity-70 transition-opacity" />
+              <p className="font-semibold text-sm sm:text-base">Add Header Images</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Click to upload (up to 5)</p>
             </div>
           </label>
         </>
       )}
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/app/settings")} className="flex-shrink-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/app/settings")} className="flex-shrink-0 min-h-[44px] min-w-[44px]">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold flex items-center gap-2 flex-wrap">
-            <Users className="w-6 h-6 text-primary flex-shrink-0" />
+          <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
             <span>Family Profile</span>
           </h1>
-          <p className="text-muted-foreground text-sm">Manage your family members</p>
+          <p className="text-muted-foreground text-xs sm:text-sm">Manage your family members</p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
@@ -633,11 +633,11 @@ if (error) throw error;
               <DialogTitle>Invite Family Member</DialogTitle>
               <DialogDescription>Send an invitation to join your family on the Family Plan</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
               <div className="space-y-2">
-                <Label>Invite Method</Label>
+                <Label className="text-xs sm:text-sm">Invite Method</Label>
                 <Select value={inviteMethod} onValueChange={(value: "email" | "phone") => setInviteMethod(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -659,20 +659,20 @@ if (error) throw error;
 
               {inviteMethod === "email" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="family@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                  <Label htmlFor="email" className="text-xs sm:text-sm">Email Address</Label>
+                  <Input id="email" type="email" placeholder="family@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" placeholder="+1 234 567 8900" value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} />
+                  <Label htmlFor="phone" className="text-xs sm:text-sm">Phone Number</Label>
+                  <Input id="phone" type="tel" placeholder="+1 234 567 8900" value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label className="text-xs sm:text-sm">Role</Label>
                 <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -685,7 +685,7 @@ if (error) throw error;
                 </Select>
               </div>
 
-              <Button onClick={handleInviteMember} disabled={sending} className="w-full">
+              <Button onClick={handleInviteMember} disabled={sending} className="w-full text-xs sm:text-sm min-h-[44px]">
                 <Send className="h-4 w-4 mr-2" />
                 {sending ? "Sending..." : "Send Invitation"}
               </Button>
