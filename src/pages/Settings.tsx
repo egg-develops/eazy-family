@@ -812,7 +812,9 @@ const l = (max + min) / 2;
       </Card>
 
       {/* Referral System */}
-      <ReferralSystem />
+      <div data-tutorial="referral-system">
+        <ReferralSystem />
+      </div>
 
       {/* Actions */}
       <div className="space-y-3">
