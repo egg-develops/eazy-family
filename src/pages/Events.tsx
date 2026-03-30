@@ -140,9 +140,26 @@ const Events = () => {
     };
   }, [showMap, userLocation]);
 
-  const filteredEvents = events.filter(event =>
-    filter === 'all' || event.type.toLowerCase() === filter.toLowerCase()
-  );
+  // Haversine distance in km
+  const calcDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const filteredEvents = events.filter(event => {
+    const typeMatch = filter === 'all' || event.type.toLowerCase() === filter.toLowerCase();
+    if (!typeMatch) return false;
+    if (!userLocation) return true;
+    const km = calcDistance(userLocation.lat, userLocation.lng, event.lat, event.lng);
+    return km <= parseInt(distance);
+  }).map(event => {
+    if (!userLocation) return event;
+    const km = calcDistance(userLocation.lat, userLocation.lng, event.lat, event.lng);
+    return { ...event, distance: `${km.toFixed(1)} km` };
+  });
 
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
