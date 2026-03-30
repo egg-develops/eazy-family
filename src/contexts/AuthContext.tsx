@@ -119,13 +119,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const redirectUrl = `${window.location.origin}/app`;
-    
+    // MVP: Don't send emailRedirectTo to avoid rate limiting
+    // Email confirmation will be handled differently in production
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        // emailRedirectTo removed for MVP (was causing rate limit issues)
         data: {
           full_name: fullName,
         }
