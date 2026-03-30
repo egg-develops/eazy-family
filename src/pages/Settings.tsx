@@ -535,43 +535,89 @@ const l = (max + min) / 2;
           </CardTitle>
           <CardDescription>{t('calendarIntegrations.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
             <>
-              <Button variant="outline" className="w-full justify-start gap-2" onClick={() => toast({ title: t('calendarIntegrations.googleCalendar'), description: "Google Calendar sync is available!" })}>
-                <CalendarIcon className="w-4 h-4" />
-                {t('calendarIntegrations.googleCalendar')}
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
-                <CalendarIcon className="w-4 h-4" />
-                {t('calendarIntegrations.appleCalendar')}
-                <span className="coming-soon-badge ml-auto">Coming Soon</span>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2 opacity-60 cursor-not-allowed" disabled>
-                <CalendarIcon className="w-4 h-4" />
-                {t('calendarIntegrations.outlookCalendar')}
-                <span className="coming-soon-badge ml-auto">Coming Soon</span>
-              </Button>
+              {/* Google Calendar - Connected */}
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 border-green-200">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="w-5 h-5 text-green-600" />
+                  <div>
+                    <h4 className="font-medium text-sm text-green-900">Google Calendar</h4>
+                    <p className="text-xs text-green-700">Connected</p>
+                  </div>
+                </div>
+                <Badge className="bg-green-600">Connected</Badge>
+              </div>
+
+              {/* Apple Calendar - Coming Soon */}
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 border-gray-200 opacity-75">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-600">Apple Calendar</h4>
+                    <p className="text-xs text-gray-500">Coming Soon</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Coming Soon</Badge>
+              </div>
+
+              {/* Outlook Calendar - Coming Soon */}
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 border-gray-200 opacity-75">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <h4 className="font-medium text-sm text-gray-600">Outlook Calendar</h4>
+                    <p className="text-xs text-gray-500">Coming Soon</p>
+                  </div>
+                </div>
+                <Badge variant="secondary">Coming Soon</Badge>
+              </div>
             </>
           ) : (
             <>
+              {/* Free tier - Show upgrade prompts */}
               <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  {t('calendarIntegrations.googleCalendar')} ({t('calendarIntegrations.premium')})
-                </Button>
+                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CalendarIcon className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium text-sm text-blue-900">Google Calendar</h4>
+                        <p className="text-xs text-blue-700">Premium Feature</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-600">Premium</Badge>
+                  </div>
+                </div>
               </UpgradeDialog>
               <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  {t('calendarIntegrations.appleCalendar')} ({t('calendarIntegrations.premium')})
-                </Button>
+                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CalendarIcon className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium text-sm text-blue-900">Apple Calendar</h4>
+                        <p className="text-xs text-blue-700">Premium Feature</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-600">Premium</Badge>
+                  </div>
+                </div>
               </UpgradeDialog>
               <UpgradeDialog>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="w-4 h-4" />
-                  {t('calendarIntegrations.outlookCalendar')} ({t('calendarIntegrations.premium')})
-                </Button>
+                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CalendarIcon className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium text-sm text-blue-900">Outlook Calendar</h4>
+                        <p className="text-xs text-blue-700">Premium Feature</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-600">Premium</Badge>
+                  </div>
+                </div>
               </UpgradeDialog>
             </>
           )}
