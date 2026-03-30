@@ -46,31 +46,63 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
       setIsLoading(true);
 
-      // Call server-side validation
-      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: { promo_code: promoCode.trim() },
-      });
+      // Validate promo code from database
+      const { data: promoData, error: promoError } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.trim().toUpperCase())
+        .single();
 
-      if (error) throw error;
-
-      if (data?.valid) {
-        setPromoApplied(true);
-        toast({
-          title: "Promo applied",
-          description: "Family Plan activated for free. Enjoy!",
-        });
-        setOpen(false);
-        window.location.reload();
-      } else {
+      if (promoError || !promoData) {
         toast({
           title: "Invalid code",
-          description: data?.error || "Please check your promo code and try again.",
+          description: "Please check your promo code and try again.",
           variant: "destructive",
         });
+        return;
       }
+
+      // Check expiration
+      if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
+        toast({
+          title: "Expired code",
+          description: "This promo code has expired.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check usage limit
+      if (promoData.max_uses && promoData.used_count >= promoData.max_uses) {
+        toast({
+          title: "Code limit reached",
+          description: "This promo code has reached its usage limit.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Apply the promotion - update user subscription
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ is_premium: true, upgraded_at: new Date().toISOString() })
+        .eq('user_id', session.user.id);
+
+      if (updateError) throw updateError;
+
+      // Increment usage count
+      await supabase
+        .from('promo_codes')
+        .update({ used_count: (promoData.used_count || 0) + 1 })
+        .eq('id', promoData.id);
+
+      setPromoApplied(true);
+      toast({
+        title: "Promo applied",
+        description: "Family Plan activated for free. Enjoy!",
+      });
+      setOpen(false);
+      window.location.reload();
     } catch (error) {
       logError('Error applying promo:', error);
       toast({

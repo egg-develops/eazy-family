@@ -39,6 +39,8 @@ const Community = () => {
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [showCreateGroupDialog, setShowCreateGroupDialog] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showGroupDetailDialog, setShowGroupDetailDialog] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
 
@@ -129,6 +131,11 @@ const Community = () => {
     } catch (error) {
       logError('Error leaving group:', error);
     }
+  };
+
+  const handleViewGroup = (group: Group) => {
+    setSelectedGroup(group);
+    setShowGroupDetailDialog(true);
   };
 
   const handleCreateGroup = () => {
@@ -264,7 +271,7 @@ const Community = () => {
           <div className="space-y-3">
             {groups.length > 0 ? (
               groups.map((group) => (
-                <Card key={group.id} className="shadow-custom-md">
+                <Card key={group.id} className="shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow" onClick={() => joinedGroupIds.has(group.id) && handleViewGroup(group)}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -280,11 +287,11 @@ const Community = () => {
                         </div>
                       </div>
                       {joinedGroupIds.has(group.id) ? (
-                        <Button variant="outline" size="sm" onClick={() => handleLeaveGroup(group.id)}>
+                        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleLeaveGroup(group.id); }}>
                           Leave
                         </Button>
                       ) : (
-                        <Button size="sm" className="gradient-primary text-white border-0" onClick={() => handleJoinGroup(group.id)}>
+                        <Button size="sm" className="gradient-primary text-white border-0" onClick={(e) => { e.stopPropagation(); handleJoinGroup(group.id); }}>
                           Join
                         </Button>
                       )}
@@ -534,6 +541,42 @@ const Community = () => {
           <div />
         </UpgradeDialog>
       )}
+
+      {/* Group Detail Dialog */}
+      <Dialog open={showGroupDetailDialog} onOpenChange={setShowGroupDetailDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedGroup?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedGroup && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground">{selectedGroup.description || "No description"}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium mb-2">Members</h4>
+                  <p className="text-2xl font-bold">{selectedGroup.member_count || 0}</p>
+                </div>
+                {selectedGroup.category && (
+                  <div>
+                    <h4 className="font-medium mb-2">Category</h4>
+                    <Badge>{selectedGroup.category}</Badge>
+                  </div>
+                )}
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Group Type</h4>
+                <p className="text-sm">{selectedGroup.is_public ? "Public" : "Private"}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGroupDetailDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

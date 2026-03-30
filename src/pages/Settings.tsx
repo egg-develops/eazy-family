@@ -46,8 +46,8 @@ const Settings = () => {
       showCalendar: true,
       showWeather: true,
       showGreeting: true,
-      topNotifications: ["Upcoming Events", "New Photos"],
-      quickActions: ["Find Events", "Add Photos"],
+      topNotifications: ["Upcoming Events"],
+      quickActions: ["Find Events"],
       iconImage: undefined,
       headerImage: undefined,
     };
@@ -193,7 +193,6 @@ const l = (max + min) / 2;
 
   const availableQuickActions = [
     { id: "Find Events", label: t('events.findEvents') },
-    { id: "Add Photos", label: t('memories.uploadNew') },
     { id: "Calendar", label: t('nav.calendar') },
     { id: "Community", label: t('nav.community') },
     { id: "To-Do List", label: t('calendar.todoList') },
@@ -425,7 +424,6 @@ const l = (max + min) / 2;
             <div className="grid grid-cols-1 gap-2 sm:gap-3">
               {[
                 { id: "Upcoming Events", label: t('home.upcomingEvents') },
-                { id: "New Photos", label: t('home.newPhotos') },
                 { id: "Pending Tasks", label: t('home.pendingTasks') },
                 { id: "Shopping List", label: t('home.shoppingList') },
               ].map((notification) => (

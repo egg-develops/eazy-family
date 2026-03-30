@@ -254,7 +254,7 @@ const AppHome = () => {
       showWeather: true,
       showGreeting: true,
       topNotifications: ["Upcoming Events", "Pending Tasks"],
-      quickActions: ["Find Events", "Add Photos"]
+      quickActions: ["Find Events"]
     };
   });
   
@@ -621,7 +621,6 @@ const AppHome = () => {
             const getIcon = (actionName: string) => {
               switch (actionName) {
                 case "Find Events": return Search;
-                case "Add Photos": return Camera; // kept for backwards compat
                 case "Calendar": return Calendar;
                 case "Community": return Users;
                 case "To-Do List": return Calendar;
@@ -635,9 +634,6 @@ const AppHome = () => {
               switch (action) {
                 case "Find Events":
                   navigate('/app/events');
-                  break;
-                case "Add Photos":
-                  navigate('/app/community');
                   break;
                 case "Calendar":
                   navigate('/app/calendar');
