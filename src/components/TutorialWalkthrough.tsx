@@ -45,13 +45,20 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
     },
     {
       target: '[data-tutorial="referral-system"]',
-      content: '🎁 Share Eazy.Family with friends! You both get 1 free month of Premium when they sign up with your code.',
+      content: '🎁 Your personal referral code is right here! Share it with friends — you both earn 1 free month of Premium when they sign up.',
       placement: 'top',
     },
     {
       target: 'body',
-      content: 'That\'s it! You\'re all set to start using Eazy Family. Share your referral code with friends to earn free Premium! You can always restart this tour from Settings.',
+      content: '📱 Share Eazy.Family with Friends! Copy your referral code from Settings and send it via WhatsApp, iMessage, or email. Every friend who joins earns you free Premium.',
       placement: 'center',
+      disableBeacon: true,
+    },
+    {
+      target: 'body',
+      content: '🎉 You\'re all set! Eazy.Family is ready to keep your family organized and connected. Replay this tour anytime from the "Re-run Tutorial" button at the bottom of Settings.',
+      placement: 'center',
+      disableBeacon: true,
     },
   ];
 
@@ -73,7 +80,7 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
         }, 200);
         return;
       }
-      // Navigate back to homepage before the final step
+      // Navigate back to homepage before the share/final steps
       if (index === 6) {
         navigate('/app');
         setTimeout(() => setStepIndex(index + 1), 500);

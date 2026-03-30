@@ -234,7 +234,14 @@ const AppHome = () => {
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
   const headerImageInputRef = useRef<HTMLInputElement>(null);
-  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [carouselIndex, setCarouselIndex] = useState(() => {
+    // Rotate carousel index on every homepage visit
+    const key = 'eazy-carousel-visit-index';
+    const prev = parseInt(sessionStorage.getItem(key) || '0', 10);
+    const next = (prev + 1) % 4; // max 4 images
+    sessionStorage.setItem(key, String(next));
+    return next;
+  });
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
     const saved = localStorage.getItem('eazy-family-home-config');
     if (saved) {
@@ -378,6 +385,14 @@ const AppHome = () => {
   // Header carousel rotation
   const headerImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
 
+  // Clamp visit-based index to actual image count
+  useEffect(() => {
+    if (headerImages.length > 0) {
+      setCarouselIndex(prev => prev % headerImages.length);
+    }
+  }, [headerImages.length]);
+
+  // Auto-rotate every 5 seconds when multiple images
   useEffect(() => {
     if (headerImages.length <= 1) return;
     const interval = setInterval(() => {

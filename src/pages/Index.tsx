@@ -2,14 +2,14 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, Calendar, MapPin, Camera, Users, ShoppingCart, ChevronRight } from "lucide-react";
+import { Heart, Calendar, MapPin, Users, ShoppingCart, MessageCircle, ChevronRight } from "lucide-react";
 
 const features = [
   { icon: Calendar, title: "Shared Calendars & Lists", description: "Sync schedules, to-do's and shopping lists" },
   { icon: MapPin, title: "Local Event Discovery", description: "Find family-friendly activities happening near you" },
-  { icon: Camera, title: "AI Photo Organizer", description: "Automatically sort and tag your memories" },
   { icon: Users, title: "Parent Community", description: "Connect with nearby parents and arrange playdates" },
-  { icon: ShoppingCart, title: "Family Marketplace", description: "Buy and sell pre-loved kids' items" },
+  { icon: ShoppingCart, title: "Family Marketplace", description: "Give away or sell pre-loved kids' items" },
+  { icon: MessageCircle, title: "Family Messaging", description: "Stay connected with your family members" },
 ];
 
 const Index = () => {

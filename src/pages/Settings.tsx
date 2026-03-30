@@ -536,91 +536,66 @@ const l = (max + min) / 2;
           <CardDescription>{t('calendarIntegrations.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Google Calendar */}
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
-            <>
-              {/* Google Calendar - Connected */}
-              <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 border-green-200">
-                <div className="flex items-center gap-3">
-                  <CalendarIcon className="w-5 h-5 text-green-600" />
-                  <div>
-                    <h4 className="font-medium text-sm text-green-900">Google Calendar</h4>
-                    <p className="text-xs text-green-700">Connected</p>
-                  </div>
+            <div className={`flex items-center justify-between p-3 border rounded-lg ${localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'bg-green-50 border-green-200' : 'bg-card border-border'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
+                <div>
+                  <h4 className="font-medium text-sm">Google Calendar</h4>
+                  <p className="text-xs text-muted-foreground">
+                    {localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'Connected — sync in Calendar tab' : 'Available — connect in Calendar tab'}
+                  </p>
                 </div>
-                <Badge className="bg-green-600">Connected</Badge>
               </div>
-
-              {/* Apple Calendar - Coming Soon */}
-              <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 border-gray-200 opacity-75">
-                <div className="flex items-center gap-3">
-                  <CalendarIcon className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600">Apple Calendar</h4>
-                    <p className="text-xs text-gray-500">Coming Soon</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
-
-              {/* Outlook Calendar - Coming Soon */}
-              <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50 border-gray-200 opacity-75">
-                <div className="flex items-center gap-3">
-                  <CalendarIcon className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600">Outlook Calendar</h4>
-                    <p className="text-xs text-gray-500">Coming Soon</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">Coming Soon</Badge>
-              </div>
-            </>
+              <Badge className={localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'bg-green-600 text-white' : 'bg-primary text-primary-foreground'}>
+                {localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'Connected' : 'Available'}
+              </Badge>
+            </div>
           ) : (
-            <>
-              {/* Free tier - Show upgrade prompts */}
-              <UpgradeDialog>
-                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium text-sm text-blue-900">Google Calendar</h4>
-                        <p className="text-xs text-blue-700">Premium Feature</p>
-                      </div>
+            <UpgradeDialog>
+              <div className="p-3 border rounded-lg bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
+                    <div>
+                      <h4 className="font-medium text-sm">Google Calendar</h4>
+                      <p className="text-xs text-muted-foreground">Upgrade to sync</p>
                     </div>
-                    <Badge className="bg-blue-600">Premium</Badge>
                   </div>
+                  <Badge className="bg-primary text-primary-foreground">Premium</Badge>
                 </div>
-              </UpgradeDialog>
-              <UpgradeDialog>
-                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium text-sm text-blue-900">Apple Calendar</h4>
-                        <p className="text-xs text-blue-700">Premium Feature</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-blue-600">Premium</Badge>
-                  </div>
-                </div>
-              </UpgradeDialog>
-              <UpgradeDialog>
-                <div className="p-3 border rounded-lg bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="w-5 h-5 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium text-sm text-blue-900">Outlook Calendar</h4>
-                        <p className="text-xs text-blue-700">Premium Feature</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-blue-600">Premium</Badge>
-                  </div>
-                </div>
-              </UpgradeDialog>
-            </>
+              </div>
+            </UpgradeDialog>
           )}
+
+          {/* Apple Calendar - Coming Soon */}
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 border-border/50 opacity-70">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shadow-sm">
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Apple Calendar</h4>
+                <p className="text-xs text-muted-foreground/70">iCloud integration</p>
+              </div>
+            </div>
+            <Badge variant="secondary">Coming Soon</Badge>
+          </div>
+
+          {/* Outlook Calendar - Coming Soon */}
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 border-border/50 opacity-70">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
+                <span className="text-white text-xs font-bold">O</span>
+              </div>
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground">Outlook Calendar</h4>
+                <p className="text-xs text-muted-foreground/70">Microsoft 365 integration</p>
+              </div>
+            </div>
+            <Badge variant="secondary">Coming Soon</Badge>
+          </div>
         </CardContent>
       </Card>
 
