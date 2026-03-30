@@ -54,8 +54,26 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
+    // Check if this user was referred (apply coupon if so)
+    const adminSupabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    const { data: referral } = await adminSupabase
+      .from("referrals")
+      .select("id, referrer_user_id")
+      .eq("referred_user_id", user.id)
+      .eq("status", "completed")
+      .eq("reward_applied", false)
+      .maybeSingle();
+
+    const referralCouponId = Deno.env.get("STRIPE_REFERRAL_COUPON_ID");
+    const discounts = referral && referralCouponId
+      ? [{ coupon: referralCouponId }]
+      : [];
+
     // Create checkout session with 7-day trial
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       line_items: [
         {
@@ -68,11 +86,21 @@ serve(async (req) => {
         trial_period_days: 7,
         metadata: {
           supabase_user_id: user.id,
+          referral_id: referral?.id ?? "",
+          referrer_user_id: referral?.referrer_user_id ?? "",
         },
       },
       success_url: `${origin}/app`,
       cancel_url: `${origin}/app/community`,
-    });
+    };
+    if (discounts.length > 0) {
+      sessionParams.discounts = discounts;
+      // Can't combine discounts with allow_promotion_codes
+    } else {
+      sessionParams.allow_promotion_codes = true;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

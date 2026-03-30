@@ -34,10 +34,10 @@ serve(async (req) => {
     // Handle subscription events
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      
+
       if (session.mode === "subscription" && session.customer) {
         const customerId = session.customer as string;
-        
+
         // Update user's subscription tier using stripe_customer_id
         const { error, count } = await supabaseClient
           .from("profiles")
@@ -50,6 +50,47 @@ serve(async (req) => {
           return new Response(JSON.stringify({ error: "Update failed" }), { status: 500 });
         } else {
           console.log(`Subscription activated for customer ${customerId}`);
+        }
+
+        // Apply referral reward to referrer if applicable
+        const subscriptionMeta = (session.subscription_data as any)?.metadata ?? (session as any).metadata ?? {};
+        const referralId = subscriptionMeta?.referral_id;
+        const referrerUserId = subscriptionMeta?.referrer_user_id;
+        const referralCouponId = Deno.env.get("STRIPE_REFERRAL_COUPON_ID");
+
+        if (referralId && referrerUserId && referralCouponId) {
+          try {
+            // Get referrer's Stripe customer ID
+            const { data: referrerProfile } = await supabaseClient
+              .from("profiles")
+              .select("stripe_customer_id")
+              .eq("user_id", referrerUserId)
+              .maybeSingle();
+
+            if (referrerProfile?.stripe_customer_id) {
+              // Find referrer's active subscription and apply coupon
+              const referrerSubscriptions = await stripe.subscriptions.list({
+                customer: referrerProfile.stripe_customer_id,
+                status: "active",
+                limit: 1,
+              });
+
+              if (referrerSubscriptions.data.length > 0) {
+                await stripe.subscriptions.update(referrerSubscriptions.data[0].id, {
+                  discounts: [{ coupon: referralCouponId }],
+                });
+                console.log(`Applied referral coupon to referrer ${referrerUserId}`);
+              }
+            }
+
+            // Mark referral as reward applied
+            await supabaseClient
+              .from("referrals")
+              .update({ reward_applied: true })
+              .eq("id", referralId);
+          } catch (refErr) {
+            console.error("Error applying referral reward:", refErr);
+          }
         }
       }
     } else if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
