@@ -1,4 +1,44 @@
 {
+  "onboarding": {
+    "welcome": {
+      "title": "Willkommen bei Eazy.Family",
+      "description": "Deine tägliche App für ein einfaches Familienleben — Termine organisieren, Aufgaben erledigen, Events planen und mit anderen Eltern vernetzen."
+    },
+    "language": {
+      "title": "Wähle deine Sprache",
+      "description": "Wir passen die App-Erfahrung für dich an"
+    },
+    "name": {
+      "title": "Wie heißt du?",
+      "description": "Hilf uns, deine Erfahrung zu personalisieren",
+      "label": "Dein Name",
+      "placeholder": "z.B. Max Mustermann"
+    },
+    "children": {
+      "title": "Füge deine Kinder hinzu",
+      "description": "Wir helfen dir, Aktivitäten für sie zu organisieren",
+      "initialsLabel": "Initialen des Kindes",
+      "ageLabel": "Alter",
+      "initialsPlaceholder": "z.B. MM",
+      "agePlaceholder": "z.B. 5",
+      "addAnother": "+ Weiteres Kind hinzufügen",
+      "skipButton": "Kinder später hinzufügen",
+      "remove": "Entfernen"
+    },
+    "location": {
+      "title": "Wo befindest du dich?",
+      "description": "Wir zeigen dir lokale familienfreundliche Events",
+      "placeholder": "Standort wählen"
+    },
+    "features": {
+      "title": "Welche Funktionen interessieren dich am meisten?",
+      "description": "Wähle alle zutreffenden aus — wir priorisieren diese für dich"
+    },
+    "next": "Weiter",
+    "back": "Zurück",
+    "getStarted": "Loslegen!",
+    "skip": "Überspringen"
+  },
   "app": {
     "name": "Eazy.Family",
     "greeting": "Guten Morgen! ☀️",

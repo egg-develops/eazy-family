@@ -57,7 +57,7 @@ const features = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -174,9 +174,9 @@ const Onboarding = () => {
               <div className="w-20 h-20 mx-auto gradient-primary rounded-full flex items-center justify-center z-0">
                 <Heart className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold relative z-10">Welcome to Eazy.Family</h2>
+              <h2 className="text-2xl font-bold relative z-10">{t('onboarding.welcome.title')}</h2>
               <p className="text-muted-foreground text-lg relative z-10">
-                Your daily app to make family life easy — organize schedules, to-do's, plan events, and connect with other parents.
+                {t('onboarding.welcome.description')}
               </p>
             </div>
           </div>
@@ -186,8 +186,8 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Choose your language</h2>
-              <p className="text-muted-foreground">We'll customize the app experience for you</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.language.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.language.description')}</p>
             </div>
             <Select value={data.language} onValueChange={(value) => {
               setData(prev => ({ ...prev, language: value }));
@@ -212,14 +212,14 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What is your name?</h2>
-              <p className="text-muted-foreground">Help us personalize your experience</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.name.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.name.description')}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Your name</Label>
+              <Label htmlFor="name">{t('onboarding.name.label')}</Label>
               <Input
                 id="name"
-                placeholder="e.g., John Doe"
+                placeholder={t('onboarding.name.placeholder')}
                 value={data.userName}
                 onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
                 className="text-lg"
@@ -232,8 +232,8 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Add your children</h2>
-              <p className="text-muted-foreground">We'll help you organize activities for them</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.children.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.children.description')}</p>
             </div>
             <div className="space-y-4">
               {data.children.map((child, index) => (
@@ -242,21 +242,21 @@ const Onboarding = () => {
                     <div className="flex gap-3 items-start">
                       <div className="flex-1 space-y-3">
                         <div>
-                          <Label htmlFor={`initials-${index}`}>Child's Initials</Label>
+                          <Label htmlFor={`initials-${index}`}>{t('onboarding.children.initialsLabel')}</Label>
                           <Input
                             id={`initials-${index}`}
-                            placeholder="e.g., JD"
+                            placeholder={t('onboarding.children.initialsPlaceholder')}
                             value={child.initials}
                             onChange={(e) => updateChild(index, 'initials', e.target.value)}
                             maxLength={3}
                           />
                         </div>
                         <div>
-                          <Label htmlFor={`age-${index}`}>Age</Label>
+                          <Label htmlFor={`age-${index}`}>{t('onboarding.children.ageLabel')}</Label>
                           <Input
                             id={`age-${index}`}
                             type="number"
-                            placeholder="e.g., 5"
+                            placeholder={t('onboarding.children.agePlaceholder')}
                             value={child.age}
                             onChange={(e) => updateChild(index, 'age', e.target.value)}
                             min="0"
@@ -271,7 +271,7 @@ const Onboarding = () => {
                           onClick={() => removeChild(index)}
                           className="mt-6"
                         >
-                          Remove
+                          {t('onboarding.children.remove')}
                         </Button>
                       )}
                     </div>
@@ -283,7 +283,7 @@ const Onboarding = () => {
                 onClick={addChild}
                 className="w-full"
               >
-                + Add Another Child
+                {t('onboarding.children.addAnother')}
               </Button>
               <Button
                 variant="ghost"
@@ -293,7 +293,7 @@ const Onboarding = () => {
                 }}
                 className="w-full"
               >
-                Add Children Later
+                {t('onboarding.children.skipButton')}
               </Button>
             </div>
           </div>
@@ -303,12 +303,12 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">Where are you located?</h2>
-              <p className="text-muted-foreground">We'll show you local family-friendly events</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.location.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.location.description')}</p>
             </div>
             <Select value={data.location} onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}>
               <SelectTrigger className="text-lg">
-                <SelectValue placeholder="Choose your location" />
+                <SelectValue placeholder={t('onboarding.location.placeholder')} />
               </SelectTrigger>
               <SelectContent>
                 {locations.map((location) => (
@@ -325,8 +325,8 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">What features interest you most?</h2>
-              <p className="text-muted-foreground">Select all that apply - we'll prioritize these for you</p>
+              <h2 className="text-2xl font-bold">{t('onboarding.features.title')}</h2>
+              <p className="text-muted-foreground">{t('onboarding.features.description')}</p>
             </div>
             <div className="grid grid-cols-1 gap-3">
               {features.map((feature) => {
@@ -394,14 +394,14 @@ const Onboarding = () => {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t('onboarding.back')}
           </Button>
             <Button
               onClick={nextStep}
               disabled={!canProceed()}
               className="flex items-center gap-2 gradient-primary text-white border-0 hover:opacity-90"
             >
-              {currentStep === steps.length ? 'Get Started' : 'Next'}
+              {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
               <ArrowRight className="w-4 h-4" />
             </Button>
         </div>

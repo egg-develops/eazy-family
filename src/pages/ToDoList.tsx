@@ -672,7 +672,15 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
   };
 
   const handleInvite = async () => {
-    if (!user || !familyId) return;
+    if (!user) return;
+    if (!familyId) {
+      toast({
+        title: "No family found",
+        description: "You need to create or join a family first. Go to Family Profile to get started.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const inviteSchema = z.object({
       email: z.string().trim().email().optional(),

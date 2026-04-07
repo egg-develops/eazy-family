@@ -313,6 +313,24 @@ const AppHome = () => {
     }
   };
 
+  const [pendingTasksCount, setPendingTasksCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingTasks = async () => {
+      try {
+        const { count } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('completed', false)
+          .eq('type', 'task');
+        setPendingTasksCount(count || 0);
+      } catch {
+        // silently fail
+      }
+    };
+    fetchPendingTasks();
+  }, []);
+
   const calendarEvents = getCalendarItems();
 
   const todayEvents = calendarEvents.filter((event) => {
@@ -606,11 +624,11 @@ const AppHome = () => {
             </Card>
           )}
           {homeConfig.topNotifications.includes("Pending Tasks") && (
-            <Card 
+            <Card
               className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => navigate('/app/todos')}
             >
-              <div className="text-2xl font-bold text-orange-600">0</div>
+              <div className="text-2xl font-bold text-orange-600">{pendingTasksCount}</div>
               <div className="text-sm text-muted-foreground">Pending Tasks</div>
             </Card>
           )}
