@@ -315,6 +315,30 @@ const AppHome = () => {
 
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
 
+  // Sync home_config from Supabase on mount
+  useEffect(() => {
+    if (!user) return;
+    const syncFromSupabase = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('home_config')
+          .eq('user_id', user.id)
+          .single();
+        if (data?.home_config && typeof data.home_config === 'object') {
+          setHomeConfig(prev => {
+            const merged = { ...prev, ...(data.home_config as Partial<HomeConfig>) };
+            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+            return merged;
+          });
+        }
+      } catch {
+        // Column may not exist yet — fall back to localStorage silently
+      }
+    };
+    syncFromSupabase();
+  }, [user]);
+
   useEffect(() => {
     const fetchPendingTasks = async () => {
       try {
@@ -343,28 +367,28 @@ const AppHome = () => {
 
   const upcomingEventsCount = calendarEvents.filter((event) => event.startDate >= startOfToday).length;
 
-  const removeCalendar = () => {
-    const newConfig = { ...homeConfig, showCalendar: false };
+  const saveConfig = (newConfig: HomeConfig) => {
     setHomeConfig(newConfig);
     localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    if (user) {
+      supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
+    }
+  };
+
+  const removeCalendar = () => {
+    saveConfig({ ...homeConfig, showCalendar: false });
   };
 
   const removeWeather = () => {
-    const newConfig = { ...homeConfig, showWeather: false };
-    setHomeConfig(newConfig);
-    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    saveConfig({ ...homeConfig, showWeather: false });
   };
 
   const addCalendar = () => {
-    const newConfig = { ...homeConfig, showCalendar: true };
-    setHomeConfig(newConfig);
-    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    saveConfig({ ...homeConfig, showCalendar: true });
   };
 
   const addWeather = () => {
-    const newConfig = { ...homeConfig, showWeather: true };
-    setHomeConfig(newConfig);
-    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    saveConfig({ ...homeConfig, showWeather: true });
   };
 
   const handleHeaderImageUpload = async (file: File) => {
@@ -393,8 +417,7 @@ const AppHome = () => {
       const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
       const updatedImages = [...currentImages, publicUrl].slice(-4); // max 4
       const newConfig = { ...homeConfig, headerImage: updatedImages[0], headerImages: updatedImages };
-      setHomeConfig(newConfig);
-      localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+      saveConfig(newConfig);
     } catch (error) {
       logError('Upload error:', error);
     }

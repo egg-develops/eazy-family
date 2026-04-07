@@ -29,11 +29,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const [locations, setLocations] = useState<WeatherLocation[]>([]);
   const [currentLocationIndex, setCurrentLocationIndex] = useState(0);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingLocation, setIsAddingLocation] = useState(false);
-  const [manualEntry, setManualEntry] = useState(false);
-  const [locationError, setLocationError] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   useEffect(() => {
     const savedLocations = localStorage.getItem('weather-locations');
@@ -49,29 +48,23 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         // Invalid saved data, fall through to detect
       }
     }
+    // No saved locations — run geolocation in background
     detectLocation();
   }, []);
 
   const detectLocation = () => {
     if (!("geolocation" in navigator)) {
-      setLocationError(true);
-      setManualEntry(true);
-      setLoading(false);
       return;
     }
-
+    setIsDetecting(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setLocationError(false);
         fetchLocationName(latitude, longitude);
       },
       (error) => {
         logError("Geolocation error:", error);
-        setLocationError(true);
-        setManualEntry(true);
-        setLoading(false);
-        // Don't show error toast - show inline fallback instead
+        setIsDetecting(false);
       },
       { timeout: 10000, maximumAge: 300000 }
     );
@@ -96,19 +89,12 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         const newLocations = [location];
         setLocations(newLocations);
         localStorage.setItem('weather-locations', JSON.stringify(newLocations));
-        setLocationError(false);
         fetchWeather(lat, lon);
-      } else {
-        // API returned no results - show manual entry
-        setLocationError(true);
-        setManualEntry(true);
-        setLoading(false);
       }
     } catch (error) {
       logError("Reverse geocoding error:", error);
-      setLocationError(true);
-      setManualEntry(true);
-      setLoading(false);
+    } finally {
+      setIsDetecting(false);
     }
   };
 
@@ -129,14 +115,12 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           humidity: data.main.humidity,
           windSpeed: data.wind.speed
         });
-        setLocationError(false);
       } else {
         throw new Error("Invalid weather response");
       }
     } catch (error) {
       logError("Weather fetch error:", error);
       toast.error("Error loading weather data. Try adding your location manually.");
-      setLocationError(true);
     } finally {
       setLoading(false);
     }
@@ -165,8 +149,6 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         setLocations(newLocations);
         localStorage.setItem('weather-locations', JSON.stringify(newLocations));
         setSearchQuery("");
-        setManualEntry(false);
-        setLocationError(false);
         setCurrentLocationIndex(newLocations.length - 1);
         fetchWeather(location.lat, location.lon);
         toast.success(`Added ${location.name}`);
@@ -188,7 +170,6 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
     if (newLocations.length === 0) {
       setWeatherData(null);
-      setManualEntry(true);
     } else if (currentLocationIndex >= newLocations.length) {
       setCurrentLocationIndex(0);
       fetchWeather(newLocations[0].lat, newLocations[0].lon);
@@ -210,8 +191,8 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const currentLocation = locations[currentLocationIndex];
 
-  // Show manual entry fallback when location detection fails
-  if ((locationError || manualEntry) && !weatherData) {
+  // No saved locations yet — show city search as primary UI
+  if (locations.length === 0) {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
         <button
@@ -224,24 +205,24 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
             <Cloud className="w-5 h-5 text-cyan-500" />
             <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
           </div>
-          <p className="text-sm text-muted-foreground">
-            We couldn't detect your location. Enter your city to see weather:
-          </p>
           <div className="flex gap-2">
             <Input
               placeholder="Enter city name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+              autoFocus
             />
             <Button onClick={searchLocation} disabled={isAddingLocation}>
               {isAddingLocation ? "..." : "Go"}
             </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={detectLocation} className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Retry auto-detect
-          </Button>
+          {isDetecting && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              Detecting your location...
+            </p>
+          )}
         </div>
       </Card>
     );

@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
@@ -6,41 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-// 10MB max audio size (base64 encoded is ~33% larger than raw)
-const MAX_AUDIO_BASE64_SIZE = 13 * 1024 * 1024;
-
-// Decode large base64 strings in chunks to avoid memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    chunks.push(bytes);
-    position += chunkSize;
-  }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return result;
-}
-
-function padBase64(input: string) {
-  const cleaned = input.replace(/\s/g, "");
-  const padLen = (4 - (cleaned.length % 4)) % 4;
-  return cleaned + "=".repeat(padLen);
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -71,159 +35,64 @@ serve(async (req) => {
       );
     }
 
-    const { audioBase64 } = await req.json();
-    
-    // Validate input
-    if (!audioBase64) {
+    const { text } = await req.json();
+
+    if (!text || typeof text !== 'string' || !text.trim()) {
       return new Response(
-        JSON.stringify({ error: "No audio data provided" }),
+        JSON.stringify({ error: "No text provided" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (typeof audioBase64 !== 'string') {
-      return new Response(
-        JSON.stringify({ error: "Audio data must be a base64 string" }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
-    if (audioBase64.length > MAX_AUDIO_BASE64_SIZE) {
-      return new Response(
-        JSON.stringify({ error: "Audio file too large. Maximum 10MB allowed" }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
-    // Convert base64 to blob for transcription (robust decoder)
-    const padded = padBase64(audioBase64);
-    const audioData = processBase64Chunks(padded);
-    const audioBlob = new Blob([audioData], { type: "audio/webm" });
-
-    // First, transcribe the audio using OpenAI's Whisper
-    const formData = new FormData();
-    formData.append("file", audioBlob, "audio.webm");
-    formData.append("model", "whisper-1");
-
-    const transcriptionResponse = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: formData,
-    });
-
-    if (!transcriptionResponse.ok) {
-      const errorText = await transcriptionResponse.text();
-      console.error("Transcription error:", transcriptionResponse.status, errorText);
-      const status = transcriptionResponse.status === 429 ? 429 : 400;
-      return new Response(
-        JSON.stringify({ error: "Transcription failed", details: errorText }),
-        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const { text: transcription } = await transcriptionResponse.json();
-    console.log("Transcription:", transcription);
-
-    // Now use Lovable AI to extract shopping items from the transcription
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 256,
         messages: [
           {
-            role: "system",
-            content: "You are a helpful shopping assistant. Extract shopping items from user speech and return them as a JSON array of strings. Each item should be a simple, clear shopping item name. If the user says something that's not a shopping item, return an empty array."
-          },
-          {
             role: "user",
-            content: transcription
+            content: `Extract shopping list items from this text. Return ONLY a JSON array of strings, no other text. Example: ["milk", "eggs", "bread"]. If no shopping items found, return [].
+
+Text: ${text}`
           }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extract_shopping_items",
-              description: "Extract shopping items from the transcribed text",
-              parameters: {
-                type: "object",
-                properties: {
-                  items: {
-                    type: "array",
-                    items: {
-                      type: "string"
-                    },
-                    description: "Array of shopping items extracted from the text"
-                  }
-                },
-                required: ["items"],
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "extract_shopping_items" } }
+        ]
       }),
     });
 
-    if (!aiResponse.ok) {
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to your workspace." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      const error = await aiResponse.text();
-      console.error("AI error:", error);
-      throw new Error("Failed to process with AI");
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Anthropic API error:", response.status, errorText);
+      throw new Error(`Anthropic API error: ${response.status}`);
     }
 
-    const aiData = await aiResponse.json();
-    console.log("AI Response:", JSON.stringify(aiData, null, 2));
+    const aiData = await response.json();
+    const rawContent = aiData.content?.[0]?.text ?? "[]";
 
-    // Extract items from tool call
     let items: string[] = [];
-    if (aiData.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments) {
-      const args = JSON.parse(aiData.choices[0].message.tool_calls[0].function.arguments);
-      items = args.items || [];
+    try {
+      const parsed = JSON.parse(rawContent.trim());
+      if (Array.isArray(parsed)) {
+        items = parsed.filter((item): item is string => typeof item === 'string');
+      }
+    } catch {
+      console.error("Failed to parse AI response:", rawContent);
+      items = [];
     }
 
     return new Response(
-      JSON.stringify({ 
-        transcription,
-        items 
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ items, transcription: text }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {

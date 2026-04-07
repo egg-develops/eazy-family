@@ -36,7 +36,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
 
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
@@ -99,6 +99,30 @@ const Settings = () => {
     
     fetchSubscription();
   }, []);
+
+  // Sync home_config from Supabase on mount
+  useEffect(() => {
+    if (!user) return;
+    const syncFromSupabase = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('home_config')
+          .eq('user_id', user.id)
+          .single();
+        if (data?.home_config && typeof data.home_config === 'object') {
+          setHomeConfig(prev => {
+            const merged = { ...prev, ...(data.home_config as Partial<HomeConfig>) };
+            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+            return merged;
+          });
+        }
+      } catch {
+        // Column may not exist yet — fall back to localStorage silently
+      }
+    };
+    syncFromSupabase();
+  }, [user]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -204,6 +228,9 @@ const l = (max + min) / 2;
     const newConfig = { ...homeConfig, ...updates };
     setHomeConfig(newConfig);
     localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    if (user) {
+      supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
+    }
     toast({
       title: t('common.success'),
       description: t('settings.homepage.description'),

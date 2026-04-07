@@ -11,152 +11,123 @@ interface VoiceShoppingAssistantProps {
 
 export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
-  const [isRecording, setIsRecording] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm'
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
-        
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
       toast({
-        title: "Recording started",
-        description: "Speak your shopping items...",
-      });
-    } catch (error) {
-      logError('Error starting recording:', error);
-      toast({
-        title: "Error",
-        description: "Could not access microphone. Please check permissions.",
+        title: "Not supported",
+        description: "Voice input is not supported in this browser.",
         variant: "destructive",
       });
+      return;
     }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setIsListening(false);
+      await processTranscript(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      logError('Speech recognition error:', event.error);
+      setIsListening(false);
+      toast({
+        title: "Voice error",
+        description: "Could not capture speech. Please try again.",
+        variant: "destructive",
+      });
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+
+    toast({
+      title: "Listening...",
+      description: "Speak your shopping items",
+    });
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
+    setIsListening(false);
   };
 
-  const processAudio = async (audioBlob: Blob) => {
+  const processTranscript = async (transcript: string) => {
     setIsProcessing(true);
-    
     try {
-      // Convert blob to base64
-      const reader = new FileReader();
-      
-      reader.onerror = () => {
-        setIsProcessing(false);
+      const { data, error } = await supabase.functions.invoke('shopping-voice-assistant', {
+        body: { text: transcript }
+      });
+
+      if (error) throw error;
+
+      if (data?.items && data.items.length > 0) {
+        onItemsAdded(data.items);
         toast({
-          title: "Error reading audio",
-          description: "Failed to process the audio file. Please try again.",
+          title: "Items added!",
+          description: `Added ${data.items.length} item(s): ${data.items.join(', ')}`,
+        });
+      } else {
+        toast({
+          title: "No items detected",
+          description: `I heard: "${transcript}"`,
           variant: "destructive",
         });
-      };
-      
-      reader.onloadend = async () => {
-        try {
-          const base64Audio = reader.result as string;
-          const base64Data = base64Audio.split(',')[1];
-
-          // Call the edge function
-          const { data, error } = await supabase.functions.invoke('shopping-voice-assistant', {
-            body: { audioBase64: base64Data }
-          });
-
-          if (error) {
-            throw error;
-          }
-
-          if (data.items && data.items.length > 0) {
-            onItemsAdded(data.items);
-            toast({
-              title: "Items added!",
-              description: `Added ${data.items.length} item(s) to your shopping list: ${data.items.join(', ')}`,
-            });
-          } else {
-            toast({
-              title: "No items detected",
-              description: data.transcription ? `I heard: "${data.transcription}"` : "Please try speaking more clearly.",
-              variant: "destructive",
-            });
-          }
-        } catch (error: unknown) {
-          logError('Error processing audio:', error);
-          toast({
-            title: "Error processing audio",
-            description: error instanceof Error ? error.message : "Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-      
-      reader.readAsDataURL(audioBlob);
+      }
     } catch (error: unknown) {
-      logError('Error processing audio:', error);
-      setIsProcessing(false);
-      
+      logError('Error processing transcript:', error);
       toast({
-        title: "Error processing audio",
+        title: "Error processing voice",
         description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       <Button
-        variant={isRecording ? "destructive" : "outline"}
+        variant={isListening ? "destructive" : "outline"}
         size="icon"
-        onClick={isRecording ? stopRecording : startRecording}
+        onClick={isListening ? stopListening : startListening}
         disabled={isProcessing}
         className="h-10 w-10"
       >
         {isProcessing ? (
           <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isRecording ? (
+        ) : isListening ? (
           <MicOff className="h-4 w-4" />
         ) : (
           <Mic className="h-4 w-4" />
         )}
       </Button>
-      {isRecording && (
+      {isListening && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-          Recording...
+          Listening...
         </div>
       )}
       {isProcessing && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          Processing audio...
+          Processing...
         </div>
       )}
     </div>
