@@ -158,12 +158,15 @@ const Auth = () => {
 
       if (error) {
         const msg = (error as any)?.message || '';
-        if (msg.includes('already registered')) {
-          toast({ title: t('auth.error'), description: t('auth.invalidCredentialsDesc'), variant: "destructive" });
-        } else if (msg.includes('Invalid login credentials')) {
-          toast({ title: t('auth.invalidCredentials'), description: t('auth.invalidCredentialsDesc'), variant: "destructive" });
+        if (msg.includes('already registered') || msg.includes('User already registered')) {
+          toast({ title: "Account already exists", description: "An account with this email already exists. Try signing in instead.", variant: "destructive" });
+          setIsSignUp(false);
+        } else if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
+          toast({ title: "Incorrect email or password", description: "Please check your credentials and try again.", variant: "destructive" });
+        } else if (msg.includes('Email not confirmed')) {
+          toast({ title: "Check your email", description: "Please click the confirmation link we sent you before signing in.", variant: "destructive" });
         } else {
-          toast({ title: t('auth.error'), description: msg, variant: "destructive" });
+          toast({ title: t('auth.error'), description: msg || "Something went wrong. Please try again.", variant: "destructive" });
         }
       } else if (isSignUp) {
         toast({ title: t('common.success'), description: "Check your email to confirm your account." });
