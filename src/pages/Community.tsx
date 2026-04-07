@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, MessageCircle, Plus, ShoppingCart, Search, Filter, Lock, Gift } from "lucide-react";
+import { Users, MessageCircle, Plus, ShoppingCart, Search, Filter, Lock, Gift, Send, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { error as logError } from "@/lib/logger";
+
+interface GroupMessage {
+  id: string;
+  group_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  profiles?: { full_name: string | null } | null;
+}
 
 interface Group {
   id: string;
@@ -41,6 +50,12 @@ const Community = () => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showGroupDetailDialog, setShowGroupDetailDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [groupDetailTab, setGroupDetailTab] = useState("chat");
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
+  const [groupMembers, setGroupMembers] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
 
@@ -135,7 +150,58 @@ const Community = () => {
 
   const handleViewGroup = (group: Group) => {
     setSelectedGroup(group);
+    setGroupDetailTab("chat");
+    setGroupMessages([]);
+    setGroupMembers([]);
     setShowGroupDetailDialog(true);
+    loadGroupMessages(group.id);
+    loadGroupMembers(group.id);
+  };
+
+  const loadGroupMessages = async (groupId: string) => {
+    try {
+      const { data } = await supabase
+        .from('group_messages')
+        .select('*, profiles(full_name)')
+        .eq('group_id', groupId)
+        .order('created_at', { ascending: true })
+        .limit(100);
+      setGroupMessages(data || []);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    } catch (error) {
+      logError('Error loading group messages:', error);
+    }
+  };
+
+  const loadGroupMembers = async (groupId: string) => {
+    try {
+      const { data } = await supabase
+        .from('group_members')
+        .select('user_id, joined_at, profiles(full_name)')
+        .eq('group_id', groupId)
+        .limit(50);
+      setGroupMembers(data || []);
+    } catch (error) {
+      logError('Error loading group members:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!user?.id || !selectedGroup || !newMessage.trim()) return;
+    setSendingMessage(true);
+    try {
+      const { error } = await supabase
+        .from('group_messages')
+        .insert({ group_id: selectedGroup.id, user_id: user.id, content: newMessage.trim() });
+      if (error) throw error;
+      setNewMessage("");
+      loadGroupMessages(selectedGroup.id);
+    } catch (error) {
+      logError('Error sending message:', error);
+      toast({ title: "Error", description: "Could not send message.", variant: "destructive" });
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleCreateGroup = () => {
@@ -271,7 +337,7 @@ const Community = () => {
           <div className="space-y-3">
             {groups.length > 0 ? (
               groups.map((group) => (
-                <Card key={group.id} className="shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow" onClick={() => joinedGroupIds.has(group.id) && handleViewGroup(group)}>
+                <Card key={group.id} className={`shadow-custom-md transition-shadow ${joinedGroupIds.has(group.id) ? 'cursor-pointer hover:shadow-lg' : ''}`} onClick={() => joinedGroupIds.has(group.id) && handleViewGroup(group)}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -542,39 +608,131 @@ const Community = () => {
         </UpgradeDialog>
       )}
 
-      {/* Group Detail Dialog */}
+      {/* Group Detail Dialog - Full Experience */}
       <Dialog open={showGroupDetailDialog} onOpenChange={setShowGroupDetailDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selectedGroup?.name}</DialogTitle>
-          </DialogHeader>
-          {selectedGroup && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Description</h4>
-                <p className="text-sm text-muted-foreground">{selectedGroup.description || "No description"}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium mb-2">Members</h4>
-                  <p className="text-2xl font-bold">{selectedGroup.member_count || 0}</p>
-                </div>
-                {selectedGroup.category && (
-                  <div>
-                    <h4 className="font-medium mb-2">Category</h4>
-                    <Badge>{selectedGroup.category}</Badge>
-                  </div>
-                )}
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Group Type</h4>
-                <p className="text-sm">{selectedGroup.is_public ? "Public" : "Private"}</p>
-              </div>
+        <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 gap-0">
+          {/* Group Header */}
+          <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => setShowGroupDetailDialog(false)}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-base truncate">{selectedGroup?.name}</h2>
+              {selectedGroup?.description && (
+                <p className="text-xs text-muted-foreground truncate">{selectedGroup.description}</p>
+              )}
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowGroupDetailDialog(false)}>Close</Button>
-          </DialogFooter>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Badge variant="secondary" className="text-xs">
+                {groupMembers.length || selectedGroup?.member_count || 0} members
+              </Badge>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs value={groupDetailTab} onValueChange={setGroupDetailTab} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="grid grid-cols-2 mx-4 mt-3 flex-shrink-0">
+              <TabsTrigger value="chat" className="text-sm">
+                <MessageCircle className="w-4 h-4 mr-1" /> Chat
+              </TabsTrigger>
+              <TabsTrigger value="members" className="text-sm">
+                <Users className="w-4 h-4 mr-1" /> Members
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Chat Tab */}
+            <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-0 px-0">
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {groupMessages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  groupMessages.map((msg) => {
+                    const isOwn = msg.user_id === user?.id;
+                    const displayName = (msg.profiles as any)?.full_name || "Member";
+                    const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+                    return (
+                      <div key={msg.id} className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {!isOwn && (
+                          <Avatar className="w-7 h-7 flex-shrink-0 mt-1">
+                            <AvatarFallback className="text-xs bg-primary/10">{initials}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className={`max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                          {!isOwn && (
+                            <span className="text-xs text-muted-foreground px-1">{displayName}</span>
+                          )}
+                          <div className={`px-3 py-2 rounded-2xl text-sm ${isOwn ? 'bg-primary text-primary-foreground rounded-tr-sm' : 'bg-muted rounded-tl-sm'}`}>
+                            {msg.content}
+                          </div>
+                          <span className="text-xs text-muted-foreground px-1">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="flex gap-2 p-4 border-t flex-shrink-0">
+                <Input
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                  maxLength={2000}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={sendingMessage || !newMessage.trim()}
+                  size="icon"
+                  className="gradient-primary text-white border-0 flex-shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Members Tab */}
+            <TabsContent value="members" className="flex-1 overflow-y-auto p-4 mt-0">
+              {groupMembers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Loading members...</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {groupMembers.map((member) => {
+                    const name = (member.profiles as any)?.full_name || "Member";
+                    const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+                    const isYou = member.user_id === user?.id;
+                    return (
+                      <div key={member.user_id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                        <Avatar className="w-8 h-8 flex-shrink-0">
+                          <AvatarFallback className="text-xs bg-primary/10">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{name}{isYou ? ' (you)' : ''}</p>
+                          {member.joined_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Joined {new Date(member.joined_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>
