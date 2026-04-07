@@ -392,12 +392,14 @@ if (error) throw error;
 
   const shareInviteLink = () => {
     if (!familyInfo) return;
-    const inviteUrl = `https://eazy.family/join-family`;
-    navigator.clipboard.writeText(`Join our family on Eazy.Family! Use code: ${familyInfo.invite_code}\n\n${inviteUrl}`);
-    toast({
-      title: "Share link copied!",
-      description: "Share this with your family members",
-    });
+    const inviteUrl = `https://eazy.family/join-family?code=${familyInfo.invite_code}`;
+    const shareText = `You're invited to join ${familyInfo.name} on Eazy.Family!\n\nTap the link to join instantly:\n${inviteUrl}`;
+    if (navigator.share) {
+      navigator.share({ title: `Join ${familyInfo.name} on Eazy.Family`, text: shareText, url: inviteUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText);
+      toast({ title: "Link copied!", description: "Share it with your family members" });
+    }
   };
 
   const regenerateInviteCode = async () => {

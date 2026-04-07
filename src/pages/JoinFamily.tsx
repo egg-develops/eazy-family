@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { error as logError } from "@/lib/logger";
 
 const JoinFamily = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const [inviteCode, setInviteCode] = useState("");
@@ -19,7 +20,11 @@ const JoinFamily = () => {
 
   useEffect(() => {
     document.title = "Join Your Eazy Family";
-  }, []);
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setInviteCode(codeFromUrl.toUpperCase().slice(0, 6));
+    }
+  }, [searchParams]);
 
   const handleJoinFamily = async () => {
     if (!user) {
@@ -116,6 +121,11 @@ const JoinFamily = () => {
         {/* Join Card */}
         <Card className="shadow-custom-lg">
           <CardContent className="space-y-4">
+            {searchParams.get('code') && (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 text-center">
+                <p className="text-sm text-primary font-medium">Your invite code has been pre-filled ✓</p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="invite-code">Invite Code</Label>
               <Input
