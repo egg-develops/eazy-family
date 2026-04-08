@@ -611,18 +611,22 @@ const l = (max + min) / 2;
             <Badge variant="secondary">Coming Soon</Badge>
           </div>
 
-          {/* Outlook Calendar - Coming Soon */}
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 border-border/50 opacity-70">
+          {/* Outlook Calendar */}
+          <div className={`flex items-center justify-between p-3 border rounded-lg ${localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'bg-blue-50 border-blue-200' : 'bg-card border-border'}`}>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
                 <span className="text-white text-xs font-bold">O</span>
               </div>
               <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Outlook Calendar</h4>
-                <p className="text-xs text-muted-foreground/70">Microsoft 365 integration</p>
+                <h4 className="font-medium text-sm">Outlook Calendar</h4>
+                <p className="text-xs text-muted-foreground">
+                  {localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'Connected — sync in Calendar tab' : 'Available — connect in Calendar tab'}
+                </p>
               </div>
             </div>
-            <Badge variant="secondary">Coming Soon</Badge>
+            <Badge className={localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'bg-blue-600 text-white' : 'bg-[#0078d4] text-white'}>
+              {localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'Connected' : 'Available'}
+            </Badge>
           </div>
         </CardContent>
       </Card>

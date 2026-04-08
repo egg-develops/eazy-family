@@ -136,6 +136,24 @@ const Calendar = () => {
     }
     return [];
   });
+
+  const [outlookSynced, setOutlookSynced] = useState(() => {
+    return localStorage.getItem('eazy-outlook-calendar-synced') === 'true';
+  });
+  const [isSyncingOutlook, setIsSyncingOutlook] = useState(false);
+  const [outlookEvents, setOutlookEvents] = useState<CalendarItem[]>(() => {
+    const saved = localStorage.getItem('eazy-outlook-calendar-events');
+    if (saved) {
+      try {
+        return JSON.parse(saved).map((e: any) => ({
+          ...e,
+          startDate: new Date(e.startDate),
+          endDate: new Date(e.endDate),
+        }));
+      } catch { return []; }
+    }
+    return [];
+  });
   
   useEffect(() => {
     localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
@@ -161,16 +179,15 @@ const Calendar = () => {
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
 
-  // Handle Google Calendar OAuth callback
+  // Handle OAuth callbacks (Google + Outlook)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
-    if (code && state === 'google_calendar_sync') {
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-      handleGoogleCallback(code);
-    }
+    if (!code) return;
+    window.history.replaceState({}, '', window.location.pathname);
+    if (state === 'google_calendar_sync') handleGoogleCallback(code);
+    if (state === 'outlook_calendar_sync') handleOutlookCallback(code);
   }, []);
 
   const handleGoogleConnect = async () => {
@@ -231,12 +248,103 @@ const Calendar = () => {
     toast({ title: 'Google Calendar disconnected' });
   };
 
+  // ── Outlook Calendar ────────────────────────────────────────────────────────
+
+  const handleOutlookConnect = async () => {
+    setIsSyncingOutlook(true);
+    try {
+      const redirectUri = `${window.location.origin}/app/calendar`;
+      const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
+        body: { action: 'get_auth_url', redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+      setIsSyncingOutlook(false);
+    }
+  };
+
+  const applyOutlookEvents = (rawEvents: any[]) => {
+    const mapped: CalendarItem[] = rawEvents.map((e: any) => ({
+      id: `outlook-${e.id}`,
+      title: e.title,
+      startDate: new Date(e.start),
+      endDate: new Date(e.end || e.start),
+      allDay: e.allDay || false,
+      location: e.location,
+      type: 'event' as const,
+      color: 'hsl(210 80% 52%)', // Outlook blue
+    }));
+    setOutlookEvents(mapped);
+    localStorage.setItem('eazy-outlook-calendar-events', JSON.stringify(mapped));
+    localStorage.setItem('eazy-outlook-calendar-synced', 'true');
+    setOutlookSynced(true);
+    return mapped;
+  };
+
+  const handleOutlookCallback = async (code: string) => {
+    setIsSyncingOutlook(true);
+    try {
+      const redirectUri = `${window.location.origin}/app/calendar`;
+      const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
+        body: { action: 'exchange_code', code, redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.events) {
+        const mapped = applyOutlookEvents(data.events);
+        setShowCalendarSyncDialog(false);
+        toast({ title: 'Outlook Calendar synced!', description: `${mapped.length} events imported.` });
+      }
+    } catch (err: any) {
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSyncingOutlook(false);
+    }
+  };
+
+  const handleOutlookResync = async () => {
+    setIsSyncingOutlook(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
+        body: { action: 'resync' },
+      });
+      if (error) throw error;
+      if (data?.events) {
+        const mapped = applyOutlookEvents(data.events);
+        toast({ title: 'Outlook synced!', description: `${mapped.length} events updated.` });
+      }
+    } catch (err: any) {
+      // If session expired, clear and prompt reconnect
+      if (err.message?.includes('expired')) {
+        setOutlookSynced(false);
+        setOutlookEvents([]);
+        localStorage.removeItem('eazy-outlook-calendar-synced');
+        localStorage.removeItem('eazy-outlook-calendar-events');
+      }
+      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+    } finally {
+      setIsSyncingOutlook(false);
+    }
+  };
+
+  const handleDisconnectOutlook = async () => {
+    try {
+      await supabase.functions.invoke('outlook-calendar-auth', { body: { action: 'disconnect' } });
+    } catch { /* best effort */ }
+    setOutlookEvents([]);
+    setOutlookSynced(false);
+    localStorage.removeItem('eazy-outlook-calendar-events');
+    localStorage.removeItem('eazy-outlook-calendar-synced');
+    toast({ title: 'Outlook Calendar disconnected' });
+  };
+
   const handleDismissSyncBanner = () => {
     localStorage.setItem('eazy-calendar-sync-dismissed', 'true');
     setShowSyncBanner(false);
   };
 
-  const allItems = [...items, ...googleEvents];
+  const allItems = [...items, ...googleEvents, ...outlookEvents];
 
   const getItemsForDate = (date: Date) => {
     return allItems.filter(item => {
@@ -641,23 +749,53 @@ const Calendar = () => {
                 </div>
               </div>
 
-              {/* Outlook Calendar — Coming Soon */}
-              <div className="p-3 rounded-lg border border-border/50 bg-muted/30">
-                <div className="flex items-center justify-between">
+              {/* Outlook Calendar — Live */}
+              {outlookSynced ? (
+                <div className="flex items-center justify-between p-3 rounded-lg border border-blue-500/40 bg-blue-500/5">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
                       <span className="text-white text-xs font-bold">O</span>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-muted-foreground">Outlook Calendar</p>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold">Coming Soon</span>
+                        <p className="text-sm font-medium">Outlook Calendar</p>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 text-[10px] font-semibold">
+                          <Check className="h-2.5 w-2.5" /> Connected
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground/70">Microsoft 365 integration</p>
+                      <p className="text-xs text-muted-foreground">{outlookEvents.length} events synced</p>
                     </div>
                   </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleOutlookResync} disabled={isSyncingOutlook}>
+                      {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDisconnectOutlook}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-3 rounded-lg border border-border hover:border-blue-400/40 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
+                        <span className="text-white text-xs font-bold">O</span>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">Outlook Calendar</p>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-semibold">Available</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Microsoft 365 & Outlook.com</p>
+                      </div>
+                    </div>
+                    <Button size="sm" onClick={handleOutlookConnect} disabled={isSyncingOutlook} className="bg-[#0078d4] hover:bg-[#106ebe] text-white border-0">
+                      {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <Check className="h-4 w-4 text-primary" />
