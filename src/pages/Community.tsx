@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, MessageCircle, Plus, ShoppingCart, Search, Filter, Lock, Gift, Send, ArrowLeft } from "lucide-react";
+import { Users, MessageCircle, Plus, ShoppingCart, Search, Filter, Lock, Gift, Send, ArrowLeft, Share2, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ const Community = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user, isPremium } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('groups');
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState<string>('all');
@@ -58,6 +60,7 @@ const Community = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [selectedMarketItem, setSelectedMarketItem] = useState<any | null>(null);
 
   // Marketplace state
   const [marketItems, setMarketItems] = useState<any[]>([]);
@@ -73,6 +76,21 @@ const Community = () => {
     loadGroups();
     loadMarketItems();
   }, [user?.id]);
+
+  // Handle group invite links: /app/community?join=GROUP_ID
+  useEffect(() => {
+    const joinGroupId = searchParams.get('join');
+    if (!joinGroupId || !user?.id) return;
+    const autoJoin = async () => {
+      if (joinedGroupIds.has(joinGroupId)) return;
+      await handleJoinGroup(joinGroupId);
+      // Open the group detail after joining
+      const { data: group } = await supabase.from('groups').select('*').eq('id', joinGroupId).single();
+      if (group) handleViewGroup(group);
+    };
+    // Wait for groups to load first
+    if (!loadingGroups) autoJoin();
+  }, [searchParams, user?.id, loadingGroups]);
 
   const loadGroups = async () => {
     try {
@@ -160,13 +178,31 @@ const Community = () => {
 
   const loadGroupMessages = async (groupId: string) => {
     try {
-      const { data } = await supabase
+      const { data: msgs, error } = await supabase
         .from('group_messages')
-        .select('*, profiles(full_name)')
+        .select('*')
         .eq('group_id', groupId)
         .order('created_at', { ascending: true })
         .limit(100);
-      setGroupMessages(data || []);
+
+      if (error) throw error;
+      if (!msgs || msgs.length === 0) {
+        setGroupMessages([]);
+        return;
+      }
+
+      // Two-query approach: profiles table has no direct FK from group_messages
+      const userIds = [...new Set(msgs.map(m => m.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      setGroupMessages(msgs.map(msg => ({
+        ...msg,
+        profiles: profileMap.get(msg.user_id) || null,
+      })));
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (error) {
       logError('Error loading group messages:', error);
@@ -175,14 +211,45 @@ const Community = () => {
 
   const loadGroupMembers = async (groupId: string) => {
     try {
-      const { data } = await supabase
+      const { data: members, error } = await supabase
         .from('group_members')
-        .select('user_id, joined_at, profiles(full_name)')
+        .select('user_id, joined_at')
         .eq('group_id', groupId)
         .limit(50);
-      setGroupMembers(data || []);
+
+      if (error) throw error;
+      if (!members || members.length === 0) {
+        setGroupMembers([]);
+        return;
+      }
+
+      const userIds = members.map(m => m.user_id);
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+      setGroupMembers(members.map(member => ({
+        ...member,
+        profiles: profileMap.get(member.user_id) || null,
+      })));
     } catch (error) {
       logError('Error loading group members:', error);
+    }
+  };
+
+  const handleShareGroup = async (group: Group) => {
+    const url = `${window.location.origin}/app/community?join=${group.id}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: group.name, text: `Join "${group.name}" on Eazy.Family!`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Invite link copied!", description: "Share it with others to invite them to the group." });
+      }
+    } catch {
+      // User cancelled share
     }
   };
 
@@ -391,7 +458,7 @@ const Community = () => {
           </div>
 
           {/* Search and Filters */}
-          <div className="space-y-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="relative sm:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -421,7 +488,7 @@ const Community = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
-                <Card key={item.id} className="shadow-custom-md flex flex-col">
+                <Card key={item.id} className="shadow-custom-md flex flex-col cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedMarketItem(item)}>
                   <CardContent className="p-4 flex flex-col flex-1">
                     <div className="w-full h-40 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 mb-3">
                       <ShoppingCart className="w-8 h-8 text-muted-foreground" />
@@ -608,6 +675,46 @@ const Community = () => {
         </UpgradeDialog>
       )}
 
+      {/* Marketplace Item Detail Dialog */}
+      <Dialog open={!!selectedMarketItem} onOpenChange={(open) => !open && setSelectedMarketItem(null)}>
+        <DialogContent className="max-w-md p-4 sm:p-6 w-[95%] sm:w-full">
+          <DialogHeader>
+            <DialogTitle>{selectedMarketItem?.title}</DialogTitle>
+          </DialogHeader>
+          {selectedMarketItem && (
+            <div className="space-y-4">
+              <div className="w-full h-48 rounded-lg bg-muted flex items-center justify-center">
+                <ShoppingCart className="w-12 h-12 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">{selectedMarketItem.description || "No description provided."}</p>
+              <div className="flex gap-2 flex-wrap">
+                {selectedMarketItem.condition && <Badge variant="secondary">{selectedMarketItem.condition}</Badge>}
+                {selectedMarketItem.category && <Badge variant="outline">{selectedMarketItem.category}</Badge>}
+              </div>
+              <div className="text-2xl font-bold text-primary">
+                {selectedMarketItem.price === 0 || !selectedMarketItem.price ? (
+                  <span className="flex items-center gap-2"><Gift className="w-5 h-5" /> Free Giveaway</span>
+                ) : (
+                  `CHF ${selectedMarketItem.price}`
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setSelectedMarketItem(null)}>Close</Button>
+            <Button
+              className="gradient-primary text-white border-0"
+              onClick={() => {
+                toast({ title: "Interest noted!", description: "The seller will be notified. Direct messaging coming soon." });
+                setSelectedMarketItem(null);
+              }}
+            >
+              I'm Interested
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Group Detail Dialog - Full Experience */}
       <Dialog open={showGroupDetailDialog} onOpenChange={setShowGroupDetailDialog}>
         <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 gap-0">
@@ -626,6 +733,11 @@ const Community = () => {
               <Badge variant="secondary" className="text-xs">
                 {groupMembers.length || selectedGroup?.member_count || 0} members
               </Badge>
+              {selectedGroup && (
+                <Button variant="ghost" size="icon" onClick={() => handleShareGroup(selectedGroup)} aria-label="Invite to group">
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
 

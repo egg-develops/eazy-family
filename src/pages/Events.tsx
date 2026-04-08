@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Filter, Clock, Heart, Share2, Navigation, X } from "lucide-react";
+import { MapPin, Filter, Clock, Heart, Share2, Navigation, X, Search, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 
 interface NearbyEvent {
@@ -23,33 +26,38 @@ interface NearbyEvent {
   distance?: string;
 }
 
-// Sample events for demo
-const sampleEvents: NearbyEvent[] = [
+// Community discovery events (curated local events)
+const communityEvents: NearbyEvent[] = [
   {
-    id: "1", title: "Family Fun Day at the Park", description: "Join us for games, face painting, and picnic!",
-    date: "Mar 22", time: "10:00 AM", location: "City Park", type: "outdoor",
-    ageRange: "All ages", price: "Free", lat: 47.3769, lng: 8.5417, distance: "1.2 km"
+    id: "c1", title: "Family Fun Day at the Park", description: "Join us for games, face painting, and picnic!",
+    date: new Date(Date.now() + 2 * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    time: "10:00 AM", location: "City Park", type: "outdoor",
+    ageRange: "All ages", price: "Free", lat: 47.3769, lng: 8.5417
   },
   {
-    id: "2", title: "Kids Art Workshop", description: "Creative painting session for children aged 4-12",
-    date: "Mar 23", time: "2:00 PM", location: "Art Center", type: "creative",
-    ageRange: "4-12", price: "CHF 15", lat: 47.3744, lng: 8.5410, distance: "2.5 km"
+    id: "c2", title: "Kids Art Workshop", description: "Creative painting session for children aged 4-12",
+    date: new Date(Date.now() + 3 * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    time: "2:00 PM", location: "Art Center", type: "creative",
+    ageRange: "4-12", price: "CHF 15", lat: 47.3744, lng: 8.5410
   },
   {
-    id: "3", title: "Story Time at Library", description: "Interactive storytelling for toddlers",
-    date: "Mar 24", time: "11:00 AM", location: "Central Library", type: "educational",
-    ageRange: "2-6", price: "Free", lat: 47.3780, lng: 8.5400, distance: "0.8 km"
+    id: "c3", title: "Story Time at Library", description: "Interactive storytelling for toddlers",
+    date: new Date(Date.now() + 4 * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+    time: "11:00 AM", location: "Central Library", type: "educational",
+    ageRange: "2-6", price: "Free", lat: 47.3780, lng: 8.5400
   },
 ];
 
 const Events = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [filter, setFilter] = useState<string>('all');
   const [distance, setDistance] = useState<string>('10');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [events] = useState<NearbyEvent[]>(sampleEvents);
+  const [dbEvents, setDbEvents] = useState<NearbyEvent[]>([]);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
 
@@ -62,7 +70,6 @@ const Events = () => {
         },
         (err) => {
           logError("Location error:", err);
-          // Default to Zurich
           setUserLocation({ lat: 47.3769, lng: 8.5417 });
         },
         { timeout: 10000 }
@@ -71,6 +78,41 @@ const Events = () => {
       setUserLocation({ lat: 47.3769, lng: 8.5417 });
     }
   }, []);
+
+  // Load user's own events from DB
+  useEffect(() => {
+    if (!user?.id) return;
+    const loadDbEvents = async () => {
+      try {
+        const { data } = await supabase
+          .from('events')
+          .select('id, title, description, start_date, location, type')
+          .gte('start_date', new Date().toISOString())
+          .order('start_date', { ascending: true })
+          .limit(20);
+
+        if (data) {
+          const mapped: NearbyEvent[] = data.map(e => ({
+            id: e.id,
+            title: e.title,
+            description: e.description || '',
+            date: new Date(e.start_date).toLocaleDateString('en', { month: 'short', day: 'numeric' }),
+            time: new Date(e.start_date).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' }),
+            location: e.location || 'Your area',
+            type: e.type || 'personal',
+            ageRange: 'All ages',
+            price: 'Free',
+            lat: 47.3769,
+            lng: 8.5417,
+          }));
+          setDbEvents(mapped);
+        }
+      } catch (err) {
+        logError("Failed to load DB events:", err);
+      }
+    };
+    loadDbEvents();
+  }, [user?.id]);
 
   // Load Mapbox map when showMap toggled
   useEffect(() => {
@@ -149,9 +191,15 @@ const Events = () => {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
-  const filteredEvents = events.filter(event => {
+  const allEvents = [...dbEvents, ...communityEvents];
+
+  const filteredEvents = allEvents.filter(event => {
     const typeMatch = filter === 'all' || event.type.toLowerCase() === filter.toLowerCase();
     if (!typeMatch) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      if (!event.title.toLowerCase().includes(q) && !event.location.toLowerCase().includes(q) && !(event.description || '').toLowerCase().includes(q)) return false;
+    }
     if (!userLocation) return true;
     const km = calcDistance(userLocation.lat, userLocation.lng, event.lat, event.lng);
     return km <= parseInt(distance);
@@ -190,6 +238,17 @@ const Events = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Search events..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -239,8 +298,11 @@ const Events = () => {
       {/* Events List */}
       <div className="space-y-3 sm:space-y-4">
         <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-          <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" />
+          <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
           Events Near You
+          {dbEvents.length > 0 && (
+            <Badge variant="secondary" className="text-xs">{dbEvents.length} from your calendar</Badge>
+          )}
         </h3>
 
         {filteredEvents.length > 0 ? (
@@ -273,6 +335,9 @@ const Events = () => {
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                     <div className="flex gap-2 flex-wrap">
+                      {dbEvents.some(e => e.id === event.id) && (
+                        <Badge className="text-xs gradient-primary text-white border-0">My Event</Badge>
+                      )}
                       <Badge variant="secondary" className="text-xs">{event.ageRange}</Badge>
                       <Badge variant="outline" className="text-xs">{event.price}</Badge>
                       <Badge variant="outline" className="text-xs">{event.type}</Badge>

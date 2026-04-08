@@ -124,6 +124,15 @@ export const EazyAssistant = () => {
       if (!response.ok || !response.body) {
         if (response.status === 429) {
           toast({ title: "Rate limit exceeded", description: "Please try again in a moment.", variant: "destructive" });
+        } else if (response.status === 401) {
+          toast({ title: "Authentication error", description: "Please sign in and try again.", variant: "destructive" });
+        } else {
+          let errorMsg = "The AI assistant is currently unavailable.";
+          try {
+            const errJson = await response.json();
+            if (errJson.error?.includes('ANTHROPIC_API_KEY')) errorMsg = "AI key not configured. Please contact support.";
+          } catch { /* ignore */ }
+          toast({ title: "Assistant unavailable", description: errorMsg, variant: "destructive" });
         }
         throw new Error("Failed to start stream");
       }
