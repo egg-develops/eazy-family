@@ -47,6 +47,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
 import { error as logError } from "@/lib/logger";
+import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AppLayout = () => {
@@ -174,7 +175,7 @@ const AppLayout = () => {
                 return (
                   <DropdownMenuItem
                     key={item.id}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => { haptic('tap'); navigate(item.path); }}
                     className={isActive(item.path) ? "bg-primary/10 text-primary font-medium" : ""}
                   >
                     <Icon className="mr-2 h-4 w-4" />
@@ -189,7 +190,7 @@ const AppLayout = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/app")}
+            onClick={() => { haptic('tap'); navigate("/app"); }}
             className={`h-12 w-12 rounded-full transition-all ${
               isHomePath 
                 ? "bg-primary text-primary-foreground shadow-md scale-105" 

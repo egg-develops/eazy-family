@@ -44,7 +44,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/app');
+      navigate('/splash');
     }
   }, [user, authLoading, navigate]);
 

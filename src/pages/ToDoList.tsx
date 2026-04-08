@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { haptic } from "@/lib/haptic";
 import { Badge } from "@/components/ui/badge";
 import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -288,6 +289,7 @@ const ToDoList = () => {
 
       // Trigger celebration when marking as complete (not when uncompleting)
       if (!wasCompleted) {
+        haptic('success');
         triggerGamification({
           type: activeTab === 'task' ? 'list_created' : activeTab === 'shopping' ? 'photo_shared' : 'event_added',
           title: '✨ Task Complete!',

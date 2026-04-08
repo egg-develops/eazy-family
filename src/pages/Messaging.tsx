@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { MessageCircle, Search, Lock, Users, Send, ArrowLeft } from "lucide-react";
 import { error as logError } from "@/lib/logger";
+import { haptic } from "@/lib/haptic";
 
 interface FamilyMember {
   user_id: string;
@@ -120,6 +121,7 @@ const Messaging = () => {
 
   const handleSend = async () => {
     if (!newMessage.trim() || !selectedMember || !user?.id) return;
+    haptic('light');
     setSending(true);
     const content = newMessage.trim();
     setNewMessage("");
@@ -131,7 +133,7 @@ const Messaging = () => {
         .single();
 
       if (error) throw error;
-      if (data) setMessages(prev => [...prev, data]);
+      if (data) { haptic('success'); setMessages(prev => [...prev, data]); }
     } catch (err) {
       logError("Error sending message:", err);
       toast({ title: "Error", description: "Could not send message.", variant: "destructive" });

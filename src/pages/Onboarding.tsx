@@ -108,7 +108,6 @@ const Onboarding = () => {
   };
 
   const skipOnboarding = () => {
-    // Skip onboarding with minimal data
     const skipData = {
       userName: "User",
       children: [{ initials: "C", age: "5" }],
@@ -119,7 +118,7 @@ const Onboarding = () => {
       userInitials: "U"
     };
     localStorage.setItem('eazy-family-onboarding', JSON.stringify(skipData));
-    navigate('/app');
+    navigate('/splash');
   };
 
   const nextStep = () => {
@@ -136,7 +135,7 @@ const Onboarding = () => {
       
       const finalData = { ...data, userInitials };
       localStorage.setItem('eazy-family-onboarding', JSON.stringify(finalData));
-      navigate('/app');
+      navigate('/splash');
     }
   };
 

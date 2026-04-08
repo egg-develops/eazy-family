@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { error as logError } from "@/lib/logger";
+import { haptic } from "@/lib/haptic";
 
 interface GroupMessage {
   id: string;
@@ -137,6 +138,7 @@ const Community = () => {
         .insert({ group_id: groupId, user_id: user.id });
 
       if (error) throw error;
+      haptic('success');
       setJoinedGroupIds(prev => new Set([...prev, groupId]));
       toast({ title: "Joined!", description: "You've joined the group." });
     } catch (error) {
@@ -240,27 +242,26 @@ const Community = () => {
   };
 
   const handleShareGroup = async (group: Group) => {
+    haptic('light');
     const url = `${window.location.origin}/app/community?join=${group.id}`;
     try {
-      if (navigator.share) {
-        await navigator.share({ title: group.name, text: `Join "${group.name}" on Eazy.Family!`, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast({ title: "Invite link copied!", description: "Share it with others to invite them to the group." });
-      }
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Invite link copied!", description: "Paste it anywhere to invite people to the group." });
     } catch {
-      // User cancelled share
+      toast({ title: "Could not copy", description: url, variant: "destructive" });
     }
   };
 
   const handleSendMessage = async () => {
     if (!user?.id || !selectedGroup || !newMessage.trim()) return;
+    haptic('light');
     setSendingMessage(true);
     try {
       const { error } = await supabase
         .from('group_messages')
         .insert({ group_id: selectedGroup.id, user_id: user.id, content: newMessage.trim() });
       if (error) throw error;
+      haptic('success');
       setNewMessage("");
       loadGroupMessages(selectedGroup.id);
     } catch (error) {

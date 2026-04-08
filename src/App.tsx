@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
 import Onboarding from "./pages/Onboarding";
+import Splash from "./pages/Splash";
 import AppLayout from "./pages/App";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -73,6 +74,9 @@ const App = () => (
                 } 
               />
               
+              {/* Logo splash after login/onboarding */}
+              <Route path="/splash" element={<ProtectedRoute><Splash /></ProtectedRoute>} />
+
               {/* Other Pages - Default theme */}
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/join-family" element={<JoinFamily />} />
