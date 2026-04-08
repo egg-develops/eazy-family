@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { MapPin, Cloud, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { error as logError } from "@/lib/logger";
 
@@ -24,6 +23,33 @@ interface WeatherData {
   windSpeed: number;
 }
 
+// Uses wttr.in — free, no API key required
+const fetchWttr = async (query: string): Promise<WeatherData> => {
+  const res = await fetch(`https://wttr.in/${encodeURIComponent(query)}?format=j1`);
+  if (!res.ok) throw new Error("Weather service unavailable");
+  const data = await res.json();
+  const current = data.current_condition?.[0];
+  if (!current) throw new Error("No weather data");
+  return {
+    temp: Math.round(parseFloat(current.temp_C)),
+    description: current.weatherDesc?.[0]?.value || "",
+    icon: getWeatherEmoji(parseInt(current.weatherCode, 10)),
+    humidity: parseInt(current.humidity, 10),
+    windSpeed: Math.round(parseFloat(current.windspeedKmph)),
+  };
+};
+
+const getWeatherEmoji = (code: number): string => {
+  if (code === 113) return "☀️";
+  if (code === 116) return "⛅";
+  if ([119, 122].includes(code)) return "☁️";
+  if ([143, 248, 260].includes(code)) return "🌫️";
+  if ([176, 185, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 353, 356, 359].includes(code)) return "🌧️";
+  if ([179, 182, 311, 314, 317, 320, 323, 326, 329, 332, 335, 338, 350, 362, 365, 368, 371, 374, 377].includes(code)) return "❄️";
+  if ([200, 386, 389, 392, 395].includes(code)) return "⛈️";
+  return "🌤️";
+};
+
 export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const { t } = useTranslation();
   const [locations, setLocations] = useState<WeatherLocation[]>([]);
@@ -35,92 +61,66 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const [isDetecting, setIsDetecting] = useState(false);
 
   useEffect(() => {
-    const savedLocations = localStorage.getItem('weather-locations');
-    if (savedLocations) {
+    const saved = localStorage.getItem('weather-locations');
+    if (saved) {
       try {
-        const parsed = JSON.parse(savedLocations);
+        const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setLocations(parsed);
-          fetchWeather(parsed[0].lat, parsed[0].lon);
+          fetchWeather(parsed[0]);
           return;
         }
-      } catch {
-        // Invalid saved data, fall through to detect
-      }
+      } catch { /* fall through */ }
     }
-    // No saved locations — run geolocation in background
     detectLocation();
   }, []);
 
   const detectLocation = () => {
-    if (!("geolocation" in navigator)) {
-      return;
-    }
+    if (!("geolocation" in navigator)) return;
     setIsDetecting(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        fetchLocationName(latitude, longitude);
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const location: WeatherLocation = {
+          id: `${latitude}-${longitude}`,
+          name: "Your location",
+          lat: latitude,
+          lon: longitude,
+        };
+        // Reverse-geocode with wttr.in naming
+        fetch(`https://wttr.in/${latitude},${longitude}?format=j1`)
+          .then(r => r.json())
+          .then(data => {
+            const area = data.nearest_area?.[0];
+            if (area) {
+              location.name = area.areaName?.[0]?.value || area.region?.[0]?.value || "Your location";
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            const locs = [location];
+            setLocations(locs);
+            localStorage.setItem('weather-locations', JSON.stringify(locs));
+            fetchWeather(location);
+            setIsDetecting(false);
+          });
       },
-      (error) => {
-        logError("Geolocation error:", error);
+      (err) => {
+        logError("Geolocation error:", err);
         setIsDetecting(false);
       },
       { timeout: 10000, maximumAge: 300000 }
     );
   };
 
-  const fetchLocationName = async (lat: number, lon: number) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('weather', {
-        body: { lat, lon, type: 'reverse' }
-      });
-
-      if (error) throw error;
-
-      if (data && Array.isArray(data) && data.length > 0 && data[0]?.name) {
-        const location: WeatherLocation = {
-          id: `${lat}-${lon}`,
-          name: data[0].name,
-          lat,
-          lon
-        };
-
-        const newLocations = [location];
-        setLocations(newLocations);
-        localStorage.setItem('weather-locations', JSON.stringify(newLocations));
-        fetchWeather(lat, lon);
-      }
-    } catch (error) {
-      logError("Reverse geocoding error:", error);
-    } finally {
-      setIsDetecting(false);
-    }
-  };
-
-  const fetchWeather = async (lat: number, lon: number) => {
+  const fetchWeather = async (location: WeatherLocation) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('weather', {
-        body: { lat, lon }
-      });
-
-      if (error) throw error;
-
-      if (data?.main) {
-        setWeatherData({
-          temp: Math.round(data.main.temp),
-          description: data.weather[0].description,
-          icon: getWeatherEmoji(data.weather[0].main),
-          humidity: data.main.humidity,
-          windSpeed: data.wind.speed
-        });
-      } else {
-        throw new Error("Invalid weather response");
-      }
-    } catch (error) {
-      logError("Weather fetch error:", error);
-      toast.error("Error loading weather data. Try adding your location manually.");
+      const data = await fetchWttr(`${location.lat},${location.lon}`);
+      setWeatherData(data);
+    } catch (err) {
+      logError("Weather fetch error:", err);
+      toast.error("Couldn't load weather. Check your connection.");
     } finally {
       setLoading(false);
     }
@@ -128,70 +128,67 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const searchLocation = async () => {
     if (!searchQuery.trim()) return;
-
     setIsAddingLocation(true);
     try {
-      const { data, error } = await supabase.functions.invoke('weather', {
-        body: { query: searchQuery, type: 'search' }
-      });
-
-      if (error) throw error;
-
-      if (data && Array.isArray(data) && data.length > 0 && data[0]?.lat) {
-        const location: WeatherLocation = {
-          id: `${data[0].lat}-${data[0].lon}`,
-          name: data[0].name,
-          lat: data[0].lat,
-          lon: data[0].lon
-        };
-
-        const newLocations = [...locations.filter(l => l.id !== location.id), location];
-        setLocations(newLocations);
-        localStorage.setItem('weather-locations', JSON.stringify(newLocations));
-        setSearchQuery("");
-        setCurrentLocationIndex(newLocations.length - 1);
-        fetchWeather(location.lat, location.lon);
-        toast.success(`Added ${location.name}`);
-      } else {
-        toast.error("Location not found. Try a different city name.");
-      }
-    } catch (error) {
-      logError("Search location error:", error);
-      toast.error("Error searching location");
+      // Validate city exists by fetching weather
+      const data = await fetchWttr(searchQuery.trim());
+      const location: WeatherLocation = {
+        id: searchQuery.trim().toLowerCase(),
+        name: searchQuery.trim(),
+        lat: 0,
+        lon: 0,
+      };
+      const newLocations = [...locations.filter(l => l.id !== location.id), location];
+      setLocations(newLocations);
+      localStorage.setItem('weather-locations', JSON.stringify(newLocations));
+      setWeatherData(data);
+      setCurrentLocationIndex(newLocations.length - 1);
+      setSearchQuery("");
+      toast.success(`Added ${location.name}`);
+    } catch (err) {
+      logError("Search location error:", err);
+      toast.error("City not found. Try a different name.");
     } finally {
       setIsAddingLocation(false);
     }
   };
 
-  const removeLocation = (id: string) => {
-    const newLocations = locations.filter(loc => loc.id !== id);
-    setLocations(newLocations);
-    localStorage.setItem('weather-locations', JSON.stringify(newLocations));
-
-    if (newLocations.length === 0) {
-      setWeatherData(null);
-    } else if (currentLocationIndex >= newLocations.length) {
-      setCurrentLocationIndex(0);
-      fetchWeather(newLocations[0].lat, newLocations[0].lon);
+  // For text-search locations we query by name; for coord locations by coords
+  const fetchWeatherForIndex = async (index: number, locs: WeatherLocation[]) => {
+    const loc = locs[index];
+    setLoading(true);
+    try {
+      const query = loc.lat !== 0 ? `${loc.lat},${loc.lon}` : loc.name;
+      const data = await fetchWttr(query);
+      setWeatherData(data);
+    } catch {
+      toast.error("Couldn't load weather for this location.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const switchLocation = (index: number) => {
     setCurrentLocationIndex(index);
-    fetchWeather(locations[index].lat, locations[index].lon);
+    fetchWeatherForIndex(index, locations);
   };
 
-  const getWeatherEmoji = (condition: string) => {
-    const conditions: Record<string, string> = {
-      Clear: "☀️", Clouds: "☁️", Rain: "🌧️", Drizzle: "🌦️",
-      Thunderstorm: "⛈️", Snow: "❄️", Mist: "🌫️", Fog: "🌫️", Haze: "🌫️"
-    };
-    return conditions[condition] || "🌤️";
+  const removeLocation = (id: string) => {
+    const newLocations = locations.filter(l => l.id !== id);
+    setLocations(newLocations);
+    localStorage.setItem('weather-locations', JSON.stringify(newLocations));
+    if (newLocations.length === 0) {
+      setWeatherData(null);
+    } else {
+      const newIndex = Math.min(currentLocationIndex, newLocations.length - 1);
+      setCurrentLocationIndex(newIndex);
+      fetchWeatherForIndex(newIndex, newLocations);
+    }
   };
 
   const currentLocation = locations[currentLocationIndex];
 
-  // No saved locations yet — show city search as primary UI
+  // No saved locations — show city search as primary UI
   if (locations.length === 0) {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
@@ -281,7 +278,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                   variant={index === currentLocationIndex ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => switchLocation(index)}
-                  className="hover:bg-muted whitespace-nowrap"
+                  className="whitespace-nowrap"
                 >
                   {loc.name}
                 </Button>

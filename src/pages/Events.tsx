@@ -114,59 +114,67 @@ const Events = () => {
     loadDbEvents();
   }, [user?.id]);
 
-  // Load Mapbox map when showMap toggled
+  // Load Leaflet map (OpenStreetMap — no API key required)
   useEffect(() => {
     if (!showMap || !mapContainerRef.current || !userLocation) return;
 
+    let map: any = null;
+
     const loadMap = async () => {
       try {
-        // Dynamically load mapbox-gl
-        const mapboxgl = (await import('mapbox-gl')).default;
-        
-        // Load CSS
-        if (!document.getElementById('mapbox-css')) {
+        const L = (await import('leaflet')).default;
+
+        // Load Leaflet CSS once
+        if (!document.getElementById('leaflet-css')) {
           const link = document.createElement('link');
-          link.id = 'mapbox-css';
+          link.id = 'leaflet-css';
           link.rel = 'stylesheet';
-          link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css';
+          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
           document.head.appendChild(link);
         }
 
-        // Fetch Mapbox token from edge function
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('mapbox-token');
-        if (tokenError || !tokenData?.token) {
-          toast({ title: "Map unavailable", description: "Could not load map token", variant: "destructive" });
-          return;
-        }
-
-        mapboxgl.accessToken = tokenData.token;
-
-        const map = new mapboxgl.Map({
-          container: mapContainerRef.current!,
-          style: 'mapbox://styles/mapbox/streets-v12',
-          center: [userLocation.lng, userLocation.lat],
-          zoom: 13,
+        // Fix default marker icons (Leaflet webpack issue)
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         });
 
-        // Add user location marker
-        new mapboxgl.Marker({ color: '#3b82f6' })
-          .setLngLat([userLocation.lng, userLocation.lat])
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>You are here</strong>'))
-          .addTo(map);
+        map = L.map(mapContainerRef.current!).setView(
+          [userLocation.lat, userLocation.lng], 13
+        );
 
-        // Add event markers
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
+
+        // User location marker (blue)
+        const blueIcon = L.divIcon({
+          className: '',
+          html: '<div style="width:14px;height:14px;border-radius:50%;background:#3b82f6;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+        L.marker([userLocation.lat, userLocation.lng], { icon: blueIcon })
+          .addTo(map)
+          .bindPopup('<strong>You are here</strong>');
+
+        // Event markers (purple/brand)
+        const eventIcon = L.divIcon({
+          className: '',
+          html: '<div style="width:12px;height:12px;border-radius:50%;background:#7c3aed;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        });
+
         filteredEvents.forEach(event => {
-          const popup = new mapboxgl.Popup().setHTML(
-            `<strong>${event.title}</strong><br/>${event.time} • ${event.location}<br/>${event.price}`
-          );
-          new mapboxgl.Marker({ color: '#ef4444' })
-            .setLngLat([event.lng, event.lat])
-            .setPopup(popup)
-            .addTo(map);
+          L.marker([event.lat, event.lng], { icon: eventIcon })
+            .addTo(map)
+            .bindPopup(`<strong>${event.title}</strong><br/>${event.time} · ${event.location}<br/>${event.price}`);
         });
 
-        map.addControl(new mapboxgl.NavigationControl());
         mapRef.current = map;
       } catch (error) {
         logError("Map load error:", error);
