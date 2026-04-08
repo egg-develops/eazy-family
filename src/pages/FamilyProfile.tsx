@@ -722,7 +722,7 @@ if (error) throw error;
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Button
                 variant="outline"
                 onClick={copyInviteCode}
@@ -733,11 +733,24 @@ if (error) throw error;
               </Button>
               <Button
                 variant="outline"
+                onClick={() => {
+                  if (!familyInfo) return;
+                  const url = `https://eazy.family/join-family?code=${familyInfo.invite_code}`;
+                  navigator.clipboard.writeText(url);
+                  toast({ title: "Link copied!", description: "Paste it anywhere to share" });
+                }}
+                className="gap-2"
+              >
+                <Copy className="h-4 w-4" />
+                Copy Link
+              </Button>
+              <Button
+                variant="outline"
                 onClick={shareInviteLink}
                 className="gap-2"
               >
                 <Share2 className="h-4 w-4" />
-                Share Link
+                Share
               </Button>
             </div>
 
@@ -753,14 +766,6 @@ if (error) throw error;
                 <RefreshCw className={`h-4 w-4 ${regeneratingCode ? 'animate-spin' : ''}`} />
                 {regeneratingCode ? 'Regenerating...' : 'Regenerate Code (old code will stop working)'}
               </Button>
-            </div>
-
-            {/* Join URL */}
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Or share this link:</p>
-              <code className="text-xs bg-muted px-2 py-1 rounded mt-1 inline-block">
-                https://eazy.family/join-family
-              </code>
             </div>
           </CardContent>
         </Card>

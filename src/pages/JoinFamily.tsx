@@ -109,9 +109,7 @@ const JoinFamily = () => {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
-          <div className="w-20 h-20 mx-auto gradient-primary rounded-3xl flex items-center justify-center shadow-custom-lg mb-4">
-            <Users className="w-10 h-10 text-white" />
-          </div>
+          <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto object-contain mb-4" />
           <h1 className="text-3xl font-bold">Join Your Eazy Family</h1>
           <p className="text-muted-foreground mt-2">
             Enter the invite code shared with you

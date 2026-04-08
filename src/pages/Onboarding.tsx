@@ -171,9 +171,7 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 mx-auto gradient-primary rounded-full flex items-center justify-center z-0">
-                <Heart className="w-10 h-10 text-white" />
-              </div>
+              <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto object-contain" />
               <h2 className="text-2xl font-bold relative z-10">{t('onboarding.welcome.title')}</h2>
               <p className="text-muted-foreground text-lg relative z-10">
                 {t('onboarding.welcome.description')}

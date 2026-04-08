@@ -127,9 +127,7 @@ const AppLayout = () => {
                 return iconUrl ? (
                   <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                 ) : (
-                  <div className="w-10 h-10 gradient-primary rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">{userInitials}</span>
-                  </div>
+                  <img src="/logo.png" alt="Eazy.Family" className="w-10 h-10 rounded-xl object-contain flex-shrink-0" />
                 );
               })()}
               <div className="flex-1 min-w-0">
