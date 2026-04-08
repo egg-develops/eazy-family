@@ -722,11 +722,11 @@ if (error) throw error;
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 onClick={copyInviteCode}
-                className="gap-2"
+                className="gap-2 flex-1 min-w-[100px]"
               >
                 <Copy className="h-4 w-4" />
                 Copy Code
@@ -739,7 +739,7 @@ if (error) throw error;
                   navigator.clipboard.writeText(url);
                   toast({ title: "Link copied!", description: "Paste it anywhere to share" });
                 }}
-                className="gap-2"
+                className="gap-2 flex-1 min-w-[100px]"
               >
                 <Copy className="h-4 w-4" />
                 Copy Link
@@ -747,7 +747,7 @@ if (error) throw error;
               <Button
                 variant="outline"
                 onClick={shareInviteLink}
-                className="gap-2"
+                className="gap-2 flex-1 min-w-[100px]"
               >
                 <Share2 className="h-4 w-4" />
                 Share

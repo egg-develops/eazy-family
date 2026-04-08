@@ -36,6 +36,7 @@ interface Group {
   category: string | null;
   is_public: boolean | null;
   created_by: string;
+  invite_code?: string | null;
 }
 
 const Community = () => {
@@ -78,18 +79,23 @@ const Community = () => {
     loadMarketItems();
   }, [user?.id]);
 
-  // Handle group invite links: /app/community?join=GROUP_ID
+  // Handle group invite links: /app/community?join=CODE_OR_UUID
   useEffect(() => {
-    const joinGroupId = searchParams.get('join');
-    if (!joinGroupId || !user?.id) return;
+    const joinParam = searchParams.get('join');
+    if (!joinParam || !user?.id) return;
     const autoJoin = async () => {
-      if (joinedGroupIds.has(joinGroupId)) return;
-      await handleJoinGroup(joinGroupId);
-      // Open the group detail after joining
-      const { data: group } = await supabase.from('groups').select('*').eq('id', joinGroupId).single();
+      // Resolve: try invite_code first (short), then fall back to id (UUID)
+      let groupId = joinParam;
+      if (joinParam.length <= 12) {
+        const { data: byCode } = await supabase
+          .from('groups').select('id').eq('invite_code', joinParam).single();
+        if (byCode) groupId = byCode.id;
+      }
+      if (joinedGroupIds.has(groupId)) return;
+      await handleJoinGroup(groupId);
+      const { data: group } = await supabase.from('groups').select('*').eq('id', groupId).single();
       if (group) handleViewGroup(group);
     };
-    // Wait for groups to load first
     if (!loadingGroups) autoJoin();
   }, [searchParams, user?.id, loadingGroups]);
 
@@ -243,7 +249,9 @@ const Community = () => {
 
   const handleShareGroup = async (group: Group) => {
     haptic('light');
-    const url = `${window.location.origin}/app/community?join=${group.id}`;
+    // Use short invite_code if available, fall back to UUID
+    const code = group.invite_code || group.id;
+    const url = `${window.location.origin}/app/community?join=${code}`;
     try {
       await navigator.clipboard.writeText(url);
       toast({ title: "Invite link copied!", description: "Paste it anywhere to invite people to the group." });

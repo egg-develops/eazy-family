@@ -614,21 +614,33 @@ const AppHome = () => {
             </Card>
           )}
 
-          {calendarView === 'month' && (
-            <Card className="p-4 shadow-custom-md">
-              <h4 className="font-semibold mb-3">October 2025</h4>
-              <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                  <div key={day} className="text-muted-foreground p-1">{day}</div>
-                ))}
-                {Array.from({ length: 31 }, (_, i) => (
-                  <div key={i} className={`p-1 rounded ${i === 1 ? 'bg-blue-500 text-white font-bold' : ''}`}>
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
+          {calendarView === 'month' && (() => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const today = now.getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
+              i < firstDay ? null : i - firstDay + 1
+            );
+            return (
+              <Card className="p-4 shadow-custom-md">
+                <h4 className="font-semibold mb-3">{monthName}</h4>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                    <div key={i} className="text-muted-foreground p-1">{day}</div>
+                  ))}
+                  {cells.map((day, i) => (
+                    <div key={i} className={`p-1 rounded ${day === today ? 'bg-blue-500 text-white font-bold' : day ? '' : ''}`}>
+                      {day || ''}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            );
+          })()}
         </div>
         </Card>
       )}

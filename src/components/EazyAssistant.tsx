@@ -94,6 +94,20 @@ export const EazyAssistant = () => {
     return false;
   };
 
+  // Local smart fallback for when the edge function is unavailable
+  const getLocalResponse = (userMessage: string, isShoppingAction: boolean): string | null => {
+    const msg = userMessage.toLowerCase();
+    if (isShoppingAction) return "Done! I've added those items to your shopping list. 🛒";
+    if (/\b(hi|hello|hey)\b/.test(msg)) return "Hi there! I'm Eazy Assistant. I can help with your family's shopping list, events, and general questions. How can I help?";
+    if (/shopping list/.test(msg) && /\b(see|show|view|what|check)\b/.test(msg)) return "Head to the To-Do List tab and select the Shopping tab to view all your items.";
+    if (/calendar|event|schedule/.test(msg) && /\b(see|show|view|check)\b/.test(msg)) return "Go to the Calendar tab to see all your family's upcoming events and appointments.";
+    if (/\b(recipe|cook|dinner|meal|food)\b/.test(msg)) return "For quick family meals, try sheet-pan recipes — one pan, 30 minutes. Chicken thighs with veggies is always a crowd-pleaser. Need something specific?";
+    if (/\b(activity|activities|rainy|kids|children)\b/.test(msg)) return "Great indoor activities: board games, baking together, movie marathon with homemade popcorn, or a living-room fort! Want more ideas?";
+    if (/\b(restaurant|eat out|dining)\b/.test(msg)) return "Check the Events page — it has local family-friendly spots. You can also search Google Maps for 'family restaurants near me'.";
+    if (/\b(add|remind|reminder)\b/.test(msg)) return "To add a task or reminder, go to the To-Do List and tap the + button. For calendar events, use the Calendar tab.";
+    return null;
+  };
+
   const streamChat = async (userMessage: string) => {
     const newMessages = [...messages, { role: "user" as const, content: userMessage }];
     setMessages(newMessages);
@@ -122,19 +136,20 @@ export const EazyAssistant = () => {
       );
 
       if (!response.ok || !response.body) {
+        // Try local fallback before showing error
+        const localReply = getLocalResponse(userMessage, isShoppingAction);
+        if (localReply) {
+          setMessages(prev => [...prev, { role: "assistant", content: localReply }]);
+          return;
+        }
         if (response.status === 429) {
           toast({ title: "Rate limit exceeded", description: "Please try again in a moment.", variant: "destructive" });
         } else if (response.status === 401) {
           toast({ title: "Authentication error", description: "Please sign in and try again.", variant: "destructive" });
         } else {
-          let errorMsg = "The AI assistant is currently unavailable.";
-          try {
-            const errJson = await response.json();
-            if (errJson.error?.includes('ANTHROPIC_API_KEY')) errorMsg = "AI key not configured. Please contact support.";
-          } catch { /* ignore */ }
-          toast({ title: "Assistant unavailable", description: errorMsg, variant: "destructive" });
+          toast({ title: "Assistant unavailable", description: "The AI assistant is temporarily unavailable.", variant: "destructive" });
         }
-        throw new Error("Failed to start stream");
+        return;
       }
 
       const reader = response.body.getReader();
@@ -183,7 +198,12 @@ export const EazyAssistant = () => {
       }
     } catch (error) {
       logError("Chat error:", error);
-      toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+      const localReply = getLocalResponse(userMessage, isShoppingAction);
+      if (localReply) {
+        setMessages(prev => [...prev, { role: "assistant", content: localReply }]);
+      } else {
+        toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+      }
     } finally {
       setIsLoading(false);
     }

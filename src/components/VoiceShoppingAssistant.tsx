@@ -69,6 +69,15 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
     setIsListening(false);
   };
 
+  // Client-side fallback: split transcript on commas, "and", "also", semicolons
+  const parseItemsLocally = (transcript: string): string[] => {
+    return transcript
+      .replace(/\b(please|add|buy|get|need|pick up|some|a few|a|an|the)\b/gi, ' ')
+      .split(/,|;|\band\b|\balso\b/i)
+      .map(s => s.trim())
+      .filter(s => s.length > 1);
+  };
+
   const processTranscript = async (transcript: string) => {
     setIsProcessing(true);
     try {
@@ -76,28 +85,44 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
         body: { text: transcript }
       });
 
-      if (error) throw error;
-
-      if (data?.items && data.items.length > 0) {
+      if (!error && data?.items && data.items.length > 0) {
         onItemsAdded(data.items);
         toast({
           title: "Items added!",
           description: `Added ${data.items.length} item(s): ${data.items.join(', ')}`,
         });
+        return;
+      }
+
+      // Fallback: parse locally
+      const items = parseItemsLocally(transcript);
+      if (items.length > 0) {
+        onItemsAdded(items);
+        toast({
+          title: "Items added!",
+          description: `Added ${items.length} item(s): ${items.join(', ')}`,
+        });
       } else {
         toast({
           title: "No items detected",
-          description: `I heard: "${transcript}"`,
+          description: `I heard: "${transcript}". Try saying items separated by "and".`,
           variant: "destructive",
         });
       }
     } catch (error: unknown) {
       logError('Error processing transcript:', error);
-      toast({
-        title: "Error processing voice",
-        description: error instanceof Error ? error.message : "Please try again.",
-        variant: "destructive",
-      });
+      // Still try local parse on error
+      const items = parseItemsLocally(transcript);
+      if (items.length > 0) {
+        onItemsAdded(items);
+        toast({ title: "Items added!", description: items.join(', ') });
+      } else {
+        toast({
+          title: "Error processing voice",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }

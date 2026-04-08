@@ -226,15 +226,6 @@ const ToDoList = () => {
       return;
     }
     
-    if (activeTab === "shared" && selectedMembers.length === 0) {
-      toast({
-        title: "No members selected",
-        description: "Please select at least one family member to share with.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const taskData = {
         title: newTaskTitle.trim(),
@@ -628,7 +619,7 @@ const ToDoList = () => {
             </Button>
             <Button 
               onClick={handleAddTask} 
-              disabled={!newTaskTitle.trim() || (activeTab === "shared" && selectedMembers.length === 0)}
+              disabled={!newTaskTitle.trim()}
               className="h-10 sm:h-11 flex-1 sm:flex-none"
             >
               {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Create List" : "Add Task"}
