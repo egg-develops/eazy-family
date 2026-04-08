@@ -225,13 +225,16 @@ interface HomeCalendarEvent {
   endDate?: Date;
   allDay?: boolean;
   location?: string;
+  itemType?: 'event' | 'reminder' | 'task';
 }
 
 const AppHome = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('day');
+  const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
+  const [snippetDay, setSnippetDay] = useState<Date | null>(null);
+  const [calendarTasks, setCalendarTasks] = useState<HomeCalendarEvent[]>([]);
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [carouselIndex, setCarouselIndex] = useState(() => {
     // Rotate carousel index on every homepage visit
@@ -264,7 +267,7 @@ const AppHome = () => {
     };
   });
   
-  // Get calendar items from localStorage
+  // Get calendar items from localStorage (events + reminders)
   const getCalendarItems = (): HomeCalendarEvent[] => {
     try {
       const saved = localStorage.getItem('eazy-family-calendar-items');
@@ -277,33 +280,33 @@ const AppHome = () => {
         .map((item: unknown): HomeCalendarEvent | null => {
           if (!item || typeof item !== "object") return null;
           const record = item as Record<string, unknown>;
-          if (record.type !== "event") return null;
 
-          const rawStartDate = record.startDate;
-          const startDate =
-            rawStartDate instanceof Date
-              ? rawStartDate
-              : typeof rawStartDate === "string"
-                ? new Date(rawStartDate)
-                : null;
+          // Handle events (startDate) and reminders (dueDate)
+          let startDate: Date | null = null;
+          if (record.type === "event") {
+            const raw = record.startDate;
+            startDate = raw instanceof Date ? raw : typeof raw === "string" ? new Date(raw) : null;
+          } else if (record.type === "reminder") {
+            const raw = record.dueDate;
+            startDate = raw instanceof Date ? raw : typeof raw === "string" ? new Date(raw) : null;
+          }
 
           if (!startDate || Number.isNaN(startDate.getTime())) return null;
 
           const rawEndDate = record.endDate;
           const endDate =
-            rawEndDate instanceof Date
-              ? rawEndDate
-              : typeof rawEndDate === "string"
-                ? new Date(rawEndDate)
-                : undefined;
+            rawEndDate instanceof Date ? rawEndDate
+              : typeof rawEndDate === "string" ? new Date(rawEndDate)
+              : undefined;
 
           return {
-            id: typeof record.id === "string" ? record.id : `${startDate.toISOString()}-${record.title ?? "event"}`,
+            id: typeof record.id === "string" ? record.id : `${startDate.toISOString()}-${record.title ?? "item"}`,
             title: typeof record.title === "string" ? record.title : "Event",
             startDate,
             endDate: endDate && !Number.isNaN(endDate.getTime()) ? endDate : undefined,
             allDay: typeof record.allDay === "boolean" ? record.allDay : false,
             location: typeof record.location === "string" ? record.location : undefined,
+            itemType: record.type === "reminder" ? "reminder" : "event",
           };
         })
         .filter((event): event is HomeCalendarEvent => event !== null);
@@ -354,7 +357,36 @@ const AppHome = () => {
     fetchPendingTasks();
   }, []);
 
-  const calendarEvents = getCalendarItems();
+  // Sync tasks/reminders with due dates into the homepage calendar
+  useEffect(() => {
+    if (!user) return;
+    const fetchTasksForCalendar = async () => {
+      try {
+        const { data } = await supabase
+          .from('tasks')
+          .select('id, title, due_date, type')
+          .not('due_date', 'is', null)
+          .eq('completed', false)
+          .in('type', ['task', 'shared']);
+        if (data) {
+          const events: HomeCalendarEvent[] = data
+            .filter(t => t.due_date)
+            .map(t => ({
+              id: `task-${t.id}`,
+              title: t.title,
+              startDate: new Date(t.due_date!),
+              itemType: 'task' as const,
+            }));
+          setCalendarTasks(events);
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    fetchTasksForCalendar();
+  }, [user]);
+
+  const calendarEvents = [...getCalendarItems(), ...calendarTasks];
 
   const todayEvents = calendarEvents.filter((event) => {
     const today = new Date();
@@ -539,109 +571,148 @@ const AppHome = () => {
         <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
-            </div>
               <div className="flex items-center gap-2">
-              <div className="flex gap-1 bg-muted rounded-lg p-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-8 px-3 ${calendarView === 'day' ? 'bg-background shadow-sm' : ''}`}
-                  onClick={() => setCalendarView('day')}
-                >
-                  Day
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-8 px-3 ${calendarView === 'week' ? 'bg-background shadow-sm' : ''}`}
-                  onClick={() => setCalendarView('week')}
-                >
-                  Week
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={`h-8 px-3 ${calendarView === 'month' ? 'bg-background shadow-sm' : ''}`}
-                  onClick={() => setCalendarView('month')}
-                >
-                  Month
-                </Button>
+                <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
               </div>
-              <button 
-                onClick={removeCalendar}
-                className="w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                aria-label="Remove calendar"
-              >
-                ×
-              </button>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1 bg-muted rounded-lg p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-3 ${calendarView === 'week' ? 'bg-background shadow-sm' : ''}`}
+                    onClick={() => setCalendarView('week')}
+                  >
+                    Week
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 px-3 ${calendarView === 'month' ? 'bg-background shadow-sm' : ''}`}
+                    onClick={() => setCalendarView('month')}
+                  >
+                    Month
+                  </Button>
+                </div>
+                <button
+                  onClick={removeCalendar}
+                  className="w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                  aria-label="Remove calendar"
+                >×</button>
+              </div>
             </div>
-          </div>
-          
-          {calendarView === 'day' && todayEvents.length > 0 && (
-            <>
-              {todayEvents.map((event) => (
-                <Card key={event.id} className="p-4 shadow-custom-md border-l-4 border-l-blue-500">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-medium">{event.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {event.allDay
-                          ? "All day"
-                          : event.startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        {event.location && ` - ${event.location}`}
-                      </p>
-                    </div>
+
+            {calendarView === 'week' && (() => {
+              const now = new Date();
+              const weekStart = new Date(now);
+              // Start week on Monday
+              const day = now.getDay();
+              const diff = day === 0 ? -6 : 1 - day;
+              weekStart.setDate(now.getDate() + diff);
+              const weekDays = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
+                return d;
+              });
+              const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+              return (
+                <Card className="p-4 shadow-custom-md">
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {weekDays.map((d, i) => {
+                      const isToday = d.toDateString() === now.toDateString();
+                      const dayEvents = calendarEvents.filter(e => e.startDate.toDateString() === d.toDateString());
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => { if (dayEvents.length > 0) setSnippetDay(d); else navigate('/app/calendar'); }}
+                          className={`p-2 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-blue-500 text-white' : 'hover:bg-muted/70'}`}
+                        >
+                          <div className="text-xs opacity-70">{labels[i]}</div>
+                          <div className="text-sm font-semibold">{d.getDate()}</div>
+                          {dayEvents.length > 0 && (
+                            <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </Card>
-              ))}
-            </>
-          )}
+              );
+            })()}
 
-          {calendarView === 'week' && (
-            <Card className="p-4 shadow-custom-md">
-              <div className="grid grid-cols-7 gap-2 text-center">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                  <div key={day} className={`p-2 rounded ${i === 2 ? 'bg-blue-500/10 border border-blue-500' : ''}`}>
-                    <div className="text-xs text-muted-foreground">{day}</div>
-                    <div className="text-sm font-semibold">{i + 1}</div>
-                    {i === 2 && <div className="w-1 h-1 bg-blue-500 rounded-full mx-auto mt-1" />}
+            {calendarView === 'month' && (() => {
+              const now = new Date();
+              const year = now.getFullYear();
+              const month = now.getMonth();
+              const today = now.getDate();
+              const firstDay = new Date(year, month, 1).getDay();
+              const daysInMonth = new Date(year, month + 1, 0).getDate();
+              const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+              const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
+                i < firstDay ? null : i - firstDay + 1
+              );
+              return (
+                <Card className="p-4 shadow-custom-md">
+                  <h4 className="font-semibold mb-3">{monthName}</h4>
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                      <div key={i} className="text-muted-foreground p-1">{d}</div>
+                    ))}
+                    {cells.map((day, i) => {
+                      if (!day) return <div key={i} />;
+                      const cellDate = new Date(year, month, day);
+                      const dayEvents = calendarEvents.filter(e => e.startDate.toDateString() === cellDate.toDateString());
+                      const isToday = day === today;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => { if (dayEvents.length > 0) setSnippetDay(cellDate); else navigate('/app/calendar'); }}
+                          className={`p-1 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-blue-500 text-white font-bold' : 'hover:bg-muted/70'}`}
+                        >
+                          {day}
+                          {dayEvents.length > 0 && (
+                            <div className={`w-1 h-1 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </Card>
-          )}
+                </Card>
+              );
+            })()}
 
-          {calendarView === 'month' && (() => {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            const today = now.getDate();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-            const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
-              i < firstDay ? null : i - firstDay + 1
-            );
-            return (
-              <Card className="p-4 shadow-custom-md">
-                <h4 className="font-semibold mb-3">{monthName}</h4>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-muted-foreground p-1">{day}</div>
-                  ))}
-                  {cells.map((day, i) => (
-                    <div key={i} className={`p-1 rounded ${day === today ? 'bg-blue-500 text-white font-bold' : day ? '' : ''}`}>
-                      {day || ''}
+            {/* Day snippet popover */}
+            {snippetDay && (() => {
+              const dayEvts = calendarEvents.filter(e => e.startDate.toDateString() === snippetDay.toDateString());
+              return (
+                <Card className="p-4 shadow-custom-md border-l-4 border-l-blue-500 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-semibold text-sm">{snippetDay.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                      <p className="text-xs text-muted-foreground">{dayEvts.length} item{dayEvts.length !== 1 ? 's' : ''}</p>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            );
-          })()}
-        </div>
+                    <button onClick={() => setSnippetDay(null)} className="text-muted-foreground hover:text-foreground p-1">×</button>
+                  </div>
+                  <div className="space-y-2 mb-3">
+                    {dayEvts.slice(0, 4).map(evt => (
+                      <div key={evt.id} className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${evt.itemType === 'task' ? 'bg-orange-400' : evt.itemType === 'reminder' ? 'bg-purple-400' : 'bg-blue-500'}`} />
+                        <span className="text-sm truncate">{evt.title}</span>
+                        {!evt.allDay && evt.itemType !== 'task' && (
+                          <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                            {evt.startDate.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                    {dayEvts.length > 4 && <p className="text-xs text-muted-foreground">+{dayEvts.length - 4} more</p>}
+                  </div>
+                  <Button size="sm" onClick={() => { setSnippetDay(null); navigate('/app/calendar'); }} className="w-full">
+                    Open Calendar
+                  </Button>
+                </Card>
+              );
+            })()}
+          </div>
         </Card>
       )}
 

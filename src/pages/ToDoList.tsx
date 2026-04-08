@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send } from "lucide-react";
+import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
@@ -30,6 +30,7 @@ interface Task {
   created_at: string;
   updated_at: string;
   shared_with?: string[] | null;
+  parent_id?: string | null;
 }
 
 interface FamilyMember {
@@ -54,6 +55,10 @@ const ToDoList = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
+  const [addingToListId, setAddingToListId] = useState<string | null>(null);
+  const [newListItemTitle, setNewListItemTitle] = useState("");
 
   const currentUserId = user?.id || '';
 
@@ -143,6 +148,9 @@ const ToDoList = () => {
 
   const filteredTasks = tasks.filter(task => {
     if (task.type !== activeTab) return false;
+    // For shared tab, only show top-level list headers (no parent_id)
+    if (activeTab === "shared" && task.parent_id) return false;
+    if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (filterView === "all") return true;
     if (filterView === "completed") return task.completed;
     if (filterView === "pending") return !task.completed;
@@ -151,6 +159,35 @@ const ToDoList = () => {
     }
     return true;
   });
+
+  // Items within a shared list
+  const getListItems = (listId: string) =>
+    tasks.filter(t => t.parent_id === listId);
+
+  const toggleListExpand = (listId: string) => {
+    setExpandedLists(prev => {
+      const next = new Set(prev);
+      next.has(listId) ? next.delete(listId) : next.add(listId);
+      return next;
+    });
+  };
+
+  const handleAddListItem = async (listId: string) => {
+    if (!newListItemTitle.trim() || !user?.id) return;
+    try {
+      await supabase.from('tasks').insert([{
+        title: newListItemTitle.trim(),
+        type: 'shared',
+        user_id: user.id,
+        parent_id: listId,
+        completed: false,
+      }]);
+      setNewListItemTitle("");
+      setAddingToListId(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const getButtonText = () => {
     if (activeTab === "shopping") {
@@ -441,84 +478,195 @@ const ToDoList = () => {
             )}
           </div>
 
-          {/* Filter */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Filter className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-            <Select value={filterView} onValueChange={setFilterView}>
-              <SelectTrigger className="h-10 w-full sm:w-auto">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tasks</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Search + Filter */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={activeTab === "shopping" ? "Search items..." : activeTab === "shared" ? "Search lists..." : "Search tasks..."}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+            {activeTab !== "shared" && (
+              <Select value={filterView} onValueChange={setFilterView}>
+                <SelectTrigger className="h-10 w-full sm:w-40">
+                  <Filter className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{activeTab === "shopping" ? "All Items" : "All"}</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  {activeTab === "task" && <SelectItem value="overdue">Overdue</SelectItem>}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Tasks List */}
-          <Card className="shadow-custom-md min-h-[300px]">
-            <CardContent className="p-4 sm:p-6">
-              {activeTab === "shared" && filteredTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <UserPlus className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-1">No shared lists</h3>
-                  <p className="text-muted-foreground mb-4">Create a shared list to invite members.</p>
-                  <Button onClick={() => setIsDialogOpen(true)} className="gradient-primary text-white border-0">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Shared List
-                  </Button>
-                </div>
-              ) : filteredTasks.length > 0 ? (
-                <div className="space-y-2 sm:space-y-3">
-                  {filteredTasks.map((task) => (
+          {activeTab === "shared" ? (
+            <div className="space-y-3">
+              {filteredTasks.length === 0 ? (
+                <Card className="shadow-custom-md">
+                  <CardContent className="flex flex-col items-center justify-center py-12 text-center p-6">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <Users className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-1">No shared lists yet</h3>
+                    <p className="text-muted-foreground mb-4 text-sm">Create a shopping list to share with your family.</p>
+                    <Button onClick={() => setIsDialogOpen(true)} className="gradient-primary text-white border-0">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Shared List
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : filteredTasks.map(list => {
+                const items = getListItems(list.id);
+                const isExpanded = expandedLists.has(list.id);
+                const doneCount = items.filter(i => i.completed).length;
+                return (
+                  <Card key={list.id} className="shadow-custom-md overflow-hidden">
                     <div
-                      key={task.id}
-                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                      className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => toggleListExpand(list.id)}
                     >
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id)}
-                        className="flex-shrink-0"
-                      />
+                      {isExpanded
+                        ? <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        : <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                      <ShoppingCart className="w-4 h-4 text-primary flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <span className={`text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                          {task.title}
-                        </span>
-                        {task.due_date && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {new Date(task.due_date) < new Date() && !task.completed ? (
-                              <span className="text-destructive font-medium">Overdue: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
-                            ) : (
-                              <span>Due: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
-                            )}
+                        <p className="font-semibold text-sm truncate">{list.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {items.length === 0 ? "No items yet" : `${doneCount}/${items.length} done`}
+                          {list.shared_with && list.shared_with.length > 0 && ` · ${list.shared_with.length} member(s)`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {items.length > 0 && (
+                          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full bg-green-500 rounded-full transition-all"
+                              style={{ width: `${(doneCount / items.length) * 100}%` }}
+                            />
                           </div>
                         )}
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteTask(list.id); }}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                          aria-label="Delete list"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteTask(task.id)}
-                        className="text-destructive hover:text-destructive text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto"
-                      >
-                        Delete
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <ParticleButton onClick={() => setIsDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {activeTab === "shopping" ? "Add a New Item" : "Add a New Task"}
-                  </ParticleButton>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
+                    {isExpanded && (
+                      <div className="border-t bg-muted/20">
+                        {items.length > 0 && (
+                          <div className="p-3 space-y-1">
+                            {items.map(item => (
+                              <div key={item.id} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
+                                <Checkbox
+                                  checked={item.completed}
+                                  onCheckedChange={() => toggleTask(item.id)}
+                                />
+                                <span className={`flex-1 text-sm ${item.completed ? "line-through text-muted-foreground" : ""}`}>
+                                  {item.title}
+                                </span>
+                                <button
+                                  onClick={() => deleteTask(item.id)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {addingToListId === list.id ? (
+                          <div className="flex gap-2 p-3 pt-1">
+                            <Input
+                              autoFocus
+                              placeholder="Item name..."
+                              value={newListItemTitle}
+                              onChange={e => setNewListItemTitle(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") handleAddListItem(list.id);
+                                if (e.key === "Escape") { setAddingToListId(null); setNewListItemTitle(""); }
+                              }}
+                              className="h-9 text-sm"
+                            />
+                            <Button size="sm" onClick={() => handleAddListItem(list.id)}>Add</Button>
+                            <Button size="sm" variant="ghost" onClick={() => { setAddingToListId(null); setNewListItemTitle(""); }}>Cancel</Button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { setAddingToListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }}
+                            className="flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add item
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="shadow-custom-md min-h-[300px]">
+              <CardContent className="p-4 sm:p-6">
+                {filteredTasks.length > 0 ? (
+                  <div className="space-y-2 sm:space-y-3">
+                    {filteredTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <Checkbox
+                          checked={task.completed}
+                          onCheckedChange={() => toggleTask(task.id)}
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className={`text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                            {task.title}
+                          </span>
+                          {task.due_date && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {new Date(task.due_date) < new Date() && !task.completed ? (
+                                <span className="text-destructive font-medium">Overdue: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
+                              ) : (
+                                <span>Due: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteTask(task.id)}
+                          className="text-destructive hover:text-destructive text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <ParticleButton onClick={() => setIsDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      {activeTab === "shopping" ? "Add a New Item" : "Add a New Task"}
+                    </ParticleButton>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
