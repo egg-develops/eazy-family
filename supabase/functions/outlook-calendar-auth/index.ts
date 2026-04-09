@@ -32,8 +32,8 @@ serve(async (req) => {
       });
     }
 
-    const clientId = Deno.env.get('OUTLOOK_CLIENT_ID');
-    if (!clientId) throw new Error('Outlook Client ID not configured');
+    const clientId = Deno.env.get('AZURE_CLIENT_ID') || Deno.env.get('OUTLOOK_CLIENT_ID');
+    if (!clientId) throw new Error('Outlook Client ID not configured (set AZURE_CLIENT_ID in secrets)');
 
     const { action, code, redirect_uri } = await req.json();
 
@@ -56,8 +56,8 @@ serve(async (req) => {
 
     // ── 2. Exchange code for tokens, fetch events ──────────────────────────────
     if (action === 'exchange_code') {
-      const clientSecret = Deno.env.get('OUTLOOK_CLIENT_SECRET');
-      if (!clientSecret) throw new Error('Outlook Client Secret not configured');
+      const clientSecret = Deno.env.get('AZURE_CLIENT_SECRET') || Deno.env.get('OUTLOOK_CLIENT_SECRET');
+      if (!clientSecret) throw new Error('Outlook Client Secret not configured (set AZURE_CLIENT_SECRET in secrets)');
 
       const tokenRes = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
         method: 'POST',
@@ -90,8 +90,8 @@ serve(async (req) => {
 
     // ── 3. Re-sync using stored refresh token ──────────────────────────────────
     if (action === 'resync') {
-      const clientSecret = Deno.env.get('OUTLOOK_CLIENT_SECRET');
-      if (!clientSecret) throw new Error('Outlook Client Secret not configured');
+      const clientSecret = Deno.env.get('AZURE_CLIENT_SECRET') || Deno.env.get('OUTLOOK_CLIENT_SECRET');
+      if (!clientSecret) throw new Error('Outlook Client Secret not configured (set AZURE_CLIENT_SECRET in secrets)');
 
       const { data: profile } = await supabase
         .from('profiles')
