@@ -8,7 +8,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SplashThemeProvider } from "./contexts/SplashThemeContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
@@ -96,6 +98,9 @@ const App = () => (
                 <Route path="family" element={<Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense>} />
               </Route>
               
+              {/* Admin Dashboard */}
+              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

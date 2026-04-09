@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, ArrowLeft, Heart, Users, Calendar, ShoppingCart, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, Heart, Users, Calendar, ShoppingCart, MapPin, MessageCircle, Sparkles } from "lucide-react";
 
 interface Child {
   initials: string;
@@ -48,11 +48,12 @@ const languages = [
 ];
 
 const features = [
-  { id: "calendar", label: "Shared Calendars & Lists", icon: Calendar },
-  { id: "shopping", label: "Sync schedules, to-do's and shopping lists", icon: ShoppingCart },
-  { id: "events", label: "Local Event Discovery", icon: MapPin },
-  { id: "community", label: "Parent Community & Playdates", icon: Users },
-  { id: "marketplace", label: "Family Marketplace", icon: ShoppingCart },
+  { id: "calendar", label: "Synced Calendars & Schedules", icon: Calendar },
+  { id: "shopping", label: "Shared To-do's and Shopping Lists", icon: ShoppingCart },
+  { id: "playdates", label: "Parent & Child Playdates", icon: Heart },
+  { id: "community", label: "Community Chat & Marketplace", icon: MessageCircle },
+  { id: "events", label: "Local Events Discovery", icon: MapPin },
+  { id: "ai", label: "AI Assistant", icon: Sparkles },
 ];
 
 const Onboarding = () => {
