@@ -46,43 +46,23 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
       setIsLoading(true);
 
-      // Validate promo code from database
-      const { data: promoData, error: promoError } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .eq('code', promoCode.trim().toUpperCase())
-        .single();
+      // Validate atomically via RPC (bypasses RLS, prevents race conditions)
+      const { data: promoResult, error: rpcError } = await supabase
+        .rpc('validate_and_increment_promo_code', {
+          _code: promoCode.trim(),
+          _user_id: session.user.id,
+        });
 
-      if (promoError || !promoData) {
+      if (rpcError || !promoResult?.valid) {
         toast({
           title: "Invalid code",
-          description: "Please check your promo code and try again.",
+          description: promoResult?.error || "Please check your promo code and try again.",
           variant: "destructive",
         });
         return;
       }
 
-      // Check expiration
-      if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
-        toast({
-          title: "Expired code",
-          description: "This promo code has expired.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check usage limit
-      if (promoData.max_uses && promoData.used_count >= promoData.max_uses) {
-        toast({
-          title: "Code limit reached",
-          description: "This promo code has reached its usage limit.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Apply the promotion - update user subscription
+      // Apply the promotion — upgrade profile to premium
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ is_premium: true, upgraded_at: new Date().toISOString() })
@@ -90,15 +70,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
       if (updateError) throw updateError;
 
-      // Increment usage count
-      await supabase
-        .from('promo_codes')
-        .update({ used_count: (promoData.used_count || 0) + 1 })
-        .eq('id', promoData.id);
-
       setPromoApplied(true);
       toast({
-        title: "Promo applied",
+        title: "Promo applied!",
         description: "Family Plan activated for free. Enjoy!",
       });
       setOpen(false);
