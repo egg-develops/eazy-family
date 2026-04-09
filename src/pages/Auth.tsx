@@ -181,103 +181,102 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            {isSignUp ? t('auth.signUp') : t('auth.signIn')}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {t('app.name')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: "linear-gradient(160deg, hsl(270 62% 7%), hsl(280 55% 11%))" }}>
+
+      {/* Glow blobs */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, hsl(270 88% 55%), transparent 70%)" }} />
+        <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, hsl(290 80% 55%), transparent 70%)" }} />
+      </div>
+
+      <div className="relative w-full max-w-sm">
+        {/* Logo + title */}
+        <div className="text-center mb-8">
+          <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto mb-4 drop-shadow-2xl"
+            style={{ filter: "drop-shadow(0 0 24px hsl(270 88% 64% / 0.6))" }} />
+          <h1 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
+            {isSignUp ? "Create your account" : "Welcome back"}
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "hsl(270 40% 68%)" }}>
+            {isSignUp ? "Join Eazy.Family for free" : "Sign in to Eazy.Family"}
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl p-6 space-y-4"
+          style={{ background: "hsl(270 50% 12% / 0.9)", border: "1px solid hsl(270 40% 22%)", backdropFilter: "blur(12px)" }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">{t('auth.fullName')}</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder={t('auth.namePlaceholder')}
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  maxLength={100}
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName" style={{ color: "hsl(270 40% 80%)" }}>{t('auth.fullName')}</Label>
+                <Input id="fullName" type="text" placeholder={t('auth.namePlaceholder')}
+                  value={fullName} onChange={(e) => setFullName(e.target.value)}
+                  required maxLength={100}
+                  className="h-11 rounded-xl border-0 text-sm"
+                  style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email')}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                maxLength={255}
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="email" style={{ color: "hsl(270 40% 80%)" }}>{t('auth.email')}</Label>
+              <Input id="email" type="email" placeholder="you@example.com"
+                value={email} onChange={(e) => setEmail(e.target.value)}
+                required maxLength={255}
+                className="h-11 rounded-xl border-0 text-sm"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('auth.password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                maxLength={100}
-              />
+            <div className="space-y-1.5">
+              <Label htmlFor="password" style={{ color: "hsl(270 40% 80%)" }}>{t('auth.password')}</Label>
+              <Input id="password" type="password" placeholder="••••••••"
+                value={password} onChange={(e) => setPassword(e.target.value)}
+                required minLength={6} maxLength={100}
+                className="h-11 rounded-xl border-0 text-sm"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
             </div>
 
-            {/* Referral Code */}
             {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="referral" className="flex items-center gap-1">
-                  <Gift className="w-4 h-4" />
-                  Referral Code (optional)
+              <div className="space-y-1.5">
+                <Label htmlFor="referral" className="flex items-center gap-1.5" style={{ color: "hsl(270 40% 80%)" }}>
+                  <Gift className="w-3.5 h-3.5" /> Referral Code (optional)
                 </Label>
-                <Input
-                  id="referral"
-                  type="text"
-                  placeholder="Enter referral code"
+                <Input id="referral" type="text" placeholder="Enter referral code"
                   value={referralCode}
-                  onChange={(e) => {
-                    setReferralCode(e.target.value);
-                    validateReferralCode(e.target.value);
-                  }}
+                  onChange={(e) => { setReferralCode(e.target.value); validateReferralCode(e.target.value); }}
                   maxLength={20}
-                />
+                  className="h-11 rounded-xl border-0 text-sm"
+                  style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
                 {validatingReferral && referralCode && (
-                  <p className="text-xs text-muted-foreground">Validating...</p>
+                  <p className="text-xs" style={{ color: "hsl(270 40% 68%)" }}>Validating...</p>
                 )}
                 {referralValid && referralCode && !validatingReferral && (
-                  <p className="text-xs text-green-600">✓ Valid referral code! You'll get 1 free month of Premium!</p>
+                  <p className="text-xs" style={{ color: "hsl(142 70% 60%)" }}>✓ Valid! You'll get 1 free month of Premium</p>
                 )}
                 {!referralValid && referralCode && !validatingReferral && (
-                  <p className="text-xs text-red-600">✗ Invalid referral code</p>
+                  <p className="text-xs text-red-400">✗ Invalid referral code</p>
                 )}
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" disabled={loading}
+              className="w-full h-12 rounded-xl text-white font-semibold border-0 mt-2 hover:opacity-90 transition-opacity"
+              style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
               {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-primary hover:underline"
-            >
-              {isSignUp ? t('auth.signIn') : t('auth.signUp')}
+
+          <div className="text-center pt-1">
+            <button type="button" onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm hover:opacity-80 transition-opacity"
+              style={{ color: "hsl(262 80% 78%)" }}>
+              {isSignUp
+                ? <>Already have an account? <span className="font-semibold">Sign in</span></>
+                : <>Don't have an account? <span className="font-semibold">Sign up free</span></>}
             </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

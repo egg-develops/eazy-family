@@ -168,11 +168,12 @@ const Onboarding = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="text-center space-y-4">
-              <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto object-contain" />
-              <h2 className="text-2xl font-bold relative z-10">{t('onboarding.welcome.title')}</h2>
-              <p className="text-muted-foreground text-lg relative z-10">
+          <div className="space-y-6 text-center py-4">
+            <img src="/logo.png" alt="Eazy.Family" className="w-24 h-24 mx-auto object-contain drop-shadow-2xl"
+              style={{ filter: "drop-shadow(0 0 28px hsl(270 88% 64% / 0.5))" }} />
+            <div>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.welcome.title')}</h2>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: "hsl(270 40% 68%)" }}>
                 {t('onboarding.welcome.description')}
               </p>
             </div>
@@ -183,22 +184,21 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">{t('onboarding.language.title')}</h2>
-              <p className="text-muted-foreground">{t('onboarding.language.description')}</p>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.language.title')}</h2>
+              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>{t('onboarding.language.description')}</p>
             </div>
             <Select value={data.language} onValueChange={(value) => {
               setData(prev => ({ ...prev, language: value }));
               i18n.changeLanguage(value);
               localStorage.setItem('eazy-family-language', value);
             }}>
-              <SelectTrigger className="text-lg">
+              <SelectTrigger className="h-12 rounded-xl border-0 text-base"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}>
                 <SelectValue placeholder="Select your language" />
               </SelectTrigger>
               <SelectContent>
                 {languages.map((language) => (
-                  <SelectItem key={language.value} value={language.value}>
-                    {language.label}
-                  </SelectItem>
+                  <SelectItem key={language.value} value={language.value}>{language.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -209,18 +209,16 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">{t('onboarding.name.title')}</h2>
-              <p className="text-muted-foreground">{t('onboarding.name.description')}</p>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.name.title')}</h2>
+              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>{t('onboarding.name.description')}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">{t('onboarding.name.label')}</Label>
-              <Input
-                id="name"
-                placeholder={t('onboarding.name.placeholder')}
+              <Label htmlFor="name" style={{ color: "hsl(270 40% 80%)" }}>{t('onboarding.name.label')}</Label>
+              <Input id="name" placeholder={t('onboarding.name.placeholder')}
                 value={data.userName}
                 onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
-                className="text-lg"
-              />
+                className="h-12 rounded-xl border-0 text-base"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
             </div>
           </div>
         );
@@ -229,69 +227,53 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">{t('onboarding.children.title')}</h2>
-              <p className="text-muted-foreground">{t('onboarding.children.description')}</p>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.children.title')}</h2>
+              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>{t('onboarding.children.description')}</p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {data.children.map((child, index) => (
-                <Card key={index}>
-                  <CardContent className="p-4">
-                    <div className="flex gap-3 items-start">
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <Label htmlFor={`initials-${index}`}>{t('onboarding.children.initialsLabel')}</Label>
-                          <Input
-                            id={`initials-${index}`}
-                            placeholder={t('onboarding.children.initialsPlaceholder')}
-                            value={child.initials}
-                            onChange={(e) => updateChild(index, 'initials', e.target.value)}
-                            maxLength={3}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor={`age-${index}`}>{t('onboarding.children.ageLabel')}</Label>
-                          <Input
-                            id={`age-${index}`}
-                            type="number"
-                            placeholder={t('onboarding.children.agePlaceholder')}
-                            value={child.age}
-                            onChange={(e) => updateChild(index, 'age', e.target.value)}
-                            min="0"
-                            max="18"
-                          />
-                        </div>
+                <div key={index} className="rounded-xl p-4 space-y-3"
+                  style={{ background: "hsl(270 40% 16%)", border: "1px solid hsl(270 40% 24%)" }}>
+                  <div className="flex gap-3 items-start">
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <Label htmlFor={`initials-${index}`} className="text-xs mb-1 block" style={{ color: "hsl(270 40% 72%)" }}>
+                          {t('onboarding.children.initialsLabel')}
+                        </Label>
+                        <Input id={`initials-${index}`} placeholder={t('onboarding.children.initialsPlaceholder')}
+                          value={child.initials} onChange={(e) => updateChild(index, 'initials', e.target.value)}
+                          maxLength={3} className="h-10 rounded-lg border-0"
+                          style={{ background: "hsl(270 40% 20%)", color: "hsl(270 40% 96%)" }} />
                       </div>
-                      {data.children.length > 1 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeChild(index)}
-                          className="mt-6"
-                        >
-                          {t('onboarding.children.remove')}
-                        </Button>
-                      )}
+                      <div>
+                        <Label htmlFor={`age-${index}`} className="text-xs mb-1 block" style={{ color: "hsl(270 40% 72%)" }}>
+                          {t('onboarding.children.ageLabel')}
+                        </Label>
+                        <Input id={`age-${index}`} type="number" placeholder={t('onboarding.children.agePlaceholder')}
+                          value={child.age} onChange={(e) => updateChild(index, 'age', e.target.value)}
+                          min="0" max="18" className="h-10 rounded-lg border-0"
+                          style={{ background: "hsl(270 40% 20%)", color: "hsl(270 40% 96%)" }} />
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    {data.children.length > 1 && (
+                      <button onClick={() => removeChild(index)} className="mt-1 text-xs hover:opacity-80"
+                        style={{ color: "hsl(0 70% 65%)" }}>
+                        {t('onboarding.children.remove')}
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
-              <Button
-                variant="outline"
-                onClick={addChild}
-                className="w-full"
-              >
-                {t('onboarding.children.addAnother')}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setData(prev => ({ ...prev, children: [{ initials: "", age: "" }] }));
-                  setCurrentStep(5);
-                }}
-                className="w-full"
-              >
+              <button onClick={addChild}
+                className="w-full h-10 rounded-xl text-sm font-medium hover:opacity-80 transition-opacity border"
+                style={{ borderColor: "hsl(270 40% 28%)", color: "hsl(262 80% 78%)" }}>
+                + {t('onboarding.children.addAnother')}
+              </button>
+              <button onClick={() => { setData(prev => ({ ...prev, children: [{ initials: "", age: "" }] })); setCurrentStep(5); }}
+                className="w-full text-sm hover:opacity-70 transition-opacity"
+                style={{ color: "hsl(270 40% 55%)" }}>
                 {t('onboarding.children.skipButton')}
-              </Button>
+              </button>
             </div>
           </div>
         );
@@ -300,11 +282,12 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">{t('onboarding.location.title')}</h2>
-              <p className="text-muted-foreground">{t('onboarding.location.description')}</p>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.location.title')}</h2>
+              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>{t('onboarding.location.description')}</p>
             </div>
             <Select value={data.location} onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}>
-              <SelectTrigger className="text-lg">
+              <SelectTrigger className="h-12 rounded-xl border-0 text-base"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}>
                 <SelectValue placeholder={t('onboarding.location.placeholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -320,33 +303,35 @@ const Onboarding = () => {
 
       case 6:
         return (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold">{t('onboarding.features.title')}</h2>
-              <p className="text-muted-foreground">{t('onboarding.features.description')}</p>
+              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>{t('onboarding.features.title')}</h2>
+              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>{t('onboarding.features.description')}</p>
             </div>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2.5">
               {features.map((feature) => {
                 const Icon = feature.icon;
+                const selected = data.features.includes(feature.id);
                 return (
-                  <Card 
-                    key={feature.id} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      data.features.includes(feature.id) 
-                        ? 'border-primary shadow-custom-md gradient-primary text-white' 
-                        : ''
-                    }`}
-                    onClick={() => toggleFeature(feature.id)}
-                  >
-                    <CardContent className="flex items-center space-x-3 p-4">
-                      <Checkbox
-                        checked={data.features.includes(feature.id)}
-                        className="data-[state=checked]:bg-white data-[state=checked]:text-primary"
-                      />
-                      <Icon className="w-5 h-5" />
-                      <span className="font-medium">{feature.label}</span>
-                    </CardContent>
-                  </Card>
+                  <button key={feature.id} onClick={() => toggleFeature(feature.id)}
+                    className="flex items-center gap-3 p-3.5 rounded-xl text-left transition-all"
+                    style={{
+                      background: selected ? "linear-gradient(135deg, hsl(270 88% 52%), hsl(290 80% 56%))" : "hsl(270 40% 16%)",
+                      border: `1px solid ${selected ? "transparent" : "hsl(270 40% 24%)"}`,
+                    }}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: selected ? "hsl(270 88% 72% / 0.3)" : "hsl(270 40% 22%)" }}>
+                      <Icon className="w-4 h-4" style={{ color: selected ? "white" : "hsl(262 80% 75%)" }} />
+                    </div>
+                    <span className="text-sm font-medium" style={{ color: selected ? "white" : "hsl(270 40% 88%)" }}>
+                      {feature.label}
+                    </span>
+                    {selected && <div className="ml-auto w-5 h-5 rounded-full bg-white/30 flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>}
+                  </button>
                 );
               })}
             </div>
@@ -359,62 +344,66 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-md mx-auto pt-8">
-        {/* Progress indicator */}
+    <div className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{ background: "linear-gradient(160deg, hsl(270 62% 7%), hsl(280 55% 11%))" }}>
+
+      {/* Ambient glow */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, hsl(270 88% 55%), transparent 70%)" }} />
+      </div>
+
+      <div className="relative max-w-md mx-auto w-full px-4 pt-10 pb-8 flex flex-col flex-1">
+
+        {/* Logo + step info */}
+        <div className="flex items-center justify-between mb-6">
+          <img src="/logo.png" alt="Eazy.Family" className="w-10 h-10 object-contain" />
+          <span className="text-xs font-medium px-3 py-1 rounded-full"
+            style={{ background: "hsl(270 50% 18%)", color: "hsl(262 80% 78%)" }}>
+            {currentStep} / {steps.length}
+          </span>
+        </div>
+
+        {/* Progress bar */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-muted-foreground">Step {currentStep} of {steps.length}</span>
-            <span className="text-sm text-muted-foreground">{Math.round((currentStep / steps.length) * 100)}%</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-2">
-            <div 
-              className="gradient-primary h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / steps.length) * 100}%` }}
-            />
+          <div className="w-full rounded-full h-1.5" style={{ background: "hsl(270 40% 20%)" }}>
+            <div className="h-1.5 rounded-full transition-all duration-500"
+              style={{
+                width: `${(currentStep / steps.length) * 100}%`,
+                background: "linear-gradient(90deg, hsl(270 88% 58%), hsl(290 80% 62%))"
+              }} />
           </div>
         </div>
 
-        {/* Step content */}
-        <Card className="shadow-custom-lg border-0 animate-fade-in">
-          <CardContent className="p-6">
-            {renderStepContent()}
-          </CardContent>
-        </Card>
+        {/* Step content card */}
+        <div className="rounded-2xl p-6 flex-1 animate-fade-in"
+          style={{ background: "hsl(270 50% 12% / 0.9)", border: "1px solid hsl(270 40% 22%)", backdropFilter: "blur(8px)" }}>
+          {renderStepContent()}
+        </div>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2"
-          >
+        <div className="flex justify-between mt-6 gap-3">
+          <Button variant="outline" onClick={prevStep} disabled={currentStep === 1}
+            className="flex items-center gap-2 rounded-xl h-12 flex-1 border-0 hover:opacity-80"
+            style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 80%)" }}>
             <ArrowLeft className="w-4 h-4" />
             {t('onboarding.back')}
           </Button>
-            <Button
-              onClick={nextStep}
-              disabled={!canProceed()}
-              className="flex items-center gap-2 gradient-primary text-white border-0 hover:opacity-90"
-            >
-              {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+          <Button onClick={nextStep} disabled={!canProceed()}
+            className="flex items-center gap-2 rounded-xl h-12 flex-1 text-white font-semibold border-0 hover:opacity-90 transition-opacity disabled:opacity-40"
+            style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
+            {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
+            <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
 
-        {/* Sign in link */}
         <div className="text-center mt-4">
-          <p className="text-sm text-muted-foreground">
+          <button type="button" onClick={() => navigate("/auth")}
+            className="text-sm hover:opacity-80 transition-opacity"
+            style={{ color: "hsl(270 40% 60%)" }}>
             Already have an account?{" "}
-            <Button
-              variant="link"
-              className="p-0 h-auto text-sm"
-              onClick={() => navigate("/auth")}
-            >
-              Sign in
-            </Button>
-          </p>
+            <span style={{ color: "hsl(262 80% 78%)" }} className="font-semibold">Sign in</span>
+          </button>
         </div>
       </div>
     </div>
