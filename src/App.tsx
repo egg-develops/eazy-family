@@ -14,6 +14,7 @@ import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
 import Onboarding from "./pages/Onboarding";
 import Splash from "./pages/Splash";
+import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -85,6 +86,7 @@ const App = () => (
               {/* Main App - User's custom theme */}
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="calendar" element={<Suspense fallback={<PageLoader />}><Calendar /></Suspense>} />
+                <Route path="calendar/outlook-callback" element={<ProtectedRoute><OutlookCallback /></ProtectedRoute>} />
                 <Route path="todos" element={<Suspense fallback={<PageLoader />}><ToDoList /></Suspense>} />
                 <Route path="events" element={<Suspense fallback={<PageLoader />}><Events /></Suspense>} />
                 

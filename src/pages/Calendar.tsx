@@ -253,7 +253,7 @@ const Calendar = () => {
   const handleOutlookConnect = async () => {
     setIsSyncingOutlook(true);
     try {
-      const redirectUri = `${window.location.origin}/app/calendar`;
+      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
       const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
         body: { action: 'get_auth_url', redirect_uri: redirectUri },
       });
@@ -286,7 +286,7 @@ const Calendar = () => {
   const handleOutlookCallback = async (code: string) => {
     setIsSyncingOutlook(true);
     try {
-      const redirectUri = `${window.location.origin}/app/calendar`;
+      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
       const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
         body: { action: 'exchange_code', code, redirect_uri: redirectUri },
       });
