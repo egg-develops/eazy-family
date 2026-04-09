@@ -62,10 +62,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         return;
       }
 
-      // Apply the promotion — upgrade profile to premium
+      // Apply the promotion — upgrade profile subscription tier
+      const tier = promoResult.subscription_tier || 'family';
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ is_premium: true, upgraded_at: new Date().toISOString() })
+        .update({ subscription_tier: tier })
         .eq('user_id', session.user.id);
 
       if (updateError) throw updateError;
