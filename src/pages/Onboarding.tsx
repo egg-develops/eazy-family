@@ -135,7 +135,7 @@ const Onboarding = () => {
       
       const finalData = { ...data, userInitials };
       localStorage.setItem('eazy-family-onboarding', JSON.stringify(finalData));
-      navigate('/splash');
+      navigate('/auth?signup=true');
     }
   };
 

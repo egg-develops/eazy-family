@@ -33,12 +33,25 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Pre-fill referral code from URL params
+  // Pre-fill referral code from URL params; open sign-up mode if ?signup=true
   useEffect(() => {
     const ref = searchParams.get('ref');
+    const signup = searchParams.get('signup');
     if (ref) {
       setReferralCode(ref);
       setIsSignUp(true);
+    } else if (signup === 'true') {
+      setIsSignUp(true);
+      // Pre-fill name from onboarding data if available
+      try {
+        const saved = localStorage.getItem('eazy-family-onboarding');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.userName && parsed.userName !== 'User') {
+            setFullName(parsed.userName);
+          }
+        }
+      } catch {}
     }
   }, [searchParams]);
 
