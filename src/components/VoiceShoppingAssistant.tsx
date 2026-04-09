@@ -40,6 +40,26 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
     recognition.onerror = (event: any) => {
       logError('Speech recognition error:', event.error);
       setIsListening(false);
+      if (event.error === 'no-speech') {
+        // Silently ignore — user just didn't say anything
+        return;
+      }
+      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+        toast({
+          title: "Microphone access denied",
+          description: "Please allow microphone access in your browser settings and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (event.error === 'audio-capture') {
+        toast({
+          title: "No microphone found",
+          description: "Make sure a microphone is connected and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Voice error",
         description: "Could not capture speech. Please try again.",
