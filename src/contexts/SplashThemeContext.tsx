@@ -23,49 +23,54 @@ export const SplashThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const activateSplashTheme = () => {
     const root = document.documentElement;
-    
-    // Dark Navy + Warm Coral Theme for Splash/Auth Pages
-    root.style.setProperty('--background', '217 33% 18%'); // Dark Navy #0f2847
-    root.style.setProperty('--foreground', '0 0% 100%'); // White text
-    
-    root.style.setProperty('--card', '217 33% 22%'); // Dark Blue #1a3a52
-    root.style.setProperty('--card-foreground', '0 0% 100%'); // White text
-    
-    root.style.setProperty('--popover', '217 33% 22%');
-    root.style.setProperty('--popover-foreground', '0 0% 100%');
-    
-    // Primary - Warm Coral for CTAs and accents
-    root.style.setProperty('--primary', '11 100% 63%'); // #ff9d7d Warm Coral
-    root.style.setProperty('--primary-foreground', '0 0% 100%'); // White text
-    root.style.setProperty('--primary-hover', '11 100% 68%'); // Lighter coral on hover
-    
-    root.style.setProperty('--secondary', '0 0% 90%'); // Light gray for secondary buttons
-    root.style.setProperty('--secondary-foreground', '217 33% 18%'); // Dark text
-    
-    root.style.setProperty('--muted', '0 0% 70%'); // Lighter gray
-    root.style.setProperty('--muted-foreground', '0 0% 100%'); // White text
-    
-    root.style.setProperty('--accent', '11 100% 63%'); // Coral accent
-    root.style.setProperty('--accent-foreground', '0 0% 100%'); // White text
-    
-    root.style.setProperty('--border', '217 33% 30%'); // Dark border
-    root.style.setProperty('--input', '217 33% 30%'); // Dark input background
-    root.style.setProperty('--ring', '11 100% 63%'); // Coral ring (focus states)
-    
-    // Gradients
-    root.style.setProperty('--gradient-primary', 'linear-gradient(135deg, hsl(11 100% 63%), hsl(11 100% 68%))'); // Coral gradient
-    root.style.setProperty('--gradient-warm', 'linear-gradient(135deg, hsl(217 33% 18%), hsl(217 33% 25%))'); // Dark navy gradient
-    root.style.setProperty('--gradient-cool', 'linear-gradient(135deg, hsl(11 100% 63%), hsl(11 100% 70%))'); // Coral gradient
-    
-    // Sidebar colors for splash pages
-    root.style.setProperty('--sidebar-background', '217 33% 18%');
-    root.style.setProperty('--sidebar-foreground', '0 0% 100%');
-    root.style.setProperty('--sidebar-primary', '11 100% 63%');
-    root.style.setProperty('--sidebar-primary-foreground', '0 0% 100%');
-    root.style.setProperty('--sidebar-accent', '0 0% 90%');
-    root.style.setProperty('--sidebar-accent-foreground', '217 33% 18%');
-    root.style.setProperty('--sidebar-border', '217 33% 30%');
-    root.style.setProperty('--sidebar-ring', '11 100% 63%');
+
+    // Deep Purple-Black + Violet theme — aligned to the EZ heart logo palette
+    // Background: deep purple-black like the logo glow bg (#0f051c)
+    root.style.setProperty('--background', '270 62% 7%');
+    root.style.setProperty('--foreground', '270 40% 96%'); // near-white with a lavender tint
+
+    // Cards: slightly lighter deep purple
+    root.style.setProperty('--card', '270 50% 12%');
+    root.style.setProperty('--card-foreground', '270 40% 96%');
+
+    root.style.setProperty('--popover', '270 50% 12%');
+    root.style.setProperty('--popover-foreground', '270 40% 96%');
+
+    // Primary — bright violet matching the logo letters (#9b59f6 ≈ hsl 270 88% 64%)
+    root.style.setProperty('--primary', '270 88% 64%');
+    root.style.setProperty('--primary-foreground', '0 0% 100%');
+    root.style.setProperty('--primary-hover', '270 88% 72%');
+
+    // Secondary — deep purple for secondary buttons
+    root.style.setProperty('--secondary', '270 50% 20%');
+    root.style.setProperty('--secondary-foreground', '270 80% 90%');
+
+    // Muted — muted lavender
+    root.style.setProperty('--muted', '270 35% 20%');
+    root.style.setProperty('--muted-foreground', '270 40% 72%');
+
+    // Accent — soft lavender highlight (#c4b5fd ≈ hsl 262 85% 85%)
+    root.style.setProperty('--accent', '262 80% 78%');
+    root.style.setProperty('--accent-foreground', '270 62% 7%');
+
+    root.style.setProperty('--border', '270 40% 22%');
+    root.style.setProperty('--input', '270 40% 18%');
+    root.style.setProperty('--ring', '270 88% 64%');
+
+    // Gradients — violet to pink-purple shimmer
+    root.style.setProperty('--gradient-primary', 'linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))');
+    root.style.setProperty('--gradient-warm',    'linear-gradient(135deg, hsl(270 62% 10%), hsl(270 50% 16%))');
+    root.style.setProperty('--gradient-cool',    'linear-gradient(135deg, hsl(262 80% 70%), hsl(270 88% 64%))');
+
+    // Sidebar
+    root.style.setProperty('--sidebar-background',          '270 62% 7%');
+    root.style.setProperty('--sidebar-foreground',          '270 40% 96%');
+    root.style.setProperty('--sidebar-primary',             '270 88% 64%');
+    root.style.setProperty('--sidebar-primary-foreground',  '0 0% 100%');
+    root.style.setProperty('--sidebar-accent',              '270 50% 20%');
+    root.style.setProperty('--sidebar-accent-foreground',   '270 80% 90%');
+    root.style.setProperty('--sidebar-border',              '270 40% 22%');
+    root.style.setProperty('--sidebar-ring',                '270 88% 64%');
   };
 
   const deactivateSplashTheme = () => {

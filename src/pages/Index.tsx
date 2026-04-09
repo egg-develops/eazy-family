@@ -2,14 +2,14 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, Calendar, MapPin, Users, ShoppingCart, MessageCircle, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Users, ShoppingCart, MessageCircle, ChevronRight } from "lucide-react";
 
 const features = [
-  { icon: Calendar, title: "Shared Calendars & Lists", description: "Sync schedules, to-do's and shopping lists" },
-  { icon: MapPin, title: "Local Event Discovery", description: "Find family-friendly activities happening near you" },
-  { icon: Users, title: "Parent Community", description: "Connect with nearby parents and arrange playdates" },
-  { icon: ShoppingCart, title: "Family Marketplace", description: "Give away or sell pre-loved kids' items" },
-  { icon: MessageCircle, title: "Family Messaging", description: "Stay connected with your family members" },
+  { icon: Calendar,       title: "Shared Calendars & Lists",       description: "Sync schedules, to-do's and shopping lists" },
+  { icon: MapPin,         title: "Local Event Discovery",           description: "Find family-friendly activities near you" },
+  { icon: Users,          title: "Parent Community",                description: "Connect with nearby parents and arrange playdates" },
+  { icon: ShoppingCart,   title: "Family Marketplace",              description: "Give away or sell pre-loved kids' items" },
+  { icon: MessageCircle,  title: "Family Messaging",                description: "Stay connected with your family members" },
 ];
 
 const Index = () => {
@@ -17,48 +17,76 @@ const Index = () => {
   const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading && user) {
-      navigate('/app');
-    }
+    if (!loading && user) navigate('/app');
   }, [user, loading, navigate]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "hsl(var(--background))" }}>
-      <div className="max-w-md mx-auto px-5 py-10">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "hsl(var(--background))" }}>
+      {/* Purple glow background blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[420px] h-[420px] rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, hsl(270 88% 55%), transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, hsl(290 80% 55%), transparent 70%)" }} />
+        <div className="absolute bottom-20 right-0 w-[200px] h-[200px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, hsl(260 80% 65%), transparent 70%)" }} />
+      </div>
+
+      <div className="relative max-w-md mx-auto px-5 py-10 flex-1 flex flex-col">
 
         {/* Hero */}
-        <div className="text-center space-y-5 mb-14">
-          <div className="w-[88px] h-[88px] mx-auto rounded-[22px] flex items-center justify-center shadow-lg"
-            style={{ background: "var(--gradient-primary)" }}>
-            <Heart className="w-11 h-11 text-white" strokeWidth={1.8} />
+        <div className="text-center space-y-5 mb-12">
+          {/* Logo */}
+          <div className="flex items-center justify-center">
+            <img
+              src="/logo.png"
+              alt="Eazy.Family"
+              className="w-28 h-28 drop-shadow-2xl"
+              style={{ filter: "drop-shadow(0 0 32px hsl(270 88% 64% / 0.6))" }}
+            />
           </div>
 
-          <h1 className="text-[2.25rem] font-bold tracking-tight leading-tight font-poppins" style={{ color: "hsl(var(--foreground))" }}>
-            Eazy.Family
-          </h1>
+          <div>
+            <h1 className="text-[2.4rem] font-bold tracking-tight leading-tight"
+              style={{ color: "hsl(var(--foreground))" }}>
+              Eazy.Family
+            </h1>
+            <p className="text-sm mt-1 font-medium" style={{ color: "hsl(262 80% 78%)" }}>
+              Your Daily Family App
+            </p>
+          </div>
 
-          <p className="text-base leading-relaxed max-w-[320px] mx-auto" style={{ color: "hsl(var(--foreground))", opacity: 0.85 }}>
+          <p className="text-sm leading-relaxed max-w-[300px] mx-auto" style={{ color: "hsl(270 40% 72%)" }}>
             The all-in-one app that keeps your family organized, connected, and making memories.
           </p>
         </div>
 
         {/* Features */}
-        <div className="space-y-3 mb-12">
+        <div className="space-y-2.5 mb-10 flex-1">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="flex items-center gap-4 bg-card rounded-2xl p-4 shadow-sm border border-border/40 animate-fade-in"
-                style={{ animationDelay: `${index * 0.06}s` }}
+                className="flex items-center gap-4 rounded-2xl p-4 animate-fade-in"
+                style={{
+                  animationDelay: `${index * 0.07}s`,
+                  background: "hsl(270 50% 12% / 0.8)",
+                  border: "1px solid hsl(270 40% 22%)",
+                  backdropFilter: "blur(8px)",
+                }}
               >
-                <div className="w-11 h-11 shrink-0 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--gradient-cool)" }}>
+                <div className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
+                  style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
                   <Icon className="w-5 h-5 text-white" strokeWidth={2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground leading-snug">{feature.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-snug mt-0.5">{feature.description}</p>
+                  <h3 className="text-sm font-semibold leading-snug" style={{ color: "hsl(270 40% 96%)" }}>
+                    {feature.title}
+                  </h3>
+                  <p className="text-xs leading-snug mt-0.5" style={{ color: "hsl(270 40% 68%)" }}>
+                    {feature.description}
+                  </p>
                 </div>
               </div>
             );
@@ -66,11 +94,11 @@ const Index = () => {
         </div>
 
         {/* CTAs */}
-        <div className="space-y-3">
+        <div className="space-y-3 pb-8">
           <Button
             onClick={() => navigate('/onboarding')}
-            className="w-full text-white border-0 hover:opacity-90 text-base py-6 rounded-xl shadow-lg font-semibold"
-            style={{ background: "var(--gradient-primary)" }}
+            className="w-full text-white border-0 text-base py-6 rounded-2xl font-semibold shadow-xl hover:opacity-90 transition-opacity"
+            style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}
           >
             Get Started — It's Free
             <ChevronRight className="w-5 h-5 ml-1" />
@@ -79,9 +107,11 @@ const Index = () => {
           <Button
             variant="ghost"
             onClick={() => navigate('/auth')}
-            className="w-full text-sm text-muted-foreground hover:text-foreground py-5 rounded-xl"
+            className="w-full text-sm py-5 rounded-2xl hover:bg-white/5 transition-colors"
+            style={{ color: "hsl(270 40% 68%)" }}
           >
-            Already have an account? <span className="font-semibold text-primary ml-1">Sign in</span>
+            Already have an account?{" "}
+            <span className="font-semibold ml-1" style={{ color: "hsl(262 80% 78%)" }}>Sign in</span>
           </Button>
         </div>
       </div>
