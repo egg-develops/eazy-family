@@ -37,6 +37,20 @@ serve(async (req) => {
 
     const { action, code, redirect_uri } = await req.json();
 
+    // ── 0. Build admin consent URL (for orgs that require IT approval) ─────────
+    if (action === 'get_admin_consent_url') {
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirect_uri,
+        scope: 'https://graph.microsoft.com/Calendars.Read offline_access',
+        state: 'outlook_admin_consent',
+      });
+      const url = `https://login.microsoftonline.com/organizations/v2.0/adminconsent?${params}`;
+      return new Response(JSON.stringify({ url }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ── 1. Build auth URL ──────────────────────────────────────────────────────
     if (action === 'get_auth_url') {
       const params = new URLSearchParams({

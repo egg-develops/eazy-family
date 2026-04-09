@@ -6,7 +6,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -137,6 +137,8 @@ const Calendar = () => {
     return [];
   });
 
+  const [outlookAdminConsentNeeded, setOutlookAdminConsentNeeded] = useState(false);
+  const [outlookAdminConsentUrl, setOutlookAdminConsentUrl] = useState('');
   const [outlookSynced, setOutlookSynced] = useState(() => {
     return localStorage.getItem('eazy-outlook-calendar-synced') === 'true';
   });
@@ -184,10 +186,20 @@ const Calendar = () => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
-    if (!code) return;
+    const oauthError = params.get('error');
+    const oauthErrorDesc = params.get('error_description') || '';
+
+    if (!code && !oauthError) return;
     window.history.replaceState({}, '', window.location.pathname);
-    if (state === 'google_calendar_sync') handleGoogleCallback(code);
-    if (state === 'outlook_calendar_sync') handleOutlookCallback(code);
+
+    // Microsoft returned an error before we even got a code
+    if (oauthError && state === 'outlook_calendar_sync') {
+      handleOutlookOAuthError(oauthError, oauthErrorDesc);
+      return;
+    }
+
+    if (state === 'google_calendar_sync') handleGoogleCallback(code!);
+    if (state === 'outlook_calendar_sync') handleOutlookCallback(code!);
   }, []);
 
   const handleGoogleConnect = async () => {
@@ -250,6 +262,38 @@ const Calendar = () => {
 
   // ── Outlook Calendar ────────────────────────────────────────────────────────
 
+  const isAdminConsentError = (msg: string) =>
+    msg.includes('AADSTS65001') ||   // user/admin hasn't consented
+    msg.includes('AADSTS90094') ||   // admin consent required by policy
+    msg.includes('AADSTS900941') ||  // admin consent required
+    msg.includes('admin_consent_required') ||
+    msg.includes('consent_required') ||
+    msg.includes('unauthorized_client');
+
+  const showAdminConsentDialog = async () => {
+    try {
+      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
+      const { data } = await supabase.functions.invoke('outlook-calendar-auth', {
+        body: { action: 'get_admin_consent_url', redirect_uri: redirectUri },
+      });
+      setOutlookAdminConsentUrl(data?.url || '');
+    } catch { /* ignore — we still show the dialog without the URL */ }
+    setOutlookAdminConsentNeeded(true);
+  };
+
+  const handleOutlookOAuthError = (error: string, description: string) => {
+    const combined = `${error} ${description}`;
+    if (isAdminConsentError(combined)) {
+      showAdminConsentDialog();
+    } else {
+      toast({
+        title: 'Outlook connection failed',
+        description: description || error,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleOutlookConnect = async () => {
     setIsSyncingOutlook(true);
     try {
@@ -291,13 +335,22 @@ const Calendar = () => {
         body: { action: 'exchange_code', code, redirect_uri: redirectUri },
       });
       if (error) throw error;
+      // Edge function may surface AADSTS errors as a message field
+      if (data?.error && isAdminConsentError(data.error)) {
+        showAdminConsentDialog();
+        return;
+      }
       if (data?.events) {
         const mapped = applyOutlookEvents(data.events);
         setShowCalendarSyncDialog(false);
         toast({ title: 'Outlook Calendar synced!', description: `${mapped.length} events imported.` });
       }
     } catch (err: any) {
-      toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+      if (isAdminConsentError(err.message || '')) {
+        showAdminConsentDialog();
+      } else {
+        toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
+      }
     } finally {
       setIsSyncingOutlook(false);
     }
@@ -672,6 +725,68 @@ const Calendar = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Outlook Admin Consent Dialog */}
+      <Dialog open={outlookAdminConsentNeeded} onOpenChange={setOutlookAdminConsentNeeded}>
+        <DialogContent className="max-w-md w-[95%] sm:w-full">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-[#0078d4]" />
+              IT Admin Approval Required
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <p className="text-muted-foreground">
+              Your organisation's IT policy requires an administrator to approve Eazy.Family before you can connect your work Outlook calendar.
+            </p>
+            <div className="rounded-lg border p-4 space-y-2 bg-muted/40">
+              <p className="font-semibold">What to do:</p>
+              <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
+                <li>Copy the message below and send it to your IT admin</li>
+                <li>Once they approve, come back and try connecting again</li>
+              </ol>
+            </div>
+
+            {/* Copyable message for IT */}
+            <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Message for your IT admin</p>
+              <p className="text-xs leading-relaxed select-all">
+                Hi, I'd like to connect my work Outlook calendar to Eazy.Family (eazy.family).
+                The app requires admin consent in Azure AD.
+                Please approve it at: <span className="font-mono break-all">{outlookAdminConsentUrl || 'https://eazy.family/admin-consent'}</span>
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => {
+                  const msg = `Hi, I'd like to connect my work Outlook calendar to Eazy.Family (eazy.family). The app requires admin consent in Azure AD. Please approve it at: ${outlookAdminConsentUrl || 'https://eazy.family/admin-consent'}`;
+                  navigator.clipboard.writeText(msg);
+                  toast({ title: 'Copied to clipboard' });
+                }}>
+                <Copy className="h-3.5 w-3.5" /> Copy Message
+              </Button>
+            </div>
+
+            {outlookAdminConsentUrl && (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-[#0078d4]/40 text-[#0078d4]"
+                onClick={() => window.open(outlookAdminConsentUrl, '_blank')}>
+                <ExternalLink className="h-4 w-4" />
+                Open Admin Consent Page
+              </Button>
+            )}
+
+            <p className="text-xs text-muted-foreground text-center">
+              Using a personal Outlook.com account instead?{' '}
+              <button className="underline" onClick={() => { setOutlookAdminConsentNeeded(false); handleOutlookConnect(); }}>
+                Try again
+              </button>
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Calendar Sync Dialog for Premium Users */}
       <Dialog open={showCalendarSyncDialog} onOpenChange={setShowCalendarSyncDialog}>
