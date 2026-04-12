@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, MapPin, Users, ShoppingCart, MessageCircle, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Users, ShoppingCart, MessageCircle, ChevronRight, Lock } from "lucide-react";
 
 const features = [
+  { icon: Lock,           title: "Secure & Private",               description: "Only accessible by your family, protected with TLS encryption and strict access controls" },
   { icon: Calendar,       title: "Shared Calendars & Lists",       description: "Sync schedules, to-do's and shopping lists" },
   { icon: MapPin,         title: "Local Event Discovery",           description: "Find family-friendly activities near you" },
   { icon: Users,          title: "Parent Community",                description: "Connect with nearby parents and arrange playdates" },
@@ -57,7 +58,7 @@ const Index = () => {
           </div>
 
           <p className="text-sm leading-relaxed max-w-[300px] mx-auto" style={{ color: "hsl(270 40% 72%)" }}>
-            The all-in-one app that keeps your family organized, connected, and making memories.
+            The all-in-one safe space that keeps your family organized, connected, and close.
           </p>
         </div>
 

@@ -33,8 +33,9 @@ const Privacy = () => {
             <h3>Data We Collect</h3>
             <ul>
               <li>Account information (name, email)</li>
-              <li>Content you add (events, tasks, photos)</li>
-              <li>Device and usage data to improve the app</li>
+              <li>Content you add (events, tasks, lists, messages)</li>
+              <li>Children's names and ages, if you choose to add them</li>
+              <li>Location (city-level, for local event discovery)</li>
             </ul>
             <Separator className="my-4" />
 
@@ -44,11 +45,22 @@ const Privacy = () => {
               <li>Secure your account and prevent abuse</li>
               <li>Notify you about important updates</li>
             </ul>
+
+            <h3>Third-Party Services</h3>
+            <p>To operate the app we use the following services, each of which may process your data only as needed for their function:</p>
+            <ul>
+              <li><strong>Supabase</strong> — database and authentication</li>
+              <li><strong>Stripe</strong> — payment processing (we never see your card details)</li>
+              <li><strong>Anthropic</strong> — AI assistant and voice shopping features</li>
+              <li><strong>Google / Microsoft</strong> — optional calendar integrations, only if you connect them</li>
+              <li><strong>Vercel</strong> — app hosting</li>
+            </ul>
+            <p>We do not use advertising networks, behavioural tracking tools, or sell your data to any third party.</p>
             <Separator className="my-4" />
 
             <h3>Security</h3>
             <p>
-              Your data is end-to-end encrypted and only visible to you and your family members you invite. We implement industry-standard security controls.
+              Your family's data is only accessible to members you personally invite. All data is protected with TLS encryption in transit and strict access controls enforced at the database level. We do not sell your data, use it for advertising, or share it with third parties beyond the services required to operate the app (such as our database provider, payment processor, and AI assistant).
             </p>
             <Separator className="my-4" />
 
