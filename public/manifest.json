@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Eazy.Family",
   "short_name": "Eazy.Family",
-  "description": "The all-in-one safe space that keeps your family organized, connected, and close.",
+  "description": "The all-in-one safe space that keeps your family organized and connected.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

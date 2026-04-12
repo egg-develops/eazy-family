@@ -58,7 +58,7 @@ const Index = () => {
           </div>
 
           <p className="text-sm leading-relaxed max-w-[300px] mx-auto" style={{ color: "hsl(270 40% 72%)" }}>
-            The all-in-one safe space that keeps your family organized, connected, and close.
+            The all-in-one safe space that keeps your family organized and connected.
           </p>
         </div>
 
