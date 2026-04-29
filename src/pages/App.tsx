@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
-  Bell, 
-  Plus, 
+  Bell,
+  Plus,
   Settings,
   Calendar,
   MapPin,
@@ -17,7 +17,9 @@ import {
   Cloud,
   X,
   RefreshCw,
-  MessageCircle
+  MessageCircle,
+  Trash2,
+  ImagePlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -236,6 +238,7 @@ const AppHome = () => {
   const [snippetDay, setSnippetDay] = useState<Date | null>(null);
   const [calendarTasks, setCalendarTasks] = useState<HomeCalendarEvent[]>([]);
   const headerImageInputRef = useRef<HTMLInputElement>(null);
+  const [showGalleryDialog, setShowGalleryDialog] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(() => {
     // Rotate carousel index on every homepage visit
     const key = 'eazy-carousel-visit-index';
@@ -454,6 +457,13 @@ const AppHome = () => {
     }
   };
 
+  const handleDeleteHeaderImage = (index: number) => {
+    const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+    const updated = currentImages.filter((_, i) => i !== index);
+    saveConfig({ ...homeConfig, headerImage: updated[0] ?? null, headerImages: updated });
+    setCarouselIndex(0);
+  };
+
   // Header carousel rotation
   const headerImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
 
@@ -487,7 +497,7 @@ const AppHome = () => {
         }}
       />
       {headerImages.length > 0 ? (
-        <div className="relative rounded-2xl overflow-hidden h-48 md:h-64">
+        <div className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-muted">
           {headerImages.map((img, i) => (
             <img
               key={i}
@@ -510,16 +520,15 @@ const AppHome = () => {
             </div>
           )}
           <button
-            onClick={() => headerImageInputRef.current?.click()}
+            onClick={() => setShowGalleryDialog(true)}
             className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
-            title={headerImages.length >= 4 ? "Max 4 images" : "Add hero image"}
-            disabled={headerImages.length >= 4}
+            title="Manage images"
           >
             <Camera className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <div 
+        <div
           onClick={() => headerImageInputRef.current?.click()}
           className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group"
         >
@@ -529,6 +538,41 @@ const AppHome = () => {
           </div>
         </div>
       )}
+
+      {/* Gallery Management Dialog */}
+      <Dialog open={showGalleryDialog} onOpenChange={setShowGalleryDialog}>
+        <DialogContent className="w-[95%] sm:w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle>Hero Images</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-2">
+            {headerImages.map((img, i) => (
+              <div key={i} className="relative rounded-xl overflow-hidden aspect-video bg-muted">
+                <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-contain" />
+                <button
+                  onClick={() => handleDeleteHeaderImage(i)}
+                  className="absolute top-1.5 right-1.5 p-1 bg-destructive/80 hover:bg-destructive rounded-full text-white transition-colors"
+                  aria-label="Delete image"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            {headerImages.length < 4 && (
+              <button
+                onClick={() => headerImageInputRef.current?.click()}
+                className="aspect-video rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ImagePlus className="w-6 h-6" />
+                <span className="text-xs">Add Photo</span>
+              </button>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGalleryDialog(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Eazy Assistant */}
       <div data-tutorial="eazy-assistant">
