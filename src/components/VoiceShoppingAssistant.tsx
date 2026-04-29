@@ -7,9 +7,10 @@ import { error as logError } from "@/lib/logger";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
+  listenerDescription?: string;
 }
 
-export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantProps) => {
+export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your shopping items" }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -77,7 +78,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded }: VoiceShoppingAssistantP
 
     toast({
       title: "Listening...",
-      description: "Speak your shopping items",
+      description: listenerDescription,
     });
   };
 

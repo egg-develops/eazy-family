@@ -218,28 +218,49 @@ const ToDoList = () => {
 
   const handleVoiceItemsAdded = async (items: string[]) => {
     try {
-      const insertPromises = items.map(item => 
-        supabase
-          .from('tasks')
-          .insert([{
+      if (activeTab === "shared") {
+        if (expandedLists.size !== 1) {
+          toast({
+            title: "Expand a list first",
+            description: "Please expand exactly one shared list before using voice.",
+            variant: "destructive",
+          });
+          return;
+        }
+        const targetListId = [...expandedLists][0];
+        const targetList = tasks.find(t => t.id === targetListId);
+        const insertPromises = items.map(item =>
+          supabase.from('tasks').insert([{
             title: item,
-            type: 'shopping',
+            type: 'shared',
             user_id: user?.id || '',
-            due_date: null,
-            shared_with: null,
+            parent_id: targetListId,
+            completed: false,
           }])
-      );
-
-      const results = await Promise.all(insertPromises);
-      
-      const hasErrors = results.some(result => result.error);
-      if (hasErrors) {
-        throw new Error("Some items failed to add");
+        );
+        const results = await Promise.all(insertPromises);
+        if (results.some(r => r.error)) throw new Error("Some items failed to add");
+        toast({
+          title: "Items Added",
+          description: `${items.length} item(s) added to "${targetList?.title ?? 'list'}".`,
+        });
+        return;
       }
 
+      const insertPromises = items.map(item =>
+        supabase.from('tasks').insert([{
+          title: item,
+          type: activeTab,
+          user_id: user?.id || '',
+          due_date: null,
+          shared_with: null,
+        }])
+      );
+      const results = await Promise.all(insertPromises);
+      if (results.some(r => r.error)) throw new Error("Some items failed to add");
       toast({
-        title: "Items Added",
-        description: `${items.length} item(s) added to your shopping list.`,
+        title: activeTab === "task" ? "Tasks Added" : "Items Added",
+        description: `${items.length} ${activeTab === "task" ? "task(s)" : "item(s)"} added.`,
       });
     } catch (error) {
       console.error('Error adding voice items:', error);
@@ -467,15 +488,28 @@ const ToDoList = () => {
               {activeTab === "shopping" ? "New Item" : activeTab === "shared" ? "New List" : "New Task"}
             </ParticleButton>
             
-            {activeTab === "shopping" && (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg bg-muted/50">
-                <div className="flex-1">
-                  <p className="text-xs sm:text-sm font-medium mb-1">Voice Assistant</p>
-                  <p className="text-xs text-muted-foreground">Tap the mic and say your shopping items</p>
-                </div>
-                <VoiceShoppingAssistant onItemsAdded={handleVoiceItemsAdded} />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg bg-muted/50">
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm font-medium mb-1">Voice Assistant</p>
+                <p className="text-xs text-muted-foreground">
+                  {activeTab === "task"
+                    ? "Tap the mic and say your tasks"
+                    : activeTab === "shared"
+                    ? "Expand a list, then tap the mic to add items by voice"
+                    : "Tap the mic and say your shopping items"}
+                </p>
               </div>
-            )}
+              <VoiceShoppingAssistant
+                onItemsAdded={handleVoiceItemsAdded}
+                listenerDescription={
+                  activeTab === "task"
+                    ? "Speak your tasks"
+                    : activeTab === "shared"
+                    ? "Speak items to add to the list"
+                    : "Speak your shopping items"
+                }
+              />
+            </div>
           </div>
 
           {/* Search + Filter */}
