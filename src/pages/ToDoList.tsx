@@ -55,6 +55,7 @@ const ToDoList = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
   const [addingToListId, setAddingToListId] = useState<string | null>(null);
@@ -385,15 +386,6 @@ const ToDoList = () => {
         <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
           <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
           <h1 className="text-lg sm:text-2xl font-bold">To-Do Lists</h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => loadTasks()}
-            className="hidden sm:flex ml-auto text-muted-foreground hover:text-foreground"
-            aria-label="Refresh"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
       </div>
@@ -530,20 +522,36 @@ const ToDoList = () => {
                 className="pl-9 h-10"
               />
             </div>
-            {activeTab !== "shared" && (
-              <Select value={filterView} onValueChange={setFilterView}>
-                <SelectTrigger className="h-10 w-full sm:w-40">
-                  <Filter className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{activeTab === "shopping" ? "All Items" : "All"}</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  {activeTab === "task" && <SelectItem value="overdue">Overdue</SelectItem>}
-                </SelectContent>
-              </Select>
-            )}
+            <div className="flex gap-2">
+              {activeTab !== "shared" && (
+                <Select value={filterView} onValueChange={setFilterView}>
+                  <SelectTrigger className="h-10 flex-1 sm:w-40">
+                    <Filter className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{activeTab === "shopping" ? "All Items" : "All"}</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    {activeTab === "task" && <SelectItem value="overdue">Overdue</SelectItem>}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 flex-shrink-0"
+                aria-label="Refresh"
+                disabled={isRefreshing}
+                onClick={async () => {
+                  setIsRefreshing(true);
+                  await loadTasks();
+                  setIsRefreshing(false);
+                }}
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
 
           {/* Tasks List */}

@@ -523,7 +523,7 @@ const AppHome = () => {
           )}
           <button
             onClick={() => setShowGalleryDialog(true)}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
             title="Manage images"
           >
             <Camera className="w-4 h-4" />
@@ -550,24 +550,25 @@ const AppHome = () => {
           </DialogHeader>
           <div className="grid grid-cols-3 sm:grid-cols-2 gap-2 sm:gap-3 py-2">
             {headerImages.map((img, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden aspect-video bg-muted">
-                <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-contain" />
+              <div key={i} className="relative rounded-lg overflow-hidden bg-muted" style={{ height: '72px' }}>
+                <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   onClick={() => handleDeleteHeaderImage(i)}
-                  className="absolute top-1.5 right-1.5 p-1 bg-destructive/80 hover:bg-destructive rounded-full text-white transition-colors"
+                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-destructive/80 hover:bg-destructive rounded-full text-white transition-colors"
                   aria-label="Delete image"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-2.5 h-2.5" />
                 </button>
               </div>
             ))}
             {headerImages.length < 4 && (
               <button
                 onClick={() => headerImageInputRef.current?.click()}
-                className="aspect-video rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                className="rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                style={{ height: '72px' }}
               >
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-xs">Add Photo</span>
+                <ImagePlus className="w-4 h-4" />
+                <span className="text-xs">Add</span>
               </button>
             )}
           </div>
