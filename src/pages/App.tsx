@@ -523,7 +523,7 @@ const AppHome = () => {
           )}
           <button
             onClick={() => setShowGalleryDialog(true)}
-            className="absolute top-4 right-4 p-2 bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 p-1.5 sm:p-2 bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
             title="Manage images"
           >
             <Camera className="w-4 h-4" />
@@ -548,7 +548,7 @@ const AppHome = () => {
           <DialogHeader>
             <DialogTitle>Hero Images</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-2">
+          <div className="grid grid-cols-3 sm:grid-cols-2 gap-2 sm:gap-3 py-2">
             {headerImages.map((img, i) => (
               <div key={i} className="relative rounded-xl overflow-hidden aspect-video bg-muted">
                 <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-contain" />

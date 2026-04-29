@@ -267,12 +267,12 @@ export const EazyAssistant = () => {
         </Button>
       </div>
 
-      <ScrollArea className="h-[300px] p-4" ref={scrollRef}>
+      <ScrollArea className="h-[180px] sm:h-[300px] p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8">
-              <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Ask me anything! Try "Add milk to shopping list" 🛒</p>
+              <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+              <p>Ask me anything</p>
             </div>
           )}
           {messages.map((msg, idx) => (

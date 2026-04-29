@@ -62,6 +62,14 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
         });
         return;
       }
+      if (event.error === 'service-not-allowed' || event.error === 'network') {
+        toast({
+          title: "Voice not available",
+          description: "Speech recognition is not supported on this browser. Try typing instead.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Voice error",
         description: "Could not capture speech. Please try again.",

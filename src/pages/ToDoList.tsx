@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
@@ -385,6 +385,15 @@ const ToDoList = () => {
         <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
           <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
           <h1 className="text-lg sm:text-2xl font-bold">To-Do Lists</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => loadTasks()}
+            className="hidden sm:flex ml-auto text-muted-foreground hover:text-foreground"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </Button>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
       </div>
@@ -400,19 +409,16 @@ const ToDoList = () => {
 >
         <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-0 h-auto">
           <TabsTrigger value="task" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+            <CheckSquare className="w-5 h-5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Tasks</span>
-            <span className="sm:hidden">T</span>
           </TabsTrigger>
           <TabsTrigger value="shopping" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+            <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Shopping</span>
-            <span className="sm:hidden">S</span>
           </TabsTrigger>
           <TabsTrigger value="shared" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Users className="w-5 h-5 sm:w-4 sm:h-4" />
             <span className="hidden sm:inline">Shared</span>
-            <span className="sm:hidden">Sh</span>
           </TabsTrigger>
         </TabsList>
 
