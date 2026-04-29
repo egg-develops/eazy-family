@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
 
-    const { text } = await req.json();
+    const { text, mode } = await req.json();
 
     if (!text || typeof text !== 'string' || !text.trim()) {
       return new Response(
@@ -48,6 +48,14 @@ serve(async (req) => {
     if (!ANTHROPIC_API_KEY) {
       throw new Error("ANTHROPIC_API_KEY is not configured");
     }
+
+    const promptByMode: Record<string, string> = {
+      shopping: `Extract every individual shopping item from this text. Each product or ingredient must be a separate entry — never combine multiple items into one string. Return ONLY a JSON array of strings. Example: ["milk", "eggs", "bread"]. If nothing found, return [].`,
+      task: `Extract every individual task or to-do action from this text. Each distinct action must be a separate entry — never combine multiple tasks into one string. Return ONLY a JSON array of strings. Example: ["call the dentist", "pick up kids", "pay electricity bill"]. If nothing found, return [].`,
+      shared: `Extract every individual item from this text. Each item must be a separate entry — never combine multiple items into one string. Return ONLY a JSON array of strings. Example: ["napkins", "paper plates", "juice"]. If nothing found, return [].`,
+    };
+
+    const prompt = promptByMode[mode] ?? promptByMode.shopping;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -62,9 +70,7 @@ serve(async (req) => {
         messages: [
           {
             role: "user",
-            content: `Extract shopping list items from this text. Return ONLY a JSON array of strings, no other text. Example: ["milk", "eggs", "bread"]. If no shopping items found, return [].
-
-Text: ${text}`
+            content: `${prompt}\n\nText: ${text}`
           }
         ]
       }),

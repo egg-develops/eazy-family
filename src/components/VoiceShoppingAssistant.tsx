@@ -8,9 +8,10 @@ import { error as logError } from "@/lib/logger";
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
   listenerDescription?: string;
+  mode?: 'shopping' | 'task' | 'shared';
 }
 
-export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your shopping items" }: VoiceShoppingAssistantProps) => {
+export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your shopping items", mode = 'shopping' }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -103,7 +104,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
     setIsProcessing(true);
     try {
       const { data, error } = await supabase.functions.invoke('shopping-voice-assistant', {
-        body: { text: transcript }
+        body: { text: transcript, mode }
       });
 
       if (!error && data?.items && data.items.length > 0) {

@@ -501,6 +501,7 @@ const ToDoList = () => {
               </div>
               <VoiceShoppingAssistant
                 onItemsAdded={handleVoiceItemsAdded}
+                mode={activeTab}
                 listenerDescription={
                   activeTab === "task"
                     ? "Speak your tasks"
