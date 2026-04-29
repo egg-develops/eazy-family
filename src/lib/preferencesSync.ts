@@ -22,6 +22,23 @@ export function setPreferenceUserId(userId: string | null) {
   _userId = userId;
 }
 
+/** Push all local SYNC_KEYS that are missing from the cloud record up to Supabase. */
+async function uploadMissingLocalPrefs(userId: string, cloudKeys: Set<string>) {
+  for (const key of SYNC_KEYS) {
+    if (cloudKeys.has(key)) continue; // cloud already has this key — skip
+    const local = localStorage.getItem(key);
+    if (!local) continue;
+    let parsed: unknown;
+    try { parsed = JSON.parse(local); } catch { parsed = local; }
+    // Fire-and-forget per key
+    supabase.rpc('upsert_preference', {
+      p_user_id: userId,
+      p_key: key,
+      p_value: parsed as never,
+    }).then(() => {/* silent */});
+  }
+}
+
 /** Load all cloud preferences and hydrate localStorage. Call once after login. */
 export async function loadCloudPreferences(userId: string) {
   setPreferenceUserId(userId);
@@ -32,16 +49,24 @@ export async function loadCloudPreferences(userId: string) {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (data?.data && typeof data.data === 'object') {
-      const loadedKeys: string[] = [];
-      for (const [key, value] of Object.entries(data.data as Record<string, unknown>)) {
-        if (value !== null && value !== undefined) {
-          const stored = typeof value === 'string' ? value : JSON.stringify(value);
-          localStorage.setItem(key, stored);
-          loadedKeys.push(key);
-        }
+    const cloudData = (data?.data ?? {}) as Record<string, unknown>;
+    const cloudKeys = new Set(Object.keys(cloudData));
+    const loadedKeys: string[] = [];
+
+    // Cloud → localStorage (cloud wins for keys that exist in cloud)
+    for (const [key, value] of Object.entries(cloudData)) {
+      if (value !== null && value !== undefined) {
+        const stored = typeof value === 'string' ? value : JSON.stringify(value);
+        localStorage.setItem(key, stored);
+        loadedKeys.push(key);
       }
-      // Notify components that cloud prefs have been hydrated into localStorage
+    }
+
+    // localStorage → cloud (upload any local keys not yet in cloud)
+    uploadMissingLocalPrefs(userId, cloudKeys);
+
+    // Notify components so they re-read from localStorage
+    if (loadedKeys.length > 0) {
       window.dispatchEvent(new CustomEvent('eazy-prefs-loaded', { detail: { keys: loadedKeys } }));
     }
   } catch {
@@ -61,7 +86,6 @@ export function cloudSet(key: string, value: string) {
     parsed = value;
   }
 
-  // Fire-and-forget
   supabase.rpc('upsert_preference', {
     p_user_id: _userId,
     p_key: key,
