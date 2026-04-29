@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { cloudSet } from '@/lib/preferencesSync';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -57,7 +58,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
+    cloudSet('theme', newTheme);
   };
 
   return (

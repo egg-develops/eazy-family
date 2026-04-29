@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { cloudSet } from "@/lib/preferencesSync";
 
 interface Event {
   id: string;
@@ -239,8 +240,8 @@ const Calendar = () => {
           color: 'hsl(142 70% 45%)',
         }));
         setGoogleEvents(mapped);
-        localStorage.setItem('eazy-google-calendar-events', JSON.stringify(mapped));
-        localStorage.setItem('eazy-google-calendar-synced', 'true');
+        cloudSet('eazy-google-calendar-events', JSON.stringify(mapped));
+        cloudSet('eazy-google-calendar-synced', 'true');
         setGoogleSynced(true);
         setShowCalendarSyncDialog(false);
         toast({ title: t('calendar.syncSuccess') || 'Google Calendar synced!', description: `${mapped.length} events imported.` });
@@ -321,8 +322,8 @@ const Calendar = () => {
       color: 'hsl(210 80% 52%)', // Outlook blue
     }));
     setOutlookEvents(mapped);
-    localStorage.setItem('eazy-outlook-calendar-events', JSON.stringify(mapped));
-    localStorage.setItem('eazy-outlook-calendar-synced', 'true');
+    cloudSet('eazy-outlook-calendar-events', JSON.stringify(mapped));
+    cloudSet('eazy-outlook-calendar-synced', 'true');
     setOutlookSynced(true);
     return mapped;
   };

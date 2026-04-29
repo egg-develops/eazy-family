@@ -51,6 +51,7 @@ import { validateImageFile } from "@/lib/fileValidation";
 import { error as logError } from "@/lib/logger";
 import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
+import { cloudSet } from "@/lib/preferencesSync";
 
 const AppLayout = () => {
   const { t } = useTranslation();
@@ -333,7 +334,7 @@ const AppHome = () => {
         if (data?.home_config && typeof data.home_config === 'object') {
           setHomeConfig(prev => {
             const merged = { ...prev, ...(data.home_config as Partial<HomeConfig>) };
-            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+            cloudSet('eazy-family-home-config', JSON.stringify(merged));
             return merged;
           });
         }
@@ -403,7 +404,7 @@ const AppHome = () => {
 
   const saveConfig = (newConfig: HomeConfig) => {
     setHomeConfig(newConfig);
-    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
     if (user) {
       supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
     }

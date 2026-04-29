@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { cloudSet } from "@/lib/preferencesSync";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,7 +101,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           .finally(() => {
             const locs = [location];
             setLocations(locs);
-            localStorage.setItem('weather-locations', JSON.stringify(locs));
+            cloudSet('weather-locations', JSON.stringify(locs));
             fetchWeather(location);
             setIsDetecting(false);
           });
@@ -140,7 +141,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       };
       const newLocations = [...locations.filter(l => l.id !== location.id), location];
       setLocations(newLocations);
-      localStorage.setItem('weather-locations', JSON.stringify(newLocations));
+      cloudSet('weather-locations', JSON.stringify(newLocations));
       setWeatherData(data);
       setCurrentLocationIndex(newLocations.length - 1);
       setSearchQuery("");
@@ -176,7 +177,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const removeLocation = (id: string) => {
     const newLocations = locations.filter(l => l.id !== id);
     setLocations(newLocations);
-    localStorage.setItem('weather-locations', JSON.stringify(newLocations));
+    cloudSet('weather-locations', JSON.stringify(newLocations));
     if (newLocations.length === 0) {
       setWeatherData(null);
     } else {

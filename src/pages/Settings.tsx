@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +114,7 @@ const Settings = () => {
         if (data?.home_config && typeof data.home_config === 'object') {
           setHomeConfig(prev => {
             const merged = { ...prev, ...(data.home_config as Partial<HomeConfig>) };
-            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+            cloudSet('eazy-family-home-config', JSON.stringify(merged));
             return merged;
           });
         }
@@ -189,7 +190,7 @@ const l = (max + min) / 2;
 
   const handleColorSchemeChange = (scheme: string) => {
     setColorScheme(scheme);
-    localStorage.setItem('eazy-family-color-scheme', scheme);
+    cloudSet('eazy-family-color-scheme', scheme);
     
     const root = document.documentElement;
     if (scheme === 'gray') {
@@ -213,7 +214,7 @@ const l = (max + min) / 2;
 
   const handleCustomColorChange = (color: string) => {
     setCustomColor(color);
-    localStorage.setItem('eazy-family-custom-color', color);
+    cloudSet('eazy-family-custom-color', color);
   };
 
   const availableQuickActions = [
@@ -227,7 +228,7 @@ const l = (max + min) / 2;
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
     const newConfig = { ...homeConfig, ...updates };
     setHomeConfig(newConfig);
-    localStorage.setItem('eazy-family-home-config', JSON.stringify(newConfig));
+    cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
     if (user) {
       supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
     }
@@ -347,7 +348,7 @@ const l = (max + min) / 2;
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     i18n.changeLanguage(newLanguage);
-    localStorage.setItem('eazy-family-language', newLanguage);
+    cloudSet('eazy-family-language', newLanguage);
     toast({
       title: t('settings.language.title'),
       description: t('settings.language.description'),
