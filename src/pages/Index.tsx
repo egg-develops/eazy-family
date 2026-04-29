@@ -95,7 +95,7 @@ const Index = () => {
         </div>
 
         {/* CTAs */}
-        <div className="space-y-3 pb-8">
+        <div className="space-y-3 pb-4">
           <Button
             onClick={() => navigate('/onboarding')}
             className="w-full text-white border-0 text-base py-6 rounded-2xl font-semibold shadow-xl hover:opacity-90 transition-opacity"
@@ -115,6 +115,13 @@ const Index = () => {
             <span className="font-semibold ml-1" style={{ color: "hsl(262 80% 78%)" }}>Sign in</span>
           </Button>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="relative text-center pb-6 text-xs space-x-3" style={{ color: "hsl(270 40% 55%)" }}>
+        <a href="/privacy" className="hover:underline">Privacy Policy</a>
+        <span>·</span>
+        <a href="/terms" className="hover:underline">Terms of Service</a>
       </div>
     </div>
   );
