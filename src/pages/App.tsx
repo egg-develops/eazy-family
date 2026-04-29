@@ -497,13 +497,14 @@ const AppHome = () => {
         }}
       />
       {headerImages.length > 0 ? (
-        <div className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-muted">
+        <div className="relative rounded-2xl overflow-hidden bg-muted w-full" style={{ aspectRatio: '16/9' }}>
           {headerImages.map((img, i) => (
             <img
               key={i}
               src={img}
               alt={`Hero ${i + 1}`}
               className={`carousel-image ${i === carouselIndex % headerImages.length ? 'active' : ''}`}
+              style={{ objectFit: 'contain', objectPosition: 'center' }}
               loading={i === 0 ? "eager" : "lazy"}
             />
           ))}
@@ -530,7 +531,8 @@ const AppHome = () => {
       ) : (
         <div
           onClick={() => headerImageInputRef.current?.click()}
-          className="relative rounded-2xl overflow-hidden h-48 md:h-64 bg-primary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group"
+          className="relative rounded-2xl overflow-hidden bg-primary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group w-full"
+          style={{ aspectRatio: '16/9' }}
         >
           <div className="text-center text-primary-foreground">
             <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />
