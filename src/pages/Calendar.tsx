@@ -159,7 +159,7 @@ const Calendar = () => {
   });
   
   useEffect(() => {
-    localStorage.setItem('eazy-family-calendar-items', JSON.stringify(items));
+    cloudSet('eazy-family-calendar-items', JSON.stringify(items));
   }, [items]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogTab, setDialogTab] = useState<"event" | "reminder">("event");
@@ -181,6 +181,29 @@ const Calendar = () => {
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
+
+  // Re-hydrate synced state when cloud preferences arrive
+  useEffect(() => {
+    const handler = () => {
+      setGoogleSynced(localStorage.getItem('eazy-google-calendar-synced') === 'true');
+      setOutlookSynced(localStorage.getItem('eazy-outlook-calendar-synced') === 'true');
+      const saved = localStorage.getItem('eazy-google-calendar-events');
+      if (saved) { try { setGoogleEvents(JSON.parse(saved)); } catch {} }
+      const savedOutlook = localStorage.getItem('eazy-outlook-calendar-events');
+      if (savedOutlook) { try { setOutlookEvents(JSON.parse(savedOutlook).map((e: any) => ({ ...e, startDate: new Date(e.startDate), endDate: new Date(e.endDate) }))); } catch {} }
+    };
+    window.addEventListener('eazy-prefs-loaded', handler);
+    return () => window.removeEventListener('eazy-prefs-loaded', handler);
+  }, []);
+
+  // Auto-open sync dialog when navigated from Settings with ?sync=1
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('sync') === '1') {
+      setShowCalendarSyncDialog(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Handle OAuth callbacks (Google + Outlook)
   useEffect(() => {
@@ -930,17 +953,29 @@ const Calendar = () => {
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
         </div>
-        <ParticleButton 
-          className="gap-2 gradient-primary text-white border-0 w-full sm:w-auto"
-          onClick={() => {
-            setDialogTab("event");
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">{t('calendar.new')}</span>
-          <span className="sm:hidden">New</span>
-        </ParticleButton>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-9"
+            onClick={() => setShowCalendarSyncDialog(true)}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            <span>Sync</span>
+            {(googleSynced || outlookSynced) && <span className="w-1.5 h-1.5 rounded-full bg-green-500 ml-0.5" />}
+          </Button>
+          <ParticleButton
+            className="gap-2 gradient-primary text-white border-0 flex-1 sm:flex-none"
+            onClick={() => {
+              setDialogTab("event");
+              setIsDialogOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('calendar.new')}</span>
+            <span className="sm:hidden">New</span>
+          </ParticleButton>
+        </div>
       </div>
 
       {/* Month Calendar */}
@@ -1098,7 +1133,7 @@ const Calendar = () => {
                         type="time"
                         value={eventStartTime}
                         onChange={(e) => setEventStartTime(e.target.value)}
-                        className="w-24 flex-shrink-0"
+                        className="w-20 sm:w-24 flex-shrink-0"
                       />
                     )}
                   </div>
@@ -1118,7 +1153,7 @@ const Calendar = () => {
                         type="time"
                         value={eventEndTime}
                         onChange={(e) => setEventEndTime(e.target.value)}
-                        className="w-24 flex-shrink-0"
+                        className="w-20 sm:w-24 flex-shrink-0"
                       />
                     )}
                   </div>

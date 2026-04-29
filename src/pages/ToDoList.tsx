@@ -580,7 +580,7 @@ const ToDoList = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         {items.length > 0 && (
-                          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="w-12 sm:w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                             <div
                               className="h-full bg-green-500 rounded-full transition-all"
                               style={{ width: `${(doneCount / items.length) * 100}%` }}

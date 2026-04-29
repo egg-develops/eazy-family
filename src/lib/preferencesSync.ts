@@ -12,6 +12,8 @@ const SYNC_KEYS = new Set([
   'eazy-google-calendar-synced',
   'eazy-outlook-calendar-events',
   'eazy-outlook-calendar-synced',
+  'eazy-family-calendar-items',
+  'eazy-family-points',
 ]);
 
 let _userId: string | null = null;
@@ -31,12 +33,16 @@ export async function loadCloudPreferences(userId: string) {
       .maybeSingle();
 
     if (data?.data && typeof data.data === 'object') {
+      const loadedKeys: string[] = [];
       for (const [key, value] of Object.entries(data.data as Record<string, unknown>)) {
         if (value !== null && value !== undefined) {
           const stored = typeof value === 'string' ? value : JSON.stringify(value);
           localStorage.setItem(key, stored);
+          loadedKeys.push(key);
         }
       }
+      // Notify components that cloud prefs have been hydrated into localStorage
+      window.dispatchEvent(new CustomEvent('eazy-prefs-loaded', { detail: { keys: loadedKeys } }));
     }
   } catch {
     // Non-fatal — app works with local values

@@ -73,6 +73,8 @@ const Settings = () => {
   const [customColor, setCustomColor] = useState(() => {
     return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
   });
+  const [googleSynced, setGoogleSynced] = useState(() => localStorage.getItem('eazy-google-calendar-synced') === 'true');
+  const [outlookSynced, setOutlookSynced] = useState(() => localStorage.getItem('eazy-outlook-calendar-synced') === 'true');
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [loadingSubscription, setLoadingSubscription] = useState(true);
 
@@ -99,6 +101,29 @@ const Settings = () => {
     };
     
     fetchSubscription();
+  }, []);
+
+  // Re-hydrate state when cloud preferences arrive
+  useEffect(() => {
+    const handler = () => {
+      const lang = localStorage.getItem('eazy-family-language');
+      if (lang) { setLanguage(lang); i18n.changeLanguage(lang); }
+      const scheme = localStorage.getItem('eazy-family-color-scheme');
+      if (scheme) setColorScheme(scheme);
+      const color = localStorage.getItem('eazy-family-custom-color');
+      if (color) setCustomColor(color);
+      const savedConfig = localStorage.getItem('eazy-family-home-config');
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        setHomeConfig(prev => ({ ...prev, ...parsed }));
+        setEditingGreeting(parsed.greeting || '');
+        setEditingByline(parsed.byline || '');
+      }
+      setGoogleSynced(localStorage.getItem('eazy-google-calendar-synced') === 'true');
+      setOutlookSynced(localStorage.getItem('eazy-outlook-calendar-synced') === 'true');
+    };
+    window.addEventListener('eazy-prefs-loaded', handler);
+    return () => window.removeEventListener('eazy-prefs-loaded', handler);
   }, []);
 
   // Sync home_config from Supabase on mount
@@ -567,19 +592,17 @@ const l = (max + min) / 2;
         <CardContent className="space-y-3">
           {/* Google Calendar */}
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
-            <div className={`flex items-center justify-between p-3 border rounded-lg ${localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'bg-green-50 border-green-200' : 'bg-card border-border'}`}>
+            <div className={`flex items-center justify-between p-3 border rounded-lg ${googleSynced ? 'bg-green-50 dark:bg-green-950/30 border-green-200' : 'bg-card border-border'}`}>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
+                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm flex-shrink-0">G</div>
                 <div>
                   <h4 className="font-medium text-sm">Google Calendar</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'Connected — sync in Calendar tab' : 'Available — connect in Calendar tab'}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{googleSynced ? 'Connected' : 'Not connected'}</p>
                 </div>
               </div>
-              <Badge className={localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'bg-green-600 text-white' : 'bg-primary text-primary-foreground'}>
-                {localStorage.getItem('eazy-google-calendar-synced') === 'true' ? 'Connected' : 'Available'}
-              </Badge>
+              <Button size="sm" variant={googleSynced ? 'outline' : 'default'} className={googleSynced ? '' : 'gradient-primary text-white border-0'} onClick={() => navigate('/app/calendar?sync=1')}>
+                {googleSynced ? 'Manage' : 'Connect'}
+              </Button>
             </div>
           ) : (
             <UpgradeDialog>
@@ -613,21 +636,19 @@ const l = (max + min) / 2;
           </div>
 
           {/* Outlook Calendar */}
-          <div className={`flex items-center justify-between p-3 border rounded-lg ${localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'bg-blue-50 border-blue-200' : 'bg-card border-border'}`}>
+          <div className={`flex items-center justify-between p-3 border rounded-lg ${outlookSynced ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200' : 'bg-card border-border'}`}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0">
                 <span className="text-white text-xs font-bold">O</span>
               </div>
               <div>
                 <h4 className="font-medium text-sm">Outlook Calendar</h4>
-                <p className="text-xs text-muted-foreground">
-                  {localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'Connected — sync in Calendar tab' : 'Available — connect in Calendar tab'}
-                </p>
+                <p className="text-xs text-muted-foreground">{outlookSynced ? 'Connected' : 'Not connected'}</p>
               </div>
             </div>
-            <Badge className={localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'bg-blue-600 text-white' : 'bg-[#0078d4] text-white'}>
-              {localStorage.getItem('eazy-outlook-calendar-synced') === 'true' ? 'Connected' : 'Available'}
-            </Badge>
+            <Button size="sm" variant={outlookSynced ? 'outline' : 'default'} className={outlookSynced ? '' : 'bg-[#0078d4] hover:bg-[#006cbd] text-white border-0'} onClick={() => navigate('/app/calendar?sync=1')}>
+              {outlookSynced ? 'Manage' : 'Connect'}
+            </Button>
           </div>
         </CardContent>
       </Card>

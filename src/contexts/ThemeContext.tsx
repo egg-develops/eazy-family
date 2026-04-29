@@ -56,6 +56,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
+  // Re-read theme when cloud preferences are hydrated
+  useEffect(() => {
+    const handler = () => {
+      const stored = localStorage.getItem('theme') as Theme | null;
+      if (stored) setThemeState(stored);
+    };
+    window.addEventListener('eazy-prefs-loaded', handler);
+    return () => window.removeEventListener('eazy-prefs-loaded', handler);
+  }, []);
+
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     cloudSet('theme', newTheme);

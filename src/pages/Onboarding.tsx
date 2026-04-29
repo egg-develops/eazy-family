@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { cloudSet } from "@/lib/preferencesSync";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -191,7 +192,7 @@ const Onboarding = () => {
             <Select value={data.language} onValueChange={(value) => {
               setData(prev => ({ ...prev, language: value }));
               i18n.changeLanguage(value);
-              localStorage.setItem('eazy-family-language', value);
+              cloudSet('eazy-family-language', value);
             }}>
               <SelectTrigger className="h-12 rounded-xl border-0 text-base"
                 style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}>
