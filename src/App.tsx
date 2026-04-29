@@ -20,6 +20,9 @@ import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import About from "./pages/About";
+import Download from "./pages/Download";
+import EventsPublic from "./pages/EventsPublic";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy pages
@@ -86,6 +89,9 @@ const App = () => (
               <Route path="/join-family" element={<JoinFamily />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/about" element={<SplashThemeProvider><About /></SplashThemeProvider>} />
+              <Route path="/download" element={<SplashThemeProvider><Download /></SplashThemeProvider>} />
+              <Route path="/events" element={<SplashThemeProvider><EventsPublic /></SplashThemeProvider>} />
               
               {/* Main App - User's custom theme */}
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
