@@ -19,6 +19,7 @@ import Splash from "./pages/Splash";
 import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy pages
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/join-family" element={<JoinFamily />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               
               {/* Main App - User's custom theme */}
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
