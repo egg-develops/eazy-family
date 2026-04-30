@@ -300,6 +300,16 @@ const Onboarding = () => {
                 ))}
               </SelectContent>
             </Select>
+            {data.location === "other" && (
+              <Input
+                value={data.customLocation}
+                onChange={(e) => setData(prev => ({ ...prev, customLocation: e.target.value }))}
+                placeholder="Enter your location"
+                className="h-12 rounded-xl border-0 text-base"
+                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}
+                autoFocus
+              />
+            )}
           </div>
         );
 
