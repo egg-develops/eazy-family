@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/PublicNav";
 import {
-  Calendar, MapPin, Users, ShoppingCart, MessageCircle, Lock,
+  Calendar, MapPin, Users, MessageCircle, Lock,
   ChevronRight, CheckCircle, Globe, Apple, Smartphone, Sparkles,
 } from "lucide-react";
 
@@ -20,11 +20,11 @@ export default function Index() {
 
   const features = [
     { icon: Lock,          title: t("website.home.f1t"), desc: t("website.home.f1d") },
+    { icon: Sparkles,      title: t("website.home.f5t"), desc: t("website.home.f5d") },
     { icon: Calendar,      title: t("website.home.f2t"), desc: t("website.home.f2d") },
-    { icon: MapPin,        title: t("website.home.f3t"), desc: t("website.home.f3d") },
-    { icon: Users,         title: t("website.home.f4t"), desc: t("website.home.f4d") },
-    { icon: ShoppingCart,  title: t("website.home.f5t"), desc: t("website.home.f5d") },
     { icon: MessageCircle, title: t("website.home.f6t"), desc: t("website.home.f6d") },
+    { icon: Users,         title: t("website.home.f4t"), desc: t("website.home.f4d") },
+    { icon: MapPin,        title: t("website.home.f3t"), desc: t("website.home.f3d") },
   ];
 
   const steps = [
