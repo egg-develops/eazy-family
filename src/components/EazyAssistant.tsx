@@ -9,6 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { TextLoop } from "@/components/ui/text-loop";
 import { error as logError } from "@/lib/logger";
+import * as chrono from "chrono-node";
+import { cloudSet } from "@/lib/preferencesSync";
 
 interface Message {
   role: "user" | "assistant";
@@ -94,6 +96,70 @@ export const EazyAssistant = () => {
     return false;
   };
 
+  // Check if message is a calendar action
+  const handleCalendarAction = (content: string): string | null => {
+    const intentPatterns = [
+      /(?:add|schedule|create|put|set up)\s+(.+?)\s+(?:to|on|in|for)\s+(?:the\s+)?(?:family\s+)?calendar/i,
+      /(?:add|schedule|create|put|set up)\s+(.+?)\s+(?:on|for|at)\s+(.+)/i,
+      /calendar[:\s]+(.+)/i,
+    ];
+
+    let rawTitle: string | null = null;
+
+    for (const pattern of intentPatterns) {
+      const match = content.match(pattern);
+      if (match) {
+        rawTitle = match[1].trim();
+        break;
+      }
+    }
+
+    if (!rawTitle) return null;
+
+    // Parse date/time from the full message
+    const parsed = chrono.parse(content, new Date(), { forwardDate: true });
+    if (!parsed.length) {
+      return "I couldn't work out the date for that event. Try something like: \"Add dentist appointment Monday 5 May at 3pm\"";
+    }
+
+    const result = parsed[0];
+    const startDate = result.start.date();
+    const endDate = result.end ? result.end.date() : new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    // Strip the date/time text out of the title if chrono picked it up inside
+    const dateText = result.text;
+    const cleanTitle = rawTitle.replace(dateText, "").replace(/\s+(on|at|for|the)\s*$/i, "").trim() || rawTitle;
+
+    // Format confirmation date string
+    const dateLabel = startDate.toLocaleDateString("en-GB", {
+      weekday: "long", day: "numeric", month: "long",
+    });
+    const timeLabel = result.start.isCertain("hour")
+      ? startDate.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+      : null;
+    const confirmLabel = timeLabel ? `${dateLabel} at ${timeLabel}` : dateLabel;
+
+    // Write directly into the calendar localStorage key (same structure as Calendar.tsx)
+    try {
+      const existing = JSON.parse(localStorage.getItem("eazy-family-calendar-items") || "[]");
+      const newEvent = {
+        id: Date.now().toString(),
+        title: cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        allDay: !result.start.isCertain("hour"),
+        type: "event",
+        color: "hsl(220 70% 50%)",
+        repeat: "never",
+      };
+      const updated = [...existing, newEvent];
+      cloudSet("eazy-family-calendar-items", JSON.stringify(updated));
+      return `Done! I've added **${newEvent.title}** to your calendar for **${confirmLabel}**. ✅`;
+    } catch {
+      return "Something went wrong saving the event. Please try adding it manually in the Calendar tab.";
+    }
+  };
+
   // Local smart fallback for when the edge function is unavailable
   const getLocalResponse = (userMessage: string, isShoppingAction: boolean): string | null => {
     const msg = userMessage.toLowerCase();
@@ -115,6 +181,14 @@ export const EazyAssistant = () => {
 
     // Check for shopping list actions
     const isShoppingAction = await handleShoppingListAction(userMessage);
+
+    // Check for calendar actions — handle directly without calling the LLM
+    const calendarReply = handleCalendarAction(userMessage);
+    if (calendarReply) {
+      setMessages(prev => [...prev, { role: "assistant", content: calendarReply }]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -234,7 +308,7 @@ export const EazyAssistant = () => {
               <TextLoop interval={3}>
                 {[
                   "Add milk and eggs to our shopping list",
-                  "Best family friendly restaurants nearby?",
+                  "Schedule dentist Monday 5 May at 3pm",
                   "Rainy day activities with two children",
                   "Quick dinner recipe with 5 ingredients",
                   "Add sunscreen to our shopping list",
