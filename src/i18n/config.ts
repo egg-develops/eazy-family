@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
+import enGB from './locales/en-GB.json';
 import de from './locales/de.json';
 import fr from './locales/fr.json';
 import it from './locales/it.json';
@@ -10,6 +11,7 @@ i18n
   .init({
     resources: {
       en: { translation: en },
+      'en-GB': { translation: { ...en, ...enGB } },
       de: { translation: de },
       fr: { translation: fr },
       it: { translation: it },

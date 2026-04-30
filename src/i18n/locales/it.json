@@ -573,5 +573,79 @@
     "due": "Scadenza:",
     "selectMembers": "Seleziona membri della famiglia",
     "loadingMembers": "Caricamento membri della famiglia..."
+  },
+  "website": {
+    "nav": {
+      "about": "Chi siamo", "events": "Eventi", "getApp": "Scarica l'app",
+      "signIn": "Accedi", "getStarted": "Inizia gratis"
+    },
+    "home": {
+      "badge": "iOS e Android disponibili presto",
+      "heroHeadline": "Un posto Eazy per la tua famiglia",
+      "heroSub": "Calendari condivisi, liste di cose da fare, messaggi ed eventi per bambini — tutto in uno spazio sicuro costruito per la tua famiglia.",
+      "check1": "Privato", "check2": "Sicuro", "check3": "Sincronizzazione multi-dispositivo",
+      "featuresTitle": "Tutto ciò di cui la tua famiglia ha bisogno",
+      "f1t": "Sicuro e Privato", "f1d": "I dati della tua famiglia sono tuoi. Crittografia TLS e controlli di accesso rigorosi.",
+      "f2t": "Calendari e Liste condivisi", "f2d": "Sincronizza orari, attività e liste della spesa istantaneamente su tutti i dispositivi.",
+      "f3t": "Scopri eventi locali", "f3d": "Trova attività ed eventi a misura di famiglia vicino a te.",
+      "f4t": "Community di genitori", "f4d": "Connettiti con i genitori vicini, condividi consigli e organizza incontri.",
+      "f5t": "Mercatino familiare", "f5d": "Regala o vendi articoli per bambini usati nella tua comunità locale.",
+      "f6t": "Messaggi di famiglia", "f6d": "Uno spazio privato perché la tua famiglia rimanga connessa ogni giorno.",
+      "howTitle": "Inizia facilmente",
+      "s1t": "Crea la tua famiglia", "s1b": "Registrati e configura il profilo della tua famiglia in meno di un minuto.",
+      "s2t": "Invita tutti", "s2b": "Condividi un link o un codice — i familiari si uniscono subito.",
+      "s3t": "Rimani organizzato", "s3b": "Gestisci calendari, liste, eventi e messaggi insieme.",
+      "downloadTitle": "Disponibile su tutti i tuoi dispositivi",
+      "downloadSub": "Usa l'app web ora — le app native iOS e Android arriveranno presto.",
+      "appStore": "App Store — Presto disponibile", "googlePlay": "Google Play — Presto disponibile", "useWebApp": "Usa l'app web",
+      "ctaPrimary": "Inizia — È gratuito", "ctaSecondary": "Accedi",
+      "freeToUse": "Gratuito", "noAds": "Senza pubblicità"
+    },
+    "about": {
+      "heroHeadline": "Stiamo costruendo un sistema semplice per la vita familiare quotidiana",
+      "heroSub": "La vita familiare ha molte parti in movimento — orari, spesa, eventi, incontri e comunicazione costante. Abbiamo creato Eazy.Family per riunire tutto in uno spazio privato e tranquillo.",
+      "valuesTitle": "I nostri valori",
+      "v1t": "La famiglia prima di tutto", "v1b": "Ogni decisione parte da una domanda: questo migliora la vita familiare?",
+      "v2t": "Privacy by Design", "v2b": "Non vendiamo mai i tuoi dati. Le informazioni della tua famiglia sono crittografate e accessibili solo a te.",
+      "v3t": "Guidati dalla community", "v3b": "Costruito con veri genitori — il tuo feedback modella ogni funzione che sviluppiamo.",
+      "v4t": "Eazy & Veloce", "v4b": "L'app quotidiana per la tua famiglia, abbiamo prestato grande attenzione a renderla semplice e utile.",
+      "storyTitle": "La storia",
+      "storyP1": "La vita familiare è bellissima. I giorni sono lunghi ma gli anni passano in fretta e prima di rendersene conto il tempo è volato. Eazy.Family è nata per far contare ogni momento e rimuovere le frustrazioni della vita quotidiana: troppe app e canali di messaggistica, calendari diversi e liste della spesa separate, la ricerca di attività per i tuoi figli. Cosa è sicuro, cosa no?",
+      "storyP2": "Il nostro obiettivo era semplice: un unico posto, privato e sicuro, che aiuta a creare ricordi duraturi per la tua famiglia e rende la vita quotidiana più facile.",
+      "ctaTitle": "Unisciti a Eazy.Family", "ctaSub": "Nessuna carta di credito richiesta.", "ctaButton": "Inizia gratis"
+    },
+    "events": {
+      "badge": "La tua fonte di eventi a misura di famiglia",
+      "heroHeadline": "Eventi reali per bambini curiosi",
+      "heroSub": "Eazy.Family organizza eventi reali, appropriati all'età, pensati per riunire la tua famiglia e i tuoi amici — musica, arte, storie, avventure all'aperto e molto altro.",
+      "ctaPrimary": "Unisciti a Eazy.Family per aggiornamenti",
+      "whatToExpect": "Cosa aspettarti",
+      "e1t": "Musica & Movimento", "e1d": "Sessioni interattive per neonati e bambini piccoli, concerti per i più grandi.",
+      "e2t": "Arti & Artigianato", "e2d": "Laboratori creativi progettati per stimolare la fantasia ad ogni età.",
+      "e3t": "Storie", "e3d": "Letture dal vivo e storie teatrali per i più piccoli.",
+      "e4t": "Avventure all'aperto", "e4d": "Passeggiate guidate nella natura, cacce al tesoro e giochi all'aperto.",
+      "stat1v": "Locale", "stat1l": "Eventi nella tua zona",
+      "stat2v": "Appropriato all'età", "stat2l": "Da 6 mesi a 10 anni",
+      "stat3v": "Calendario", "stat3l": "Eventi mensili e speciali",
+      "comingSoonTitle": "Eventi in arrivo",
+      "comingSoonSub": "Crea un account gratuito per sapere quando gli eventi arriveranno nella tua zona.",
+      "comingSoonCta": "Unisciti a Eazy.Family", "exploreApp": "Esplora l'app"
+    },
+    "download": {
+      "heroHeadline": "Scarica Eazy.Family", "heroSub": "Disponibile sul web ora. Le app native iOS e Android sono in arrivo.",
+      "iosLabel": "App iOS", "iosSub": "Presto disponibile",
+      "androidLabel": "App Android", "androidSub": "Presto disponibile",
+      "webLabel": "App Web", "webSub": "Disponibile ora", "webCta": "Apri l'app web",
+      "featuresTitle": "Tutto disponibile sul web adesso",
+      "notifyTitle": "Ricevi una notifica al lancio delle app",
+      "notifySub": "Crea un account gratuito e ti avviseremo quando iOS e Android sono pronti.",
+      "notifyCta": "Crea un account gratuito",
+      "wf1": "Sincronizzazione completa multi-dispositivo",
+      "wf2": "Calendari e liste di cose da fare condivisi",
+      "wf3": "Messaggistica familiare",
+      "wf4": "Scoperta di eventi locali",
+      "wf5": "Assistente Eazy con intelligenza artificiale",
+      "wf6": "Installa come PWA dal browser"
+    }
   }
 }

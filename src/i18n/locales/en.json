@@ -573,5 +573,79 @@
     "due": "Due:",
     "selectMembers": "Select Family Members",
     "loadingMembers": "Loading family members..."
+  },
+  "website": {
+    "nav": {
+      "about": "About", "events": "Events", "getApp": "Get the App",
+      "signIn": "Sign In", "getStarted": "Get Started Free"
+    },
+    "home": {
+      "badge": "iOS & Android coming soon",
+      "heroHeadline": "One Eazy place for your family",
+      "heroSub": "Shared calendars, to-do lists, messaging, and child-friendly events — all in one safe space built for your family.",
+      "check1": "Private", "check2": "Secure", "check3": "Cross-device sync",
+      "featuresTitle": "Everything your family needs",
+      "f1t": "Secure & Private", "f1d": "Your family's data stays yours. TLS encryption and strict per-family access controls.",
+      "f2t": "Shared Calendars & Lists", "f2d": "Sync schedules, to-dos and shopping lists instantly across all devices.",
+      "f3t": "Local Event Discovery", "f3d": "Find family-friendly activities, markets and events happening near you.",
+      "f4t": "Parent Community", "f4d": "Connect with nearby parents, share tips and arrange playdates.",
+      "f5t": "Family Marketplace", "f5d": "Give away or sell pre-loved kids' items within your local community.",
+      "f6t": "Family Messaging", "f6d": "A private space for your family to stay connected every day.",
+      "howTitle": "Eazy to Get Started",
+      "s1t": "Create your family", "s1b": "Sign up and set up your family profile in under a minute.",
+      "s2t": "Invite everyone", "s2b": "Share a link or code — family members join instantly.",
+      "s3t": "Stay organised", "s3b": "Manage calendars, lists, events and messages together.",
+      "downloadTitle": "Available on all your devices",
+      "downloadSub": "Use the web app now — native iOS and Android apps are coming soon with the same seamless sync.",
+      "appStore": "App Store — Coming Soon", "googlePlay": "Google Play — Coming Soon", "useWebApp": "Use Web App Now",
+      "ctaPrimary": "Get Started — It's Free", "ctaSecondary": "Sign In",
+      "freeToUse": "Free to use", "noAds": "No ads"
+    },
+    "about": {
+      "heroHeadline": "We're building a simple system for day-to-day family life",
+      "heroSub": "Family life is full of moving parts — schedules, shopping, events, playdates, and constant communication. We built Eazy.Family to bring all of that into one private, calm space so families can spend less time managing and more time together.",
+      "valuesTitle": "Our values",
+      "v1t": "Family First", "v1b": "Every decision we make starts with one question: does this make family life better?",
+      "v2t": "Privacy by Design", "v2b": "We never sell your data. Your family's information is encrypted and only accessible to you.",
+      "v3t": "Community Driven", "v3b": "Built with real parents — your feedback shapes every feature we build.",
+      "v4t": "Eazy & Fast", "v4b": "The daily app for your family, we've taken great care to make it simple and useful.",
+      "storyTitle": "The story",
+      "storyP1": "Family life is beautiful. The days are long but the years are short and before you know it time has gone. Eazy.Family was built to make every moment count and remove the frustrations of daily life: too many apps and messaging channels, different calendars and separate shopping lists, searching for activities and events your children will enjoy. What's safe, what's not?",
+      "storyP2": "Our goal was simple: one place, that's private and secure, helps you create lasting memories for your family and makes your daily life easier.",
+      "ctaTitle": "Join Eazy.Family", "ctaSub": "No credit card required.", "ctaButton": "Get Started Free"
+    },
+    "events": {
+      "badge": "Your source for family-friendly events",
+      "heroHeadline": "Real-world events for curious children",
+      "heroSub": "Eazy.Family organizes real-world, age-appropriate, events designed to bring your family and friends together — music, arts, storytelling, outdoor adventures, and more.",
+      "ctaPrimary": "Join Eazy.Family for updates",
+      "whatToExpect": "What to expect",
+      "e1t": "Music & Movement", "e1d": "Interactive sessions for babies and toddlers, concerts for young children.",
+      "e2t": "Arts & Crafts", "e2d": "Creative workshops designed to spark imagination at every age.",
+      "e3t": "Storytelling", "e3d": "Live reading sessions and theatrical stories for the little ones.",
+      "e4t": "Outdoor Adventures", "e4d": "Guided nature walks, scavenger hunts and outdoor play.",
+      "stat1v": "Local", "stat1l": "Events in your area",
+      "stat2v": "Age appropriate", "stat2l": "From 6 months to age 10",
+      "stat3v": "Calendar", "stat3l": "Monthly and special events",
+      "comingSoonTitle": "Events coming soon",
+      "comingSoonSub": "Create a free account to know when events are coming to your area.",
+      "comingSoonCta": "Join Eazy.Family", "exploreApp": "Explore the App"
+    },
+    "download": {
+      "heroHeadline": "Get Eazy.Family", "heroSub": "Available on web now. Native iOS and Android apps are on the way.",
+      "iosLabel": "iOS App", "iosSub": "Coming Soon",
+      "androidLabel": "Android App", "androidSub": "Coming Soon",
+      "webLabel": "Web App", "webSub": "Available Now", "webCta": "Open Web App",
+      "featuresTitle": "Everything's available on web right now",
+      "notifyTitle": "Get notified when the apps launch",
+      "notifySub": "Create a free account and we'll email you when iOS and Android apps are ready.",
+      "notifyCta": "Create Free Account",
+      "wf1": "Full cross-device sync",
+      "wf2": "Shared calendars & to-do lists",
+      "wf3": "Family messaging",
+      "wf4": "Local event discovery",
+      "wf5": "AI-powered Eazy Assistant",
+      "wf6": "Install as PWA from your browser"
+    }
   }
 }
