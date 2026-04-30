@@ -6,14 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, Camera, X, Copy, RefreshCw, Share2, QrCode } from "lucide-react";
+import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, X, Copy, RefreshCw, Share2, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
-import { validateImageFile, validateImageFiles } from "@/lib/fileValidation";
 import { log, error as logError } from "@/lib/logger";
 import { Database } from "@/integrations/supabase/types";
 
@@ -61,8 +59,6 @@ const FamilyProfile = () => {
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
-  const [headerImages, setHeaderImages] = useState<string[]>([]);
-  const [uploadingHeader, setUploadingHeader] = useState(false);
   const [familyInfo, setFamilyInfo] = useState<{ name: string; invite_code: string } | null>(null);
   const [regeneratingCode, setRegeneratingCode] = useState(false);
 
@@ -79,10 +75,7 @@ const FamilyProfile = () => {
   useEffect(() => {
     if (user) {
       loadFamilyData();
-      const savedHeaderImages = localStorage.getItem(`eazy-family-profile-headers-${user.id}`);
-      if (savedHeaderImages) {
-        setHeaderImages(JSON.parse(savedHeaderImages));
-      }
+
     }
   }, [user]);
 
@@ -302,85 +295,6 @@ if (error) throw error;
     }
   };
 
-  const handleHeaderImageUpload = async (files: FileList) => {
-    if (!user) return;
-    
-    const remainingSlots = 5 - headerImages.length;
-    if (remainingSlots <= 0) {
-      toast({
-        title: "Maximum images reached",
-        description: "You can upload a maximum of 5 header images.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const filesToUpload = Array.from(files).slice(0, remainingSlots);
-    
-    setUploadingHeader(true);
-    try {
-      const uploadedUrls: string[] = [];
-      
-      for (const file of filesToUpload) {
-        // Validate file before upload
-        const validationResult = validateImageFile(file);
-        if (!validationResult.valid) {
-          toast({
-            title: "Invalid file",
-            description: validationResult.error,
-            variant: "destructive",
-          });
-          continue;
-        }
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('user-uploads')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('user-uploads')
-          .getPublicUrl(filePath);
-        
-        uploadedUrls.push(publicUrl);
-      }
-
-      const newImages = [...headerImages, ...uploadedUrls];
-      setHeaderImages(newImages);
-      localStorage.setItem(`eazy-family-profile-headers-${user.id}`, JSON.stringify(newImages));
-      
-      toast({
-        title: "Header images updated",
-        description: `${uploadedUrls.length} image(s) added successfully.`,
-      });
-    } catch (error) {
-      logError('Upload error:', error);
-      toast({
-        title: "Upload failed",
-        description: "Could not upload header images",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingHeader(false);
-    }
-  };
-
-  const removeHeaderImage = (index: number) => {
-    if (!user) return;
-    const newImages = headerImages.filter((_, i) => i !== index);
-    setHeaderImages(newImages);
-    localStorage.setItem(`eazy-family-profile-headers-${user.id}`, JSON.stringify(newImages));
-    toast({
-      title: "Image removed",
-      description: "Header image has been removed.",
-    });
-  };
-
   const copyInviteCode = () => {
     if (!familyInfo) return;
     navigator.clipboard.writeText(familyInfo.invite_code);
@@ -533,84 +447,6 @@ if (error) throw error;
 
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
-      {/* Header Images Carousel Section */}
-      {headerImages.length > 0 ? (
-        <div className="relative rounded-lg sm:rounded-2xl overflow-hidden">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {headerImages.map((image, index) => (
-                <CarouselItem key={index}>
-                  <div className="relative w-full aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-                    <img 
-                      src={image} 
-                      alt={`Family Profile Header ${index + 1}`} 
-                      className="absolute inset-0 w-full h-full object-cover object-center"
-                    />
-                    <button
-                      onClick={() => removeHeaderImage(index)}
-                      className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 bg-red-500/70 hover:bg-red-600 rounded-full text-white transition-colors z-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                      title="Remove this image"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {headerImages.length > 1 && (
-              <>
-                <CarouselPrevious className="left-1 sm:left-2" />
-                <CarouselNext className="right-1 sm:right-2" />
-              </>
-            )}
-          </Carousel>
-          {headerImages.length < 5 && (
-            <>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                id="header-upload"
-                onChange={(e) => {
-                  if (e.target.files) handleHeaderImageUpload(e.target.files);
-                }}
-              />
-              <label
-                htmlFor="header-upload"
-                className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
-                title={`Add more images (${headerImages.length}/5)`}
-              >
-                <Plus className="w-4 h-4" />
-              </label>
-            </>
-          )}
-        </div>
-      ) : (
-        <>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            id="header-upload"
-            onChange={(e) => {
-              if (e.target.files) handleHeaderImageUpload(e.target.files);
-            }}
-          />
-          <label 
-            htmlFor="header-upload"
-            className="relative rounded-lg sm:rounded-2xl overflow-hidden h-24 sm:h-32 md:h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center cursor-pointer hover:from-primary/30 hover:to-accent/30 transition-colors group block"
-          >
-            <div className="text-center px-4">
-              <Camera className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50 group-hover:opacity-70 transition-opacity" />
-              <p className="font-semibold text-sm sm:text-base">Add Header Images</p>
-              <p className="text-xs sm:text-sm text-muted-foreground">Click to upload (up to 5)</p>
-            </div>
-          </label>
-        </>
-      )}
-      
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate("/app/settings")} className="flex-shrink-0 min-h-[44px] min-w-[44px]">
