@@ -237,7 +237,7 @@ export const EazyAssistant = () => {
                   "Best family friendly restaurants nearby?",
                   "Rainy day activities with two children",
                   "Quick dinner recipe with 5 ingredients",
-                  "Add an event to our family calendar",
+                  "Add sunscreen to our shopping list",
                 ].map((text) => (
                   <span key={text} className="block">{text}</span>
                 ))}
