@@ -14,6 +14,7 @@ import {
   Image as ImageIcon, X, Loader2,
 } from "lucide-react";
 import { error as logError } from "@/lib/logger";
+import { compressAndUpload } from "@/lib/imageUpload";
 import { haptic } from "@/lib/haptic";
 
 interface FamilyMember { user_id: string; name: string }
@@ -277,9 +278,7 @@ const Messaging = () => {
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${user!.id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("message-media").upload(path, file);
-      if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("message-media").getPublicUrl(path);
+      const publicUrl = await compressAndUpload(file, "message-media", path);
       if (type === "direct") await sendDirectMessage(newMessage, publicUrl);
       else await sendFamilyMessage(newMessage, publicUrl);
     } catch (err) {

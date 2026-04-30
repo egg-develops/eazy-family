@@ -19,6 +19,7 @@ import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { PrivacySettings } from "@/components/PrivacySettings";
 import { validateImageFile } from "@/lib/fileValidation";
+import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
 
 interface HomeConfig {
@@ -288,18 +289,8 @@ const l = (max + min) / 2;
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-uploads')
-        .getPublicUrl(filePath);
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const publicUrl = await compressAndUpload(file, 'user-uploads', filePath);
 
       if (type === 'profile') {
         saveHomeConfig({ iconImage: publicUrl });

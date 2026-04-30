@@ -48,6 +48,7 @@ import { NavLink } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
+import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
 import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
@@ -434,20 +435,9 @@ const AppHome = () => {
     }
 
     try {
-      const { supabase } = await import("@/integrations/supabase/client");
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-uploads')
-        .getPublicUrl(filePath);
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const publicUrl = await compressAndUpload(file, 'user-uploads', filePath);
 
       const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
       const updatedImages = [...currentImages, publicUrl].slice(-4); // max 4
@@ -460,9 +450,11 @@ const AppHome = () => {
 
   const handleDeleteHeaderImage = (index: number) => {
     const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+    const removed = currentImages[index];
     const updated = currentImages.filter((_, i) => i !== index);
     saveConfig({ ...homeConfig, headerImage: updated[0] ?? null, headerImages: updated });
     setCarouselIndex(0);
+    if (removed) deleteStorageFile('user-uploads', removed).catch(() => {});
   };
 
   // Header carousel rotation
