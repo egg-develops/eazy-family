@@ -49,12 +49,12 @@ const languages = [
 ];
 
 const features = [
-  { id: "calendar", label: "Synced Calendars & Schedules", icon: Calendar },
-  { id: "shopping", label: "Shared To-do's and Shopping Lists", icon: ShoppingCart },
-  { id: "playdates", label: "Parent & Child Playdates", icon: Heart },
-  { id: "community", label: "Community Chat & Marketplace", icon: MessageCircle },
-  { id: "events", label: "Local Events Discovery", icon: MapPin },
-  { id: "ai", label: "AI Assistant", icon: Sparkles },
+  { id: "ai",        label: "AI-Powered Eazy Assistant",       icon: Sparkles },
+  { id: "calendar",  label: "Synced Calendars & Schedules",    icon: Calendar },
+  { id: "shopping",  label: "Shared To-do's & Shopping Lists", icon: ShoppingCart },
+  { id: "events",    label: "Local Events Discovery",          icon: MapPin },
+  { id: "community", label: "Community Groups & Chat",         icon: MessageCircle },
+  { id: "playdates", label: "Parent & Child Playdates",        icon: Heart },
 ];
 
 const Onboarding = () => {

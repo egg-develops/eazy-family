@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   MessageCircle, Search, Users, Send, ArrowLeft,
   Image as ImageIcon, X, Loader2,
@@ -384,8 +384,8 @@ const Messaging = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as "family" | "direct")}>
-        <TabsList className="w-full sm:w-auto">
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as "family" | "direct")} className="flex flex-col" style={{ height: "calc(100vh - 220px)", minHeight: "400px" }}>
+        <TabsList className="w-full sm:w-auto flex-shrink-0">
           <TabsTrigger value="family" className="flex-1 sm:flex-none gap-2">
             <Users className="w-4 h-4" />
             Family Chat
@@ -400,12 +400,11 @@ const Messaging = () => {
             )}
           </TabsTrigger>
         </TabsList>
-      </Tabs>
-
-      <div style={{ height: "calc(100vh - 280px)", minHeight: "400px" }}>
 
         {/* ── Family Chat ── */}
-        {activeTab === "family" && (
+        <TabsContent value="family" className="flex-1 mt-4 min-h-0">
+        <div className="flex flex-col h-full">
+        {true && (
           <div className="flex flex-col h-full">
             {familyId ? (
               <>
@@ -439,9 +438,11 @@ const Messaging = () => {
             )}
           </div>
         )}
+        </div>
+        </TabsContent>
 
         {/* ── Direct Messages ── */}
-        {activeTab === "direct" && (
+        <TabsContent value="direct" className="flex-1 mt-4 min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 h-full">
 
             {/* Contact list */}
@@ -543,8 +544,8 @@ const Messaging = () => {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Lightbox */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
