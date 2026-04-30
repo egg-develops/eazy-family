@@ -288,6 +288,7 @@ const l = (max + min) / 2;
     else setUploadingHeader(true);
 
     try {
+      const oldUrl = type === 'profile' ? homeConfig.iconImage : homeConfig.headerImage;
       const fileExt = file.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
       const publicUrl = await compressAndUpload(file, 'user-uploads', filePath);
@@ -297,6 +298,7 @@ const l = (max + min) / 2;
       } else {
         saveHomeConfig({ headerImage: publicUrl });
       }
+      if (oldUrl) deleteStorageFile('user-uploads', oldUrl).catch(() => {});
     } catch (error) {
       logError('Upload error:', error);
       toast({
