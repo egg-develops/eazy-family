@@ -1,21 +1,25 @@
-// Haptic feedback via Web Vibration API (Android/supported browsers)
-// iOS Safari does not expose vibration — silently ignored there
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 type HapticStyle = 'light' | 'medium' | 'success' | 'error' | 'tap';
 
-const patterns: Record<HapticStyle, number | number[]> = {
-  tap: 30,
-  light: 50,
-  medium: 80,
-  success: [40, 60, 40],
-  error: [80, 60, 80],
-};
-
-export const haptic = (style: HapticStyle = 'light') => {
-  if (!('vibrate' in navigator)) return;
+export const haptic = async (style: HapticStyle = 'light') => {
   try {
-    navigator.vibrate(patterns[style]);
+    switch (style) {
+      case 'tap':
+      case 'light':
+        await Haptics.impact({ style: ImpactStyle.Light });
+        break;
+      case 'medium':
+        await Haptics.impact({ style: ImpactStyle.Medium });
+        break;
+      case 'success':
+        await Haptics.notification({ type: NotificationType.Success });
+        break;
+      case 'error':
+        await Haptics.notification({ type: NotificationType.Error });
+        break;
+    }
   } catch {
-    // Silently ignore if not supported
+    // Falls back gracefully on web — Capacitor stubs return resolved promises
   }
 };
