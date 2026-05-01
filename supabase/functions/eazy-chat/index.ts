@@ -16,7 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -40,22 +39,19 @@ serve(async (req) => {
     }
 
     const { messages, context } = await req.json();
-    
-    // Validate input
+
     if (!Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ error: 'Messages must be an array' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
     if (messages.length > MAX_MESSAGES) {
       return new Response(
         JSON.stringify({ error: `Too many messages. Maximum ${MAX_MESSAGES} allowed` }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
     for (const msg of messages) {
       if (!msg.role || !msg.content) {
         return new Response(
@@ -70,14 +66,15 @@ serve(async (req) => {
         );
       }
     }
+
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY is not configured');
-    }
+    if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not configured');
 
     const systemPrompt = context
       ? `You are Eazy Assistant, a helpful family assistant for the Eazy.Family app. Help families organize their schedules, plan activities, manage tasks, and provide parenting tips. Be friendly, supportive, and concise. Note: ${context}`
       : 'You are Eazy Assistant, a helpful family assistant for the Eazy.Family app. Help families organize their schedules, plan activities, manage tasks, and provide parenting tips. Be friendly, supportive, and concise in your responses.';
+
+    const model = 'claude-haiku-4-5-20251001';
 
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -87,7 +84,7 @@ serve(async (req) => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model,
         max_tokens: 1024,
         system: systemPrompt,
         messages: messages.map((m: { role: string; content: string }) => ({
@@ -113,10 +110,13 @@ serve(async (req) => {
       );
     }
 
-    // Transform Anthropic SSE stream → OpenAI-compatible SSE format
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();
+
+    // Token tracking
+    let inputTokens = 0;
+    let outputTokens = 0;
 
     (async () => {
       const reader = anthropicResponse.body!.getReader();
@@ -140,6 +140,18 @@ serve(async (req) => {
               const jsonStr = trimmed.slice(6);
               try {
                 const event = JSON.parse(jsonStr);
+
+                // Capture input tokens from message_start
+                if (event.type === 'message_start' && event.message?.usage) {
+                  inputTokens = event.message.usage.input_tokens ?? 0;
+                }
+
+                // Capture output tokens from message_delta
+                if (event.type === 'message_delta' && event.usage) {
+                  outputTokens = event.usage.output_tokens ?? 0;
+                }
+
+                // Forward content to client in OpenAI-compatible format
                 if (
                   event.type === 'content_block_delta' &&
                   event.delta?.type === 'text_delta' &&
@@ -161,6 +173,23 @@ serve(async (req) => {
         console.error('Stream transform error:', err);
       } finally {
         await writer.close();
+
+        // Log token usage after stream completes (fire-and-forget)
+        try {
+          const serviceClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+            { auth: { persistSession: false } }
+          );
+          await serviceClient.from('ai_usage_logs').insert({
+            user_id: user.id,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            model,
+          });
+        } catch (logErr) {
+          console.error('Failed to log token usage:', logErr);
+        }
       }
     })();
 

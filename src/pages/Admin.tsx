@@ -19,6 +19,17 @@ interface Stats {
   totalTasks: number;
   totalEvents: number;
   totalMessages: number;
+  // AI usage
+  totalAiSessions: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  aiSessionsToday: number;
+  // Page views
+  totalPageViews: number;
+  pageViewsToday: number;
+  topPages: { path: string; count: number }[];
+  // Storage
+  storageBuckets: { bucket: string; file_count: number; total_bytes: number }[];
   promos: { code: string; current_uses: number; max_uses: number | null }[];
   tierBreakdown: { tier: string; count: number }[];
   recentUsers: { full_name: string; email: string; created_at: string; subscription_tier: string }[];
@@ -98,6 +109,42 @@ const Admin = () => {
     // Messages
     const { count: totalMessages } = await supabase.from('direct_messages').select('*', { count: 'exact', head: true });
 
+    // AI usage
+    const [
+      { data: aiAll },
+      { count: aiToday },
+    ] = await Promise.all([
+      supabase.from('ai_usage_logs').select('input_tokens, output_tokens'),
+      supabase.from('ai_usage_logs').select('*', { count: 'exact', head: true }).gte('created_at', day1.toISOString()),
+    ]);
+    const totalInputTokens = (aiAll || []).reduce((s: number, r: any) => s + (r.input_tokens || 0), 0);
+    const totalOutputTokens = (aiAll || []).reduce((s: number, r: any) => s + (r.output_tokens || 0), 0);
+
+    // Page views
+    const [
+      { count: totalPageViews },
+      { count: pageViewsToday },
+      { data: pageViewsRaw },
+    ] = await Promise.all([
+      supabase.from('page_views').select('*', { count: 'exact', head: true }),
+      supabase.from('page_views').select('*', { count: 'exact', head: true }).gte('created_at', day1.toISOString()),
+      supabase.from('page_views').select('path'),
+    ]);
+    const pathCounts: Record<string, number> = {};
+    (pageViewsRaw || []).forEach((r: any) => { pathCounts[r.path] = (pathCounts[r.path] || 0) + 1; });
+    const topPages = Object.entries(pathCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([path, count]) => ({ path, count }));
+
+    // Storage
+    const { data: storageRaw } = await supabase.rpc('get_storage_stats');
+    const storageBuckets = (storageRaw || []).map((r: any) => ({
+      bucket: r.bucket,
+      file_count: Number(r.file_count),
+      total_bytes: Number(r.total_bytes),
+    }));
+
     const recentUsers = (recentRaw || []).map((p: any) => ({
       full_name: p.full_name || 'Unknown',
       email: p.email || '—',
@@ -117,6 +164,14 @@ const Admin = () => {
       totalTasks: totalTasks || 0,
       totalEvents: totalEvents || 0,
       totalMessages: totalMessages || 0,
+      totalAiSessions: (aiAll || []).length,
+      totalInputTokens,
+      totalOutputTokens,
+      aiSessionsToday: aiToday || 0,
+      totalPageViews: totalPageViews || 0,
+      pageViewsToday: pageViewsToday || 0,
+      topPages,
+      storageBuckets,
       promos: promos || [],
       tierBreakdown,
       recentUsers,
@@ -256,6 +311,83 @@ const Admin = () => {
                 <StatCard icon={Sparkles} label="AI Assistant" value="Active" color="hsl(45 95% 60%)" sub="Claude-powered" />
               </div>
             </section>
+
+            {/* AI Usage */}
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'hsl(270 40% 55%)' }}>
+                AI Usage
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <StatCard icon={Sparkles} label="Total Sessions" value={stats.totalAiSessions} color="hsl(45 95% 60%)" />
+                <StatCard icon={Sparkles} label="Sessions Today" value={stats.aiSessionsToday} color="hsl(45 95% 60%)" />
+                <StatCard icon={Sparkles} label="Input Tokens" value={stats.totalInputTokens.toLocaleString()} color="hsl(200 80% 60%)" sub="↑ user messages" />
+                <StatCard icon={Sparkles} label="Output Tokens" value={stats.totalOutputTokens.toLocaleString()} color="hsl(262 80% 78%)" sub="↓ AI responses" />
+              </div>
+            </section>
+
+            {/* Page Views */}
+            <section>
+              <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'hsl(270 40% 55%)' }}>
+                Page Views
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                <StatCard icon={Activity} label="Total Views" value={stats.totalPageViews.toLocaleString()} color="hsl(142 70% 60%)" />
+                <StatCard icon={Activity} label="Views Today" value={stats.pageViewsToday.toLocaleString()} color="hsl(142 70% 60%)" />
+              </div>
+              {stats.topPages.length > 0 && (
+                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(270 40% 22%)' }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: 'hsl(270 50% 14%)' }}>
+                        <th className="text-left px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Page</th>
+                        <th className="text-right px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Views</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.topPages.map((p, i) => (
+                        <tr key={p.path} style={{ background: i % 2 === 0 ? 'hsl(270 50% 10%)' : 'hsl(270 50% 12%)' }}>
+                          <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'hsl(270 40% 80%)' }}>{p.path}</td>
+                          <td className="px-4 py-2.5 text-right font-bold" style={{ color: 'hsl(270 40% 96%)' }}>{p.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            {/* Storage */}
+            {stats.storageBuckets.length > 0 && (
+              <section>
+                <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'hsl(270 40% 55%)' }}>
+                  Storage
+                </h2>
+                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(270 40% 22%)' }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr style={{ background: 'hsl(270 50% 14%)' }}>
+                        <th className="text-left px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Bucket</th>
+                        <th className="text-right px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Files</th>
+                        <th className="text-right px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Size</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.storageBuckets.map((b, i) => (
+                        <tr key={b.bucket} style={{ background: i % 2 === 0 ? 'hsl(270 50% 10%)' : 'hsl(270 50% 12%)' }}>
+                          <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'hsl(262 80% 78%)' }}>{b.bucket}</td>
+                          <td className="px-4 py-2.5 text-right" style={{ color: 'hsl(270 40% 80%)' }}>{b.file_count}</td>
+                          <td className="px-4 py-2.5 text-right font-medium" style={{ color: 'hsl(270 40% 96%)' }}>
+                            {b.total_bytes < 1024 * 1024
+                              ? `${(b.total_bytes / 1024).toFixed(1)} KB`
+                              : `${(b.total_bytes / (1024 * 1024)).toFixed(1)} MB`}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
 
             {/* Promo Codes */}
             {stats.promos.length > 0 && (
