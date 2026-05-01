@@ -74,6 +74,7 @@ serve(async (req) => {
       body: JSON.stringify({
         from: 'Eazy.Family <noreply@eazy.family>',
         to: [to],
+        bcc: ['ermiasgiovanni@gmail.com'],
         subject: `${fromName} invited you to Eazy.Family`,
         html,
       }),

@@ -158,9 +158,9 @@ export const PrivacySettings = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="discoverable-location">Allow nearby members to contact me</Label>
+              <Label htmlFor="discoverable-location">Allow verified members to contact me</Label>
               <p className="text-sm text-muted-foreground">
-                Other verified Eazy.Family members in your area may send you a connection request. Your exact location is never shared.
+                Verified Eazy.Family members in your area may send you a connection request. Your exact location is never shared.
               </p>
             </div>
             <Switch
