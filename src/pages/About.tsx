@@ -103,6 +103,7 @@ export default function About() {
             <Link to="/download" className="hover:opacity-80">{t("website.nav.getApp")}</Link>
             <Link to="/privacy" className="hover:opacity-80">Privacy Policy</Link>
             <Link to="/terms" className="hover:opacity-80">Terms of Service</Link>
+            <a href="https://x.com/eazy_family" target="_blank" rel="noopener noreferrer" className="hover:opacity-80">𝕏 @eazy_family</a>
           </nav>
           <p className="text-xs" style={{ color: "hsl(270 30% 45%)" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>

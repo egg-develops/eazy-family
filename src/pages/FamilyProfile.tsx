@@ -216,9 +216,33 @@ if (error) throw error;
       const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
       log("Invitation link:", inviteLink);
 
+      // Send email invite if method is email
+      if (inviteMethod === "email" && validationData.email) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", user.id)
+          .single();
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+
+        await supabase.functions.invoke("send-invite-email", {
+          body: {
+            to: validationData.email,
+            inviterName: profileData?.full_name || "Your family",
+            inviteLink,
+            role: inviteRole,
+          },
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        });
+      }
+
       toast({
         title: "Invitation sent!",
-        description: `Family member invited via ${inviteMethod}. Share this link: ${inviteLink}`,
+        description: inviteMethod === "email"
+          ? `Invite email sent to ${validationData.email}`
+          : `Share this link with your family member: ${inviteLink}`,
       });
 
       setIsInviteDialogOpen(false);

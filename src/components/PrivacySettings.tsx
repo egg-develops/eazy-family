@@ -20,6 +20,7 @@ export const PrivacySettings = () => {
   const [displayName, setDisplayName] = useState("");
   const [shareEmail, setShareEmail] = useState(false);
   const [sharePhone, setSharePhone] = useState(false);
+  const [discoverableByLocation, setDiscoverableByLocation] = useState(false);
 
   useEffect(() => {
     loadPrivacySettings();
@@ -31,7 +32,7 @@ export const PrivacySettings = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, share_email, share_phone")
+        .select("display_name, share_email, share_phone, discoverable_by_location")
         .eq("user_id", user.id)
         .single();
 
@@ -41,6 +42,7 @@ export const PrivacySettings = () => {
         setDisplayName(data.display_name || "");
         setShareEmail(data.share_email || false);
         setSharePhone(data.share_phone || false);
+        setDiscoverableByLocation((data as any).discoverable_by_location || false);
       }
     } catch (error) {
       logError("Error loading privacy settings:", error);
@@ -60,7 +62,8 @@ export const PrivacySettings = () => {
           display_name: displayName.trim() || null,
           share_email: shareEmail,
           share_phone: sharePhone,
-        })
+          discoverable_by_location: discoverableByLocation,
+        } as any)
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -150,6 +153,20 @@ export const PrivacySettings = () => {
               id="share-phone"
               checked={sharePhone}
               onCheckedChange={setSharePhone}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="discoverable-location">Allow nearby members to contact me</Label>
+              <p className="text-sm text-muted-foreground">
+                Other verified Eazy.Family members in your area may send you a connection request. Your exact location is never shared.
+              </p>
+            </div>
+            <Switch
+              id="discoverable-location"
+              checked={discoverableByLocation}
+              onCheckedChange={setDiscoverableByLocation}
             />
           </div>
         </div>

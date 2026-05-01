@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Users, Crown, TrendingUp, Gift, Calendar, ShoppingCart,
-  MessageCircle, MapPin, Sparkles, LogOut, RefreshCw, Activity,
+  MessageCircle, MapPin, Sparkles, LogOut, RefreshCw, Activity, Download,
 } from 'lucide-react';
 
 interface Stats {
@@ -18,9 +18,11 @@ interface Stats {
   totalGroups: number;
   totalTasks: number;
   totalEvents: number;
+  totalMessages: number;
   promos: { code: string; current_uses: number; max_uses: number | null }[];
   tierBreakdown: { tier: string; count: number }[];
   recentUsers: { full_name: string; email: string; created_at: string; subscription_tier: string }[];
+  allEmails: { email: string; full_name: string; created_at: string; subscription_tier: string }[];
 }
 
 const StatCard = ({
@@ -64,6 +66,7 @@ const Admin = () => {
       { count: totalTasks },
       { data: promos },
       { data: recentRaw },
+      { data: allEmailsRaw },
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', day1.toISOString()),
@@ -73,7 +76,8 @@ const Admin = () => {
       supabase.from('groups').select('*', { count: 'exact', head: true }),
       supabase.from('tasks').select('*', { count: 'exact', head: true }),
       supabase.from('promo_codes').select('code, current_uses, max_uses'),
-      supabase.from('profiles').select('full_name, subscription_tier, created_at').order('created_at', { ascending: false }).limit(10),
+      supabase.from('profiles').select('full_name, email, subscription_tier, created_at').order('created_at', { ascending: false }).limit(20),
+      supabase.from('profiles').select('email, full_name, created_at, subscription_tier').not('email', 'is', null).order('created_at', { ascending: false }),
     ]);
 
     // Tier breakdown
@@ -91,10 +95,12 @@ const Admin = () => {
     // Events
     const { count: totalEvents } = await supabase.from('events').select('*', { count: 'exact', head: true });
 
-    // Recent users with auth emails via admin (fallback to profile data)
+    // Messages
+    const { count: totalMessages } = await supabase.from('direct_messages').select('*', { count: 'exact', head: true });
+
     const recentUsers = (recentRaw || []).map((p: any) => ({
       full_name: p.full_name || 'Unknown',
-      email: '—',
+      email: p.email || '—',
       created_at: p.created_at,
       subscription_tier: p.subscription_tier || 'free',
     }));
@@ -110,9 +116,16 @@ const Admin = () => {
       totalGroups: totalGroups || 0,
       totalTasks: totalTasks || 0,
       totalEvents: totalEvents || 0,
+      totalMessages: totalMessages || 0,
       promos: promos || [],
       tierBreakdown,
       recentUsers,
+      allEmails: (allEmailsRaw || []).map((p: any) => ({
+        email: p.email,
+        full_name: p.full_name || '',
+        created_at: p.created_at,
+        subscription_tier: p.subscription_tier || 'free',
+      })),
     });
     setLastRefresh(new Date());
     setLoading(false);
@@ -121,6 +134,20 @@ const Admin = () => {
   useEffect(() => { fetchStats(); }, []);
 
   const handleSignOut = async () => { await signOut(); navigate('/auth'); };
+
+  const exportEmailsCSV = () => {
+    if (!stats?.allEmails.length) return;
+    const rows = [
+      ['Email', 'Name', 'Tier', 'Joined'],
+      ...stats.allEmails.map(u => [u.email, u.full_name, u.subscription_tier, new Date(u.created_at).toLocaleDateString()]),
+    ];
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `eazy-family-emails-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
 
   const tierColor: Record<string, string> = {
     free: 'hsl(270 40% 55%)',
@@ -150,6 +177,14 @@ const Admin = () => {
             style={{ background: 'hsl(270 50% 20%)', color: 'hsl(270 40% 80%)' }}>
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
+          </button>
+          <button
+            onClick={exportEmailsCSV}
+            disabled={!stats?.allEmails.length}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: 'hsl(142 60% 18%)', color: 'hsl(142 70% 70%)' }}>
+            <Download className="w-3.5 h-3.5" />
+            Emails CSV
           </button>
           <button
             onClick={handleSignOut}
@@ -214,9 +249,10 @@ const Admin = () => {
               <h2 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'hsl(270 40% 55%)' }}>
                 Content & Activity
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <StatCard icon={ShoppingCart} label="Total Tasks" value={stats.totalTasks} color="hsl(262 80% 78%)" />
                 <StatCard icon={Calendar} label="Total Events" value={stats.totalEvents} color="hsl(200 80% 60%)" />
+                <StatCard icon={MessageCircle} label="Messages Sent" value={stats.totalMessages} color="hsl(142 70% 60%)" />
                 <StatCard icon={Sparkles} label="AI Assistant" value="Active" color="hsl(45 95% 60%)" sub="Claude-powered" />
               </div>
             </section>
@@ -260,6 +296,7 @@ const Admin = () => {
                   <thead>
                     <tr style={{ background: 'hsl(270 50% 14%)' }}>
                       <th className="text-left px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Name</th>
+                      <th className="text-left px-4 py-3 font-semibold hidden md:table-cell" style={{ color: 'hsl(270 40% 68%)' }}>Email</th>
                       <th className="text-left px-4 py-3 font-semibold hidden sm:table-cell" style={{ color: 'hsl(270 40% 68%)' }}>Joined</th>
                       <th className="text-right px-4 py-3 font-semibold" style={{ color: 'hsl(270 40% 68%)' }}>Tier</th>
                     </tr>
@@ -268,6 +305,7 @@ const Admin = () => {
                     {stats.recentUsers.map((u, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? 'hsl(270 50% 10%)' : 'hsl(270 50% 12%)' }}>
                         <td className="px-4 py-3 font-medium" style={{ color: 'hsl(270 40% 90%)' }}>{u.full_name}</td>
+                        <td className="px-4 py-3 hidden md:table-cell font-mono text-xs" style={{ color: 'hsl(270 40% 65%)' }}>{u.email}</td>
                         <td className="px-4 py-3 hidden sm:table-cell" style={{ color: 'hsl(270 40% 55%)' }}>
                           {new Date(u.created_at).toLocaleDateString()}
                         </td>

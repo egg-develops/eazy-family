@@ -545,6 +545,12 @@ const ToDoList = () => {
                 disabled={isRefreshing}
                 onClick={async () => {
                   setIsRefreshing(true);
+                  const completedIds = tasks
+                    .filter(t => t.type === activeTab && t.completed)
+                    .map(t => t.id);
+                  if (completedIds.length > 0) {
+                    await supabase.from('tasks').delete().in('id', completedIds);
+                  }
                   await loadTasks();
                   setIsRefreshing(false);
                 }}
