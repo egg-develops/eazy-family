@@ -12,53 +12,152 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
   const navigate = useNavigate();
 
   const steps: Step[] = [
+    // ── Step 1: Welcome ──────────────────────────────────────────────────────
     {
       target: 'body',
-      content: 'Welcome to Eazy Family! Let\'s take a quick tour of the key features to help you get started.',
       placement: 'center',
       disableBeacon: true,
+      content: (
+        <div>
+          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>Welcome to Eazy.Family! 👋</p>
+          <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
+            Your family's private hub for staying <strong>organized and connected</strong> — calendar,
+            tasks, shopping, messaging, events, and more.
+          </p>
+          <p style={{ lineHeight: 1.6, opacity: 0.8, fontSize: '0.9rem' }}>
+            Let's take a 2-minute tour of the key features.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 2: Eazy Assistant ───────────────────────────────────────────────
     {
       target: '[data-tutorial="eazy-assistant"]',
-      content: 'Meet Eazy Assistant - your AI-powered family helper! Ask questions, add items to your shopping list by voice, or get help planning.',
       placement: 'bottom',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Meet Eazy Assistant 🤖</p>
+          <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
+            Your AI family helper. Tap a suggestion chip or type anything:
+          </p>
+          <ul style={{ paddingLeft: 16, lineHeight: 1.8, fontSize: '0.9rem', opacity: 0.85 }}>
+            <li>"Add milk and eggs to our shopping list"</li>
+            <li>"Schedule dentist Monday at 3pm"</li>
+            <li>"Quick dinner recipe with 5 ingredients"</li>
+          </ul>
+          <p style={{ marginTop: 8, fontSize: '0.9rem', opacity: 0.75 }}>
+            Works in English, German, French, and Italian.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 3: Settings header (navigated to from step 2) ───────────────────
     {
       target: '[data-tutorial="settings"]',
-      content: 'Access all your settings here to customize your Eazy Family experience.',
       placement: 'bottom',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Settings ⚙️</p>
+          <p style={{ lineHeight: 1.6 }}>
+            Everything about your experience lives here — profile, calendar sync, appearance,
+            language, privacy, and more. Let's walk through the highlights.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 4: Custom Images ────────────────────────────────────────────────
     {
       target: '[data-tutorial="custom-images"]',
-      content: 'Upload custom profile and header images to personalize your homepage.',
-      placement: 'right',
+      placement: 'bottom',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Personalise Your Home Screen 📸</p>
+          <p style={{ lineHeight: 1.6 }}>
+            Upload up to <strong>4 rotating hero images</strong> — family photos, a favourite view,
+            anything you like. They auto-rotate every 5 seconds on your home screen.
+          </p>
+          <p style={{ marginTop: 8, fontSize: '0.9rem', opacity: 0.75 }}>
+            You can also set a custom greeting and family name at the top.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 5: Calendar Integrations ────────────────────────────────────────
     {
       target: '[data-tutorial="calendar-integrations"]',
-      content: 'Connect your Google Calendar to sync all your events in one place. Apple and Outlook coming soon!',
-      placement: 'right',
+      placement: 'top',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Calendar Sync 📅</p>
+          <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
+            Connect <strong>Google Calendar</strong> or <strong>Microsoft Outlook</strong> — both
+            are fully live. Your events sync automatically and appear on your home screen widget.
+          </p>
+          <p style={{ fontSize: '0.9rem', opacity: 0.75 }}>
+            You can also add events directly via Eazy Assistant or the Calendar tab.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 6: Appearance ───────────────────────────────────────────────────
     {
       target: '[data-tutorial="appearance"]',
-      content: 'Customize your app\'s appearance with dark mode, custom colors, and more.',
-      placement: 'right',
+      placement: 'top',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Appearance & Language 🎨</p>
+          <p style={{ lineHeight: 1.6 }}>
+            Choose <strong>light or dark mode</strong>, pick a colour palette, and set your
+            preferred language. Eazy.Family is fully available in English, German, French,
+            and Italian — the whole app updates instantly.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 7: Referral ─────────────────────────────────────────────────────
     {
       target: '[data-tutorial="referral-system"]',
-      content: '🎁 Your personal referral code is right here! Share it with friends — you both earn 1 free month of Premium when they sign up.',
       placement: 'top',
+      content: (
+        <div>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>Invite Friends, Earn Premium 🎁</p>
+          <p style={{ lineHeight: 1.6 }}>
+            Share your personal referral code with friends and family.
+            <strong> You both earn 1 free month of Premium</strong> when they sign up and
+            activate it — no limits on how many you can refer.
+          </p>
+        </div>
+      ),
     },
+
+    // ── Step 8: Completion (back on homepage) ────────────────────────────────
     {
       target: 'body',
-      content: '📱 Share Eazy.Family with Friends! Copy your referral code from Settings and send it via WhatsApp, iMessage, or email. Every friend who joins earns you free Premium.',
       placement: 'center',
       disableBeacon: true,
-    },
-    {
-      target: 'body',
-      content: '🎉 You\'re all set! Eazy.Family is ready to keep your family organized and connected. Replay this tour anytime from the "Re-run Tutorial" button at the bottom of Settings.',
-      placement: 'center',
-      disableBeacon: true,
+      content: (
+        <div>
+          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>You're all set! 🎉</p>
+          <p style={{ lineHeight: 1.6, marginBottom: 12 }}>
+            A few more things to explore on your own:
+          </p>
+          <ul style={{ paddingLeft: 16, lineHeight: 1.9, fontSize: '0.9rem' }}>
+            <li><strong>Family tab</strong> — invite members with a link or email</li>
+            <li><strong>To-Do's</strong> — tasks, shopping lists, and shared lists</li>
+            <li><strong>Community</strong> — join or create local family groups</li>
+            <li><strong>Messaging</strong> — direct messages with family members</li>
+          </ul>
+          <p style={{ marginTop: 12, fontSize: '0.85rem', opacity: 0.65 }}>
+            You can replay this tour anytime from the bottom of Settings.
+          </p>
+        </div>
+      ),
     },
   ];
 
@@ -66,24 +165,24 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
     const { status, index, type } = data;
 
     if (type === 'step:after') {
-      // Navigate to settings before the settings steps
+      // After step 2 (eazy assistant), navigate to settings and wait for element
       if (index === 1) {
         navigate('/app/settings');
         let attempts = 0;
         const interval = setInterval(() => {
           const el = document.querySelector('[data-tutorial="settings"]');
           attempts++;
-          if (el || attempts >= 30) {
+          if (el || attempts >= 40) {
             clearInterval(interval);
             setStepIndex(index + 1);
           }
-        }, 200);
+        }, 150);
         return;
       }
-      // Navigate back to homepage before the share/final steps
+      // After step 7 (referral), navigate back to homepage for completion
       if (index === 6) {
         navigate('/app');
-        setTimeout(() => setStepIndex(index + 1), 500);
+        setTimeout(() => setStepIndex(index + 1), 400);
         return;
       }
       if (index < steps.length - 1) {
@@ -111,26 +210,30 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
           primaryColor: 'hsl(var(--primary))',
           textColor: 'hsl(var(--foreground))',
           backgroundColor: 'hsl(var(--background))',
-          overlayColor: 'rgba(0, 0, 0, 0.5)',
+          overlayColor: 'rgba(0, 0, 0, 0.55)',
           arrowColor: 'hsl(var(--background))',
           zIndex: 10000,
+          width: 340,
         },
-        tooltip: { borderRadius: '8px', padding: '16px' },
+        tooltip: { borderRadius: '12px', padding: '20px' },
+        tooltipContent: { padding: '4px 0 8px' },
         buttonNext: {
           backgroundColor: 'hsl(var(--primary))',
           color: 'hsl(var(--primary-foreground))',
-          borderRadius: '6px',
-          padding: '8px 16px',
+          borderRadius: '8px',
+          padding: '8px 18px',
+          fontWeight: 600,
         },
-        buttonBack: { color: 'hsl(var(--muted-foreground))' },
+        buttonBack: { color: 'hsl(var(--muted-foreground))', marginRight: 8 },
         buttonSkip: { color: 'hsl(var(--muted-foreground))' },
+        spotlight: { borderRadius: '12px' },
       }}
       locale={{
         back: 'Back',
         close: 'Close',
-        last: 'Finish',
-        next: 'Next',
-        skip: 'Skip Tour',
+        last: 'Done',
+        next: 'Next →',
+        skip: 'Skip tour',
       }}
     />
   );

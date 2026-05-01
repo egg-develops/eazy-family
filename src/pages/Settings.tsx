@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun } from "lucide-react";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun, Mail, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
@@ -876,7 +876,11 @@ const l = (max + min) / 2;
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
-          onClick={() => { localStorage.setItem('eazy-family-tutorial-run', 'true'); window.dispatchEvent(new Event('tutorial-start')); }}
+          onClick={() => {
+            localStorage.removeItem('eazy-family-tutorial-completed');
+            localStorage.setItem('eazy-family-tutorial-run', 'true');
+            window.dispatchEvent(new Event('tutorial-start'));
+          }}
         >
           <RefreshCw className="h-4 w-4" />
           Re-run Tutorial
@@ -890,6 +894,53 @@ const l = (max + min) / 2;
           {t('settings.actions.signOut')}
         </Button>
       </div>
+
+      {/* Contact Us */}
+      <Card className="shadow-custom-md">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Mail className="h-5 w-5" />
+            Contact Us
+          </CardTitle>
+          <CardDescription>We'd love to hear from you</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <MessageCircle className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Feedback & Feature Requests</p>
+              <a
+                href="mailto:hello@eazy.family"
+                className="text-sm text-primary hover:underline"
+              >
+                hello@eazy.family
+              </a>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Ideas, suggestions, or anything you'd love to see
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Shield className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Technical Support</p>
+              <a
+                href="mailto:support@eazy.family"
+                className="text-sm text-primary hover:underline"
+              >
+                support@eazy.family
+              </a>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Bugs, account issues, or anything not working right
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

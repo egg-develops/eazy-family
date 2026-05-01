@@ -38,7 +38,11 @@ export const GlobalTutorial = () => {
 
     checkFlag();
 
-    const onStart = () => checkFlag();
+    const onStart = () => {
+      // Clear completed flag so re-run always works from Settings
+      localStorage.removeItem('eazy-family-tutorial-completed');
+      checkFlag();
+    };
     window.addEventListener('tutorial-start', onStart as EventListener);
 
     return () => {

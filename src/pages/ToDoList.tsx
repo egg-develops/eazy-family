@@ -15,7 +15,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptic";
 import { Badge } from "@/components/ui/badge";
-import { triggerGamification } from "@/components/GamificationToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
@@ -337,14 +336,8 @@ const ToDoList = () => {
 
       if (error) throw error;
 
-      // Trigger celebration when marking as complete (not when uncompleting)
       if (!wasCompleted) {
         haptic('success');
-        triggerGamification({
-          type: activeTab === 'task' ? 'list_created' : activeTab === 'shopping' ? 'photo_shared' : 'event_added',
-          title: '✨ Task Complete!',
-          points: 10
-        });
       }
     } catch (error) {
       console.error('Error toggling task:', error);
