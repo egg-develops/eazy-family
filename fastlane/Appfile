@@ -1,5 +1,9 @@
 app_identifier("eazy.family.app")
 apple_id("ermiasgiovanni@gmail.com")
 
-itc_team_id("")  # App Store Connect Team ID — fill after first login
-team_id("")      # Developer Portal Team ID — fill after first login
+itc_team_id("")
+team_id("")
+
+# App Store Connect App ID
+# app_id: 6765778216
+

@@ -1,0 +1,8 @@
+Welcome to Eazy.Family! This is our first release.
+
+• Shared family calendar
+• Shared to-do lists
+• Family messaging
+• Eazy AI Assistant
+• Local family events discovery
+• Private and secure — your data belongs to you
