@@ -1,4 +1,5 @@
 import Anthropic from "npm:@anthropic-ai/sdk@0.27.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
 
@@ -25,20 +26,37 @@ async function sendMessage(token: string, chatId: number | string, text: string)
   });
 }
 
+async function isApproved(supabase: ReturnType<typeof createClient>, chatId: number): Promise<boolean> {
+  const { data } = await supabase
+    .from("telegram_approved_chats")
+    .select("chat_id")
+    .eq("chat_id", chatId)
+    .maybeSingle();
+  return !!data;
+}
+
+async function approveChat(supabase: ReturnType<typeof createClient>, chatId: number): Promise<void> {
+  await supabase
+    .from("telegram_approved_chats")
+    .upsert({ chat_id: chatId });
+}
+
 Deno.serve(async (req) => {
   const token = Deno.env.get("TELEGRAM_BOT_TOKEN");
   const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const pairingCode = Deno.env.get("TELEGRAM_PAIRING_CODE");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!token || !anthropicKey) {
+  if (!token || !anthropicKey || !supabaseUrl || !supabaseKey) {
     return new Response("Missing env vars", { status: 500 });
   }
 
-  // Telegram sends POST for every update
   if (req.method !== "POST") {
     return new Response("OK", { status: 200 });
   }
 
-  let update: any;
+  let update: { message?: TelegramMessage; edited_message?: TelegramMessage };
   try {
     update = await req.json();
   } catch {
@@ -49,9 +67,22 @@ Deno.serve(async (req) => {
   if (!message?.text) return new Response("OK", { status: 200 });
 
   const chatId = message.chat.id;
-  const userText = message.text;
+  const userText = message.text.trim();
 
-  // Acknowledge quickly (Telegram expects response within 5s)
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const approved = await isApproved(supabase, chatId);
+
+  if (!approved) {
+    if (pairingCode && userText === pairingCode) {
+      await approveChat(supabase, chatId);
+      await sendMessage(token, chatId, "Paired successfully! You now have access to the Eazy.Family assistant.");
+    } else {
+      await sendMessage(token, chatId, "Send the pairing code to use this bot.");
+    }
+    return new Response("OK", { status: 200 });
+  }
+
   const responsePromise = (async () => {
     try {
       const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -72,7 +103,11 @@ Deno.serve(async (req) => {
     }
   })();
 
-  // Fire-and-forget — return 200 immediately so Telegram doesn't retry
   responsePromise.catch(console.error);
   return new Response("OK", { status: 200 });
 });
+
+interface TelegramMessage {
+  text?: string;
+  chat: { id: number };
+}
