@@ -17,10 +17,23 @@ platform :ios do
     )
     match(type: "appstore", readonly: is_ci)
     increment_build_number(xcodeproj: "ios/App/App.xcodeproj")
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/App/App.xcodeproj",
+      team_id: "PU6P37HYB9",
+      bundle_identifier: "eazy.family.app",
+      code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore eazy.family.app"
+    )
     build_app(
       project: "ios/App/App.xcodeproj",
       scheme: "App",
-      export_method: "app-store"
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "eazy.family.app" => "match AppStore eazy.family.app"
+        }
+      }
     )
     upload_to_testflight(
       api_key: api_key,
