@@ -44,10 +44,12 @@ jobs:
         run: |
           echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" | base64 --decode > fastlane/AuthKey_4H662N6NAJ.p8
 
+      - name: Configure git credentials for Match
+        run: git config --global url."https://x-access-token:${{ secrets.MATCH_GIT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Run Fastlane beta
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_TOKEN: ${{ secrets.MATCH_GIT_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: fastlane ios beta
