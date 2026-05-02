@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -32,12 +32,22 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
-      - name: Cache Swift packages
+      - name: Cache SPM packages
         uses: actions/cache@v4
         with:
-          path: ~/Library/Developer/Xcode/DerivedData
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/.swiftpm
           key: ${{ runner.os }}-spm-${{ hashFiles('ios/App/CapApp-SPM/Package.resolved') }}
           restore-keys: ${{ runner.os }}-spm-
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -disablePackageRepositoryCache \
+            | grep -E "error:|warning:|Resolve|Fetch|Checkout" || true
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
