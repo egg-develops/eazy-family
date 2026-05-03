@@ -4,6 +4,7 @@ import { Mic, MicOff, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
@@ -13,9 +14,16 @@ interface VoiceShoppingAssistantProps {
 
 export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your shopping items", mode = 'shopping' }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
+  const { i18n } = useTranslation();
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const recognitionRef = useRef<any>(null);
+
+  const speechLang = i18n.language === "de" ? "de-CH"
+    : i18n.language === "fr" ? "fr-CH"
+    : i18n.language === "it" ? "it-CH"
+    : i18n.language === "en-GB" ? "en-GB"
+    : "en-US";
 
   const startListening = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -31,7 +39,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    recognition.lang = speechLang;
 
     recognition.onresult = async (event: any) => {
       const transcript = event.results[0][0].transcript;
