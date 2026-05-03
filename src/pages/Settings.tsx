@@ -397,46 +397,37 @@ const l = (max + min) / 2;
         <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
           {/* Profile Icon Upload */}
           <div className="space-y-2" data-tutorial="custom-images">
-            <Label htmlFor="profile-icon" className="text-sm sm:text-base">{t('settings.homepage.profileIcon')}</Label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <Input
-                id="profile-icon"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file, 'profile');
-                }}
-                disabled={uploadingProfile}
-                className="flex-1 file:mr-2 sm:file:mr-4 file:py-2 file:px-2 sm:file:px-4 file:rounded-md file:border-0 file:text-xs sm:file:text-sm file:font-medium h-10 sm:h-11"
-              />
-              {uploadingProfile && <span className="text-xs sm:text-sm text-muted-foreground">{t('common.loading')}</span>}
+            <Label className="text-sm sm:text-base">{t('settings.homepage.profileIcon')}</Label>
+            <div className="flex items-center gap-3">
+              {homeConfig.iconImage
+                ? <img src={homeConfig.iconImage} alt="Profile" className="w-12 h-12 rounded-full object-cover flex-shrink-0 border" />
+                : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs flex-shrink-0">None</div>
+              }
+              <label htmlFor="profile-icon" className="cursor-pointer">
+                <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
+                  {uploadingProfile ? t('common.loading') : homeConfig.iconImage ? 'Change photo' : 'Upload photo'}
+                </span>
+                <input id="profile-icon" type="file" accept="image/*" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'profile'); }}
+                  disabled={uploadingProfile} />
+              </label>
             </div>
-            {homeConfig.iconImage && (
-              <img src={homeConfig.iconImage} alt="Profile" className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover flex-shrink-0" />
-            )}
           </div>
 
           {/* Header Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="header-image" className="text-sm sm:text-base">{t('settings.homepage.headerImage')}</Label>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <Input
-                id="header-image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file, 'header');
-                }}
-                disabled={uploadingHeader}
-                className="flex-1 file:mr-2 sm:file:mr-4 file:py-2 file:px-2 sm:file:px-4 file:rounded-md file:border-0 file:text-xs sm:file:text-sm file:font-medium h-10 sm:h-11"
-              />
-              {uploadingHeader && <span className="text-xs sm:text-sm text-muted-foreground">{t('common.loading')}</span>}
-            </div>
+            <Label className="text-sm sm:text-base">{t('settings.homepage.headerImage')}</Label>
             {homeConfig.headerImage && (
-              <img src={homeConfig.headerImage} alt="Header" className="w-full h-24 sm:h-32 rounded-lg object-cover flex-shrink-0" />
+              <img src={homeConfig.headerImage} alt="Header" className="w-full h-24 sm:h-32 rounded-lg object-cover" />
             )}
+            <label htmlFor="header-image" className="cursor-pointer block">
+              <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
+                {uploadingHeader ? t('common.loading') : homeConfig.headerImage ? 'Change background' : 'Upload background'}
+              </span>
+              <input id="header-image" type="file" accept="image/*" className="hidden"
+                onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'header'); }}
+                disabled={uploadingHeader} />
+            </label>
           </div>
 
           {/* Quick Actions */}
@@ -879,7 +870,7 @@ const l = (max + min) / 2;
           onClick={() => {
             localStorage.removeItem('eazy-family-tutorial-completed');
             localStorage.setItem('eazy-family-tutorial-run', 'true');
-            window.dispatchEvent(new Event('tutorial-start'));
+            navigate('/app');
           }}
         >
           <RefreshCw className="h-4 w-4" />
