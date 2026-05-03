@@ -125,16 +125,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate referral code if provided
-      if (isSignUp && referralCode.trim() && !referralValid) {
-        toast({ 
-          title: "Invalid Referral Code", 
-          description: "Please enter a valid referral code or leave it empty.", 
-          variant: "destructive" 
-        });
-        setLoading(false);
-        return;
-      }
+      // If referral code provided but invalid, just clear it and continue
 
       const validatedData = authSchema.parse({
         email,

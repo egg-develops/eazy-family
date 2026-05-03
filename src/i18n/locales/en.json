@@ -2,7 +2,7 @@
   "onboarding": {
     "welcome": {
       "title": "Welcome to Eazy.Family",
-      "description": "Your daily app to make family life easy — organize schedules, to-do's, plan events, and connect with other parents."
+      "description": "Your daily app to make life easy — sync schedules, to-do's, shopping, and plan events with your family's own AI assistant."
     },
     "language": {
       "title": "Choose your language",
@@ -32,7 +32,7 @@
     },
     "features": {
       "title": "What features interest you most?",
-      "description": "Select all that apply — we'll prioritize these for you"
+      "description": "Select all that apply to customize your experience."
     },
     "next": "Next",
     "back": "Back",
@@ -580,7 +580,7 @@
       "signIn": "Sign In", "getStarted": "Get Started Free"
     },
     "home": {
-      "badge": "iOS & Android coming soon",
+      "badge": "Now available on iOS & Android",
       "heroHeadline": "One Eazy place for your family",
       "heroSub": "Shared calendars, to-do lists, messaging, and child-friendly events — all in one safe space built for your family.",
       "check1": "Private", "check2": "Secure", "check3": "Cross-device sync",

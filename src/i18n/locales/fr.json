@@ -2,7 +2,7 @@
   "onboarding": {
     "welcome": {
       "title": "Bienvenue sur Eazy.Family",
-      "description": "Votre application quotidienne pour simplifier la vie de famille — gérez les emplois du temps, les tâches, planifiez des événements et connectez-vous avec d'autres parents."
+      "description": "Votre app quotidienne pour simplifier la vie — synchronisez les agendas, les tâches, les courses et planifiez des événements avec votre propre assistant IA."
     },
     "language": {
       "title": "Choisissez votre langue",
@@ -32,7 +32,7 @@
     },
     "features": {
       "title": "Quelles fonctionnalités vous intéressent le plus ?",
-      "description": "Sélectionnez tout ce qui s'applique — nous les prioriserons pour vous"
+      "description": "Sélectionnez tout ce qui s'applique pour personnaliser votre expérience."
     },
     "next": "Suivant",
     "back": "Retour",
@@ -580,7 +580,7 @@
       "signIn": "Se connecter", "getStarted": "Commencer gratuitement"
     },
     "home": {
-      "badge": "iOS & Android bientôt disponibles",
+      "badge": "Maintenant disponible sur iOS & Android",
       "heroHeadline": "Un Eazy endroit pour votre famille",
       "heroSub": "Calendriers partagés, listes de tâches, messagerie et événements adaptés aux enfants — tout en un espace sûr conçu pour votre famille.",
       "check1": "Privé", "check2": "Sécurisé", "check3": "Synchronisation multi-appareils",
