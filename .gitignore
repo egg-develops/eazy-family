@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build artifacts
+*.ipa
+*.dSYM.zip
+fastlane/report.xml
+fastlane/README.md
+.claude/
