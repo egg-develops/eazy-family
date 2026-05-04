@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, Shield, Users, Zap, ArrowRight } from "lucide-react";
+import { Heart, Shield, Users, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/PublicNav";
 
@@ -12,7 +12,6 @@ export default function About() {
     { icon: Heart,  title: t("website.about.v1t"), body: t("website.about.v1b") },
     { icon: Shield, title: t("website.about.v2t"), body: t("website.about.v2b") },
     { icon: Users,  title: t("website.about.v3t"), body: t("website.about.v3b") },
-    { icon: Zap,    title: t("website.about.v4t"), body: t("website.about.v4b") },
   ];
 
   return (
@@ -42,7 +41,7 @@ export default function About() {
           <h2 className="text-xl font-bold mb-8 text-center" style={{ color: "hsl(270 40% 96%)" }}>
             {t("website.about.valuesTitle")}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {values.map(v => {
               const Icon = v.icon;
               return (
