@@ -131,8 +131,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   const freeFeatures = [
     "Up to 5 family members",
-    "Basic calendar & reminders",
-    "Shopping & to-do lists",
+    "Calendar & reminders",
+    "Shopping & to-do lists with voice input",
+    "Eazy AI Assistant — 10 messages/month",
     "Community browsing",
   ];
 
@@ -200,7 +201,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 onClick={() => setBillingCycle('monthly')}
                 className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   billingCycle === 'monthly'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-white'
                     : 'bg-background text-muted-foreground hover:bg-muted'
                 }`}
               >
@@ -208,16 +209,13 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               </button>
               <button
                 onClick={() => setBillingCycle('annual')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   billingCycle === 'annual'
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-white'
                     : 'bg-background text-muted-foreground hover:bg-muted'
                 }`}
               >
                 Annual
-                <Badge className={`text-xs px-1.5 py-0 ${billingCycle === 'annual' ? 'bg-white/20 text-white border-0' : 'bg-green-100 text-green-700 border-0'}`}>
-                  2 months free
-                </Badge>
               </button>
             </div>
 
@@ -231,6 +229,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 </div>
               ) : (
                 <div>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Badge className="bg-green-100 text-green-700 border-0 text-xs">2 months free</Badge>
+                  </div>
                   <p className="text-3xl font-bold">
                     CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>
                   </p>
