@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Check, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,10 +25,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
-  // If user is already premium, don't wrap in upgrade dialog - just render children directly
   if (isPremium) {
     return <>{children}</>;
   }
@@ -46,7 +47,6 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
       setIsLoading(true);
 
-      // Validate atomically via RPC (bypasses RLS, prevents race conditions)
       const { data: promoResult, error: rpcError } = await supabase
         .rpc('validate_and_increment_promo_code', {
           _code: promoCode.trim(),
@@ -62,7 +62,6 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         return;
       }
 
-      // Apply the promotion — upgrade profile subscription tier
       const tier = promoResult.subscription_tier || 'family';
       const { error: updateError } = await supabase
         .from('profiles')
@@ -91,15 +90,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   };
 
   const handleUpgrade = async () => {
-    // Check if promo code is entered - if so, apply it instead of payment
     if (promoCode.trim()) {
       await applyPromo();
       return;
     }
-
-    if (promoApplied) {
-      return; // Already applied
-    }
+    if (promoApplied) return;
 
     setIsLoading(true);
     try {
@@ -114,6 +109,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       }
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { billing_cycle: billingCycle },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -151,6 +147,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     "No ads, ever",
   ];
 
+  const monthlyPrice = 5;
+  const annualPrice = 49;
+  const annualMonthly = (annualPrice / 12).toFixed(2);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -166,7 +166,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         <div className="space-y-6 py-4">
           {/* Free Plan */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground">Free Plan - What you have now</h3>
+            <h3 className="font-semibold text-sm text-muted-foreground">Free Plan — What you have now</h3>
             <div className="space-y-2">
               {freeFeatures.map((feature) => (
                 <div key={feature} className="flex items-start gap-2 text-sm">
@@ -181,7 +181,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <Crown className="h-5 w-5 text-primary" />
-              Family Plan - Everything in Free, plus:
+              Family Plan — Everything in Free, plus:
             </h3>
             <div className="space-y-2">
               {familyFeatures.map((feature) => (
@@ -193,26 +193,76 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             </div>
           </div>
 
-          {/* Pricing */}
+          {/* Billing toggle */}
           <div className="space-y-4 pt-4 border-t">
-            <div className="text-center space-y-2">
-              <p className="text-3xl font-bold">
-                CHF 5<span className="text-lg text-muted-foreground">/month</span>
-              </p>
-              <p className="text-sm text-muted-foreground">Cancel anytime</p>
+            <div className="flex rounded-xl border border-border overflow-hidden">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  billingCycle === 'monthly'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annual')}
+                className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  billingCycle === 'annual'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Annual
+                <Badge className={`text-xs px-1.5 py-0 ${billingCycle === 'annual' ? 'bg-white/20 text-white border-0' : 'bg-green-100 text-green-700 border-0'}`}>
+                  2 months free
+                </Badge>
+              </button>
+            </div>
+
+            <div className="text-center">
+              {billingCycle === 'monthly' ? (
+                <div>
+                  <p className="text-3xl font-bold">
+                    CHF {monthlyPrice}<span className="text-lg text-muted-foreground font-normal">/month</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-3xl font-bold">
+                    CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    CHF {annualPrice} billed annually · Save CHF {monthlyPrice * 12 - annualPrice}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Promo code */}
             <div className="flex gap-2 items-center">
-              <Input placeholder="Have a promo code?" value={promoCode} onChange={(e) => setPromoCode(e.target.value)} />
-              <Button variant="outline" onClick={applyPromo}>
+              <Input
+                placeholder="Have a promo code?"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+              />
+              <Button variant="outline" onClick={applyPromo} disabled={isLoading || !promoCode.trim()}>
                 Apply
               </Button>
             </div>
 
-            <Button className="w-full gradient-primary text-white border-0" size="lg" onClick={handleUpgrade} disabled={isLoading}>
+            <Button
+              className="w-full gradient-primary text-white border-0"
+              size="lg"
+              onClick={handleUpgrade}
+              disabled={isLoading}
+            >
               <Crown className="h-4 w-4 mr-2" />
-              {isLoading ? "Loading..." : "Upgrade to Family Plan"}
+              {isLoading
+                ? "Loading..."
+                : `Upgrade — CHF ${billingCycle === 'annual' ? annualPrice + '/year' : monthlyPrice + '/month'}`}
             </Button>
             <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
               Maybe Later
