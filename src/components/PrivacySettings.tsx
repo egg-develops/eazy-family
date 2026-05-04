@@ -20,7 +20,6 @@ export const PrivacySettings = () => {
   const [displayName, setDisplayName] = useState("");
   const [shareEmail, setShareEmail] = useState(false);
   const [sharePhone, setSharePhone] = useState(false);
-  const [discoverableByLocation, setDiscoverableByLocation] = useState(false);
 
   useEffect(() => {
     loadPrivacySettings();
@@ -28,11 +27,10 @@ export const PrivacySettings = () => {
 
   const loadPrivacySettings = async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("display_name, share_email, share_phone, discoverable_by_location")
+        .select("display_name, share_email, share_phone")
         .eq("user_id", user.id)
         .single();
 
@@ -42,7 +40,6 @@ export const PrivacySettings = () => {
         setDisplayName(data.display_name || "");
         setShareEmail(data.share_email || false);
         setSharePhone(data.share_phone || false);
-        setDiscoverableByLocation((data as any).discoverable_by_location || false);
       }
     } catch (error) {
       logError("Error loading privacy settings:", error);
@@ -53,7 +50,6 @@ export const PrivacySettings = () => {
 
   const savePrivacySettings = async () => {
     if (!user) return;
-
     setSaving(true);
     try {
       const { error } = await supabase
@@ -69,9 +65,7 @@ export const PrivacySettings = () => {
 
       await supabase
         .from("family_members")
-        .update({
-          display_name: displayName.trim() || null,
-        })
+        .update({ display_name: displayName.trim() || null })
         .eq("user_id", user.id);
 
       toast({
@@ -107,9 +101,7 @@ export const PrivacySettings = () => {
           <Shield className="h-5 w-5" />
           {t('privacySettings.title')}
         </CardTitle>
-        <CardDescription>
-          {t('privacySettings.description')}
-        </CardDescription>
+        <CardDescription>{t('privacySettings.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
@@ -130,52 +122,22 @@ export const PrivacySettings = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="share-email">{t('privacySettings.shareEmail')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('privacySettings.shareEmailDesc')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('privacySettings.shareEmailDesc')}</p>
             </div>
-            <Switch
-              id="share-email"
-              checked={shareEmail}
-              onCheckedChange={setShareEmail}
-            />
+            <Switch id="share-email" checked={shareEmail} onCheckedChange={setShareEmail} />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="share-phone">{t('privacySettings.sharePhone')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('privacySettings.sharePhoneDesc')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('privacySettings.sharePhoneDesc')}</p>
             </div>
-            <Switch
-              id="share-phone"
-              checked={sharePhone}
-              onCheckedChange={setSharePhone}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="discoverable-location">Allow verified members to contact me</Label>
-              <p className="text-sm text-muted-foreground">
-                Verified Eazy.Family members in your area may send you a connection request. Your exact location is never shared.
-              </p>
-            </div>
-            <Switch
-              id="discoverable-location"
-              checked={discoverableByLocation}
-              onCheckedChange={setDiscoverableByLocation}
-            />
+            <Switch id="share-phone" checked={sharePhone} onCheckedChange={setSharePhone} />
           </div>
         </div>
 
         <div className="pt-4 border-t">
-          <Button
-            onClick={savePrivacySettings}
-            disabled={saving}
-            className="w-full"
-          >
+          <Button onClick={savePrivacySettings} disabled={saving} className="w-full">
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -186,7 +148,6 @@ export const PrivacySettings = () => {
             )}
           </Button>
         </div>
-
       </CardContent>
     </Card>
   );

@@ -322,6 +322,8 @@ const AppHome = () => {
   const [showInviteBanner, setShowInviteBanner] = useState(() =>
     !localStorage.getItem('eazy-family-invite-dismissed')
   );
+  const inviteTouchY = useRef(0);
+  const inviteTouchX = useRef(0);
 
   // Sync home_config from Supabase on mount
   useEffect(() => {
@@ -429,6 +431,9 @@ const AppHome = () => {
   };
 
   const handleHeaderImageUpload = async (file: File) => {
+    const currentImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+    if (currentImages.length >= 4) return; // already at max
+
     const validationResult = validateImageFile(file);
     if (!validationResult.valid) {
       logError('File validation failed:', validationResult.error);
@@ -516,10 +521,10 @@ const AppHome = () => {
           )}
           <button
             onClick={() => setShowGalleryDialog(true)}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-background/50 hover:bg-background/70 rounded-full text-foreground transition-colors z-10"
+            className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-background/60 hover:bg-background/80 rounded-full text-foreground transition-colors z-10"
             title="Manage images"
           >
-            <Camera className="w-4 h-4" />
+            <Camera className="w-3 h-3" />
           </button>
         </div>
       ) : (
@@ -539,7 +544,7 @@ const AppHome = () => {
       <Dialog open={showGalleryDialog} onOpenChange={setShowGalleryDialog}>
         <DialogContent className="w-[95%] sm:w-full max-w-md">
           <DialogHeader>
-            <DialogTitle>Hero Images</DialogTitle>
+            <DialogTitle>Hero Images ({headerImages.length}/4)</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-3 sm:grid-cols-2 gap-2 sm:gap-3 py-2">
             {headerImages.map((img, i) => (
@@ -578,7 +583,18 @@ const AppHome = () => {
 
       {/* First-time Invite Family banner */}
       {showInviteBanner && (
-        <Card className="p-4 border-2 border-primary/40 bg-primary/5 shadow-custom-md relative">
+        <Card
+          className="p-4 border-2 border-primary/40 bg-primary/5 shadow-custom-md relative"
+          onTouchStart={(e) => { inviteTouchY.current = e.touches[0].clientY; inviteTouchX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            const dy = e.changedTouches[0].clientY - inviteTouchY.current;
+            const dx = Math.abs(e.changedTouches[0].clientX - inviteTouchX.current);
+            if (dy < -60 && dx < 40) {
+              localStorage.setItem('eazy-family-invite-dismissed', '1');
+              setShowInviteBanner(false);
+            }
+          }}
+        >
           <button
             onClick={() => {
               localStorage.setItem('eazy-family-invite-dismissed', '1');

@@ -195,16 +195,8 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   };
 
   const currentLocation = locations[currentLocationIndex];
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    (e.currentTarget as HTMLElement).dataset.touchY = String(e.touches[0].clientY);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent, onDismiss: () => void) => {
-    const startY = parseFloat((e.currentTarget as HTMLElement).dataset.touchY || '0');
-    const deltaY = e.changedTouches[0].clientY - startY;
-    if (deltaY < -60) onDismiss();
-  };
+  const touchStartY = useRef(0);
+  const touchStartX = useRef(0);
 
   // No saved locations — show city search as primary UI
   if (locations.length === 0) {
@@ -260,8 +252,12 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   return (
     <Card
       className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={(e) => handleTouchEnd(e, onRemove)}
+      onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; touchStartX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        const dy = e.changedTouches[0].clientY - touchStartY.current;
+        const dx = Math.abs(e.changedTouches[0].clientX - touchStartX.current);
+        if (dy < -60 && dx < 40) onRemove();
+      }}
     >
       <button
         onClick={onRemove}
