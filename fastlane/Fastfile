@@ -69,14 +69,11 @@ platform :android do
 
   desc "Build and upload to Google Play internal track"
   lane :beta do
-    gradle(
-      task: "bundle",
-      build_type: "Release",
-      project_dir: "android/"
-    )
     upload_to_play_store(
       track: "internal",
-      aab: "android/app/build/outputs/bundle/release/app-release.aab"
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key: "fastlane/google-play-key.json",
+      package_name: "eazy.family.app"
     )
     telegram_notify(message: "✅ Android beta uploaded to Play Store internal track")
   end

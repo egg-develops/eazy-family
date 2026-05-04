@@ -29,3 +29,5 @@ dist-ssr
 fastlane/report.xml
 fastlane/README.md
 .claude/
+android/app/keystore.jks
+fastlane/google-play-key.json

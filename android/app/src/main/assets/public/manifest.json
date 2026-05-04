@@ -1,19 +1,67 @@
 {
-  "name": "Eazy.Family - Ultimate Family Hub",
+  "id": "/",
+  "name": "Eazy.Family",
   "short_name": "Eazy.Family",
-  "description": "Simplify family life with calendar sync, event discovery, photo management, and community connections",
+  "description": "The all-in-one safe space that keeps your family organized and connected.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#fcfcfd",
-  "theme_color": "#4f8cff",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#ffffff",
+  "theme_color": "#3d0d6b",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
+      "src": "../icons/icon-48.webp",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-72.webp",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-96.webp",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-128.webp",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-192.webp",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-256.webp",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icons/icon-512.webp",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["lifestyle", "productivity", "social"],
+  "categories": [
+    "lifestyle",
+    "productivity",
+    "social"
+  ],
   "lang": "en-US"
 }
