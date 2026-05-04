@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cloudSet } from "@/lib/preferencesSync";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+  const locationsRef = useRef<WeatherLocation[]>([]);
+
+  useEffect(() => { locationsRef.current = locations; }, [locations]);
 
   useEffect(() => {
     const saved = localStorage.getItem('weather-locations');
@@ -147,6 +151,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       setWeatherData(data);
       setCurrentLocationIndex(newLocations.length - 1);
       setSearchQuery("");
+      setIsLocationDialogOpen(false);
       toast.success(`Added ${location.name}`);
     } catch (err) {
       logError("Search location error:", err);
@@ -173,7 +178,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const switchLocation = (index: number) => {
     setCurrentLocationIndex(index);
-    fetchWeatherForIndex(index, locations);
+    fetchWeatherForIndex(index, locationsRef.current);
   };
 
   const removeLocation = (id: string) => {
@@ -191,13 +196,23 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   const currentLocation = locations[currentLocationIndex];
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    (e.currentTarget as HTMLElement).dataset.touchY = String(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, onDismiss: () => void) => {
+    const startY = parseFloat((e.currentTarget as HTMLElement).dataset.touchY || '0');
+    const deltaY = e.changedTouches[0].clientY - startY;
+    if (deltaY < -60) onDismiss();
+  };
+
   // No saved locations — show city search as primary UI
   if (locations.length === 0) {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
         <button
           onClick={onRemove}
-          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
           aria-label="Remove weather"
         >×</button>
         <div className="space-y-4">
@@ -243,10 +258,14 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   }
 
   return (
-    <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
+    <Card
+      className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={(e) => handleTouchEnd(e, onRemove)}
+    >
       <button
         onClick={onRemove}
-        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10"
+        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
         aria-label="Remove weather"
       >×</button>
 
@@ -295,7 +314,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           </div>
         )}
 
-        <Dialog>
+        <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="hover:bg-muted gap-2">
               <Cloud className="w-4 h-4" />
@@ -313,6 +332,8 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && searchLocation()}
+                  autoFocus
+                  onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)}
                 />
                 <Button onClick={searchLocation} disabled={isAddingLocation}>
                   {isAddingLocation ? "Adding..." : "Add"}

@@ -526,8 +526,8 @@ const AppHome = () => {
           style={{ aspectRatio: '16/9' }}
         >
           <div className="text-center text-primary-foreground">
-            <Camera className="w-12 h-12 mx-auto mb-3 opacity-80 group-hover:opacity-100 transition-opacity" />
-            <p className="font-semibold text-lg">Add Hero Image</p>
+            <Camera className="w-8 h-8 mx-auto mb-2 opacity-80 group-hover:opacity-100 transition-opacity" />
+            <p className="font-semibold text-base">Add Hero Image</p>
           </div>
         </div>
       )}
@@ -633,7 +633,7 @@ const AppHome = () => {
                 </div>
                 <button
                   onClick={removeCalendar}
-                  className="w-6 h-6 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors text-lg font-light"
                   aria-label="Remove calendar"
                 >×</button>
               </div>
@@ -772,7 +772,7 @@ const AppHome = () => {
               onClick={() => navigate('/app/todos')}
             >
               <div className="text-2xl font-bold text-orange-600">{pendingTasksCount}</div>
-              <div className="text-sm text-muted-foreground">Pending Tasks</div>
+              <div className="text-sm text-muted-foreground">{t('home.pendingTasks')}</div>
             </Card>
           )}
           {homeConfig.topNotifications.includes("Shopping List") && (
@@ -1040,6 +1040,8 @@ const QuickToDos = () => {
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
+                autoFocus
+                onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)}
               />
             </div>
           </div>

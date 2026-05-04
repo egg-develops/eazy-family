@@ -62,8 +62,7 @@ export const PrivacySettings = () => {
           display_name: displayName.trim() || null,
           share_email: shareEmail,
           share_phone: sharePhone,
-          discoverable_by_location: discoverableByLocation,
-        } as any)
+        })
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -188,11 +187,6 @@ export const PrivacySettings = () => {
           </Button>
         </div>
 
-        <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">
-            <strong>{t('privacySettings.displayName')}:</strong> {t('privacySettings.displayNameHint')}
-          </p>
-        </div>
       </CardContent>
     </Card>
   );

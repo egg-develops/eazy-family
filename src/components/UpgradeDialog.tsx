@@ -134,21 +134,21 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   };
 
   const freeFeatures = [
-    "Basic calendar",
-    "Task management",
-    "Community access",
-    "Shopping lists",
+    "Up to 5 family members",
+    "Basic calendar & reminders",
+    "Shopping & to-do lists",
+    "Community browsing",
   ];
 
   const familyFeatures = [
     "Unlimited family members",
-    "Unlimited calendar syncs",
-    "Shared lists across family",
-    "Private messaging",
-    "Create custom groups",
-    "EazyAI Assistant",
-    "Sell items on marketplace",
+    "Eazy AI Assistant (unlimited)",
+    "Shared lists & real-time sync",
+    "Private family messaging",
+    "Create & manage groups",
+    "Outlook & Google Calendar sync",
     "Priority support",
+    "No ads, ever",
   ];
 
   return (
@@ -213,6 +213,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             <Button className="w-full gradient-primary text-white border-0" size="lg" onClick={handleUpgrade} disabled={isLoading}>
               <Crown className="h-4 w-4 mr-2" />
               {isLoading ? "Loading..." : "Upgrade to Family Plan"}
+            </Button>
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
+              Maybe Later
             </Button>
           </div>
         </div>

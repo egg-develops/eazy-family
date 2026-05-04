@@ -70,6 +70,21 @@
   color: hsl(var(--muted-foreground)) !important;
 }
 
+/* Button text and icons in dark mode */
+.dark button:not([class*="gradient"]):not([class*="text-white"]):not([class*="text-primary-foreground"]) {
+  color: hsl(var(--foreground));
+}
+.dark button svg {
+  color: currentColor;
+}
+/* Outline and ghost button variants */
+.dark [class*="variant-outline"],
+.dark [class*="variant-ghost"],
+.dark [data-variant="outline"],
+.dark [data-variant="ghost"] {
+  color: hsl(var(--foreground));
+}
+
 /* Scrollbar dark mode */
 .dark ::-webkit-scrollbar {
   width: 6px;
