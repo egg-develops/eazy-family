@@ -88,13 +88,15 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           lat: latitude,
           lon: longitude,
         };
-        // Reverse-geocode with wttr.in naming
-        fetch(`https://wttr.in/${latitude},${longitude}?format=j1`)
+        // Reverse-geocode with Nominatim for accurate city name
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`, {
+          headers: { 'Accept-Language': 'en', 'User-Agent': 'EazyFamily/1.0' }
+        })
           .then(r => r.json())
           .then(data => {
-            const area = data.nearest_area?.[0];
-            if (area) {
-              location.name = area.areaName?.[0]?.value || area.region?.[0]?.value || "Your location";
+            const addr = data.address;
+            if (addr) {
+              location.name = addr.city || addr.town || addr.village || addr.county || "Your location";
             }
           })
           .catch(() => {})

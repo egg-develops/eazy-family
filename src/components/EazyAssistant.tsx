@@ -426,12 +426,12 @@ export const EazyAssistant = () => {
               <p className="mb-4 text-sm">
                 {i18n.language === "de" ? "Wie kann ich helfen?" : i18n.language === "fr" ? "Comment puis-je vous aider?" : i18n.language === "it" ? "Come posso aiutarti?" : "Ask me anything"}
               </p>
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap gap-2 justify-center px-2">
                 {suggestions.slice(0, 4).map((s) => (
                   <button
                     key={s}
                     onClick={() => { setInput(s); }}
-                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-muted hover:bg-accent transition-colors text-left"
+                    className="text-xs px-3 py-1.5 rounded-full border border-border bg-muted hover:bg-accent transition-colors text-left max-w-full break-words"
                   >
                     {s}
                   </button>

@@ -57,6 +57,19 @@
   border-color: hsl(var(--border));
 }
 
+/* Ensure text is readable on dark backgrounds */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+.dark p, .dark span, .dark label, .dark li {
+  color: hsl(var(--foreground));
+}
+.dark .text-gray-900, .dark .text-gray-800, .dark .text-gray-700,
+.dark .text-black, .dark .text-slate-900, .dark .text-zinc-900 {
+  color: hsl(var(--foreground)) !important;
+}
+.dark .text-gray-600, .dark .text-gray-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
 /* Scrollbar dark mode */
 .dark ::-webkit-scrollbar {
   width: 6px;

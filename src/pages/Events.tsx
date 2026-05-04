@@ -190,15 +190,7 @@ const Events = () => {
     const loadMap = async () => {
       try {
         const L = (await import('leaflet')).default;
-
-        // Load Leaflet CSS once
-        if (!document.getElementById('leaflet-css')) {
-          const link = document.createElement('link');
-          link.id = 'leaflet-css';
-          link.rel = 'stylesheet';
-          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-          document.head.appendChild(link);
-        }
+        await import('leaflet/dist/leaflet.css');
 
         // Fix default marker icons (Leaflet webpack issue)
         delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -208,9 +200,10 @@ const Events = () => {
           shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
         });
 
-        map = L.map(mapContainerRef.current!).setView(
+        map = L.map(mapContainerRef.current!, { zoomControl: true }).setView(
           [userLocation.lat, userLocation.lng], 13
         );
+        setTimeout(() => map?.invalidateSize(), 100);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',

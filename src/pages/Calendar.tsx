@@ -1125,7 +1125,15 @@ const Calendar = () => {
                     <Input
                       type="date"
                       value={format(eventStartDate, "yyyy-MM-dd")}
-                      onChange={(e) => setEventStartDate(new Date(e.target.value))}
+                      onChange={(e) => {
+                        const newStart = new Date(e.target.value);
+                        setEventStartDate(newStart);
+                        if (newStart >= eventEndDate) {
+                          const newEnd = new Date(newStart);
+                          newEnd.setHours(newEnd.getHours() + 1);
+                          setEventEndDate(newEnd);
+                        }
+                      }}
                       className="flex-1 min-w-0"
                     />
                     {!eventAllDay && (

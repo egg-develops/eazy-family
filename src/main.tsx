@@ -16,6 +16,16 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   });
 }
 
+// iOS: scroll focused input into view when keyboard appears
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const el = document.activeElement as HTMLElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
+    }
+  });
+}
+
 createRoot(document.getElementById("root")!).render(<App />);
 // Fresh build Mon Mar 23 13:13:46 CET 2026
 // Database migration complete - Mon Mar 30 12:52:42 CEST 2026

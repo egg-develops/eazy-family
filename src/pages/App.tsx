@@ -87,7 +87,7 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3">
+      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             {/* Hamburger Dropdown Menu */}
@@ -146,7 +146,7 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 pb-24 lg:pb-6 overflow-x-hidden">
+      <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
         <div className="max-w-7xl mx-auto px-4 py-6">
           {isHomePath ? <AppHome /> : <Outlet />}
         </div>
@@ -161,15 +161,13 @@ const AppLayout = () => {
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-12 w-12 rounded-full bg-muted/50 hover:bg-muted"
+                className="h-10 w-10 rounded-full bg-muted/50 hover:bg-muted"
               >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="w-2 h-2 rounded-sm bg-primary" />
-                    <div className="w-2 h-2 rounded-sm bg-primary" />
-                    <div className="w-2 h-2 rounded-sm bg-primary" />
-                    <div className="w-2 h-2 rounded-sm bg-primary" />
-                  </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
+                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
+                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
+                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -195,9 +193,9 @@ const AppLayout = () => {
             variant="ghost"
             size="icon"
             onClick={() => { haptic('tap'); navigate("/app"); }}
-            className={`h-12 w-12 rounded-full transition-all ${
-              isHomePath 
-                ? "bg-primary text-primary-foreground shadow-md scale-105" 
+            className={`h-10 w-10 rounded-full transition-all ${
+              isHomePath
+                ? "bg-primary text-primary-foreground shadow-md scale-105"
                 : "bg-muted/50 hover:bg-muted"
             }`}
           >
@@ -795,7 +793,7 @@ const AppHome = () => {
         <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
         
         <div className="grid grid-cols-2 gap-3">
-          {homeConfig.quickActions && homeConfig.quickActions.map((action, index) => {
+          {homeConfig.quickActions && homeConfig.quickActions.filter(a => ["Find Events","Calendar","Community","To-Do List","Shopping List"].includes(a)).map((action, index) => {
             const getIcon = (actionName: string) => {
               switch (actionName) {
                 case "Find Events": return Search;
