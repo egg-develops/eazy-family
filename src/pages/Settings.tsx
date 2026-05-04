@@ -243,13 +243,6 @@ const l = (max + min) / 2;
     cloudSet('eazy-family-custom-color', color);
   };
 
-  const availableQuickActions = [
-    { id: "Find Events", label: t('events.findEvents') },
-    { id: "Calendar", label: t('nav.calendar') },
-    { id: "Community", label: t('nav.community') },
-    { id: "To-Do List", label: t('calendar.todoList') },
-    { id: "Shopping List", label: t('home.shoppingList') },
-  ];
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
     const newConfig = { ...homeConfig, ...updates };
@@ -314,40 +307,6 @@ const l = (max + min) / 2;
 
   const handleCalendarToggle = () => {
     saveHomeConfig({ showCalendar: !homeConfig.showCalendar });
-  };
-
-  const handleQuickActionToggle = (actionId: string, enabled: boolean) => {
-    const newActions = enabled 
-      ? [...homeConfig.quickActions, actionId]
-      : homeConfig.quickActions.filter(a => a !== actionId);
-    
-    if (newActions.length > 4) {
-      toast({
-        title: t('common.error'),
-        description: t('settings.homepage.quickActionsDesc'),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    saveHomeConfig({ quickActions: newActions });
-  };
-
-  const handleNotificationToggle = (notificationId: string, enabled: boolean) => {
-    const newNotifications = enabled 
-      ? [...homeConfig.topNotifications, notificationId]
-      : homeConfig.topNotifications.filter(n => n !== notificationId);
-    
-    if (newNotifications.length > 2) {
-      toast({
-        title: t('common.error'),
-        description: t('settings.homepage.topNotificationsDesc'),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    saveHomeConfig({ topNotifications: newNotifications });
   };
 
   const handleLogout = async () => {
@@ -430,55 +389,6 @@ const l = (max + min) / 2;
             </label>
           </div>
 
-          {/* Quick Actions */}
-          <div className="space-y-3" data-tutorial="quick-actions">
-            <Label className="text-sm sm:text-base">{t('settings.homepage.quickActionsMax')}</Label>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              {t('settings.homepage.quickActionsDesc')}
-            </p>
-            <div className="grid grid-cols-1 gap-2 sm:gap-3">
-              {availableQuickActions.map((action) => (
-                <div key={action.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
-                  <Checkbox
-                    checked={homeConfig.quickActions.includes(action.id)}
-                    onCheckedChange={(checked) => 
-                      handleQuickActionToggle(action.id, checked as boolean)
-                    }
-                    disabled={!homeConfig.quickActions.includes(action.id) && homeConfig.quickActions.length >= 4}
-                    className="flex-shrink-0"
-                  />
-                  <span className="font-medium text-sm">{action.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Top Notifications */}
-          <div className="space-y-3" data-tutorial="top-notifications">
-            <Label className="text-sm sm:text-base">{t('settings.homepage.topNotifications')}</Label>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              {t('settings.homepage.topNotificationsDesc')}
-            </p>
-            <div className="grid grid-cols-1 gap-2 sm:gap-3">
-              {[
-                { id: "Upcoming Events", label: t('home.upcomingEvents') },
-                { id: "Pending Tasks", label: t('home.pendingTasks') },
-                { id: "Shopping List", label: t('home.shoppingList') },
-              ].map((notification) => (
-                <div key={notification.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border rounded-lg">
-                  <Checkbox
-                    checked={homeConfig.topNotifications.includes(notification.id)}
-                    onCheckedChange={(checked) => 
-                      handleNotificationToggle(notification.id, checked as boolean)
-                    }
-                    disabled={!homeConfig.topNotifications.includes(notification.id) && homeConfig.topNotifications.length >= 2}
-                    className="flex-shrink-0"
-                  />
-                  <span className="font-medium text-sm">{notification.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </CardContent>
       </Card>
 

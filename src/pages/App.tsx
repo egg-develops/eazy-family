@@ -319,6 +319,9 @@ const AppHome = () => {
   };
 
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [showInviteBanner, setShowInviteBanner] = useState(() =>
+    !localStorage.getItem('eazy-family-invite-dismissed')
+  );
 
   // Sync home_config from Supabase on mount
   useEffect(() => {
@@ -573,6 +576,38 @@ const AppHome = () => {
         <EazyAssistant />
       </div>
 
+      {/* First-time Invite Family banner */}
+      {showInviteBanner && (
+        <Card className="p-4 border-2 border-primary/40 bg-primary/5 shadow-custom-md relative">
+          <button
+            onClick={() => {
+              localStorage.setItem('eazy-family-invite-dismissed', '1');
+              setShowInviteBanner(false);
+            }}
+            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-lg font-light transition-colors"
+            aria-label="Dismiss"
+          >×</button>
+          <div className="flex items-start gap-3 pr-6">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">Invite your family</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Share the app with your family members to start syncing calendars, lists, and more.
+              </p>
+              <Button
+                size="sm"
+                className="mt-3 gradient-primary text-white border-0"
+                onClick={() => navigate('/app/settings')}
+              >
+                Invite Family Members
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Add Widget Buttons */}
       {(!homeConfig.showCalendar || !homeConfig.showWeather) && (
         <div className="grid grid-cols-2 gap-3">
@@ -754,88 +789,45 @@ const AppHome = () => {
         </Card>
       )}
 
-      {/* Quick Stats */}
-      {homeConfig.topNotifications && homeConfig.topNotifications.length > 0 && (
-        <div className="grid grid-cols-2 gap-4">
-          {homeConfig.topNotifications.includes("Upcoming Events") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/calendar')}
-            >
-              <div className="text-2xl font-bold text-primary">{upcomingEventsCount}</div>
-              <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
-            </Card>
-          )}
-          {homeConfig.topNotifications.includes("Pending Tasks") && (
-            <Card
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/todos')}
-            >
-              <div className="text-2xl font-bold text-orange-600">{pendingTasksCount}</div>
-              <div className="text-sm text-muted-foreground">{t('home.pendingTasks')}</div>
-            </Card>
-          )}
-          {homeConfig.topNotifications.includes("Shopping List") && (
-            <Card 
-              className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate('/app/todos')}
-            >
-              <div className="text-2xl font-bold text-blue-600">0</div>
-              <div className="text-sm text-muted-foreground">Shopping Items</div>
-            </Card>
-          )}
-        </div>
-      )}
+      {/* Quick Stats — always visible */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card
+          className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/app/calendar')}
+        >
+          <div className="text-2xl font-bold text-primary">{upcomingEventsCount}</div>
+          <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
+        </Card>
+        <Card
+          className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate('/app/todos')}
+        >
+          <div className="text-2xl font-bold text-orange-600">{pendingTasksCount}</div>
+          <div className="text-sm text-muted-foreground">{t('home.pendingTasks')}</div>
+        </Card>
+      </div>
 
 
-      {/* Quick Actions */}
+      {/* Quick Actions — fixed set */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
-        
         <div className="grid grid-cols-2 gap-3">
-          {homeConfig.quickActions && homeConfig.quickActions.filter(a => ["Find Events","Calendar","Community","To-Do List","Shopping List"].includes(a)).map((action, index) => {
-            const getIcon = (actionName: string) => {
-              switch (actionName) {
-                case "Find Events": return Search;
-                case "Calendar": return Calendar;
-                case "Community": return Users;
-                case "To-Do List": return Calendar;
-                case "Shopping List": return ShoppingCart;
-                default: return Search;
-              }
-            };
-            
-            const ActionIcon = getIcon(action);
-            const handleActionClick = () => {
-              switch (action) {
-                case "Find Events":
-                  navigate('/app/events');
-                  break;
-                case "Calendar":
-                  navigate('/app/calendar');
-                  break;
-                case "Community":
-                  navigate('/app/community');
-                  break;
-                case "To-Do List":
-                case "Shopping List":
-                  navigate('/app/todos');
-                  break;
-              }
-            };
-            
-            return (
-              <Button 
-                key={index} 
-                variant="outline" 
-                className="h-auto p-4 flex flex-col gap-2 border-2 border-primary/30 hover:border-primary transition-all"
-                onClick={handleActionClick}
-              >
-                <ActionIcon className="w-5 h-5" />
-                <span className="text-sm">{action}</span>
-              </Button>
-            );
-          })}
+          {[
+            { label: t('nav.events'), icon: Search, path: '/app/events' },
+            { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar' },
+            { label: t('nav.community'), icon: Users, path: '/app/community' },
+            { label: "Shopping List", icon: ShoppingCart, path: '/app/todos' },
+          ].map(({ label, icon: Icon, path }) => (
+            <Button
+              key={label}
+              variant="outline"
+              className="h-auto p-4 flex flex-col gap-2 border-2 border-primary/30 hover:border-primary transition-all"
+              onClick={() => { haptic('tap'); navigate(path); }}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-sm">{label}</span>
+            </Button>
+          ))}
         </div>
       </div>
 
