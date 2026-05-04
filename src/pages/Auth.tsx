@@ -247,19 +247,10 @@ const Auth = () => {
                 </Label>
                 <Input id="referral" type="text" placeholder="Enter referral code"
                   value={referralCode}
-                  onChange={(e) => { setReferralCode(e.target.value); validateReferralCode(e.target.value); }}
+                  onChange={(e) => setReferralCode(e.target.value)}
                   maxLength={20}
                   className="h-11 rounded-xl border-0 text-sm"
                   style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }} />
-                {validatingReferral && referralCode && (
-                  <p className="text-xs" style={{ color: "hsl(270 40% 68%)" }}>Validating...</p>
-                )}
-                {referralValid && referralCode && !validatingReferral && (
-                  <p className="text-xs" style={{ color: "hsl(142 70% 60%)" }}>✓ Valid! You'll get 1 free month of Premium</p>
-                )}
-                {!referralValid && referralCode && !validatingReferral && (
-                  <p className="text-xs text-red-400">✗ Invalid referral code</p>
-                )}
               </div>
             )}
 
