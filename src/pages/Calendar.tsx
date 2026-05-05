@@ -80,17 +80,17 @@ const getInitialItems = (): CalendarItem[] => {
       allDay: false, 
       location: "Aquatic Center",
       type: "event",
-      color: "hsl(220 70% 50%)"
+      color: "#6B3FBF"
     },
-    { 
-      id: "2", 
-      title: "Children's Museum", 
+    {
+      id: "2",
+      title: "Children's Museum",
       startDate: new Date(2025, 9, 3, 10, 0),
-      endDate: new Date(2025, 9, 3, 12, 0), 
-      allDay: false, 
+      endDate: new Date(2025, 9, 3, 12, 0),
+      allDay: false,
       location: "Interactive Art Exhibition",
       type: "event",
-      color: "hsl(45 90% 65%)"
+      color: "#FFC861"
     },
     {
       id: "3",
@@ -545,9 +545,9 @@ const Calendar = () => {
         repeat: repeatValue,
         travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
         type: "event",
-        color: "hsl(220 70% 50%)"
+        color: "#6B3FBF"
       };
-      
+
       setItems([...items, newEvent]);
       toast({
         title: t('calendar.eventAdded'),
@@ -924,7 +924,7 @@ const Calendar = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium">Outlook Calendar</p>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[10px] font-semibold">Available</span>
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-grape-100/50 text-grape-600 text-[10px] font-semibold">Available</span>
                         </div>
                         <p className="text-xs text-muted-foreground">Microsoft 365 & Outlook.com</p>
                       </div>
@@ -962,7 +962,7 @@ const Calendar = () => {
           >
             <RefreshCw className="h-3.5 w-3.5" />
             <span>Sync</span>
-            {(googleSynced || outlookSynced) && <span className="w-1.5 h-1.5 rounded-full bg-green-500 ml-0.5" />}
+            {(googleSynced || outlookSynced) && <span className="w-1.5 h-1.5 rounded-full bg-grape-500 ml-0.5" />}
           </Button>
           <ParticleButton
             className="gap-2 gradient-primary text-white border-0 flex-1 sm:flex-none"

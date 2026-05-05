@@ -102,7 +102,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
 
   return (
     <div className="w-full bg-white rounded-lg shadow-lg flex flex-col h-full">
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-3 sm:p-4 rounded-t-lg flex-shrink-0">
+      <div className="text-white p-3 sm:p-4 rounded-t-lg flex-shrink-0" style={{ background: "#6B3FBF" }}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="relative flex-shrink-0">
@@ -115,12 +115,12 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
               />
               {isOnline && (
-                <div className="absolute bottom-0 right-0 w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full border-2 border-white" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 sm:w-3 sm:h-3 bg-grape-300 rounded-full border-2 border-white" />
               )}
             </div>
             <div className="min-w-0">
               <h3 className="font-semibold text-sm sm:text-base truncate">{userName}</h3>
-              <p className="text-xs sm:text-sm text-blue-100">
+              <p className="text-xs sm:text-sm text-white/70">
                 {isOnline ? 'Active now' : 'Offline'}
               </p>
             </div>
@@ -129,7 +129,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
           <div className="flex gap-1 sm:gap-2 flex-shrink-0">
             <button
               onClick={onCallClick}
-              className="p-1.5 sm:p-2 hover:bg-blue-700 rounded-full transition"
+              className="p-1.5 sm:p-2 hover:bg-grape-700 rounded-full transition"
               title="Voice call"
             >
               <Phone size={16} className="sm:hidden" />
@@ -137,7 +137,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
             </button>
             <button
               onClick={onVideoCallClick}
-              className="p-1.5 sm:p-2 hover:bg-blue-700 rounded-full transition"
+              className="p-1.5 sm:p-2 hover:bg-grape-700 rounded-full transition"
               title="Video call"
             >
               <Video size={16} className="sm:hidden" />
@@ -145,7 +145,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
             </button>
             <button
               onClick={onInfoClick}
-              className="p-1.5 sm:p-2 hover:bg-blue-700 rounded-full transition"
+              className="p-1.5 sm:p-2 hover:bg-grape-700 rounded-full transition"
               title="Info"
             >
               <Info size={16} className="sm:hidden" />
@@ -179,9 +179,10 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
                   <div
                     className={`px-3 sm:px-4 py-2 rounded-lg break-words text-sm sm:text-base ${
                       message.isCurrentUser
-                        ? 'bg-blue-500 text-white rounded-br-none'
+                        ? 'text-white rounded-br-none'
                         : 'bg-white text-gray-900 rounded-bl-none'
                     }`}
+                    style={message.isCurrentUser ? { background: "#6B3FBF" } : undefined}
                   >
                     {message.content}
                   </div>
@@ -193,9 +194,10 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
                           key={idx}
                           className={`px-2 sm:px-3 py-1 sm:py-2 rounded-lg text-xs sm:text-sm truncate ${
                             message.isCurrentUser
-                              ? 'bg-blue-600'
+                              ? 'text-white'
                               : 'bg-gray-200'
                           }`}
+                          style={message.isCurrentUser ? { background: "#522793" } : undefined}
                           title={attachment.name}
                         >
                           📎 {attachment.name}
@@ -208,7 +210,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
                     <span
                       className={
                         message.isCurrentUser
-                          ? 'text-blue-100'
+                          ? 'text-white/70'
                           : 'text-gray-500'
                       }
                     >
@@ -218,8 +220,8 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
                       <span
                         className={
                           message.status === 'read'
-                            ? 'text-blue-200'
-                            : 'text-blue-100'
+                            ? 'text-white/60'
+                            : 'text-white/70'
                         }
                       >
                         {getStatusIcon(message.status)}
@@ -234,7 +236,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
 
         {isLoading && (
           <div className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-grape-600" />
           </div>
         )}
 

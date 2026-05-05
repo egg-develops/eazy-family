@@ -134,7 +134,7 @@ const MarketplaceImageUpload: React.FC<MarketplaceImageUploadProps> = ({
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-lg p-8 text-center transition cursor-pointer ${
           dragActive
-            ? 'border-blue-500 bg-blue-50'
+            ? 'border-grape-600 bg-grape-100'
             : 'border-gray-300 hover:border-gray-400'
         }`}
       >
@@ -157,7 +157,7 @@ const MarketplaceImageUpload: React.FC<MarketplaceImageUploadProps> = ({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-semibold"
+          className="px-4 py-2 text-white rounded-lg transition font-semibold" style={{ background: "#6B3FBF" }}
         >
           Select Images
         </button>
@@ -196,7 +196,7 @@ const MarketplaceImageUpload: React.FC<MarketplaceImageUploadProps> = ({
                   {image.file.name}
                 </div>
 
-                <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                <div className="absolute top-2 left-2 text-white text-xs font-semibold px-2 py-1 rounded" style={{ background: "#6B3FBF" }}>
                   {index + 1}
                 </div>
 
@@ -210,11 +210,11 @@ const MarketplaceImageUpload: React.FC<MarketplaceImageUploadProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 transition flex flex-col items-center justify-center cursor-pointer group"
+                className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-grape-600 hover:bg-grape-100 transition flex flex-col items-center justify-center cursor-pointer group"
               >
                 <ImageIcon
                   size={32}
-                  className="text-gray-400 group-hover:text-blue-500 mb-2"
+                  className="text-gray-400 mb-2"
                 />
                 <span className="text-sm text-gray-600">Add More</span>
               </button>

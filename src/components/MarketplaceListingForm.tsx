@@ -105,7 +105,7 @@ const MarketplaceListingForm: React.FC<{
             value={formData.title}
             onChange={handleInputChange}
             placeholder="What are you selling?"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500"
             maxLength={100}
           />
           {errors.title && (
@@ -127,7 +127,7 @@ const MarketplaceListingForm: React.FC<{
             onChange={handleInputChange}
             placeholder="Describe the item..."
             rows={5}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500"
           />
           {errors.description && (
             <p className="text-red-500 text-sm mt-1">{errors.description}</p>
@@ -148,7 +148,7 @@ const MarketplaceListingForm: React.FC<{
               placeholder="0.00"
               step="0.01"
               min="0"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500"
             />
             {errors.price && (
               <p className="text-red-500 text-sm mt-1">{errors.price}</p>
@@ -167,7 +167,7 @@ const MarketplaceListingForm: React.FC<{
               name="condition"
               value={formData.condition}
               onChange={handleInputChange}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500"
             >
               <option value="new">New</option>
               <option value="like-new">Like New</option>
@@ -199,7 +199,7 @@ const MarketplaceListingForm: React.FC<{
             ))}
 
             {formData.images.length < 5 && (
-              <label className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500 flex flex-col items-center justify-center">
+              <label className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-grape-500 flex flex-col items-center justify-center">
                 <Upload size={24} className="text-gray-400 mb-2" />
                 <span className="text-sm text-gray-600">Add Image</span>
                 <input
@@ -217,7 +217,7 @@ const MarketplaceListingForm: React.FC<{
         <div className="flex gap-3 pt-4 border-t">
           <button
             type="submit"
-            className="flex-1 bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600"
+            className="flex-1 text-white py-2 rounded-lg font-semibold" style={{ background: "#6B3FBF" }}
           >
             Create Listing
           </button>

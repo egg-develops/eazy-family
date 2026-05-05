@@ -118,7 +118,7 @@ const GoogleCalendarView: React.FC<GoogleCalendarViewProps> = ({
                   )
                 )
               }
-              className="border rounded min-h-24 p-2 cursor-pointer hover:bg-blue-50 transition"
+              className="border rounded min-h-24 p-2 cursor-pointer hover:bg-grape-100 transition"
             >
               <div className="font-semibold mb-1">{day}</div>
               <div className="space-y-1">
@@ -130,7 +130,7 @@ const GoogleCalendarView: React.FC<GoogleCalendarViewProps> = ({
                       onEventClick?.(event);
                     }}
                     className={`text-xs p-1 rounded cursor-pointer truncate ${
-                      event.color || 'bg-blue-200 text-blue-900'
+                      event.color || 'bg-grape-100 text-grape-700'
                     }`}
                   >
                     {event.title}

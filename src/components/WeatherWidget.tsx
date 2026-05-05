@@ -201,7 +201,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   // No saved locations — show city search as primary UI
   if (locations.length === 0) {
     return (
-      <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
+      <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
         <button
           onClick={onRemove}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
@@ -209,7 +209,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         >×</button>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-cyan-500" />
+            <Cloud className="w-5 h-5 text-grape-500" />
             <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
           </div>
           <div className="flex gap-2">
@@ -237,9 +237,9 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   if (loading && !weatherData) {
     return (
-      <Card className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden">
+      <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
         <div className="flex items-center gap-3">
-          <Cloud className="w-8 h-8 text-cyan-500" />
+          <Cloud className="w-8 h-8 text-grape-500" />
           <div>
             <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             <p className="text-sm opacity-70">Loading...</p>
@@ -251,7 +251,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   return (
     <Card
-      className="p-6 shadow-custom-md border-2 border-cyan-500/30 relative overflow-hidden"
+      className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden"
       onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; touchStartX.current = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
         const dy = e.changedTouches[0].clientY - touchStartY.current;
@@ -269,7 +269,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <Cloud className="w-5 h-5 text-cyan-500 flex-shrink-0" />
+              <Cloud className="w-5 h-5 text-grape-500 flex-shrink-0" />
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             </div>
             {currentLocation && (

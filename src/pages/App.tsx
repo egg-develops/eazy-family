@@ -630,7 +630,7 @@ const AppHome = () => {
           {!homeConfig.showCalendar && (
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col gap-2 border-2 border-blue-500/30 hover:border-blue-500 transition-all"
+              className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-500/30 hover:border-grape-600 transition-all"
               onClick={addCalendar}
             >
               <Calendar className="w-5 h-5" />
@@ -640,7 +640,7 @@ const AppHome = () => {
           {!homeConfig.showWeather && (
             <Button 
               variant="outline" 
-              className="h-auto p-4 flex flex-col gap-2 border-2 border-cyan-500/30 hover:border-cyan-500 transition-all"
+              className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-300/50 hover:border-grape-500 transition-all"
               onClick={addWeather}
             >
               <Cloud className="w-5 h-5" />
@@ -657,11 +657,11 @@ const AppHome = () => {
 
       {/* Today's Highlights */}
       {homeConfig.showCalendar && (
-        <Card className="p-4 shadow-custom-md border-2 border-blue-500/30">
+        <Card className="p-4 shadow-custom-md border-2 border-grape-500/30">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                <Calendar className="w-5 h-5 text-grape-600 flex-shrink-0" />
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1 bg-muted rounded-lg p-1">
@@ -713,12 +713,12 @@ const AppHome = () => {
                         <button
                           key={i}
                           onClick={() => { if (dayEvents.length > 0) setSnippetDay(d); else navigate('/app/calendar'); }}
-                          className={`p-2 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-blue-500 text-white' : 'hover:bg-muted/70'}`}
+                          className={`p-2 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-grape-600 text-white' : 'hover:bg-muted/70'}`}
                         >
                           <div className="text-xs opacity-70">{labels[i]}</div>
                           <div className="text-sm font-semibold">{d.getDate()}</div>
                           {dayEvents.length > 0 && (
-                            <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                            <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-grape-600'}`} />
                           )}
                         </button>
                       );
@@ -755,11 +755,11 @@ const AppHome = () => {
                         <button
                           key={i}
                           onClick={() => { if (dayEvents.length > 0) setSnippetDay(cellDate); else navigate('/app/calendar'); }}
-                          className={`p-1 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-blue-500 text-white font-bold' : 'hover:bg-muted/70'}`}
+                          className={`p-1 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-grape-600 text-white font-bold' : 'hover:bg-muted/70'}`}
                         >
                           {day}
                           {dayEvents.length > 0 && (
-                            <div className={`w-1 h-1 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-blue-500'}`} />
+                            <div className={`w-1 h-1 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-grape-600'}`} />
                           )}
                         </button>
                       );
@@ -773,7 +773,7 @@ const AppHome = () => {
             {snippetDay && (() => {
               const dayEvts = calendarEvents.filter(e => e.startDate.toDateString() === snippetDay.toDateString());
               return (
-                <Card className="p-4 shadow-custom-md border-l-4 border-l-blue-500 animate-in fade-in slide-in-from-top-2">
+                <Card className="p-4 shadow-custom-md border-l-4 border-l-grape-600 animate-in fade-in slide-in-from-top-2">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="font-semibold text-sm">{snippetDay.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
@@ -784,7 +784,7 @@ const AppHome = () => {
                   <div className="space-y-2 mb-3">
                     {dayEvts.slice(0, 4).map(evt => (
                       <div key={evt.id} className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${evt.itemType === 'task' ? 'bg-orange-400' : evt.itemType === 'reminder' ? 'bg-purple-400' : 'bg-blue-500'}`} />
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${evt.itemType === 'task' ? 'bg-orange-400' : evt.itemType === 'reminder' ? 'bg-purple-400' : 'bg-grape-600'}`} />
                         <span className="text-sm truncate">{evt.title}</span>
                         {!evt.allDay && evt.itemType !== 'task' && (
                           <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">

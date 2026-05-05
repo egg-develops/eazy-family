@@ -230,7 +230,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               ) : (
                 <div>
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <Badge className="bg-green-100 text-green-700 border-0 text-xs">2 months free</Badge>
+                    <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
                   </div>
                   <p className="text-3xl font-bold">
                     CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>

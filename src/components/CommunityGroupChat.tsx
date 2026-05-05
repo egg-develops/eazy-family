@@ -27,9 +27,9 @@ const CommunityGroupChat: React.FC<{
 
   return (
     <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-lg flex flex-col h-96">
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
+      <div style={{ background: "#6B3FBF" }} className="text-white p-4 rounded-t-lg">
         <h2 className="text-lg font-bold">{groupName}</h2>
-        <p className="text-sm text-blue-100">{messages.length} messages</p>
+        <p className="text-sm" style={{ color: "#F0E4FB" }}>{messages.length} messages</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -63,9 +63,10 @@ const CommunityGroupChat: React.FC<{
               <div
                 className={`px-4 py-2 rounded-lg ${
                   message.isCurrentUser
-                    ? 'bg-blue-500 text-white rounded-br-none'
+                    ? 'text-white rounded-br-none'
                     : 'bg-gray-100 text-gray-900 rounded-bl-none'
                 }`}
+                style={message.isCurrentUser ? { background: "#6B3FBF" } : undefined}
               >
                 {message.content}
               </div>
@@ -87,7 +88,7 @@ const CommunityGroupChat: React.FC<{
               }
             }}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500"
           />
           <button className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg">
             <Smile size={20} />
@@ -95,7 +96,7 @@ const CommunityGroupChat: React.FC<{
           <button
             onClick={handleSendMessage}
             disabled={!messageText.trim()}
-            className="p-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg disabled:opacity-50"
+            className="p-2 text-white rounded-lg disabled:opacity-50" style={{ background: "#6B3FBF" }}
           >
             <Send size={20} />
           </button>

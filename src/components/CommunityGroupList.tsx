@@ -40,7 +40,7 @@ const CommunityGroupList: React.FC<{
             className="border rounded-lg p-4 hover:shadow-md transition cursor-pointer"
           >
             <div className="flex gap-4">
-              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-lg flex items-center justify-center" style={{ background: "#6B3FBF" }}>
                 <Users size={24} className="text-white" />
               </div>
               <div className="flex-1">

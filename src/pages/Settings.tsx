@@ -66,14 +66,8 @@ const Settings = () => {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
-  const { theme, setTheme, isDark } = useTheme();
+  const { setTheme, isDark } = useTheme();
   const [emailNotifications, setEmailNotifications] = useState(true);
-  const [colorScheme, setColorScheme] = useState(() => {
-    return localStorage.getItem('eazy-family-color-scheme') || 'gray';
-  });
-  const [customColor, setCustomColor] = useState(() => {
-    return localStorage.getItem('eazy-family-custom-color') || '#6366f1';
-  });
   const [googleSynced, setGoogleSynced] = useState(() => localStorage.getItem('eazy-google-calendar-synced') === 'true');
   const [outlookSynced, setOutlookSynced] = useState(() => localStorage.getItem('eazy-outlook-calendar-synced') === 'true');
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
@@ -109,10 +103,6 @@ const Settings = () => {
     const handler = () => {
       const lang = localStorage.getItem('eazy-family-language');
       if (lang) { setLanguage(lang); i18n.changeLanguage(lang); }
-      const scheme = localStorage.getItem('eazy-family-color-scheme');
-      if (scheme) setColorScheme(scheme);
-      const color = localStorage.getItem('eazy-family-custom-color');
-      if (color) setCustomColor(color);
       const savedConfig = localStorage.getItem('eazy-family-home-config');
       if (savedConfig) {
         const parsed = JSON.parse(savedConfig);
@@ -151,34 +141,6 @@ const Settings = () => {
     syncFromSupabase();
   }, [user]);
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (colorScheme === 'custom') {
-      const hsl = hexToHSL(customColor);
-      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
-      const hoverL = Math.max(l - 10, 10);
-      root.style.setProperty('--primary', hsl);
-      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
-      root.style.setProperty('--accent', hsl);
-    } else if (colorScheme === 'gray') {
-      root.style.setProperty('--primary', '240 5% 64%');
-      root.style.setProperty('--primary-hover', '240 5% 54%');
-      root.style.setProperty('--accent', '240 5% 74%');
-    }
-  }, [colorScheme, customColor]);
-
-  useEffect(() => {
-    if (colorScheme === 'custom') {
-      const root = document.documentElement;
-      const hsl = hexToHSL(customColor);
-      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
-      const hoverL = Math.max(l - 10, 10);
-      root.style.setProperty('--primary', hsl);
-      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
-      root.style.setProperty('--accent', hsl);
-    }
-  }, [customColor, colorScheme]);
-
   const handleDarkModeToggle = () => {
     const newTheme = isDark ? 'light' : 'dark';
     setTheme(newTheme);
@@ -187,62 +149,6 @@ const Settings = () => {
       description: t('settings.language.description'),
     });
   };
-
-  const hexToHSL = (hex: string) => {
-    hex = hex.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0;
-let s = 0;
-const l = (max + min) / 2;
-    
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-    
-    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-  };
-
-  const handleColorSchemeChange = (scheme: string) => {
-    setColorScheme(scheme);
-    cloudSet('eazy-family-color-scheme', scheme);
-    
-    const root = document.documentElement;
-    if (scheme === 'gray') {
-      root.style.setProperty('--primary', '240 5% 64%');
-      root.style.setProperty('--primary-hover', '240 5% 54%');
-      root.style.setProperty('--accent', '240 5% 74%');
-    } else if (scheme === 'custom') {
-      const hsl = hexToHSL(customColor);
-      const [h, s, l] = hsl.split(' ').map(v => parseFloat(v));
-      const hoverL = Math.max(l - 10, 10);
-      root.style.setProperty('--primary', hsl);
-      root.style.setProperty('--primary-hover', `${h} ${s}% ${hoverL}%`);
-      root.style.setProperty('--accent', hsl);
-    }
-    
-    toast({
-      title: t('settings.appearance.colorScheme'),
-      description: t('settings.appearance.colorSchemeDesc'),
-    });
-  };
-
-  const handleCustomColorChange = (color: string) => {
-    setCustomColor(color);
-    cloudSet('eazy-family-custom-color', color);
-  };
-
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
     const newConfig = { ...homeConfig, ...updates };
@@ -530,7 +436,7 @@ const l = (max + min) / 2;
           </div>
 
           {/* Outlook Calendar */}
-          <div className={`flex items-center justify-between p-3 border rounded-lg ${outlookSynced ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200' : 'bg-card border-border'}`}>
+          <div className={`flex items-center justify-between p-3 border rounded-lg ${outlookSynced ? 'bg-grape-100/50 dark:bg-grape-900/30 border-grape-300' : 'bg-card border-border'}`}>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0">
                 <span className="text-white text-xs font-bold">O</span>
@@ -577,62 +483,6 @@ const l = (max + min) / 2;
             />
           </div>
 
-          {/* Color Scheme Selection */}
-          <div className="space-y-4">
-            <div>
-              <Label>{t('settings.appearance.colorScheme')}</Label>
-              <p className="text-sm text-muted-foreground">{t('settings.appearance.colorSchemeDesc')}</p>
-            </div>
-            
-            <RadioGroup value={colorScheme} onValueChange={handleColorSchemeChange} className="space-y-3">
-              <div className="relative">
-                <RadioGroupItem value="gray" id="gray" className="peer sr-only" />
-                <Label
-                  htmlFor="gray"
-                  className="flex items-center gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="w-8 h-8 rounded-full" style={{ background: 'hsl(240 5% 64%)' }}></div>
-                  <span className="text-sm font-medium">Gray (Default)</span>
-                </Label>
-              </div>
-              
-              <div className="relative">
-                <RadioGroupItem value="custom" id="custom" className="peer sr-only" />
-                <Label
-                  htmlFor="custom"
-                  className="flex flex-col gap-3 rounded-lg border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary cursor-pointer"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <label htmlFor="color-picker" className="cursor-pointer">
-                        <div
-                          className="size-8 cursor-pointer rounded-lg border-2 border-muted-foreground/20 hover:border-muted-foreground/40 transition-colors"
-                          style={{ backgroundColor: customColor }}
-                        />
-                      </label>
-                      <Input
-                        id="color-picker"
-                        type="color"
-                        value={customColor}
-                        onChange={(e) => handleCustomColorChange(e.target.value)}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">{t('settings.appearance.customColor')}</span>
-                      <Input
-                        type="text"
-                        value={customColor}
-                        onChange={(e) => handleCustomColorChange(e.target.value)}
-                        placeholder="#000000"
-                        className="font-mono mt-1 h-8 text-xs"
-                      />
-                    </div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
         </CardContent>
       </Card>
 

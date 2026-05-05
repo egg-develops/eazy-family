@@ -125,7 +125,7 @@ const AcceptInvite = () => {
           
           {status === 'success' && (
             <>
-              <CheckCircle className="h-12 w-12 text-green-500" />
+              <CheckCircle className="h-12 w-12" style={{ color: "#6B3FBF" }} />
               <p className="text-sm text-center">{message}</p>
               <p className="text-xs text-muted-foreground text-center">
                 Redirecting to family page...

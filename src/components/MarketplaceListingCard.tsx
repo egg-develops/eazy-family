@@ -29,9 +29,9 @@ const MarketplaceListingCard: React.FC<ListingCardProps> = ({
   const [isFavorited, setIsFavorited] = useState(false);
 
   const conditionColors: Record<string, string> = {
-    new: 'bg-green-100 text-green-800',
-    'like-new': 'bg-emerald-100 text-emerald-800',
-    good: 'bg-blue-100 text-blue-800',
+    new: 'bg-grape-100 text-grape-700',
+    'like-new': 'bg-blush-100 text-blush-500',
+    good: 'bg-sky-100 text-sky-500',
     fair: 'bg-yellow-100 text-yellow-800',
     poor: 'bg-red-100 text-red-800',
   };
@@ -79,7 +79,7 @@ const MarketplaceListingCard: React.FC<ListingCardProps> = ({
         <h3 className="font-semibold text-lg line-clamp-2 mb-2">{title}</h3>
 
         <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-2xl font-bold text-blue-600">
+          <span className="text-2xl font-bold" style={{ color: "#6B3FBF" }}>
             ${price.toFixed(2)}
           </span>
         </div>

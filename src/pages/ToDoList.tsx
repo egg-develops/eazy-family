@@ -419,7 +419,7 @@ const ToDoList = () => {
               </Card>
               <Card className="shadow-custom-md">
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">{sharedStats.collaborators}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-grape-600">{sharedStats.collaborators}</div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Members</div>
                 </CardContent>
               </Card>
@@ -462,7 +462,7 @@ const ToDoList = () => {
               )}
               <Card className="shadow-custom-md">
                 <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.pending}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-grape-600">{stats.pending}</div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
                 </CardContent>
               </Card>
