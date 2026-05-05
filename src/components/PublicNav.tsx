@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -17,8 +17,7 @@ export function PublicNav() {
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [resourcesOpen, setResourcesOpen] = useState(false);
-  const resourcesRef = useRef<HTMLDivElement>(null);
+  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,17 +25,7 @@ export function PublicNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => { setMenuOpen(false); setResourcesOpen(false); }, [pathname]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (resourcesRef.current && !resourcesRef.current.contains(e.target as Node)) {
-        setResourcesOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  useEffect(() => { setMenuOpen(false); setMobileResourcesOpen(false); }, [pathname]);
 
   const isActive = (href: string) => pathname === href || pathname === href.split("#")[0];
 
@@ -77,25 +66,21 @@ export function PublicNav() {
             {t("website.nav.events")}
           </Link>
 
-          {/* Resources dropdown */}
-          <div
-            ref={resourcesRef}
-            className="relative"
-            onMouseEnter={() => setResourcesOpen(true)}
-            onMouseLeave={() => setResourcesOpen(false)}
-          >
-            <button
-              onClick={() => navigate("/resources")}
+          {/* Resources dropdown — pure CSS hover, no JS state */}
+          <div className="relative group">
+            <Link
+              to="/resources"
               className={`flex items-center gap-1 text-sm transition-colors ${isActive("/resources") ? "font-medium" : "opacity-60 hover:opacity-90"}`}
               style={{ color: "#1A0B2E" }}
             >
               {t("website.nav.resources")}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${resourcesOpen ? "rotate-180" : ""}`} />
-            </button>
+              <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
+            </Link>
 
-            {resourcesOpen && (
+            {/* Dropdown — visible on group hover; invisible bridge prevents gap-closing */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 hidden group-hover:block" style={{ minWidth: "180px" }}>
               <div
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 rounded-2xl shadow-xl border overflow-hidden min-w-[180px] animate-fade-in"
+                className="rounded-2xl shadow-xl border overflow-hidden"
                 style={{ background: "#FFFFFF", borderColor: "#F0E4FB" }}
               >
                 {RESOURCES_ITEMS.map(item => {
@@ -104,8 +89,10 @@ export function PublicNav() {
                     <Link
                       key={item.href}
                       to={item.href}
-                      className="flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-grape-50"
+                      className="flex items-center gap-3 px-4 py-3 text-sm transition-colors"
                       style={{ color: "#1A0B2E" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#F8F1FF")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "")}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" style={{ color: "#6B3FBF" }} />
                       {item.label}
@@ -113,7 +100,7 @@ export function PublicNav() {
                   );
                 })}
               </div>
-            )}
+            </div>
           </div>
 
           <Link
@@ -175,13 +162,14 @@ export function PublicNav() {
           {/* Resources expandable section in mobile */}
           <div>
             <button
-              className="block py-2.5 text-sm opacity-70 w-full text-left font-medium"
+              className="flex items-center gap-1 py-2.5 text-sm opacity-70 w-full text-left"
               style={{ color: "#1A0B2E" }}
-              onClick={() => navigate("/resources")}
+              onClick={() => setMobileResourcesOpen(v => !v)}
             >
               {t("website.nav.resources")}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${mobileResourcesOpen ? "rotate-180" : ""}`} />
             </button>
-            <div className="pl-4 space-y-1">
+            {mobileResourcesOpen && <div className="pl-4 space-y-1">
               {RESOURCES_ITEMS.map(item => {
                 const Icon = item.icon;
                 return (
@@ -196,7 +184,7 @@ export function PublicNav() {
                   </Link>
                 );
               })}
-            </div>
+            </div>}
           </div>
 
           <hr className="my-2" style={{ borderColor: "#F0E4FB" }} />

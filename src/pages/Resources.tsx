@@ -243,7 +243,7 @@ export default function Resources() {
           </h1>
           <p className="text-base leading-relaxed" style={MUTED}>
             Practical guides, parenting ideas, and curated picks to make family
-            life a little smoother — in English, German, French, and Italian.
+            life a little smoother.
           </p>
         </section>
 
