@@ -1,7 +1,7 @@
 {
   "website": {
     "nav": {
-      "about": "About", "events": "Events", "getApp": "Get the App",
+      "about": "About", "events": "Events", "getApp": "Get the App", "resources": "Resources",
       "signIn": "Sign In", "getStarted": "Get Started Free"
     },
     "home": {
@@ -70,6 +70,24 @@
       "wf4": "Local event discovery",
       "wf5": "AI-powered Eazy Assistant",
       "wf6": "Install as PWA from your browser"
+    },
+    "resources": {
+      "heroHeadline": "Help & Resources",
+      "heroSub": "Everything you need to get the most out of Eazy.Family.",
+      "gettingStartedTitle": "Getting started",
+      "gs1t": "Create your account", "gs1b": "Sign up in under a minute — no credit card needed.",
+      "gs2t": "Set up your family", "gs2b": "Add a family name and invite members with a simple link or code.",
+      "gs3t": "Start organising", "gs3b": "Add events to the shared calendar, create to-do lists, and message together.",
+      "faqTitle": "Frequently asked questions",
+      "q1": "Is Eazy.Family free?", "a1": "Yes — the core features are completely free. We may introduce optional premium features in the future.",
+      "q2": "How do I invite my family?", "a2": "After creating your account, go to Family Settings and share your unique invite link or code. Members join instantly.",
+      "q3": "Is my family's data private?", "a3": "Absolutely. Your data is encrypted in transit and at rest. We never sell your data or share it with third parties.",
+      "q4": "What devices does Eazy.Family work on?", "a4": "Eazy.Family works in any modern web browser. Native iOS and Android apps are coming soon.",
+      "q5": "Can I use it in my language?", "a5": "Yes — we support English, German, French, and Italian, with more languages on the way.",
+      "q6": "How do I delete my account?", "a6": "You can delete your account at any time from the Settings page inside the app. All your data will be removed.",
+      "ctaTitle": "Ready to get started?",
+      "ctaSub": "Join families already using Eazy.Family.",
+      "ctaButton": "Get Started Free"
     }
   }
 }

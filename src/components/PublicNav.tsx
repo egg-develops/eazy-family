@@ -21,9 +21,10 @@ export function PublicNav() {
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   const NAV_LINKS = [
-    { href: "/about",    label: t("website.nav.about") },
-    { href: "/events",   label: t("website.nav.events") },
-    { href: "/download", label: t("website.nav.getApp") },
+    { href: "/about",     label: t("website.nav.about") },
+    { href: "/events",    label: t("website.nav.events") },
+    { href: "/resources", label: t("website.nav.resources") },
+    { href: "/download",  label: t("website.nav.getApp") },
   ];
 
   const isActive = (href: string) => pathname === href;

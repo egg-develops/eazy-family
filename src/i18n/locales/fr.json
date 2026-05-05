@@ -576,7 +576,7 @@
   },
   "website": {
     "nav": {
-      "about": "À propos", "events": "Événements", "getApp": "Télécharger",
+      "about": "À propos", "events": "Événements", "getApp": "Télécharger", "resources": "Ressources",
       "signIn": "Se connecter", "getStarted": "Commencer gratuitement"
     },
     "home": {
@@ -645,6 +645,24 @@
       "wf4": "Découverte d'événements locaux",
       "wf5": "Assistant Eazy propulsé par l'IA",
       "wf6": "Installer comme PWA depuis votre navigateur"
+    },
+    "resources": {
+      "heroHeadline": "Aide & Ressources",
+      "heroSub": "Tout ce dont vous avez besoin pour tirer le meilleur d'Eazy.Family.",
+      "gettingStartedTitle": "Pour commencer",
+      "gs1t": "Créer votre compte", "gs1b": "Inscription en moins d'une minute — aucune carte bancaire requise.",
+      "gs2t": "Configurer votre famille", "gs2b": "Ajoutez un nom de famille et invitez les membres via un lien ou un code.",
+      "gs3t": "Commencer à organiser", "gs3b": "Ajoutez des événements au calendrier partagé, créez des listes et échangez ensemble.",
+      "faqTitle": "Questions fréquentes",
+      "q1": "Eazy.Family est-il gratuit ?", "a1": "Oui — les fonctionnalités principales sont entièrement gratuites. Des options premium pourront être ajoutées à l'avenir.",
+      "q2": "Comment inviter ma famille ?", "a2": "Après inscription, accédez aux Paramètres famille et partagez votre lien ou code d'invitation.",
+      "q3": "Les données de ma famille sont-elles privées ?", "a3": "Absolument. Vos données sont chiffrées. Nous ne vendons jamais vos données à des tiers.",
+      "q4": "Sur quels appareils fonctionne Eazy.Family ?", "a4": "Eazy.Family fonctionne dans tout navigateur moderne. Les apps iOS et Android arrivent bientôt.",
+      "q5": "Puis-je l'utiliser dans ma langue ?", "a5": "Oui — nous prenons en charge l'anglais, l'allemand, le français et l'italien.",
+      "q6": "Comment supprimer mon compte ?", "a6": "Vous pouvez supprimer votre compte à tout moment depuis les Paramètres de l'app.",
+      "ctaTitle": "Prêt à commencer ?",
+      "ctaSub": "Rejoignez les familles qui utilisent déjà Eazy.Family.",
+      "ctaButton": "Commencer gratuitement"
     }
   }
 }

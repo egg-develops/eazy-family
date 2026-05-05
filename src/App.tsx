@@ -25,6 +25,7 @@ import Terms from "./pages/Terms";
 import About from "./pages/About";
 import Download from "./pages/Download";
 import EventsPublic from "./pages/EventsPublic";
+import Resources from "./pages/Resources";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy pages
@@ -56,33 +57,12 @@ const App = () => (
           <AuthProvider>
             <ScrollToTop />
             <Routes>
-              {/* Splash Pages - Dark Navy + Warm Coral Theme */}
-              <Route 
-                path="/" 
-                element={
-                  <SplashThemeProvider>
-                    <Index />
-                  </SplashThemeProvider>
-                } 
-              />
-              <Route 
-                path="/auth" 
-                element={
-                  <SplashThemeProvider>
-                    <Auth />
-                  </SplashThemeProvider>
-                } 
-              />
-              
-              {/* Onboarding - Also uses splash theme */}
-              <Route 
-                path="/onboarding" 
-                element={
-                  <SplashThemeProvider>
-                    <Onboarding />
-                  </SplashThemeProvider>
-                } 
-              />
+              {/* Public marketing pages — light paper theme (no SplashThemeProvider) */}
+              <Route path="/" element={<Index />} />
+
+              {/* Auth + Onboarding — dark ink celebratory theme */}
+              <Route path="/auth" element={<SplashThemeProvider><Auth /></SplashThemeProvider>} />
+              <Route path="/onboarding" element={<SplashThemeProvider><Onboarding /></SplashThemeProvider>} />
               
               {/* Logo splash after login/onboarding */}
               <Route path="/splash" element={<ProtectedRoute><Splash /></ProtectedRoute>} />
@@ -92,9 +72,10 @@ const App = () => (
               <Route path="/join-family" element={<JoinFamily />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-              <Route path="/about" element={<SplashThemeProvider><About /></SplashThemeProvider>} />
-              <Route path="/download" element={<SplashThemeProvider><Download /></SplashThemeProvider>} />
-              <Route path="/events" element={<SplashThemeProvider><EventsPublic /></SplashThemeProvider>} />
+              <Route path="/about" element={<About />} />
+              <Route path="/download" element={<Download />} />
+              <Route path="/events" element={<EventsPublic />} />
+              <Route path="/resources" element={<Resources />} />
               
               {/* Main App - User's custom theme */}
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

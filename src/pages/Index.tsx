@@ -181,6 +181,7 @@ export default function Index() {
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={SUBTLE}>
             <Link to="/about" className="hover:opacity-80">{t("website.nav.about")}</Link>
             <Link to="/events" className="hover:opacity-80">{t("website.nav.events")}</Link>
+            <Link to="/resources" className="hover:opacity-80">{t("website.nav.resources")}</Link>
             <Link to="/download" className="hover:opacity-80">{t("website.nav.getApp")}</Link>
             <Link to="/privacy" className="hover:opacity-80">Privacy Policy</Link>
             <Link to="/terms" className="hover:opacity-80">Terms of Service</Link>

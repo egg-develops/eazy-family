@@ -576,7 +576,7 @@
   },
   "website": {
     "nav": {
-      "about": "Chi siamo", "events": "Eventi", "getApp": "Scarica l'app",
+      "about": "Chi siamo", "events": "Eventi", "getApp": "Scarica l'app", "resources": "Risorse",
       "signIn": "Accedi", "getStarted": "Inizia gratis"
     },
     "home": {
@@ -645,6 +645,24 @@
       "wf4": "Scoperta di eventi locali",
       "wf5": "Assistente Eazy con intelligenza artificiale",
       "wf6": "Installa come PWA dal browser"
+    },
+    "resources": {
+      "heroHeadline": "Aiuto & Risorse",
+      "heroSub": "Tutto quello che ti serve per ottenere il massimo da Eazy.Family.",
+      "gettingStartedTitle": "Per iniziare",
+      "gs1t": "Crea il tuo account", "gs1b": "Registrati in meno di un minuto — nessuna carta di credito richiesta.",
+      "gs2t": "Configura la famiglia", "gs2b": "Aggiungi un nome famiglia e invita i membri con un link o un codice.",
+      "gs3t": "Inizia ad organizzarti", "gs3b": "Aggiungi eventi al calendario condiviso, crea liste e messaggia insieme.",
+      "faqTitle": "Domande frequenti",
+      "q1": "Eazy.Family è gratuito?", "a1": "Sì — le funzionalità principali sono completamente gratuite. In futuro potrebbero essere introdotte opzioni premium.",
+      "q2": "Come invito la mia famiglia?", "a2": "Dopo la registrazione, vai nelle Impostazioni famiglia e condividi il tuo link o codice di invito.",
+      "q3": "I dati della mia famiglia sono privati?", "a3": "Assolutamente. I dati sono crittografati. Non vendiamo mai i tuoi dati a terzi.",
+      "q4": "Su quali dispositivi funziona Eazy.Family?", "a4": "Eazy.Family funziona in qualsiasi browser moderno. Le app iOS e Android arrivano presto.",
+      "q5": "Posso usarlo nella mia lingua?", "a5": "Sì — supportiamo inglese, tedesco, francese e italiano.",
+      "q6": "Come elimino il mio account?", "a6": "Puoi eliminare il tuo account in qualsiasi momento dalle Impostazioni dell'app.",
+      "ctaTitle": "Pronto per iniziare?",
+      "ctaSub": "Unisciti alle famiglie che usano già Eazy.Family.",
+      "ctaButton": "Inizia gratis"
     }
   }
 }
