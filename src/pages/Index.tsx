@@ -65,7 +65,7 @@ export default function Index() {
 
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-light tracking-tight leading-[1.1]"
             style={{ color: "#1A0B2E" }}>
-            {t("website.home.heroHeadline")}
+            One <em>Eazy</em> place for your family
           </h1>
 
           <p className="text-base sm:text-lg max-w-xl mx-auto leading-relaxed" style={MUTED}>

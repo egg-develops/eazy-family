@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="blob1" cx="50%" cy="0%" r="60%">
+      <stop offset="0%" stop-color="#C7AEEF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FBF8FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blob2" cx="85%" cy="70%" r="40%">
+      <stop offset="0%" stop-color="#EE7BB0" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FBF8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#FBF8FF"/>
+  <rect width="1200" height="630" fill="url(#blob1)"/>
+  <rect width="1200" height="630" fill="url(#blob2)"/>
+
+  <!-- Border -->
+  <rect x="40" y="40" width="1120" height="550" rx="32" fill="none" stroke="#F0E4FB" stroke-width="2"/>
+
+  <!-- Logo mark (simplified purple circle with E) -->
+  <circle cx="600" cy="200" r="56" fill="#6B3FBF"/>
+  <text x="600" y="218" font-family="Georgia, serif" font-size="52" font-style="italic" font-weight="300" fill="#FBF8FF" text-anchor="middle">E</text>
+
+  <!-- Wordmark -->
+  <text x="600" y="310" font-family="Georgia, serif" font-size="64" font-weight="300" fill="#1A0B2E" text-anchor="middle" letter-spacing="-1">
+    <tspan font-style="italic">Eazy</tspan><tspan fill="#EE7BB0">.</tspan><tspan>Family</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="600" y="368" font-family="'DM Sans', Arial, sans-serif" font-size="22" fill="#522793" text-anchor="middle" opacity="0.8">
+    One Eazy place for your family
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(600, 440)">
+    <!-- Pill 1 -->
+    <rect x="-390" y="-20" width="160" height="40" rx="20" fill="#F0E4FB"/>
+    <text x="-310" y="5" font-family="'DM Sans', Arial, sans-serif" font-size="16" fill="#522793" text-anchor="middle">📅 Shared Calendar</text>
+
+    <!-- Pill 2 -->
+    <rect x="-200" y="-20" width="140" height="40" rx="20" fill="#F0E4FB"/>
+    <text x="-130" y="5" font-family="'DM Sans', Arial, sans-serif" font-size="16" fill="#522793" text-anchor="middle">✅ To-Do Lists</text>
+
+    <!-- Pill 3 -->
+    <rect x="-35" y="-20" width="150" height="40" rx="20" fill="#F0E4FB"/>
+    <text x="40" y="5" font-family="'DM Sans', Arial, sans-serif" font-size="16" fill="#522793" text-anchor="middle">💬 Messaging</text>
+
+    <!-- Pill 4 -->
+    <rect x="135" y="-20" width="130" height="40" rx="20" fill="#F0E4FB"/>
+    <text x="200" y="5" font-family="'DM Sans', Arial, sans-serif" font-size="16" fill="#522793" text-anchor="middle">🗺️ Events</text>
+
+    <!-- Pill 5 -->
+    <rect x="287" y="-20" width="120" height="40" rx="20" fill="#F0E4FB"/>
+    <text x="347" y="5" font-family="'DM Sans', Arial, sans-serif" font-size="16" fill="#522793" text-anchor="middle">🤖 AI</text>
+  </g>
+
+  <!-- eazy.family URL -->
+  <text x="600" y="568" font-family="'DM Sans', Arial, sans-serif" font-size="18" fill="#C7AEEF" text-anchor="middle">eazy.family</text>
+</svg>

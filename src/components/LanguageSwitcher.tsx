@@ -46,7 +46,7 @@ export function LanguageSwitcher({ variant = "auto" }: Props) {
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
           isDark
             ? "hover:bg-white/10 text-white/80 hover:text-white"
-            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+            : "bg-white/80 border border-grape-100 hover:bg-white text-foreground shadow-sm"
         }`}
         aria-label="Change language"
       >

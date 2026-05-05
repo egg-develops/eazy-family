@@ -818,7 +818,7 @@ const AppHome = () => {
           className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => navigate('/app/todos')}
         >
-          <div className="text-2xl font-bold text-orange-600">{pendingTasksCount}</div>
+          <div className="text-2xl font-bold" style={{ color: "#EE7BB0" }}>{pendingTasksCount}</div>
           <div className="text-sm text-muted-foreground">{t('home.pendingTasks')}</div>
         </Card>
       </div>
