@@ -614,7 +614,7 @@ const AppHome = () => {
               </p>
               <Button
                 size="sm"
-                className="mt-3 gradient-primary text-white border-0"
+                className="mt-3 text-white border-0" style={{ background: "#6B3FBF" }}
                 onClick={() => navigate('/app/settings')}
               >
                 Invite Family Members

@@ -194,15 +194,15 @@
 
 @layer utilities {
   .gradient-primary {
-    background: var(--gradient-primary);
+    background: #6B3FBF;
   }
 
   .gradient-warm {
-    background: var(--gradient-warm);
+    background: #EE7BB0;
   }
 
   .gradient-cool {
-    background: var(--gradient-cool);
+    background: #6E8FE5;
   }
 
   .shadow-custom-sm {
