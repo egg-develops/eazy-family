@@ -12,26 +12,27 @@ const Splash = () => {
   return (
     <div
       className="animate-splash-exit fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: "linear-gradient(160deg, hsl(270 62% 7%), hsl(280 55% 11%))" }}
+      style={{ background: "linear-gradient(160deg, #1A0B2E, #2A1248)" }}
     >
-      {/* Glow blobs */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full opacity-30"
-          style={{ background: "radial-gradient(circle, hsl(270 88% 55%), transparent 70%)" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full opacity-25"
+          style={{ background: "radial-gradient(circle, #6B3FBF, transparent 70%)" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #EE7BB0, transparent 70%)" }} />
       </div>
 
       <img
         src="/logo.png"
         alt="Eazy.Family"
         className="w-32 h-32 object-contain animate-logo-pop relative z-10"
-        style={{ filter: "drop-shadow(0 0 40px hsl(270 88% 64% / 0.7))" }}
+        style={{ filter: "drop-shadow(0 0 40px rgb(107 63 191 / 0.6))" }}
       />
-      <p className="mt-5 text-2xl font-bold tracking-tight animate-splash-text relative z-10"
-        style={{ color: "hsl(270 40% 96%)" }}>
-        Eazy.Family
+      <p className="mt-5 font-serif text-2xl font-light tracking-tight animate-splash-text relative z-10"
+        style={{ color: "#FBF8FF" }}>
+        eazy<span style={{ color: "#EE7BB0" }}>.</span>family
       </p>
       <p className="mt-1 text-sm animate-splash-text relative z-10"
-        style={{ color: "hsl(262 80% 78%)" }}>
+        style={{ color: "#C7AEEF" }}>
         Your daily family app
       </p>
     </div>

@@ -4,6 +4,11 @@ import { Globe, Apple, Smartphone, CheckCircle, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/PublicNav";
 
+const HEADING = { color: "#1A0B2E" };
+const MUTED   = { color: "#522793" };
+const SUBTLE  = { color: "#8A5FE0" };
+const CARD    = { background: "#FFFFFF", border: "1px solid #F0E4FB" };
+
 export default function Download() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -18,11 +23,11 @@ export default function Download() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "hsl(var(--background))", color: "hsl(var(--foreground))" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FBF8FF", color: "#1A0B2E" }}>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, hsl(270 88% 55%), transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #C7AEEF, transparent 70%)" }} />
       </div>
 
       <PublicNav />
@@ -31,10 +36,10 @@ export default function Download() {
 
         {/* Hero */}
         <section className="text-center space-y-4">
-          <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: "hsl(270 40% 98%)" }}>
+          <h1 className="font-serif text-3xl sm:text-4xl font-light" style={HEADING}>
             {t("website.download.heroHeadline")}
           </h1>
-          <p className="text-base" style={{ color: "hsl(270 30% 68%)" }}>
+          <p className="text-base" style={MUTED}>
             {t("website.download.heroSub")}
           </p>
         </section>
@@ -42,58 +47,55 @@ export default function Download() {
         {/* App store buttons */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* iOS */}
-          <div className="rounded-2xl p-6 text-center space-y-4 opacity-50"
-            style={{ background: "hsl(270 50% 10% / 0.8)", border: "1px solid hsl(270 40% 20%)" }}>
-            <Apple className="w-10 h-10 mx-auto" style={{ color: "hsl(270 40% 80%)" }} />
+          <div className="rounded-2xl p-6 text-center space-y-4 opacity-50" style={CARD}>
+            <Apple className="w-10 h-10 mx-auto" style={{ color: "#C7AEEF" }} />
             <div>
-              <p className="font-semibold text-sm" style={{ color: "hsl(270 40% 90%)" }}>{t("website.download.iosLabel")}</p>
-              <p className="text-xs mt-1" style={{ color: "hsl(270 30% 60%)" }}>{t("website.download.iosSub")}</p>
+              <p className="font-medium text-sm" style={HEADING}>{t("website.download.iosLabel")}</p>
+              <p className="text-xs mt-1" style={SUBTLE}>{t("website.download.iosSub")}</p>
             </div>
             <div className="px-4 py-2 rounded-xl text-xs font-medium border"
-              style={{ borderColor: "hsl(270 40% 28%)", color: "hsl(270 40% 60%)" }}>
+              style={{ borderColor: "#F0E4FB", color: "#8A5FE0" }}>
               App Store
             </div>
           </div>
 
           {/* Android */}
-          <div className="rounded-2xl p-6 text-center space-y-4 opacity-50"
-            style={{ background: "hsl(270 50% 10% / 0.8)", border: "1px solid hsl(270 40% 20%)" }}>
-            <Smartphone className="w-10 h-10 mx-auto" style={{ color: "hsl(270 40% 80%)" }} />
+          <div className="rounded-2xl p-6 text-center space-y-4 opacity-50" style={CARD}>
+            <Smartphone className="w-10 h-10 mx-auto" style={{ color: "#C7AEEF" }} />
             <div>
-              <p className="font-semibold text-sm" style={{ color: "hsl(270 40% 90%)" }}>{t("website.download.androidLabel")}</p>
-              <p className="text-xs mt-1" style={{ color: "hsl(270 30% 60%)" }}>{t("website.download.androidSub")}</p>
+              <p className="font-medium text-sm" style={HEADING}>{t("website.download.androidLabel")}</p>
+              <p className="text-xs mt-1" style={SUBTLE}>{t("website.download.androidSub")}</p>
             </div>
             <div className="px-4 py-2 rounded-xl text-xs font-medium border"
-              style={{ borderColor: "hsl(270 40% 28%)", color: "hsl(270 40% 60%)" }}>
+              style={{ borderColor: "#F0E4FB", color: "#8A5FE0" }}>
               Google Play
             </div>
           </div>
 
-          {/* Web */}
+          {/* Web — active */}
           <div className="rounded-2xl p-6 text-center space-y-4"
-            style={{ background: "hsl(270 50% 12% / 0.9)", border: "1px solid hsl(270 60% 35%)" }}>
-            <Globe className="w-10 h-10 mx-auto" style={{ color: "hsl(270 70% 72%)" }} />
+            style={{ background: "#F0E4FB", border: "1px solid #C7AEEF" }}>
+            <Globe className="w-10 h-10 mx-auto" style={{ color: "#6B3FBF" }} />
             <div>
-              <p className="font-semibold text-sm" style={{ color: "hsl(270 40% 96%)" }}>{t("website.download.webLabel")}</p>
-              <p className="text-xs mt-1" style={{ color: "hsl(270 60% 72%)" }}>{t("website.download.webSub")}</p>
+              <p className="font-medium text-sm" style={HEADING}>{t("website.download.webLabel")}</p>
+              <p className="text-xs mt-1" style={MUTED}>{t("website.download.webSub")}</p>
             </div>
-            <Button onClick={() => navigate("/onboarding")} className="w-full text-white border-0 text-xs py-2"
-              style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
+            <Button onClick={() => navigate("/onboarding")} className="w-full text-white border-0 text-xs py-2 rounded-xl"
+              style={{ background: "#6B3FBF" }}>
               {t("website.download.webCta")}
             </Button>
           </div>
         </section>
 
         {/* Web features */}
-        <section className="rounded-2xl p-6 space-y-4"
-          style={{ background: "hsl(270 50% 10% / 0.8)", border: "1px solid hsl(270 40% 20%)" }}>
-          <h2 className="font-bold text-base" style={{ color: "hsl(270 40% 96%)" }}>
+        <section className="rounded-2xl p-6 space-y-4" style={CARD}>
+          <h2 className="font-medium text-base" style={HEADING}>
             {t("website.download.featuresTitle")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {webFeatures.map(f => (
-              <div key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "hsl(270 30% 75%)" }}>
-                <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "hsl(270 60% 72%)" }} />
+              <div key={f} className="flex items-center gap-2.5 text-sm" style={MUTED}>
+                <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#6B3FBF" }} />
                 {f}
               </div>
             ))}
@@ -102,28 +104,28 @@ export default function Download() {
 
         {/* Notify me */}
         <section className="text-center rounded-3xl p-10 space-y-4"
-          style={{ background: "hsl(270 50% 10% / 0.8)", border: "1px solid hsl(270 40% 22%)" }}>
-          <Bell className="w-8 h-8 mx-auto opacity-60" style={{ color: "hsl(270 60% 72%)" }} />
-          <h2 className="font-bold text-lg" style={{ color: "hsl(270 40% 98%)" }}>
+          style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
+          <Bell className="w-8 h-8 mx-auto" style={{ color: "#C7AEEF" }} />
+          <h2 className="font-serif text-lg font-light" style={HEADING}>
             {t("website.download.notifyTitle")}
           </h2>
-          <p className="text-sm" style={{ color: "hsl(270 30% 65%)" }}>
+          <p className="text-sm" style={MUTED}>
             {t("website.download.notifySub")}
           </p>
           <Button onClick={() => navigate("/onboarding")} className="text-white border-0 px-8 py-5 text-sm rounded-2xl"
-            style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
+            style={{ background: "#6B3FBF" }}>
             {t("website.download.notifyCta")}
           </Button>
         </section>
       </main>
 
-      <footer className="py-10 px-5 border-t" style={{ borderColor: "hsl(270 40% 16%)" }}>
+      <footer className="py-10 px-5 border-t" style={{ borderColor: "#F0E4FB" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="Eazy.Family" className="w-7 h-7" />
-            <span className="font-semibold text-sm" style={{ color: "hsl(270 40% 80%)" }}>Eazy.Family</span>
+            <span className="font-medium text-sm" style={HEADING}>Eazy.Family</span>
           </Link>
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={{ color: "hsl(270 30% 58%)" }}>
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={SUBTLE}>
             <Link to="/about" className="hover:opacity-80">{t("website.nav.about")}</Link>
             <Link to="/events" className="hover:opacity-80">{t("website.nav.events")}</Link>
             <Link to="/download" className="hover:opacity-80">{t("website.nav.getApp")}</Link>
@@ -133,7 +135,7 @@ export default function Download() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
           </nav>
-          <p className="text-xs" style={{ color: "hsl(270 30% 45%)" }}>© {new Date().getFullYear()} Eazy.Family</p>
+          <p className="text-xs" style={{ color: "#C7AEEF" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>
       </footer>
     </div>

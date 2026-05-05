@@ -18,7 +18,6 @@ export function PublicNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on navigation
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   const NAV_LINKS = [
@@ -31,14 +30,18 @@ export function PublicNav() {
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "backdrop-blur-md border-b" : ""}`}
-      style={{ backgroundColor: scrolled ? "hsl(270 30% 5% / 0.9)" : "transparent", borderColor: "hsl(270 40% 20% / 0.4)" }}
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "shadow-sm border-b" : ""}`}
+      style={{
+        backgroundColor: scrolled ? "rgba(251, 248, 255, 0.95)" : "transparent",
+        backdropFilter: scrolled ? "blur(12px)" : undefined,
+        borderColor: "#F0E4FB",
+      }}
     >
       <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8" />
-          <span className="font-bold text-sm hidden sm:inline" style={{ color: "hsl(270 40% 96%)" }}>Eazy.Family</span>
+          <span className="font-semibold text-sm hidden sm:inline" style={{ color: "#1A0B2E" }}>Eazy.Family</span>
         </Link>
 
         {/* Desktop nav */}
@@ -47,8 +50,8 @@ export function PublicNav() {
             <Link
               key={l.href}
               to={l.href}
-              className={`text-sm transition-colors ${isActive(l.href) ? "opacity-100 font-medium" : "opacity-60 hover:opacity-90"}`}
-              style={{ color: "hsl(270 40% 92%)" }}
+              className={`text-sm transition-colors ${isActive(l.href) ? "font-medium" : "opacity-60 hover:opacity-90"}`}
+              style={{ color: "#1A0B2E" }}
             >
               {l.label}
             </Link>
@@ -57,24 +60,24 @@ export function PublicNav() {
 
         {/* Desktop right */}
         <div className="hidden md:flex items-center gap-2">
-          <LanguageSwitcher variant="dark" />
+          <LanguageSwitcher variant="auto" />
           <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}
-            className="text-sm opacity-70 hover:opacity-100" style={{ color: "hsl(270 40% 90%)" }}>
+            className="text-sm" style={{ color: "#522793" }}>
             {t("website.nav.signIn")}
           </Button>
           <Button size="sm" onClick={() => navigate("/onboarding")}
-            className="text-white border-0 text-sm"
-            style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
+            className="text-white border-0 text-sm rounded-xl"
+            style={{ background: "#6B3FBF" }}>
             {t("website.nav.getStarted")}
           </Button>
         </div>
 
         {/* Mobile: language + hamburger */}
         <div className="md:hidden flex items-center gap-1">
-          <LanguageSwitcher variant="dark" />
+          <LanguageSwitcher variant="auto" />
           <button
             className="p-2" onClick={() => setMenuOpen(v => !v)}
-            aria-label="Toggle menu" style={{ color: "hsl(270 40% 85%)" }}
+            aria-label="Toggle menu" style={{ color: "#522793" }}
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -85,25 +88,25 @@ export function PublicNav() {
       {menuOpen && (
         <div
           className="md:hidden border-t px-5 py-4 space-y-2"
-          style={{ backgroundColor: "hsl(270 30% 5% / 0.97)", borderColor: "hsl(270 40% 20%)" }}
+          style={{ backgroundColor: "#FBF8FF", borderColor: "#F0E4FB" }}
         >
           {NAV_LINKS.map(l => (
             <Link
               key={l.href}
               to={l.href}
-              className={`block py-2.5 text-sm ${isActive(l.href) ? "font-medium opacity-100" : "opacity-75"}`}
-              style={{ color: "hsl(270 40% 90%)" }}
+              className={`block py-2.5 text-sm ${isActive(l.href) ? "font-medium" : "opacity-70"}`}
+              style={{ color: "#1A0B2E" }}
             >
               {l.label}
             </Link>
           ))}
-          <hr className="my-2" style={{ borderColor: "hsl(270 40% 18%)" }} />
-          <Button variant="ghost" className="w-full justify-start text-sm opacity-70" onClick={() => navigate("/auth")}
-            style={{ color: "hsl(270 40% 90%)" }}>
+          <hr className="my-2" style={{ borderColor: "#F0E4FB" }} />
+          <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => navigate("/auth")}
+            style={{ color: "#522793" }}>
             {t("website.nav.signIn")}
           </Button>
-          <Button className="w-full text-white border-0" onClick={() => navigate("/onboarding")}
-            style={{ background: "linear-gradient(135deg, hsl(270 88% 58%), hsl(290 80% 62%))" }}>
+          <Button className="w-full text-white border-0 rounded-xl" onClick={() => navigate("/onboarding")}
+            style={{ background: "#6B3FBF" }}>
             {t("website.nav.getStarted")}
           </Button>
         </div>

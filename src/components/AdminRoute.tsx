@@ -19,8 +19,8 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading || isAdmin === null) {
     return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: 'hsl(270 62% 7%)' }}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: 'hsl(270 88% 64%)' }} />
+      <div className="flex items-center justify-center min-h-screen" style={{ background: '#FBF8FF' }}>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: '#6B3FBF' }} />
       </div>
     );
   }
