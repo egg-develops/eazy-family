@@ -46,8 +46,9 @@ export function LanguageSwitcher({ variant = "auto" }: Props) {
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
           isDark
             ? "hover:bg-white/10 text-white/80 hover:text-white"
-            : "bg-white/80 border border-grape-100 hover:bg-white text-foreground shadow-sm"
+            : "bg-white hover:bg-white shadow-sm"
         }`}
+        style={isDark ? undefined : { border: "1px solid #F0E4FB", color: "#1A0B2E" }}
         aria-label="Change language"
       >
         <span className="text-base leading-none">{current.flag}</span>
@@ -60,7 +61,7 @@ export function LanguageSwitcher({ variant = "auto" }: Props) {
           className="absolute right-0 top-full mt-1 z-50 rounded-xl shadow-xl border overflow-hidden min-w-[160px]"
           style={isDark
             ? { background: "hsl(270 30% 8%)", borderColor: "hsl(270 40% 22%)" }
-            : undefined}
+            : { background: "#FFFFFF", borderColor: "#F0E4FB" }}
         >
           {LANGUAGES.map(lang => (
             <button
@@ -68,9 +69,13 @@ export function LanguageSwitcher({ variant = "auto" }: Props) {
               onClick={() => change(lang.code)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors ${
                 lang.code === i18n.language
-                  ? isDark ? "bg-white/10 font-medium text-white" : "bg-primary/10 font-medium text-primary"
-                  : isDark ? "text-white/80 hover:bg-white/8" : "text-foreground hover:bg-muted"
+                  ? isDark ? "bg-white/10 font-medium text-white" : "font-medium"
+                  : isDark ? "text-white/80 hover:bg-white/8" : "hover:bg-grape-50"
               }`}
+              style={isDark ? undefined : {
+                color: lang.code === i18n.language ? "#6B3FBF" : "#1A0B2E",
+                background: lang.code === i18n.language ? "#F0E4FB" : undefined,
+              }}
             >
               <span className="text-base">{lang.flag}</span>
               <span>{lang.label}</span>

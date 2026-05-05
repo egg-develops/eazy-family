@@ -42,10 +42,10 @@ export function PublicNav() {
         {/* Branded wordmark */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8" />
-          <span className="font-serif text-base hidden sm:inline" style={{ color: "#1A0B2E" }}>
-            <em className="not-italic" style={{ fontStyle: "italic" }}>Eazy</em>
+          <span className="font-serif text-base hidden sm:inline" style={{ color: "#1A0B2E", fontStyle: "normal" }}>
+            <em style={{ fontStyle: "italic", color: "#1A0B2E" }}>Eazy</em>
             <span style={{ color: "#EE7BB0" }}>.</span>
-            <span>Family</span>
+            <span style={{ color: "#1A0B2E" }}>Family</span>
           </span>
         </Link>
 
