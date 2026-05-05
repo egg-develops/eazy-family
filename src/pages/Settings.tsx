@@ -223,11 +223,6 @@ const Settings = () => {
     });
   };
 
-  const handleRerunOnboarding = () => {
-    localStorage.removeItem('eazy-family-onboarding');
-    navigate('/onboarding');
-  };
-
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     i18n.changeLanguage(newLanguage);
@@ -619,22 +614,13 @@ const Settings = () => {
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
-          onClick={handleRerunOnboarding}
-        >
-          <RefreshCw className="h-4 w-4" />
-          Re-run Onboarding
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2"
           onClick={() => {
-            localStorage.removeItem('eazy-family-tutorial-completed');
-            localStorage.setItem('eazy-family-tutorial-run', 'true');
-            navigate('/app');
+            window.dispatchEvent(new Event("tutorial-start"));
+            navigate("/app");
           }}
         >
           <RefreshCw className="h-4 w-4" />
-          Re-run Tutorial
+          Replay Feature Tour
         </Button>
         <Button
           variant="destructive"

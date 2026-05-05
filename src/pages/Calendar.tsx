@@ -6,7 +6,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, Sparkles } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -749,6 +749,21 @@ const Calendar = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Voice assistant nudge */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#6B3FBF" }}>
+          <Mic className="w-4 h-4 text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
+            Tap the mic and say&nbsp;
+            <span className="italic" style={{ color: "#6B3FBF" }}>"Schedule dentist Monday at 3pm"</span>
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: "#8A5FE0" }}>Eazy Assistant adds it to your calendar instantly.</p>
+        </div>
+        <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: "#FFC861" }} />
+      </div>
 
       {/* Outlook Admin Consent Dialog */}
       <Dialog open={outlookAdminConsentNeeded} onOpenChange={setOutlookAdminConsentNeeded}>

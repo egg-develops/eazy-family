@@ -158,16 +158,17 @@ const AppLayout = () => {
           {/* Menu Icon - Opens Settings Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full bg-muted/50 hover:bg-muted"
+                className="h-10 w-10 rounded-full hover:bg-muted"
+                style={{ background: "rgba(107,63,191,0.08)" }}
               >
-                <div className="grid grid-cols-2 gap-1">
-                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
-                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
-                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
-                  <div className="w-1.5 h-1.5 rounded-sm bg-primary" />
+                <div className="grid grid-cols-2 gap-[3px]">
+                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#6B3FBF" }} />
+                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#EE7BB0" }} />
+                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#6E8FE5" }} />
+                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#FFC861" }} />
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -193,13 +194,12 @@ const AppLayout = () => {
             variant="ghost"
             size="icon"
             onClick={() => { haptic('tap'); navigate("/app"); }}
-            className={`h-10 w-10 rounded-full transition-all ${
-              isHomePath
-                ? "bg-primary text-primary-foreground shadow-md scale-105"
-                : "bg-muted/50 hover:bg-muted"
-            }`}
+            className="h-10 w-10 rounded-full transition-all"
+            style={isHomePath
+              ? { background: "#6B3FBF", color: "#FBF8FF", boxShadow: "0 2px 8px rgba(107,63,191,0.4)" }
+              : { background: "rgba(107,63,191,0.08)" }}
           >
-            <Home className="h-5 w-5" />
+            <Home className="h-5 w-5" style={isHomePath ? { color: "#FBF8FF" } : { color: "#6B3FBF" }} />
           </Button>
         </div>
       </nav>

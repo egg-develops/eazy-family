@@ -414,7 +414,7 @@ export const EazyAssistant = () => {
         <div className="flex items-center justify-between text-primary-foreground">
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 flex-shrink-0" />
+              <Sparkles className="w-6 h-6 flex-shrink-0" style={{ color: "#FFC861" }} />
               <h3 className="text-xl font-bold">Eazy Assistant</h3>
             </div>
             <div className="text-primary-foreground/90 text-sm min-h-[40px] pt-3">
@@ -435,7 +435,7 @@ export const EazyAssistant = () => {
     <Card className="shadow-custom-lg overflow-hidden">
       <div className="bg-primary p-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-primary-foreground">
-          <Sparkles className="w-5 h-5" />
+          <Sparkles className="w-5 h-5" style={{ color: "#FFC861" }} />
           <h3 className="font-bold">Eazy Assistant</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -512,8 +512,12 @@ export const EazyAssistant = () => {
             size="icon"
             variant={isListening ? "destructive" : "outline"}
             aria-label={isListening ? "Stop listening" : "Start voice input"}
+            className="relative"
           >
             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {!isListening && (
+              <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
+            )}
           </Button>
           <Input
             value={input}

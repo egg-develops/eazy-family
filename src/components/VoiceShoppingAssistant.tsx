@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Mic, MicOff, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
@@ -173,7 +173,7 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
         size="icon"
         onClick={isListening ? stopListening : startListening}
         disabled={isProcessing}
-        className="h-10 w-10"
+        className="h-10 w-10 relative"
       >
         {isProcessing ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -181,6 +181,9 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
           <MicOff className="h-4 w-4" />
         ) : (
           <Mic className="h-4 w-4" />
+        )}
+        {!isListening && !isProcessing && (
+          <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
         )}
       </Button>
       {isListening && (

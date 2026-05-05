@@ -1,62 +1,42 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { TutorialWalkthrough } from "@/components/TutorialWalkthrough";
+import { FeatureTour } from "@/components/FeatureTour";
 
 export const GlobalTutorial = () => {
-  const [run, setRun] = useState(false);
-  const location = useLocation();
-
-  // Only show tutorial on the homepage
-  const isHomepage = location.pathname === '/app';
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!isHomepage) {
-      setRun(false);
-      return;
-    }
+    const check = () => {
+      const completed = localStorage.getItem("eazy-family-tutorial-completed") === "true";
+      const shouldRun = localStorage.getItem("eazy-family-tutorial-run") === "true";
+      const firstLaunch = localStorage.getItem("eazy-family-first-launch");
 
-    const checkFlag = () => {
-      const completed = localStorage.getItem('eazy-family-tutorial-completed') === 'true';
-      const shouldRun = localStorage.getItem('eazy-family-tutorial-run') === 'true';
-      const hasLaunched = localStorage.getItem('eazy-family-first-launch');
-      
-      // Auto-play on first launch
-      if (!hasLaunched && !completed) {
-        localStorage.setItem('eazy-family-first-launch', 'true');
-        localStorage.setItem('eazy-family-tutorial-run', 'true');
-        setRun(true);
+      if (!firstLaunch && !completed) {
+        localStorage.setItem("eazy-family-first-launch", "true");
+        setShow(true);
         return;
       }
-      
-      if (completed) {
-        localStorage.removeItem('eazy-family-tutorial-run');
-        setRun(false);
-      } else {
-        setRun(shouldRun);
+      if (shouldRun) {
+        localStorage.removeItem("eazy-family-tutorial-run");
+        setShow(true);
       }
     };
 
-    checkFlag();
+    check();
 
     const onStart = () => {
-      // Clear completed flag so re-run always works from Settings
-      localStorage.removeItem('eazy-family-tutorial-completed');
-      checkFlag();
+      localStorage.removeItem("eazy-family-tutorial-completed");
+      localStorage.removeItem("eazy-family-tutorial-run");
+      setShow(true);
     };
-    window.addEventListener('tutorial-start', onStart as EventListener);
+    window.addEventListener("tutorial-start", onStart as EventListener);
+    return () => window.removeEventListener("tutorial-start", onStart as EventListener);
+  }, []);
 
-    return () => {
-      window.removeEventListener('tutorial-start', onStart as EventListener);
-    };
-  }, [isHomepage]);
-
-  const handleComplete = () => {
-    localStorage.removeItem('eazy-family-tutorial-run');
-    localStorage.setItem('eazy-family-tutorial-completed', 'true');
-    setRun(false);
+  const handleDone = () => {
+    localStorage.setItem("eazy-family-tutorial-completed", "true");
+    setShow(false);
   };
 
-  if (!isHomepage) return null;
-
-  return <TutorialWalkthrough run={run} onComplete={handleComplete} />;
+  if (!show) return null;
+  return <FeatureTour onDone={handleDone} />;
 };
