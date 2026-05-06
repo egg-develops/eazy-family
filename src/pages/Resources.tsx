@@ -259,25 +259,6 @@ export default function Resources() {
           </p>
         </section>
 
-        {/* ── Language toggle ── */}
-        <div className="flex gap-2 flex-wrap justify-center">
-          {(["en", "de", "fr", "it"] as Lang[]).map((l) => (
-            <button
-              key={l}
-              onClick={() => { setLang(l); i18n.changeLanguage(l); localStorage.setItem("eazy-family-language", l); }}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
-              style={
-                lang === l
-                  ? { background: "#6B3FBF", color: "#FBF8FF" }
-                  : { background: "#F0E4FB", color: "#522793" }
-              }
-            >
-              <Globe className="w-3 h-3" />
-              {LANG_LABELS[l]}
-            </button>
-          ))}
-        </div>
-
         {/* ── Section anchor tabs ── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {(["blog", "parenting", "shop"] as const).map((section) => {
@@ -605,7 +586,7 @@ export default function Resources() {
           style={{ background: "#6B3FBF" }}
         >
           <h2 className="font-serif text-2xl sm:text-3xl" style={{ color: "#FBF8FF" }}>
-            Ready to organise your family life?
+            Ready to make your family life Eazy?
           </h2>
           <p className="text-sm leading-relaxed max-w-md mx-auto" style={{ color: "#C7AEEF" }}>
             Calendar, lists, messaging, and AI assistance — all in one private

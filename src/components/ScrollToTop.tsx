@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
+    if (hash) return;
     window.scrollTo(0, 0);
 
     // Fire-and-forget page view log

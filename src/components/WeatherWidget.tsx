@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, CloudSunSun, RefreshCw } from "lucide-react";
+import { MapPin, CloudSun, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { error as logError } from "@/lib/logger";

@@ -57,7 +57,7 @@ export default function About() {
                   </div>
                   <div>
                     <h3 className="font-medium text-sm mb-1" style={HEADING}>{v.title}</h3>
-                    <p className="text-xs leading-relaxed" style={SUBTLE}>{v.body}</p>
+                    <p className="text-xs leading-relaxed whitespace-pre-line" style={SUBTLE}>{v.body}</p>
                   </div>
                 </div>
               );
