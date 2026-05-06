@@ -199,7 +199,7 @@ const Auth = () => {
       <div className="relative w-full max-w-sm">
         {/* Logo + title */}
         <div className="text-center mb-8">
-          <img src="/icons/icon-primary-512.webp" alt="Eazy.Family" className="w-20 h-20 mx-auto mb-4 drop-shadow-2xl"
+          <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto mb-4 drop-shadow-2xl"
             style={{ filter: "drop-shadow(0 0 24px hsl(270 88% 64% / 0.6))" }} />
           <h1 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
             {isSignUp ? "Create your account" : "Welcome back"}

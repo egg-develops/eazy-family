@@ -84,13 +84,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     // Re-check session when tab becomes visible (iOS Safari pauses JS timers, preventing token refresh)
+    // Only update state if we actually get a valid response — don't null-out user on network errors
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          setSession(session);
-          setUser(session?.user ?? null);
-          if (session?.user) fetchSubscriptionTier(session.user.id);
-          else setSubscriptionTier(null);
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+          if (error) return; // network error — keep current state
+          if (session) {
+            setSession(session);
+            setUser(session.user);
+            fetchSubscriptionTier(session.user.id);
+          } else {
+            // Only sign out if we got a definitive null (not a network failure)
+            setSession(null);
+            setUser(null);
+            setSubscriptionTier(null);
+          }
         });
       }
     };

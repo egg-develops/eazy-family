@@ -48,8 +48,10 @@ type CalendarItem = Event | Reminder;
 const getInitialItems = (): CalendarItem[] => {
   const saved = localStorage.getItem('eazy-family-calendar-items');
   if (saved) {
-    const parsed = JSON.parse(saved);
-    return parsed.map((item: unknown) => {
+    let parsed: unknown;
+    try { parsed = JSON.parse(saved); } catch { localStorage.removeItem('eazy-family-calendar-items'); return []; }
+    if (!Array.isArray(parsed)) return [];
+    return (parsed as unknown[]).map((item: unknown) => {
   if (typeof item === "object" && item !== null) {
     const e = item as {
   id?: string;

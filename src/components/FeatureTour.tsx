@@ -13,7 +13,7 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    icon: <img src="/icons/icon-primary-512.webp" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
+    icon: <img src="/logo.png" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
     accent: "#6B3FBF",
     iconBg: "#FBF8FF",
     title: "Welcome to Eazy.Family",
