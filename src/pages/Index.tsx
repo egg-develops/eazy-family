@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Navigate, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -16,13 +15,12 @@ const MUTED = { color: "#522793" };
 const SUBTLE = { color: "#8A5FE0" };
 
 export default function Index() {
-  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && user) navigate("/app");
-  }, [user, loading, navigate]);
+  if (loading) return null;
+  if (user) return <Navigate to="/app" replace />;
 
   const features = [
     { icon: Lock,          title: t("website.home.f1t"), desc: t("website.home.f1d") },

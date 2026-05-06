@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,11 +55,7 @@ const Auth = () => {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      navigate('/splash');
-    }
-  }, [user, authLoading, navigate]);
+  if (!authLoading && user) return <Navigate to="/app" replace />;
 
   // Validate referral code
   const validateReferralCode = async (code: string) => {

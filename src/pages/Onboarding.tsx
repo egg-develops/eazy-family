@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
@@ -45,11 +45,7 @@ const Onboarding = () => {
   const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      navigate('/app');
-    }
-  }, [user, authLoading, navigate]);
+  if (!authLoading && user) return <Navigate to="/app" replace />;
 
   const [data, setData] = useState<OnboardingData>({
     userName: "",

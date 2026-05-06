@@ -58,11 +58,11 @@ const App = () => (
             <ScrollToTop />
             <Routes>
               {/* Public marketing pages — light paper theme (no SplashThemeProvider) */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
 
               {/* Auth + Onboarding — dark ink celebratory theme */}
-              <Route path="/auth" element={<SplashThemeProvider><Auth /></SplashThemeProvider>} />
-              <Route path="/onboarding" element={<SplashThemeProvider><Onboarding /></SplashThemeProvider>} />
+              <Route path="/auth" element={<ErrorBoundary><SplashThemeProvider><Auth /></SplashThemeProvider></ErrorBoundary>} />
+              <Route path="/onboarding" element={<ErrorBoundary><SplashThemeProvider><Onboarding /></SplashThemeProvider></ErrorBoundary>} />
               
               {/* Logo splash after login/onboarding */}
               <Route path="/splash" element={<ProtectedRoute><Splash /></ProtectedRoute>} />
