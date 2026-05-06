@@ -438,7 +438,7 @@ const ToDoList = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="shadow-custom-md">
+              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" onClick={() => setFilterView("all")}>
                 <CardContent className="p-3 sm:p-4 text-center">
                   <div className="text-2xl sm:text-3xl font-bold">{stats.total}</div>
                   <div className="text-xs sm:text-sm text-muted-foreground">
@@ -446,21 +446,21 @@ const ToDoList = () => {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="shadow-custom-md">
+              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-green-400/50 transition-all" onClick={() => setFilterView("completed")}>
                 <CardContent className="p-3 sm:p-4 text-center">
                   <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.completed}</div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
                 </CardContent>
               </Card>
               {activeTab !== "shopping" && (
-                <Card className="shadow-custom-md">
+                <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={() => setFilterView("overdue")}>
                   <CardContent className="p-3 sm:p-4 text-center">
                     <div className="text-2xl sm:text-3xl font-bold text-orange-600">{stats.overdue}</div>
                     <div className="text-xs sm:text-sm text-muted-foreground">Overdue</div>
                   </CardContent>
                 </Card>
               )}
-              <Card className="shadow-custom-md">
+              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-grape-400/50 transition-all" onClick={() => setFilterView("pending")}>
                 <CardContent className="p-3 sm:p-4 text-center">
                   <div className="text-2xl sm:text-3xl font-bold text-grape-600">{stats.pending}</div>
                   <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>

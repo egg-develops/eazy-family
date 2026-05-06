@@ -78,7 +78,7 @@ export default function Index() {
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-2 text-xs" style={SUBTLE}>
+          <div className="flex items-center justify-center gap-6 pt-2 text-xs" style={HEADING}>
             {[t("website.home.check1"), t("website.home.check2"), t("website.home.check3")].map(text => (
               <span key={text} className="flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />

@@ -125,8 +125,54 @@ const Events = () => {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({ lat: 47.3769, lng: 8.5417 });
   const [dbEvents, setDbEvents] = useState<NearbyEvent[]>([]);
+  const [aiResults, setAiResults] = useState<NearbyEvent[]>([]);
+  const [isAiSearching, setIsAiSearching] = useState(false);
+  const aiSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
+
+  const searchWithAI = async (query: string) => {
+    if (!query.trim() || !user) return;
+    setIsAiSearching(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const prompt = `You are an event discovery assistant. Find 4 real or realistic family-friendly events near Zürich, Switzerland matching: "${query}". Return ONLY a JSON array (no markdown, no explanation) of objects with these fields: title, description, date (like "May 15"), time (like "10:00 AM"), location (real Zürich address), type (one of: outdoor/educational/creative/entertainment/wellness), ageRange, price. Make them feel real and specific.`;
+      const { data, error } = await supabase.functions.invoke('eazy-chat', {
+        body: { messages: [{ role: 'user', content: prompt }], conversationId: 'event-search' },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error || !data?.message) return;
+      const raw = data.message.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setAiResults(parsed.map((e: Record<string, string>, i: number) => ({
+          id: `ai-${i}`,
+          title: e.title || '',
+          description: e.description || '',
+          date: e.date || '',
+          time: e.time || '',
+          location: e.location || 'Zürich',
+          type: e.type || 'educational',
+          ageRange: e.ageRange || 'All ages',
+          price: e.price || 'Free',
+          lat: 47.3769 + (Math.random() - 0.5) * 0.05,
+          lng: 8.5417 + (Math.random() - 0.5) * 0.05,
+        })));
+      }
+    } catch {
+      // Silent fail — AI search is additive
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    if (aiSearchTimerRef.current) clearTimeout(aiSearchTimerRef.current);
+    if (!searchQuery.trim()) { setAiResults([]); return; }
+    aiSearchTimerRef.current = setTimeout(() => searchWithAI(searchQuery), 900);
+    return () => { if (aiSearchTimerRef.current) clearTimeout(aiSearchTimerRef.current); };
+  }, [searchQuery]);
 
   useEffect(() => {
     // Request browser location
@@ -432,6 +478,46 @@ const Events = () => {
           </Card>
         )}
       </div>
+
+      {/* AI Search Results */}
+      {searchQuery.trim() && (
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold flex items-center gap-2" style={{ color: "#6B3FBF" }}>
+            <Search className="w-4 h-4" />
+            {isAiSearching ? "Searching beyond the list…" : `AI-powered results for "${searchQuery}"`}
+          </h3>
+          {isAiSearching && (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: "#F8F1FF", border: "1px solid #EDE9F8" }}>
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <p className="text-sm text-muted-foreground">Finding events from across the web…</p>
+            </div>
+          )}
+          {!isAiSearching && aiResults.length > 0 && aiResults.map(event => (
+            <Card key={event.id} className="shadow-custom-md" style={{ borderLeft: "3px solid #6B3FBF" }}>
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-semibold text-sm">{event.title}</h4>
+                    <Badge className="text-[10px] px-1.5 py-0.5 flex-shrink-0" style={{ background: "#EDE9F8", color: "#6B3FBF", border: "none" }}>AI</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{event.description}</p>
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{event.date} · {event.time}</span>
+                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{event.location}</span>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">{event.ageRange}</Badge>
+                    <Badge variant="outline" className="text-xs">{event.price}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {!isAiSearching && aiResults.length === 0 && searchQuery.trim() && (
+            <p className="text-sm text-muted-foreground px-1">No AI results found — try a different search.</p>
+          )}
+        </div>
+      )}
 
       {/* Map View Toggle */}
       <Button

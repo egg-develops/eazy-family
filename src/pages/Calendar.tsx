@@ -6,8 +6,8 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid } from "lucide-react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -127,6 +127,8 @@ const Calendar = () => {
   const { toast } = useToast();
   const { isPremium } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day'>('month');
+  const [showViewPicker, setShowViewPicker] = useState(false);
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
   const [showSyncBanner, setShowSyncBanner] = useState(() => {
     return localStorage.getItem('eazy-calendar-sync-dismissed') !== 'true';
@@ -693,6 +695,167 @@ const Calendar = () => {
     setIsDialogOpen(false);
   };
 
+  const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6am–10pm
+
+  const getEventsForDateAndHour = (day: Date, hour: number) =>
+    items.filter(item => {
+      if (item.type !== "event") return false;
+      const d = new Date(item.startDate);
+      return isSameDay(d, day) && d.getHours() === hour;
+    });
+
+  const renderTimeGrid = (days: Date[]) => {
+    const columnWidth = days.length === 1 ? "w-full" : days.length === 3 ? "w-1/3" : "w-1/7";
+    return (
+      <div className="rounded-2xl overflow-hidden" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+        {/* Column headers */}
+        <div className="flex border-b" style={{ borderColor: "#F0E4FB" }}>
+          <div className="w-12 flex-shrink-0" />
+          {days.map(day => {
+            const isTodayDate = isToday(day);
+            return (
+              <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#6B3FBF" : "#9B7ADE" }}>
+                <div>{format(day, "EEE")}</div>
+                <div
+                  className="w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-semibold"
+                  style={{ background: isTodayDate ? "#6B3FBF" : "transparent", color: isTodayDate ? "#fff" : "#1A0B2E" }}
+                >
+                  {format(day, "d")}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Time slots */}
+        <div className="overflow-y-auto max-h-[60vh]">
+          {HOURS.map(hour => (
+            <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "#F8F1FF" }}>
+              <div className="w-12 flex-shrink-0 text-right pr-2 pt-1">
+                <span className="text-[10px]" style={{ color: "#C4B0E8" }}>
+                  {hour === 12 ? "12pm" : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
+                </span>
+              </div>
+              {days.map(day => {
+                const events = getEventsForDateAndHour(day, hour);
+                return (
+                  <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "#F0E4FB" }}>
+                    {events.map(item => {
+                      if (item.type !== "event") return null;
+                      const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#EDE9F8", border: "#6B3FBF", label: "Event" };
+                      return (
+                        <div
+                          key={item.id}
+                          className="text-[10px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
+                          style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "#1A0B2E" }}
+                          onClick={() => handleEditItem(item)}
+                        >
+                          {item.title}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDayCalendar = () => {
+    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    const weekStart = startOfWeek(selectedDate);
+    const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    return (
+      <div className="space-y-3">
+        {/* Mini week strip for navigation */}
+        <div className="rounded-2xl p-3" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+              {format(selectedDate, "MMMM")}{" "}
+              <em style={{ color: "#6B3FBF" }}>'{format(selectedDate, "yy")}</em>
+            </h2>
+            <div className="flex gap-1">
+              <button onClick={() => setSelectedDate(d => subDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+                <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+              </button>
+              <button onClick={() => setSelectedDate(d => addDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+                <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-7">
+            {weekDays.map((d, i) => (
+              <div key={i} className="text-center text-[10px] font-medium py-1" style={{ color: "#9B7ADE" }}>{d}</div>
+            ))}
+            {weekDates.map(day => {
+              const isTodayDate = isToday(day);
+              const isSel = isSameDay(day, selectedDate);
+              return (
+                <button key={day.toISOString()} onClick={() => setSelectedDate(day)} className="flex items-center justify-center h-7">
+                  <span
+                    className="w-6 h-6 text-xs font-medium rounded-full flex items-center justify-center"
+                    style={{
+                      background: isTodayDate ? "#6B3FBF" : isSel ? "#EDE9F8" : "transparent",
+                      color: isTodayDate ? "#fff" : isSel ? "#3D1F8A" : "#1A0B2E",
+                    }}
+                  >{format(day, "d")}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {renderTimeGrid([selectedDate])}
+      </div>
+    );
+  };
+
+  const render3DayCalendar = () => {
+    const days = [subDays(selectedDate, 1), selectedDate, addDays(selectedDate, 1)];
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+            {format(days[0], "MMM d")} – {format(days[2], "d")}
+          </h2>
+          <div className="flex gap-1">
+            <button onClick={() => setSelectedDate(d => subDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            </button>
+            <button onClick={() => setSelectedDate(d => addDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            </button>
+          </div>
+        </div>
+        {renderTimeGrid(days)}
+      </div>
+    );
+  };
+
+  const renderWeekCalendar = () => {
+    const weekStart = startOfWeek(selectedDate);
+    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+            {format(days[0], "MMM d")} – {format(days[6], "MMM d")}
+          </h2>
+          <div className="flex gap-1">
+            <button onClick={() => setSelectedDate(d => subDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            </button>
+            <button onClick={() => setSelectedDate(d => addDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
+              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            </button>
+          </div>
+        </div>
+        {renderTimeGrid(days)}
+      </div>
+    );
+  };
+
   const renderMonthCalendar = () => {
     const monthStart = startOfMonth(selectedDate);
     const monthEnd = endOfMonth(selectedDate);
@@ -748,13 +911,16 @@ const Calendar = () => {
               <button
                 key={day.toISOString()}
                 onClick={() => setSelectedDate(day)}
-                className="relative flex flex-col pt-1.5 px-1.5 pb-4 min-h-[52px] rounded-xl transition-colors text-left"
-                style={{
-                  background: (isTodayDate || isSelected) ? "#EDE9F8" : "transparent",
-                  opacity: isCurrentMonth ? 1 : 0.3,
-                }}
+                className="relative flex flex-col items-center pt-1.5 px-0.5 pb-4 min-h-[52px] transition-colors"
+                style={{ opacity: isCurrentMonth ? 1 : 0.3 }}
               >
-                <span className="text-xs font-medium leading-none" style={{ color: (isTodayDate || isSelected) ? "#3D1F8A" : "#1A0B2E" }}>
+                <span
+                  className="text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full leading-none"
+                  style={{
+                    background: isTodayDate ? "#6B3FBF" : isSelected ? "#EDE9F8" : "transparent",
+                    color: isTodayDate ? "#FFFFFF" : isSelected ? "#3D1F8A" : "#1A0B2E",
+                  }}
+                >
                   {format(day, "d")}
                 </span>
                 {dayItems.length > 0 && (
@@ -997,6 +1163,31 @@ const Calendar = () => {
           <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="gap-1.5 h-9 px-3 text-sm"
+              onClick={() => setShowViewPicker(v => !v)}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="capitalize">{calendarView === '3day' ? '3 Day' : calendarView}</span>
+            </Button>
+            {showViewPicker && (
+              <div className="absolute right-0 top-10 z-50 w-36 rounded-xl border shadow-lg overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
+                {(['month', 'week', '3day', 'day'] as const).map(v => (
+                  <button
+                    key={v}
+                    onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
+                    className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-purple-50 flex items-center justify-between"
+                    style={{ color: calendarView === v ? "#6B3FBF" : "#1A0B2E", fontWeight: calendarView === v ? 600 : 400 }}
+                  >
+                    {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
+                    {calendarView === v && <Check className="h-3.5 w-3.5" style={{ color: "#6B3FBF" }} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <Button
             variant="outline"
             className="gap-1.5 h-9 px-3 text-sm"
@@ -1042,11 +1233,14 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Month Calendar */}
-      {renderMonthCalendar()}
+      {/* Calendar View */}
+      {calendarView === 'month' && renderMonthCalendar()}
+      {calendarView === 'week' && renderWeekCalendar()}
+      {calendarView === '3day' && render3DayCalendar()}
+      {calendarView === 'day' && renderDayCalendar()}
 
-      {/* Day Events — stylized */}
-      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
+      {/* Day Events — only in month view */}
+      {calendarView === 'month' && <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
         {/* Header */}
         <p className="text-xs font-semibold tracking-wide uppercase mb-1" style={{ color: "#9B7ADE" }}>
           {isToday(selectedDate) ? "TODAY · " : ""}{format(selectedDate, "EEEE, MMMM d").toUpperCase()}
@@ -1142,7 +1336,7 @@ const Calendar = () => {
         >
           <Plus className="w-4 h-4" /> Add event
         </button>
-      </div>
+      </div>}
 
       {/* Add Event/Reminder Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

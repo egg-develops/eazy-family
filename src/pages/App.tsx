@@ -153,7 +153,7 @@ const AppLayout = () => {
 
       {/* Main Content */}
       <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
-        <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto px-4 pb-6 pt-3">
           {isHomePath ? <AppHome /> : <Outlet />}
         </div>
       </main>
@@ -660,7 +660,7 @@ const AppHome = () => {
               className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-300/50 hover:border-grape-500 transition-all"
               onClick={addWeather}
             >
-              <CloudSun className="w-5 h-5" />
+              <CloudSun className="w-5 h-5" style={{ color: "#FFC861" }} />
               <span className="text-sm">Weather</span>
             </Button>
           )}
