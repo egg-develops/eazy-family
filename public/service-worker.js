@@ -1,4 +1,4 @@
-const CACHE_NAME = 'eazy-family-v3';
+const CACHE_NAME = 'eazy-family-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

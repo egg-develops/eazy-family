@@ -249,18 +249,22 @@ const AppHome = () => {
     return next;
   });
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
-    const saved = localStorage.getItem('eazy-family-home-config');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const headerImages = parsed.headerImages || (parsed.headerImage ? [parsed.headerImage] : []);
-      return {
-        ...parsed,
-        showGreeting: parsed.showGreeting !== false,
-        topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
-        quickActions: parsed.quickActions || [],
-        headerImages: headerImages.length > 0 ? headerImages : ["/hero-default.png"],
-        headerImage: headerImages[0] || "/hero-default.png",
-      };
+    try {
+      const saved = localStorage.getItem('eazy-family-home-config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const headerImages = parsed.headerImages || (parsed.headerImage ? [parsed.headerImage] : []);
+        return {
+          ...parsed,
+          showGreeting: parsed.showGreeting !== false,
+          topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
+          quickActions: parsed.quickActions || [],
+          headerImages: headerImages.length > 0 ? headerImages : ["/hero-default.png"],
+          headerImage: headerImages[0] || "/hero-default.png",
+        };
+      }
+    } catch {
+      localStorage.removeItem('eazy-family-home-config');
     }
     // Default config when nothing is saved
     return {
