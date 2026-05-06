@@ -78,7 +78,7 @@ const App = () => (
               <Route path="/resources" element={<Resources />} />
               
               {/* Main App - User's custom theme */}
-              <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route path="/app" element={<ProtectedRoute><ErrorBoundary><AppLayout /></ErrorBoundary></ProtectedRoute>}>
                 <Route path="calendar" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Calendar /></Suspense></ErrorBoundary>} />
                 <Route path="calendar/outlook-callback" element={<ProtectedRoute><OutlookCallback /></ProtectedRoute>} />
                 <Route path="todos" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><ToDoList /></Suspense></ErrorBoundary>} />

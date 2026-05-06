@@ -40,8 +40,20 @@ const Settings = () => {
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
 
   const [homeConfig, setHomeConfig] = useState<HomeConfig>(() => {
-    const saved = localStorage.getItem('eazy-family-home-config');
-    const parsed = saved ? JSON.parse(saved) : {
+    try {
+      const saved = localStorage.getItem('eazy-family-home-config');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          topNotifications: parsed.topNotifications || [],
+          quickActions: parsed.quickActions || [],
+        };
+      }
+    } catch {
+      localStorage.removeItem('eazy-family-home-config');
+    }
+    return {
       greeting: "Good morning! ☀️",
       byline: "Let's make today amazing",
       showCalendar: true,
@@ -51,11 +63,6 @@ const Settings = () => {
       quickActions: ["Find Events"],
       iconImage: undefined,
       headerImage: undefined,
-    };
-    return {
-      ...parsed,
-      topNotifications: parsed.topNotifications || [],
-      quickActions: parsed.quickActions || [],
     };
   });
 

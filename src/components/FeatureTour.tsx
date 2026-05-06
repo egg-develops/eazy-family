@@ -84,7 +84,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
     >
       <div
         className="relative w-full max-w-md rounded-3xl shadow-2xl overflow-y-auto"
-        style={{ background: "#FBF8FF", maxHeight: "calc(100dvh - 10rem)", overscrollBehavior: "contain" }}
+        style={{ background: "#FBF8FF", maxHeight: "min(560px, calc(100vh - 8rem))", overscrollBehavior: "contain" }}
       >
         {/* Dismiss */}
         <button

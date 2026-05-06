@@ -74,11 +74,13 @@ const AppLayout = () => {
 
   useEffect(() => {
     // Check if user has completed onboarding (skip for authenticated users)
-    const onboardingData = localStorage.getItem('eazy-family-onboarding');
-    if (onboardingData) {
-      const data = JSON.parse(onboardingData);
-      setUserInitials(data.userInitials || "EF");
-    }
+    try {
+      const onboardingData = localStorage.getItem('eazy-family-onboarding');
+      if (onboardingData) {
+        const data = JSON.parse(onboardingData);
+        setUserInitials(data.userInitials || "EF");
+      }
+    } catch {}
   }, []);
 
   const currentPath = location.pathname;
@@ -126,9 +128,11 @@ const AppLayout = () => {
               className="flex items-center gap-3 hover:bg-transparent p-0"
             >
               {(() => {
-                const savedConfig = localStorage.getItem('eazy-family-home-config');
-                const config = savedConfig ? JSON.parse(savedConfig) : {};
-                const iconUrl = config.iconImage;
+                let iconUrl: string | undefined;
+                try {
+                  const savedConfig = localStorage.getItem('eazy-family-home-config');
+                  if (savedConfig) iconUrl = JSON.parse(savedConfig)?.iconImage;
+                } catch {}
                 
                 return iconUrl ? (
                   <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
