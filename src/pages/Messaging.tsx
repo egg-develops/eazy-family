@@ -376,11 +376,6 @@ const Messaging = () => {
   // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-4 p-3 sm:p-4">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-        <h1 className="text-lg sm:text-2xl font-bold">Messages</h1>
-      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={v => setActiveTab(v as "family" | "direct")} className="flex flex-col" style={{ height: "calc(100vh - 220px)", minHeight: "400px" }}>

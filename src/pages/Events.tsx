@@ -323,11 +323,8 @@ const Events = () => {
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
-          <h1 className="text-lg sm:text-2xl font-bold">{t('events.title')}</h1>
-        </div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs sm:text-sm text-muted-foreground">Family-friendly events near you</p>
         <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
           {filteredEvents.length} events
         </Badge>

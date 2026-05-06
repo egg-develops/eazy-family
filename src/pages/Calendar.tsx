@@ -1154,15 +1154,9 @@ const Calendar = () => {
       </Dialog>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: "#6E8FE5" }} />
-            {t('calendar.title')}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
+        <div className="flex gap-2 flex-shrink-0">
           <div className="relative">
             <Button
               variant="outline"

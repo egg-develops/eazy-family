@@ -375,13 +375,7 @@ const ToDoList = () => {
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-          <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center" />
-          <h1 className="text-lg sm:text-2xl font-bold">To-Do Lists</h1>
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
-      </div>
+      <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
 
       {/* Tabs */}
       <Tabs

@@ -263,13 +263,7 @@ const Community = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-          <h1 className="text-xl sm:text-2xl font-bold">{t('community.hub')}</h1>
-        </div>
-        <p className="text-xs sm:text-sm text-muted-foreground">{t('community.hubDesc')}</p>
-      </div>
+      <p className="text-xs sm:text-sm text-muted-foreground">{t('community.hubDesc')}</p>
 
       {/* Groups */}
       <div className="space-y-4">

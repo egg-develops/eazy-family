@@ -122,24 +122,26 @@ const AppLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <button
-              onClick={() => navigate('/app')}
-              className="flex-shrink-0"
-              aria-label="Home"
-            >
-              {(() => {
-                let iconUrl: string | undefined;
-                try {
-                  const savedConfig = localStorage.getItem('eazy-family-home-config');
-                  if (savedConfig) iconUrl = JSON.parse(savedConfig)?.iconImage;
-                } catch {}
-                return iconUrl ? (
-                  <img src={iconUrl} alt="Home" className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <img src="/logo.png" alt="Home" className="w-8 h-8 rounded-xl object-contain" />
-                );
-              })()}
-            </button>
+            {isHomePath ? (
+              <button onClick={() => navigate('/app')} className="flex-shrink-0" aria-label="Home">
+                {(() => {
+                  let iconUrl: string | undefined;
+                  try {
+                    const savedConfig = localStorage.getItem('eazy-family-home-config');
+                    if (savedConfig) iconUrl = JSON.parse(savedConfig)?.iconImage;
+                  } catch {}
+                  return iconUrl ? (
+                    <img src={iconUrl} alt="Home" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <img src="/logo.png" alt="Home" className="w-8 h-8 rounded-xl object-contain" />
+                  );
+                })()}
+              </button>
+            ) : (() => {
+              const currentNav = navigationItems.find(item => item.path === currentPath);
+              const NavIcon = currentNav?.icon;
+              return NavIcon ? <NavIcon className="h-5 w-5 flex-shrink-0 text-primary" /> : null;
+            })()}
             <h1 className="font-bold text-lg text-foreground truncate">
               {isHomePath
                 ? t('app.name')
