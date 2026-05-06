@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -592,7 +593,9 @@ const AppHome = () => {
 
       {/* Eazy Assistant */}
       <div data-tutorial="eazy-assistant">
-        <EazyAssistant />
+        <ErrorBoundary>
+          <EazyAssistant />
+        </ErrorBoundary>
       </div>
 
       {/* First-time Invite Family banner */}
@@ -666,7 +669,9 @@ const AppHome = () => {
 
       {/* Weather Widget */}
       {homeConfig.showWeather && (
-        <WeatherWidget onRemove={removeWeather} />
+        <ErrorBoundary>
+          <WeatherWidget onRemove={removeWeather} />
+        </ErrorBoundary>
       )}
 
       {/* Today's Highlights */}
@@ -1079,7 +1084,9 @@ const QuickToDos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <GlobalTutorial />
+      <ErrorBoundary>
+        <GlobalTutorial />
+      </ErrorBoundary>
     </div>
   );
 };

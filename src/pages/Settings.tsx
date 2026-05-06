@@ -139,10 +139,12 @@ const Settings = () => {
       if (lang) { setLanguage(lang); i18n.changeLanguage(lang); }
       const savedConfig = localStorage.getItem('eazy-family-home-config');
       if (savedConfig) {
-        const parsed = JSON.parse(savedConfig);
-        setHomeConfig(prev => ({ ...prev, ...parsed }));
-        setEditingGreeting(parsed.greeting || '');
-        setEditingByline(parsed.byline || '');
+        try {
+          const parsed = JSON.parse(savedConfig);
+          setHomeConfig(prev => ({ ...prev, ...parsed }));
+          setEditingGreeting(parsed.greeting || '');
+          setEditingByline(parsed.byline || '');
+        } catch { localStorage.removeItem('eazy-family-home-config'); }
       }
       setGoogleSynced(localStorage.getItem('eazy-google-calendar-synced') === 'true');
       setOutlookSynced(localStorage.getItem('eazy-outlook-calendar-synced') === 'true');
