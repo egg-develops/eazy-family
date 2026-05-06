@@ -560,14 +560,25 @@ const Settings = () => {
               {/* Display name */}
               <div className="space-y-2">
                 <Label htmlFor="display-name">{t('privacySettings.displayName')}</Label>
-                <Input
-                  id="display-name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  onBlur={() => savePrivacyField("display_name", displayName.trim() || null)}
-                  placeholder={t('privacySettings.displayNamePlaceholder')}
-                  maxLength={100}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="display-name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && savePrivacyField("display_name", displayName.trim() || null)}
+                    placeholder={t('privacySettings.displayNamePlaceholder')}
+                    maxLength={100}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    className="flex-shrink-0 text-white border-0 h-10"
+                    style={{ background: "#6B3FBF" }}
+                    onClick={() => savePrivacyField("display_name", displayName.trim() || null)}
+                  >
+                    Save
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">{t('privacySettings.displayNameHint')}</p>
               </div>
 

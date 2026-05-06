@@ -23,7 +23,7 @@ const TAGS = {
   school:   { label: "School",   bg: "#EDE9F8", border: "#6B3FBF", dot: "#6B3FBF" },
   travel:   { label: "Travel",   bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
   birthday: { label: "Birthday", bg: "#FFE4F0", border: "#EE7BB0", dot: "#EE7BB0" },
-  reminder: { label: "Reminder", bg: "#FFFBE6", border: "#FFC861", dot: "#FFC861" },
+  personal: { label: "Personal", bg: "#FFFBE6", border: "#FFC861", dot: "#FFC861" },
 } as const;
 type EventTag = keyof typeof TAGS;
 
@@ -780,7 +780,6 @@ const Calendar = () => {
             <div key={key} className="flex items-center gap-1.5 text-xs">
               <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
               <span className="font-medium" style={{ color: "#1A0B2E" }}>{tag.label}</span>
-              <span style={{ color: "#9B7ADE" }}>· {tag.label === "School" ? "Grape 600" : tag.label === "Travel" ? "Sky 500" : tag.label === "Birthday" ? "Blush 500" : "Sun 500"}</span>
             </div>
           ))}
         </div>
@@ -835,35 +834,6 @@ const Calendar = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Voice assistant nudge — functional mic */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isListeningVoice ? "#F0E4FB" : "#F8F1FF", border: "1px solid #F0E4FB", transition: "background 0.2s" }}>
-        <button
-          onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative transition-colors"
-          style={{ background: isListeningVoice ? "#EE7BB0" : "#6B3FBF" }}
-          aria-label={isListeningVoice ? "Stop listening" : "Start voice input"}
-        >
-          {isListeningVoice ? (
-            <MicOff className="w-4 h-4 text-white" />
-          ) : (
-            <Mic className="w-4 h-4 text-white" />
-          )}
-          {!isListeningVoice && (
-            <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
-          )}
-        </button>
-        <div className="flex-1 min-w-0">
-          {isListeningVoice ? (
-            <p className="text-xs font-medium animate-pulse" style={{ color: "#EE7BB0" }}>Listening…</p>
-          ) : (
-            <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
-              Say <span className="italic" style={{ color: "#6B3FBF" }}>"Dentist Oct 10 at 3pm"</span>
-              {" "}— Voice adds it instantly.
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* Outlook Admin Consent Dialog */}
       <Dialog open={outlookAdminConsentNeeded} onOpenChange={setOutlookAdminConsentNeeded}>
@@ -1029,8 +999,7 @@ const Calendar = () => {
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
-            size="sm"
-            className="gap-1.5 h-9"
+            className="gap-1.5 h-9 px-3 text-sm"
             onClick={() => setShowCalendarSyncDialog(true)}
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -1038,7 +1007,7 @@ const Calendar = () => {
             {(googleSynced || outlookSynced) && <span className="w-1.5 h-1.5 rounded-full bg-grape-500 ml-0.5" />}
           </Button>
           <ParticleButton
-            className="gap-2 gradient-primary text-white border-0 flex-1 sm:flex-none"
+            className="gap-2 gradient-primary text-white border-0 h-9 px-3 text-sm flex-1 sm:flex-none"
             onClick={() => {
               resetEventForm();
               setDialogTab("event");
@@ -1046,9 +1015,30 @@ const Calendar = () => {
             }}
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('calendar.new')}</span>
-            <span className="sm:hidden">New</span>
+            <span>{t('calendar.new')}</span>
           </ParticleButton>
+        </div>
+      </div>
+
+      {/* Voice assistant nudge — under header */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isListeningVoice ? "#F0E4FB" : "#F8F1FF", border: "1px solid #F0E4FB", transition: "background 0.2s" }}>
+        <button
+          onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative transition-colors"
+          style={{ background: isListeningVoice ? "#EE7BB0" : "#6B3FBF" }}
+          aria-label={isListeningVoice ? "Stop listening" : "Start voice input"}
+        >
+          {isListeningVoice ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-white" />}
+          {!isListeningVoice && <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />}
+        </button>
+        <div className="flex-1 min-w-0">
+          {isListeningVoice ? (
+            <p className="text-xs font-medium animate-pulse" style={{ color: "#EE7BB0" }}>Listening…</p>
+          ) : (
+            <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
+              Say <span className="italic" style={{ color: "#6B3FBF" }}>"Dentist Oct 10 at 3pm"</span>{" "}— Voice adds it instantly.
+            </p>
+          )}
         </div>
       </div>
 
@@ -1075,8 +1065,8 @@ const Calendar = () => {
           <div className="space-y-3">
             {getItemsForDate(selectedDate)
               .sort((a, b) => {
-                const aTime = a.type === "event" ? a.startDate.getTime() : (a.dueDate?.getTime() ?? 0);
-                const bTime = b.type === "event" ? b.startDate.getTime() : (b.dueDate?.getTime() ?? 0);
+                const aTime = a.type === "event" ? new Date(a.startDate).getTime() : (a.dueDate ? new Date(a.dueDate).getTime() : 0);
+                const bTime = b.type === "event" ? new Date(b.startDate).getTime() : (b.dueDate ? new Date(b.dueDate).getTime() : 0);
                 return aTime - bTime;
               })
               .map((item) => {
