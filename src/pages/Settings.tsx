@@ -273,9 +273,10 @@ const Settings = () => {
         await supabase.from("family_members").update({ display_name: value || null }).eq("user_id", user.id);
       }
       toast({ title: "Saved", description: "Your settings have been updated." });
-    } catch (err) {
+    } catch (err: any) {
       logError("Error saving privacy setting:", err);
-      toast({ title: "Save failed", description: "Could not save your changes. Please try again.", variant: "destructive" });
+      const msg = err?.message || err?.details || JSON.stringify(err) || "Unknown error";
+      toast({ title: "Save failed", description: msg, variant: "destructive" });
     }
   };
 
