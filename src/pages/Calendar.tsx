@@ -19,6 +19,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import * as chrono from "chrono-node";
 
+const TAGS = {
+  school:   { label: "School",   bg: "#EDE9F8", border: "#6B3FBF", dot: "#6B3FBF" },
+  travel:   { label: "Travel",   bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
+  birthday: { label: "Birthday", bg: "#FFE4F0", border: "#EE7BB0", dot: "#EE7BB0" },
+  reminder: { label: "Reminder", bg: "#FFFBE6", border: "#FFC861", dot: "#FFC861" },
+} as const;
+type EventTag = keyof typeof TAGS;
+
 interface Event {
   id: string;
   title: string;
@@ -30,6 +38,7 @@ interface Event {
   travelTime?: string;
   type: "event";
   color: string;
+  tag?: EventTag;
 }
 
 interface Reminder {
@@ -73,14 +82,14 @@ const getInitialItems = (): CalendarItem[] => {
   return null;
 }).filter(Boolean);
   }
-  
+
   return [
-    { 
-      id: "1", 
-      title: "Swimming Lesson", 
+    {
+      id: "1",
+      title: "Swimming Lesson",
       startDate: new Date(2025, 9, 2, 14, 0),
-      endDate: new Date(2025, 9, 2, 15, 0), 
-      allDay: false, 
+      endDate: new Date(2025, 9, 2, 15, 0),
+      allDay: false,
       location: "Aquatic Center",
       type: "event",
       color: "#6B3FBF"
@@ -160,7 +169,7 @@ const Calendar = () => {
     }
     return [];
   });
-  
+
   useEffect(() => {
     cloudSet('eazy-family-calendar-items', JSON.stringify(items));
   }, [items]);
@@ -169,7 +178,7 @@ const Calendar = () => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [customRepeatNumber, setCustomRepeatNumber] = useState("1");
   const [customRepeatUnit, setCustomRepeatUnit] = useState<"days" | "weeks" | "months">("weeks");
-  
+
   const [eventTitle, setEventTitle] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventAllDay, setEventAllDay] = useState(false);
@@ -179,7 +188,8 @@ const Calendar = () => {
   const [eventEndTime, setEventEndTime] = useState("10:00");
   const [eventRepeat, setEventRepeat] = useState("never");
   const [eventTravelTime, setEventTravelTime] = useState("none");
-  
+  const [eventTag, setEventTag] = useState<EventTag | null>(null);
+
   const [reminderTitle, setReminderTitle] = useState("");
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
@@ -454,9 +464,9 @@ const Calendar = () => {
   };
 
   const toggleReminder = (id: string) => {
-    setItems(items.map(item => 
-      item.id === id && item.type === "reminder" 
-        ? { ...item, completed: !item.completed } 
+    setItems(items.map(item =>
+      item.id === id && item.type === "reminder"
+        ? { ...item, completed: !item.completed }
         : item
     ));
   };
@@ -471,6 +481,7 @@ const Calendar = () => {
     setEventEndTime("10:00");
     setEventRepeat("never");
     setEventTravelTime("none");
+    setEventTag(null);
     setEditingItemId(null);
     setCustomRepeatNumber("1");
     setCustomRepeatUnit("weeks");
@@ -555,6 +566,7 @@ const Calendar = () => {
       setEventEndTime(format(item.endDate, "HH:mm"));
       setEventRepeat(item.repeat || "never");
       setEventTravelTime(item.travelTime || "none");
+      setEventTag(item.tag || null);
     } else {
       setDialogTab("reminder");
       setReminderTitle(item.title);
@@ -575,26 +587,26 @@ const Calendar = () => {
 
   const handleAddEvent = () => {
     if (!eventTitle.trim()) return;
-    
+
     const [startHours, startMinutes] = eventStartTime.split(':').map(Number);
     const [endHours, endMinutes] = eventEndTime.split(':').map(Number);
-    
+
     const startDateTime = new Date(eventStartDate);
     if (!eventAllDay) {
       startDateTime.setHours(startHours, startMinutes);
     }
-    
+
     const endDateTime = new Date(eventEndDate);
     if (!eventAllDay) {
       endDateTime.setHours(endHours, endMinutes);
     }
-    
-    const repeatValue = eventRepeat === "custom" 
+
+    const repeatValue = eventRepeat === "custom"
       ? `${t('calendar.every')} ${customRepeatNumber} ${t(`calendar.${customRepeatUnit}`)}`
       : eventRepeat !== "never" ? eventRepeat : undefined;
-    
+
     if (editingItemId) {
-      setItems(items.map(item => 
+      setItems(items.map(item =>
         item.id === editingItemId && item.type === "event"
           ? {
               ...item,
@@ -605,6 +617,8 @@ const Calendar = () => {
               location: eventLocation || undefined,
               repeat: repeatValue,
               travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
+              tag: eventTag || undefined,
+              color: eventTag ? TAGS[eventTag].border : item.color,
             }
           : item
       ));
@@ -623,7 +637,8 @@ const Calendar = () => {
         repeat: repeatValue,
         travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
         type: "event",
-        color: "#6B3FBF"
+        color: eventTag ? TAGS[eventTag].border : "#6B3FBF",
+        tag: eventTag || undefined,
       };
 
       setItems([...items, newEvent]);
@@ -632,16 +647,16 @@ const Calendar = () => {
         description: `${eventTitle} ${t('calendar.hasBeenAdded')}`,
       });
     }
-    
+
     resetEventForm();
     setIsDialogOpen(false);
   };
 
   const handleAddReminder = () => {
     if (!reminderTitle.trim()) return;
-    
+
     if (editingItemId) {
-      setItems(items.map(item => 
+      setItems(items.map(item =>
         item.id === editingItemId && item.type === "reminder"
           ? {
               ...item,
@@ -666,14 +681,14 @@ const Calendar = () => {
         priority: reminderPriority,
         type: "reminder"
       };
-      
+
       setItems([...items, newReminder]);
       toast({
         title: t('calendar.reminderAdded'),
         description: `${reminderTitle} ${t('calendar.hasBeenAdded')}`,
       });
     }
-    
+
     resetReminderForm();
     setIsDialogOpen(false);
   };
@@ -684,104 +699,92 @@ const Calendar = () => {
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
-    
     const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
-    const weekDaysLong = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-2 sm:pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <CardTitle className="text-lg sm:text-xl">{format(selectedDate, "MMMM yyyy")}</CardTitle>
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs sm:text-sm h-8 sm:h-9"
-                onClick={() => setSelectedDate(new Date())}
-              >
-                {t('calendar.today')}
-              </Button>
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => {
-                    const newDate = new Date(selectedDate);
-                    newDate.setMonth(newDate.getMonth() - 1);
-                    setSelectedDate(newDate);
-                  }}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => {
-                    const newDate = new Date(selectedDate);
-                    newDate.setMonth(newDate.getMonth() + 1);
-                    setSelectedDate(newDate);
-                  }}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+        {/* Header: "May '26" style */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-serif text-2xl font-light" style={{ color: "#1A0B2E" }}>
+            {format(selectedDate, "MMMM")}{" "}
+            <em style={{ color: "#6B3FBF" }}>'{format(selectedDate, "yy")}</em>
+          </h2>
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-purple-50"
+              style={{ border: "1px solid #E8DCF8" }}
+            >
+              <ChevronLeft className="w-4 h-4" style={{ color: "#6B3FBF" }} />
+            </button>
+            <button
+              onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-purple-50"
+              style={{ border: "1px solid #E8DCF8" }}
+            >
+              <ChevronRight className="w-4 h-4" style={{ color: "#6B3FBF" }} />
+            </button>
+          </div>
+        </div>
+
+        {/* Day headers */}
+        <div className="grid grid-cols-7 mb-1">
+          {weekDays.map((d, i) => (
+            <div key={i} className="text-center text-xs font-medium py-1.5" style={{ color: "#9B7ADE" }}>
+              {d}
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pb-2 sm:pb-3 overflow-x-auto">
-          <div className="grid grid-cols-7 gap-1 sm:gap-2 min-w-full">
-            {weekDays.map((day, idx) => (
-              <div key={idx} className="text-center text-xs sm:text-sm font-semibold text-foreground p-1 sm:p-2">
-                <span className="sm:hidden">{day}</span>
-                <span className="hidden sm:inline">{weekDaysLong[idx]}</span>
-              </div>
-            ))}
-            {days.map((day) => {
-              const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
-              const dayItems = getItemsForDate(day);
-              const hasItems = dayItems.length > 0;
-              const isSelected = isSameDay(day, selectedDate);
-              const isTodayDate = isToday(day);
-              
-              return (
-                <button
-                  key={day.toISOString()}
-                  className={`
-                    aspect-square flex flex-col items-center justify-center
-                    cursor-pointer transition-all relative
-                    ${!isCurrentMonth ? "text-muted-foreground/40" : "text-foreground"}
-                    ${!isTodayDate && !isSelected ? "hover:bg-muted rounded-full" : ""}
-                  `}
-                  onClick={() => setSelectedDate(day)}
-                >
-                  <div className={`
-                    w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-xs sm:text-sm font-medium transition-all
-                    ${isTodayDate ? "font-bold text-white" : ""}
-                    ${isSelected && !isTodayDate ? "bg-accent" : ""}
-                  `}
-                  style={isTodayDate ? { background: "#6B3FBF" } : {}}>
+          ))}
+        </div>
+
+        {/* Day cells */}
+        <div className="grid grid-cols-7 gap-px">
+          {days.map((day) => {
+            const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+            const dayItems = getItemsForDate(day);
+            const isSelected = isSameDay(day, selectedDate);
+            const isTodayDate = isToday(day);
+
+            return (
+              <button
+                key={day.toISOString()}
+                onClick={() => setSelectedDate(day)}
+                className="relative flex flex-col pt-1.5 px-1.5 pb-4 min-h-[52px] rounded-xl transition-colors text-left"
+                style={{
+                  background: (isTodayDate || isSelected) ? "#EDE9F8" : "transparent",
+                  opacity: isCurrentMonth ? 1 : 0.3,
+                }}
+              >
+                <span className="text-xs font-medium leading-none" style={{ color: (isTodayDate || isSelected) ? "#3D1F8A" : "#1A0B2E" }}>
                   {format(day, "d")}
+                </span>
+                {dayItems.length > 0 && (
+                  <div className="absolute bottom-1.5 left-1.5 right-1.5 flex flex-col gap-px">
+                    {dayItems.slice(0, 3).map((item, idx) => {
+                      const color = item.type === "event"
+                        ? (item.tag && TAGS[item.tag] ? TAGS[item.tag].border : item.color)
+                        : "#FFC861";
+                      return (
+                        <div key={idx} className="h-0.5 rounded-full" style={{ backgroundColor: color, width: `${Math.min(100, 55 + idx * 15)}%` }} />
+                      );
+                    })}
                   </div>
-                  {hasItems && (
-                    <div className="flex gap-0.5 mt-0.5 absolute bottom-1">
-                      {dayItems.slice(0, 3).map((item, idx) => (
-                        <div
-                          key={idx}
-                          className="w-1 h-1 rounded-full"
-                          style={{ backgroundColor: item.type === "event" ? item.color : "hsl(var(--primary))" }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 pt-3" style={{ borderTop: "1px solid #F0E4FB" }}>
+          {(Object.entries(TAGS) as [EventTag, typeof TAGS[EventTag]][]).map(([key, tag]) => (
+            <div key={key} className="flex items-center gap-1.5 text-xs">
+              <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
+              <span className="font-medium" style={{ color: "#1A0B2E" }}>{tag.label}</span>
+              <span style={{ color: "#9B7ADE" }}>· {tag.label === "School" ? "Grape 600" : tag.label === "Travel" ? "Sky 500" : tag.label === "Birthday" ? "Blush 500" : "Sun 500"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   };
 
@@ -805,8 +808,8 @@ const Calendar = () => {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 {isPremium ? (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="gradient-primary text-white border-0 whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9"
                     onClick={() => setShowCalendarSyncDialog(true)}
                   >
@@ -819,9 +822,9 @@ const Calendar = () => {
                     </Button>
                   </UpgradeDialog>
                 )}
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
                   onClick={handleDismissSyncBanner}
                 >
@@ -1052,108 +1055,104 @@ const Calendar = () => {
       {/* Month Calendar */}
       {renderMonthCalendar()}
 
-      {/* Events & Reminders List */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-2 sm:pb-3">
-          <CardTitle className="text-base sm:text-lg">{format(selectedDate, "EEEE, MMMM d, yyyy")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4 sm:p-6">
-          {getItemsForDate(selectedDate).length > 0 ? (
-            getItemsForDate(selectedDate).map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
-                onClick={() => handleEditItem(item)}
-              >
-                {item.type === "event" ? (
-                  <>
-                    <div 
-                      className="w-1 h-full rounded-full mt-1"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate">{item.title}</h4>
-                          {item.location && (
-                            <a
-                              href={`https://maps.google.com/?q=${encodeURIComponent(item.location)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm flex items-center gap-1 mt-0.5 hover:underline"
-                              style={{ color: "#6E8FE5" }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MapPin className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{item.location}</span>
-                            </a>
-                          )}
-                          {item.repeat && (
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {t('calendar.repeats')}: {item.repeat}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground whitespace-nowrap">
-                          {item.allDay ? (
-                            <span>{t('calendar.allDay')}</span>
-                          ) : (
-                            <div className="text-right">
-                              <div>{format(item.startDate, "HH:mm")}</div>
-                              <div>{format(item.endDate, "HH:mm")}</div>
-                            </div>
-                          )}
-                        </div>
+      {/* Day Events — stylized */}
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
+        {/* Header */}
+        <p className="text-xs font-semibold tracking-wide uppercase mb-1" style={{ color: "#9B7ADE" }}>
+          {isToday(selectedDate) ? "TODAY · " : ""}{format(selectedDate, "EEEE, MMMM d").toUpperCase()}
+        </p>
+        <h2 className="font-serif text-2xl font-light mb-4" style={{ color: "#1A0B2E" }}>
+          {(() => {
+            const count = getItemsForDate(selectedDate).length;
+            if (count === 0) return "A clear, open day.";
+            if (count <= 2) return "A gentle day ahead.";
+            if (count <= 4) return "A busy day ahead.";
+            return "A full day ahead.";
+          })()}
+        </h2>
+
+        {getItemsForDate(selectedDate).length > 0 ? (
+          <div className="space-y-3">
+            {getItemsForDate(selectedDate)
+              .sort((a, b) => {
+                const aTime = a.type === "event" ? a.startDate.getTime() : (a.dueDate?.getTime() ?? 0);
+                const bTime = b.type === "event" ? b.startDate.getTime() : (b.dueDate?.getTime() ?? 0);
+                return aTime - bTime;
+              })
+              .map((item) => {
+                if (item.type === "event") {
+                  const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#EDE9F8", border: "#6B3FBF", dot: "#6B3FBF", label: "Event" };
+                  const timeStr = item.allDay ? "All day" : format(item.startDate, "HH:mm");
+                  return (
+                    <div key={item.id} className="flex gap-3 group cursor-pointer" onClick={() => handleEditItem(item)}>
+                      <div className="text-right w-10 flex-shrink-0 pt-3">
+                        <span className="text-xs font-medium" style={{ color: "#9B7ADE" }}>{timeStr}</span>
+                      </div>
+                      <div
+                        className="flex-1 rounded-xl p-3 transition-opacity hover:opacity-90 relative overflow-hidden"
+                        style={{ background: tagStyle.bg, borderLeft: `3px solid ${tagStyle.border}` }}
+                      >
+                        <p className="font-semibold text-sm" style={{ color: "#1A0B2E" }}>{item.title}</p>
+                        <p className="text-xs mt-0.5" style={{ color: tagStyle.border }}>
+                          {item.tag ? TAGS[item.tag].label : "Event"}
+                          {item.location ? ` · ${item.location}` : ""}
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1.5 py-0.5 rounded"
+                          style={{ color: "#EE7BB0" }}
+                        >×</button>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteItem(item.id);
-                      }}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {t('common.delete')}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Checkbox
-                      checked={item.completed}
-                      onCheckedChange={() => toggleReminder(item.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`font-medium ${item.completed ? "line-through text-muted-foreground" : ""}`}>
-                        {item.title}
-                      </h4>
-                      {item.dueTime && (
-                        <p className="text-sm text-muted-foreground">{item.dueTime}</p>
-                      )}
+                  );
+                } else {
+                  return (
+                    <div key={item.id} className="flex gap-3 group cursor-pointer" onClick={() => handleEditItem(item)}>
+                      <div className="text-right w-10 flex-shrink-0 pt-3">
+                        <span className="text-xs font-medium" style={{ color: "#9B7ADE" }}>
+                          {item.dueTime || ""}
+                        </span>
+                      </div>
+                      <div
+                        className="flex-1 rounded-xl p-3 transition-opacity hover:opacity-90 flex items-center gap-3"
+                        style={{ background: "#FFFBE6", borderLeft: "3px solid #FFC861" }}
+                      >
+                        <Checkbox
+                          checked={item.completed}
+                          onCheckedChange={() => toggleReminder(item.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-semibold text-sm ${item.completed ? "line-through opacity-50" : ""}`} style={{ color: "#1A0B2E" }}>
+                            {item.title}
+                          </p>
+                          <p className="text-xs" style={{ color: "#FFC861" }}>Reminder</p>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                          style={{ color: "#EE7BB0" }}
+                        >×</button>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteItem(item.id);
-                      }}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {t('common.delete')}
-                    </Button>
-                  </>
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground py-8">{t('calendar.noEventsForDay')}</p>
-          )}
-        </CardContent>
-      </Card>
+                  );
+                }
+              })}
+          </div>
+        ) : (
+          <p className="text-sm py-4" style={{ color: "#9B7ADE" }}>{t('calendar.noEventsForDay')}</p>
+        )}
+
+        {/* Quick add button */}
+        <button
+          onClick={() => { resetEventForm(); setDialogTab("event"); setIsDialogOpen(true); }}
+          className="mt-4 w-full py-2 rounded-xl text-sm font-medium transition-colors hover:bg-purple-50 flex items-center justify-center gap-2"
+          style={{ border: "1px dashed #E8DCF8", color: "#9B7ADE" }}
+        >
+          <Plus className="w-4 h-4" /> Add event
+        </button>
+      </div>
 
       {/* Add Event/Reminder Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -1161,7 +1160,7 @@ const Calendar = () => {
           <DialogHeader>
             <DialogTitle>{t('calendar.new')}</DialogTitle>
           </DialogHeader>
-          
+
           <Tabs value={dialogTab} onValueChange={(v) => setDialogTab(v as "event" | "reminder")} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="event">{t('calendar.event')}</TabsTrigger>
@@ -1176,6 +1175,36 @@ const Calendar = () => {
                   onChange={(e) => setEventTitle(e.target.value)}
                   className="w-full text-xs sm:text-sm min-h-[44px]"
                 />
+              </div>
+
+              {/* Tag picker */}
+              <div className="space-y-2">
+                <Label>Tag</Label>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setEventTag(null)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${eventTag === null ? "border-gray-400 bg-gray-100" : "border-transparent bg-muted hover:border-gray-300"}`}
+                  >
+                    None
+                  </button>
+                  {(Object.entries(TAGS) as [EventTag, typeof TAGS[EventTag]][]).map(([key, tag]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setEventTag(key)}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5"
+                      style={{
+                        background: eventTag === key ? tag.bg : "transparent",
+                        borderColor: eventTag === key ? tag.border : "#E8DCF8",
+                        color: eventTag === key ? tag.border : "#9B7ADE",
+                      }}
+                    >
+                      <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
