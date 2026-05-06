@@ -252,6 +252,28 @@ const Settings = () => {
     });
   };
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeletingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.functions.invoke('delete-account', {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (error) throw error;
+      await signOut();
+    } catch (err: any) {
+      logError('Error deleting account:', err);
+      toast({ title: "Error", description: err?.message || "Could not delete account. Please contact support@eazy.family", variant: "destructive" });
+    } finally {
+      setDeletingAccount(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     i18n.changeLanguage(newLanguage);
@@ -377,8 +399,8 @@ const Settings = () => {
                 <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
                   {uploadingProfile ? t('common.loading') : homeConfig.iconImage ? 'Change photo' : 'Upload photo'}
                 </span>
-                <input id="profile-icon" type="file" accept="image/*" className="hidden"
-                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'profile'); }}
+                <input id="profile-icon" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden"
+                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'profile'); e.target.value = ''; }}
                   disabled={uploadingProfile} />
               </label>
             </div>
@@ -691,6 +713,37 @@ const Settings = () => {
           {t('settings.actions.signOut')}
         </Button>
       </div>
+
+      {/* Delete Account */}
+      <Card className="shadow-custom-md border-destructive/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-destructive">Delete Account</CardTitle>
+          <CardDescription>Permanently delete your account and all associated data. This cannot be undone.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!showDeleteConfirm ? (
+            <Button
+              variant="outline"
+              className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete My Account
+            </Button>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-destructive">Are you sure? This will permanently delete all your data, family members, and messages.</p>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>
+                  Cancel
+                </Button>
+                <Button variant="destructive" className="flex-1" onClick={handleDeleteAccount} disabled={deletingAccount}>
+                  {deletingAccount ? "Deleting…" : "Yes, Delete Everything"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 11. Contact Us */}
       <Card className="shadow-custom-md">

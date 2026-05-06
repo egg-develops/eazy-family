@@ -116,7 +116,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       });
 
       if (error) throw error;
-      if (data?.url) window.open(data.url, '_blank');
+      if (data?.url) window.location.href = data.url;
     } catch (error) {
       logError("Error creating checkout:", error);
       toast({
@@ -241,18 +241,6 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   </p>
                 </div>
               )}
-            </div>
-
-            {/* Promo code */}
-            <div className="flex gap-2 items-center">
-              <Input
-                placeholder="Have a promo code?"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-              />
-              <Button variant="outline" onClick={applyPromo} disabled={isLoading || !promoCode.trim()}>
-                Apply
-              </Button>
             </div>
 
             <Button
