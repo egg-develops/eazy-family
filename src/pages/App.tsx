@@ -122,11 +122,10 @@ const AppLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => navigate('/app')}
-              className="flex items-center gap-3 hover:bg-transparent p-0"
+              className="flex-shrink-0"
+              aria-label="Home"
             >
               {(() => {
                 let iconUrl: string | undefined;
@@ -134,19 +133,18 @@ const AppLayout = () => {
                   const savedConfig = localStorage.getItem('eazy-family-home-config');
                   if (savedConfig) iconUrl = JSON.parse(savedConfig)?.iconImage;
                 } catch {}
-                
                 return iconUrl ? (
-                  <img src={iconUrl} alt="User icon" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  <img src={iconUrl} alt="Home" className="w-8 h-8 rounded-full object-cover" />
                 ) : (
-                  <img src="/logo.png" alt="Eazy.Family" className="w-10 h-10 rounded-xl object-contain flex-shrink-0" />
+                  <img src="/logo.png" alt="Home" className="w-8 h-8 rounded-xl object-contain" />
                 );
               })()}
-              <div className="flex-1 min-w-0">
-                <h1 className="font-bold text-lg text-foreground whitespace-nowrap">
-                  {t('app.name')}
-                </h1>
-              </div>
-            </Button>
+            </button>
+            <h1 className="font-bold text-lg text-foreground truncate">
+              {isHomePath
+                ? t('app.name')
+                : navigationItems.find(item => item.path === currentPath)?.label ?? t('app.name')}
+            </h1>
           </div>
         </div>
       </header>
