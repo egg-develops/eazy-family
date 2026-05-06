@@ -79,12 +79,12 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-28 sm:pb-4 pt-8"
-      style={{ background: "rgba(26, 11, 46, 0.7)", backdropFilter: "blur(6px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ background: "rgba(26, 11, 46, 0.7)", backdropFilter: "blur(6px)", paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 5rem)" }}
     >
       <div
-        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: "#FBF8FF" }}
+        className="relative w-full max-w-md rounded-3xl shadow-2xl overflow-y-auto"
+        style={{ background: "#FBF8FF", maxHeight: "calc(100dvh - 10rem)", overscrollBehavior: "contain" }}
       >
         {/* Dismiss */}
         <button
