@@ -662,7 +662,27 @@
       "q6": "How do I delete my account?", "a6": "You can delete your account at any time from the Settings page inside the app. All your data will be removed.",
       "ctaTitle": "Ready to get started?",
       "ctaSub": "Join families already using Eazy.Family.",
-      "ctaButton": "Get Started Free"
+      "ctaButton": "Get Started Free",
+      "readMore": "Read more",
+      "readLess": "Read less",
+      "readTime": "read",
+      "descBlog": "Articles & guides",
+      "descParenting": "Practical advice",
+      "descShop": "Curated picks",
+      "commission": "Eazy.Family may earn a small commission from qualifying Amazon purchases at no extra cost to you. We only recommend things we'd genuinely use.",
+      "shopOnAmazon": "Shop on Amazon",
+      "badge_top_pick": "Top Pick",
+      "badge_editor_s_choice": "Editor's Choice",
+      "badge_family_favourite": "Family Favourite",
+      "badge_best_value": "Best Value",
+      "faq1q": "Is Eazy.Family free to use?",
+      "faq1a": "Eazy.Family offers a free tier with core features — shared calendar, lists, and family messaging. Premium plans unlock AI assistance, advanced privacy controls, and unlimited storage. No ads on any plan.",
+      "faq2q": "Does Eazy.Family work in multiple languages?",
+      "faq2a": "Yes. Eazy.Family supports English, German, French, and Italian — making it especially well-suited to multilingual families across Switzerland, France, Germany, Italy, and the UK.",
+      "faq3q": "How is Eazy.Family different from a WhatsApp group?",
+      "faq3a": "A WhatsApp group is a messaging thread. Eazy.Family is a full family hub: shared calendar, real-time lists, private messaging, AI assistance, and event planning — all in one place, with no ads and strong privacy controls.",
+      "faq4q": "Is my family's data private?",
+      "faq4a": "Absolutely. Eazy.Family is designed to be private by default. Your family's calendar, messages, and lists are never used for advertising or shared with third parties. Privacy is a core design principle, not a premium add-on."
     }
   }
 }

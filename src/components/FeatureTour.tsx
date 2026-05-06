@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { X, Mic, Calendar, CheckSquare, Settings, Sparkles, ArrowRight } from "lucide-react";
+import { X, Calendar, CheckSquare, Settings, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Slide {
   icon: React.ReactNode;
   accent: string;
+  iconBg?: string;
   title: string;
   body: string;
   hint?: string;
@@ -12,18 +13,19 @@ interface Slide {
 
 const SLIDES: Slide[] = [
   {
-    icon: <Sparkles className="w-8 h-8 text-white" />,
+    icon: <img src="/icons/icon-primary-512.webp" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
     accent: "#6B3FBF",
+    iconBg: "#FBF8FF",
     title: "Welcome to Eazy.Family",
     body: "Your family's private space — organized, connected, and always in sync.",
     hint: "A quick tour of the key features. Takes about 60 seconds.",
   },
   {
-    icon: <Mic className="w-8 h-8 text-white" />,
-    accent: "#EE7BB0",
-    title: "Voice Shopping & Tasks",
-    body: "Tap the mic and say things like \"Add milk and eggs to the shopping list\" or \"Remind me to call the dentist on Friday\" — Eazy handles the rest.",
-    hint: "Works in English, German, French, and Italian.",
+    icon: <Sparkles className="w-8 h-8" style={{ color: "#FFC861" }} />,
+    accent: "#6B3FBF",
+    title: "Eazy Assistant",
+    body: "Your family's personal AI assistant is always on your homepage — ask it anything.",
+    hint: "Available in English, German, French, and Italian.",
   },
   {
     icon: <Calendar className="w-8 h-8 text-white" />,
@@ -37,13 +39,13 @@ const SLIDES: Slide[] = [
     accent: "#FFC861",
     title: "To-Do's & Lists",
     body: "Shared to-do lists, shopping lists, and reminders — visible to everyone in your family the moment you add them.",
-    hint: "Assign tasks to family members and track what's done.",
+    hint: "Tap the mic on To-Do's page to add shopping items and tasks.",
   },
   {
     icon: <Settings className="w-8 h-8 text-white" />,
     accent: "#8A5FE0",
-    title: "Make It Yours",
-    body: "Go to Settings to upload family photos for your home screen, set your language, and sync your calendar. Takes 2 minutes.",
+    title: "Eazy.Family is Yours",
+    body: "Go to Settings to upload photos for your profile and banner, change your language, switch to dark-mode, and sync your calendars.",
     hint: "Up to 4 rotating hero images — your family, your style.",
   },
 ];
@@ -77,11 +79,11 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-28 sm:pb-4 pt-8"
       style={{ background: "rgba(26, 11, 46, 0.7)", backdropFilter: "blur(6px)" }}
     >
       <div
-        className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
         style={{ background: "#FBF8FF" }}
       >
         {/* Dismiss */}
@@ -101,7 +103,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
         >
           <div
             className="w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg transition-colors duration-500"
-            style={{ background: slide.accent }}
+            style={{ background: slide.iconBg ?? slide.accent }}
           >
             {slide.icon}
           </div>

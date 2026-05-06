@@ -662,7 +662,27 @@
       "q6": "Wie lösche ich mein Konto?", "a6": "Du kannst dein Konto jederzeit in den Einstellungen der App löschen. Alle Daten werden entfernt.",
       "ctaTitle": "Bereit loszulegen?",
       "ctaSub": "Schließe dich Familien an, die Eazy.Family bereits nutzen.",
-      "ctaButton": "Kostenlos starten"
+      "ctaButton": "Kostenlos starten",
+      "readMore": "Mehr lesen",
+      "readLess": "Weniger lesen",
+      "readTime": "Lesezeit",
+      "descBlog": "Artikel & Ratgeber",
+      "descParenting": "Praktische Tipps",
+      "descShop": "Kuratierte Auswahl",
+      "commission": "Eazy.Family kann eine kleine Provision für qualifizierte Amazon-Käufe erhalten, ohne dass dir zusätzliche Kosten entstehen. Wir empfehlen nur Dinge, die wir selbst nutzen würden.",
+      "shopOnAmazon": "Bei Amazon kaufen",
+      "badge_top_pick": "Top-Auswahl",
+      "badge_editor_s_choice": "Redaktionstipp",
+      "badge_family_favourite": "Familienliebling",
+      "badge_best_value": "Bestes Preis-Leistungs-Verhältnis",
+      "faq1q": "Ist Eazy.Family kostenlos nutzbar?",
+      "faq1a": "Eazy.Family bietet ein kostenloses Basisangebot mit den wichtigsten Funktionen – gemeinsamer Kalender, Listen und Familien-Messaging. Premium-Pläne schalten KI-Hilfe, erweiterte Datenschutzkontrollen und unbegrenzten Speicher frei. Auf keinem Plan gibt es Werbung.",
+      "faq2q": "Funktioniert Eazy.Family in mehreren Sprachen?",
+      "faq2a": "Ja. Eazy.Family unterstützt Englisch, Deutsch, Französisch und Italienisch – ideal für mehrsprachige Familien in der Schweiz, Deutschland, Frankreich, Italien und Großbritannien.",
+      "faq3q": "Wie unterscheidet sich Eazy.Family von einer WhatsApp-Gruppe?",
+      "faq3a": "Eine WhatsApp-Gruppe ist ein Messaging-Thread. Eazy.Family ist ein vollständiger Familien-Hub: gemeinsamer Kalender, Echtzeit-Listen, private Nachrichten, KI-Unterstützung und Eventplanung – alles an einem Ort, ohne Werbung und mit starken Datenschutzkontrollen.",
+      "faq4q": "Sind die Daten meiner Familie privat?",
+      "faq4a": "Absolut. Eazy.Family ist von Grund auf auf Datenschutz ausgelegt. Kalender, Nachrichten und Listen deiner Familie werden nie für Werbung genutzt oder an Dritte weitergegeben. Datenschutz ist ein Kernprinzip, kein Premium-Add-on."
     }
   }
 }

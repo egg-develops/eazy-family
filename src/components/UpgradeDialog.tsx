@@ -131,6 +131,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   const freeFeatures = [
     "Up to 4 family members",
+    "Private family messaging",
     "Calendar & reminders",
     "Shopping & to-do lists with voice input",
     "Eazy AI Assistant — 10 messages/month",
@@ -159,9 +160,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <Crown className="h-6 w-6 text-primary" />
-            Upgrade to Family Plan
+            Upgrade to Family
           </DialogTitle>
-          <DialogDescription>Unlock all premium features for your family</DialogDescription>
+          <DialogDescription className="text-left">Unlock all premium features</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">

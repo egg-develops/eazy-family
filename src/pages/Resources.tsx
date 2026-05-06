@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { PublicNav } from "@/components/PublicNav";
 import {
@@ -170,10 +171,21 @@ function buildSchema() {
 // ─── Main component ──────────────────────────────────────────
 export default function Resources() {
   const navigate = useNavigate();
-  const [lang, setLang] = useState<Lang>("en");
+  const { t, i18n } = useTranslation();
+  const [lang, setLang] = useState<Lang>(() => {
+    const l = i18n.language || "en";
+    return (l.startsWith("de") ? "de" : l.startsWith("fr") ? "fr" : l.startsWith("it") ? "it" : "en") as Lang;
+  });
   const [openBlog, setOpenBlog] = useState<string | null>(null);
   const [openParenting, setOpenParenting] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Sync with global language switcher (top menu)
+  useEffect(() => {
+    const l = i18n.language || "en";
+    const mapped = (l.startsWith("de") ? "de" : l.startsWith("fr") ? "fr" : l.startsWith("it") ? "it" : "en") as Lang;
+    setLang(mapped);
+  }, [i18n.language]);
 
   // Reset expanded items when language changes
   useEffect(() => {
@@ -252,7 +264,7 @@ export default function Resources() {
           {(["en", "de", "fr", "it"] as Lang[]).map((l) => (
             <button
               key={l}
-              onClick={() => setLang(l)}
+              onClick={() => { setLang(l); i18n.changeLanguage(l); localStorage.setItem("eazy-family-language", l); }}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
               style={
                 lang === l
@@ -272,9 +284,9 @@ export default function Resources() {
             const icons = { blog: Rss, parenting: Heart, shop: ShoppingBag };
             const Icon = icons[section];
             const descs = {
-              blog: "Articles & guides",
-              parenting: "Practical advice",
-              shop: "Curated picks",
+              blog: t("website.resources.descBlog"),
+              parenting: t("website.resources.descParenting"),
+              shop: t("website.resources.descShop"),
             };
             return (
               <a
@@ -357,11 +369,11 @@ export default function Resources() {
                   >
                     {isOpen ? (
                       <>
-                        <ChevronUp className="w-3 h-3" /> Read less
+                        <ChevronUp className="w-3 h-3" /> {t("website.resources.readLess")}
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="w-3 h-3" /> Read more
+                        <ChevronDown className="w-3 h-3" /> {t("website.resources.readMore")}
                       </>
                     )}
                   </button>
@@ -383,7 +395,7 @@ export default function Resources() {
                   >
                     <span>{post.date}</span>
                     <span>·</span>
-                    <span>{post.readTime} read</span>
+                    <span>{post.readTime} {t("website.resources.readTime")}</span>
                   </div>
                 </article>
               );
@@ -442,11 +454,11 @@ export default function Resources() {
                   >
                     {isOpen ? (
                       <>
-                        <ChevronUp className="w-3 h-3" /> Read less
+                        <ChevronUp className="w-3 h-3" /> {t("website.resources.readLess")}
                       </>
                     ) : (
                       <>
-                        <ChevronDown className="w-3 h-3" /> Read more
+                        <ChevronDown className="w-3 h-3" /> {t("website.resources.readMore")}
                       </>
                     )}
                   </button>
@@ -478,9 +490,7 @@ export default function Resources() {
               </h2>
             </div>
             <p className="text-xs max-w-sm leading-relaxed" style={{ color: "#C7AEEF" }}>
-              Eazy.Family may earn a small commission from qualifying Amazon
-              purchases at no extra cost to you. We only recommend things we'd
-              genuinely use.
+              {t("website.resources.commission")}
             </p>
           </div>
 
@@ -508,7 +518,7 @@ export default function Resources() {
                       className="self-start text-xs px-2 py-0.5 rounded-full font-medium"
                       style={badgeStyle(product.badge)}
                     >
-                      {product.badge}
+                      {t(`website.resources.badge_${product.badge.replace(/[' ]/g, "_").replace(/'/g, "").toLowerCase()}`, product.badge)}
                     </span>
 
                     {/* Name */}
@@ -533,7 +543,7 @@ export default function Resources() {
                       style={{ background: "#6B3FBF", color: "#FBF8FF" }}
                     >
                       <ShoppingCart className="w-3 h-3" />
-                      Shop on Amazon
+                      {t("website.resources.shopOnAmazon")}
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -548,24 +558,24 @@ export default function Resources() {
         ══════════════════════════════════════════════ */}
         <section className="space-y-4 scroll-mt-24">
           <h2 className="font-serif text-2xl" style={HEADING}>
-            Frequently asked questions
+            {t("website.resources.faqTitle")}
           </h2>
 
           <div className="space-y-2">
-            {FAQS.map((faq, i) => {
-              const isOpen = openFaq === i;
+            {([1, 2, 3, 4] as const).map((n) => {
+              const isOpen = openFaq === n;
               return (
                 <div
-                  key={i}
+                  key={n}
                   className="rounded-2xl overflow-hidden transition-shadow hover:shadow-sm"
                   style={CARD}
                 >
                   <button
                     className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
+                    onClick={() => setOpenFaq(isOpen ? null : n)}
                   >
                     <span className="font-medium text-sm" style={HEADING}>
-                      {faq.q}
+                      {t(`website.resources.faq${n}q`)}
                     </span>
                     {isOpen ? (
                       <ChevronUp className="w-4 h-4 flex-shrink-0" style={{ color: "#6B3FBF" }} />
@@ -578,7 +588,7 @@ export default function Resources() {
                       className="px-5 pb-4 text-sm leading-relaxed border-t"
                       style={{ borderColor: "#F0E4FB", color: "#522793" }}
                     >
-                      {faq.a}
+                      {t(`website.resources.faq${n}a`)}
                     </div>
                   )}
                 </div>

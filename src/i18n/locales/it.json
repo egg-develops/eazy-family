@@ -662,7 +662,27 @@
       "q6": "Come elimino il mio account?", "a6": "Puoi eliminare il tuo account in qualsiasi momento dalle Impostazioni dell'app.",
       "ctaTitle": "Pronto per iniziare?",
       "ctaSub": "Unisciti alle famiglie che usano già Eazy.Family.",
-      "ctaButton": "Inizia gratis"
+      "ctaButton": "Inizia gratis",
+      "readMore": "Leggi di più",
+      "readLess": "Riduci",
+      "readTime": "di lettura",
+      "descBlog": "Articoli e guide",
+      "descParenting": "Consigli pratici",
+      "descShop": "Selezione curata",
+      "commission": "Eazy.Family potrebbe guadagnare una piccola commissione dagli acquisti Amazon idonei, senza costi aggiuntivi per te. Raccomandiamo solo prodotti che useremmo davvero.",
+      "shopOnAmazon": "Acquista su Amazon",
+      "badge_top_pick": "Top Scelta",
+      "badge_editor_s_choice": "Scelta della redazione",
+      "badge_family_favourite": "Preferito dalle famiglie",
+      "badge_best_value": "Miglior rapporto qualità-prezzo",
+      "faq1q": "Eazy.Family è gratuito?",
+      "faq1a": "Eazy.Family offre un livello gratuito con le funzionalità principali — calendario condiviso, liste e messaggistica familiare. I piani premium sbloccano l'assistenza IA, controlli avanzati sulla privacy e spazio illimitato. Nessuna pubblicità su nessun piano.",
+      "faq2q": "Eazy.Family funziona in più lingue?",
+      "faq2a": "Sì. Eazy.Family supporta inglese, tedesco, francese e italiano — ideale per le famiglie multilingue in Svizzera, Francia, Germania, Italia e Regno Unito.",
+      "faq3q": "In che cosa Eazy.Family è diverso da un gruppo WhatsApp?",
+      "faq3a": "Un gruppo WhatsApp è un thread di messaggi. Eazy.Family è un hub familiare completo: calendario condiviso, liste in tempo reale, messaggistica privata, assistenza IA e pianificazione eventi — tutto in un unico posto, senza pubblicità.",
+      "faq4q": "I dati della mia famiglia sono privati?",
+      "faq4a": "Assolutamente. Eazy.Family è progettato per essere privato per default. Il calendario, i messaggi e le liste della tua famiglia non vengono mai usati per pubblicità né condivisi con terzi. La privacy è un principio fondamentale, non un optional premium."
     }
   }
 }

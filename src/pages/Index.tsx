@@ -57,12 +57,6 @@ export default function Index() {
       {/* ── Hero ── */}
       <section className="pt-32 pb-20 px-5 text-center">
         <div className="max-w-3xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border"
-            style={{ background: "#F0E4FB", borderColor: "#C7AEEF", color: "#522793" }}>
-            <Sparkles className="w-3.5 h-3.5" />
-            {t("website.home.badge")}
-          </div>
-
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-light tracking-tight leading-[1.1]"
             style={{ color: "#1A0B2E" }}>
             One <em>Eazy</em> place for your family
