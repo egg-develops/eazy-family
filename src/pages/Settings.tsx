@@ -305,11 +305,6 @@ const Settings = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4" style={{ overscrollBehavior: "contain" }}>
-      {/* Header */}
-      <div data-tutorial="settings">
-        <p className="text-xs sm:text-sm text-muted-foreground">{t('settings.subtitle')}</p>
-      </div>
-
       {/* 1. Account */}
       <Card className="shadow-custom-md">
         <CardHeader className="pb-3 sm:pb-6">

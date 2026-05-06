@@ -375,7 +375,6 @@ const ToDoList = () => {
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
-      <p className="text-xs sm:text-sm text-muted-foreground">Organize your family tasks and shopping lists</p>
 
       {/* Tabs */}
       <Tabs

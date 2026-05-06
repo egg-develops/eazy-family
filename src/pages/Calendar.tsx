@@ -1154,9 +1154,7 @@ const Calendar = () => {
       </Dialog>
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
-        <div className="flex gap-2 flex-shrink-0">
+      <div className="flex gap-2 justify-end">
           <div className="relative">
             <Button
               variant="outline"
@@ -1202,7 +1200,6 @@ const Calendar = () => {
             <Plus className="h-4 w-4" />
             <span>{t('calendar.new')}</span>
           </ParticleButton>
-        </div>
       </div>
 
       {/* Voice assistant nudge — under header */}

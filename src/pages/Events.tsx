@@ -324,7 +324,6 @@ const Events = () => {
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-xs sm:text-sm text-muted-foreground">Family-friendly events near you</p>
         <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
           {filteredEvents.length} events
         </Badge>

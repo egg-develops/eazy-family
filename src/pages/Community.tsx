@@ -262,9 +262,6 @@ const Community = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <p className="text-xs sm:text-sm text-muted-foreground">{t('community.hubDesc')}</p>
-
       {/* Groups */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">

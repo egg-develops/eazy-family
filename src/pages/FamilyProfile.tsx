@@ -475,7 +475,6 @@ if (error) throw error;
             <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
             <span>Family Profile</span>
           </h1>
-          <p className="text-muted-foreground text-xs sm:text-sm">Manage your family members</p>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
