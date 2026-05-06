@@ -44,15 +44,14 @@ const Onboarding = () => {
   const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-
-  if (!authLoading && user) return <Navigate to="/app" replace />;
-
   const [data, setData] = useState<OnboardingData>({
     userName: "",
     location: "",
     customLocation: "",
     language: "",
   });
+
+  if (!authLoading && user) return <Navigate to="/app" replace />;
 
   const nextStep = () => {
     if (currentStep < steps.length) {
