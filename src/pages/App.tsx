@@ -16,7 +16,7 @@ import {
   Search,
   CheckSquare,
   Menu,
-  Cloud,
+  CloudSun,
   X,
   RefreshCw,
   MessageCircle,
@@ -660,7 +660,7 @@ const AppHome = () => {
               className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-300/50 hover:border-grape-500 transition-all"
               onClick={addWeather}
             >
-              <Cloud className="w-5 h-5" />
+              <CloudSun className="w-5 h-5" />
               <span className="text-sm">Weather</span>
             </Button>
           )}

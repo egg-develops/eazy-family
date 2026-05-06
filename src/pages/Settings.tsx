@@ -267,14 +267,14 @@ const Settings = () => {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ [field]: value })
-        .eq("user_id", user.id);
+        .upsert({ user_id: user.id, [field]: value }, { onConflict: "user_id" });
       if (error) throw error;
       if (field === "display_name") {
         await supabase.from("family_members").update({ display_name: value || null }).eq("user_id", user.id);
       }
-    } catch (error) {
-      logError("Error saving privacy setting:", error);
+      toast({ title: "Saved", description: "Your settings have been updated." });
+    } catch (err) {
+      logError("Error saving privacy setting:", err);
       toast({ title: "Save failed", description: "Could not save your changes. Please try again.", variant: "destructive" });
     }
   };
