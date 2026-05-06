@@ -271,7 +271,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4" style={{ overscrollBehavior: "contain" }}>
       {/* Header */}
       <div data-tutorial="settings">
         <h1 className="text-lg sm:text-2xl font-bold">{t('settings.title')}</h1>
