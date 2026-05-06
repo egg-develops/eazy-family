@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Cloud, RefreshCw } from "lucide-react";
+import { MapPin, CloudSunSun, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { error as logError } from "@/lib/logger";
@@ -146,10 +146,12 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         lon: 0,
       };
       const newLocations = [...locations.filter(l => l.id !== location.id), location];
+      const newIndex = newLocations.length - 1;
       setLocations(newLocations);
+      locationsRef.current = newLocations;
       cloudSet('weather-locations', JSON.stringify(newLocations));
       setWeatherData(data);
-      setCurrentLocationIndex(newLocations.length - 1);
+      setCurrentLocationIndex(newIndex);
       setSearchQuery("");
       setIsLocationDialogOpen(false);
       toast.success(`Added ${location.name}`);
@@ -176,9 +178,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
     }
   };
 
-  const switchLocation = (index: number) => {
+  const switchLocation = (index: number, locs?: WeatherLocation[]) => {
+    const list = locs ?? locationsRef.current;
     setCurrentLocationIndex(index);
-    fetchWeatherForIndex(index, locationsRef.current);
+    fetchWeatherForIndex(index, list);
   };
 
   const removeLocation = (id: string) => {
@@ -195,8 +198,6 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   };
 
   const currentLocation = locations[currentLocationIndex];
-  const touchStartY = useRef(0);
-  const touchStartX = useRef(0);
 
   // No saved locations — show city search as primary UI
   if (locations.length === 0) {
@@ -209,7 +210,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         >×</button>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-grape-500" />
+            <CloudSun className="w-5 h-5 flex-shrink-0" style={{ color: "#FFC861" }} />
             <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
           </div>
           <div className="flex gap-2">
@@ -239,7 +240,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
     return (
       <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
         <div className="flex items-center gap-3">
-          <Cloud className="w-8 h-8 text-grape-500" />
+          <CloudSun className="w-8 h-8" style={{ color: "#FFC861" }} />
           <div>
             <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             <p className="text-sm opacity-70">Loading...</p>
@@ -250,15 +251,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   }
 
   return (
-    <Card
-      className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden"
-      onTouchStart={(e) => { touchStartY.current = e.touches[0].clientY; touchStartX.current = e.touches[0].clientX; }}
-      onTouchEnd={(e) => {
-        const dy = e.changedTouches[0].clientY - touchStartY.current;
-        const dx = Math.abs(e.changedTouches[0].clientX - touchStartX.current);
-        if (dy < -60 && dx < 40) onRemove();
-      }}
-    >
+    <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
       <button
         onClick={onRemove}
         className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
@@ -269,7 +262,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <Cloud className="w-5 h-5 text-grape-500 flex-shrink-0" />
+              <CloudSun className="w-5 h-5 flex-shrink-0" style={{ color: "#FFC861" }} />
               <h3 className="font-semibold text-lg">{t('home.weather')}</h3>
             </div>
             {currentLocation && (
@@ -313,11 +306,11 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="sm" className="hover:bg-muted gap-2">
-              <Cloud className="w-4 h-4" />
+              <CloudSun className="w-4 h-4" style={{ color: "#FFC861" }} />
               {t('home.addLocation')}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="top-[15%] translate-y-0 max-w-sm w-[92%]">
             <DialogHeader>
               <DialogTitle>{t('home.addLocation')}</DialogTitle>
             </DialogHeader>
@@ -329,7 +322,6 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && searchLocation()}
                   autoFocus
-                  onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)}
                 />
                 <Button onClick={searchLocation} disabled={isAddingLocation}>
                   {isAddingLocation ? "Adding..." : "Add"}

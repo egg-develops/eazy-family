@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { 
@@ -154,15 +155,15 @@ const AppLayout = () => {
 
       {/* Bottom Navigation - Mobile and Tablet */}
       <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-3 bg-card/95 backdrop-blur-md rounded-full px-4 py-3 shadow-custom-lg border border-border/50">
+        <div className="flex items-center gap-3 rounded-full px-4 py-3 shadow-custom-lg" style={{ background: "#6B3FBF" }}>
           {/* Menu Icon - Opens Settings Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full hover:bg-muted"
-                style={{ background: "rgba(107,63,191,0.08)" }}
+                className="h-10 w-10 rounded-full"
+                style={{ background: "rgba(255,255,255,0.15)" }}
               >
                 <div className="grid grid-cols-2 gap-[3px]">
                   <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#6B3FBF" }} />
@@ -196,10 +197,10 @@ const AppLayout = () => {
             onClick={() => { haptic('tap'); navigate("/app"); }}
             className="h-10 w-10 rounded-full transition-all"
             style={isHomePath
-              ? { background: "#6B3FBF", color: "#FBF8FF", boxShadow: "0 2px 8px rgba(107,63,191,0.4)" }
-              : { background: "rgba(107,63,191,0.08)" }}
+              ? { background: "rgba(255,255,255,0.25)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }
+              : { background: "rgba(255,255,255,0.1)" }}
           >
-            <Home className="h-5 w-5" style={isHomePath ? { color: "#FBF8FF" } : { color: "#6B3FBF" }} />
+            <Home className="h-5 w-5" style={{ color: "#FFC861" }} />
           </Button>
         </div>
       </nav>
@@ -251,11 +252,14 @@ const AppHome = () => {
     const saved = localStorage.getItem('eazy-family-home-config');
     if (saved) {
       const parsed = JSON.parse(saved);
+      const headerImages = parsed.headerImages || (parsed.headerImage ? [parsed.headerImage] : []);
       return {
         ...parsed,
         showGreeting: parsed.showGreeting !== false,
         topNotifications: parsed.topNotifications || ["Upcoming Events", "Pending Tasks"],
         quickActions: parsed.quickActions || [],
+        headerImages: headerImages.length > 0 ? headerImages : ["/hero-default.png"],
+        headerImage: headerImages[0] || "/hero-default.png",
       };
     }
     // Default config when nothing is saved
@@ -266,7 +270,9 @@ const AppHome = () => {
       showWeather: true,
       showGreeting: true,
       topNotifications: ["Upcoming Events", "Pending Tasks"],
-      quickActions: ["Find Events"]
+      quickActions: ["Find Events"],
+      headerImage: "/hero-default.png",
+      headerImages: ["/hero-default.png"],
     };
   });
   
@@ -633,7 +639,7 @@ const AppHome = () => {
               className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-500/30 hover:border-grape-600 transition-all"
               onClick={addCalendar}
             >
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5" style={{ color: "#6E8FE5" }} />
               <span className="text-sm">Calendar</span>
             </Button>
           )}
@@ -661,7 +667,7 @@ const AppHome = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-grape-600 flex-shrink-0" />
+                <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: "#6E8FE5" }} />
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1 bg-muted rounded-lg p-1">
@@ -704,8 +710,8 @@ const AppHome = () => {
               });
               const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
               return (
-                <Card className="p-4 shadow-custom-md">
-                  <div className="grid grid-cols-7 gap-1 text-center">
+                <Card className="p-3 shadow-custom-md">
+                  <div className="grid grid-cols-7 text-center">
                     {weekDays.map((d, i) => {
                       const isToday = d.toDateString() === now.toDateString();
                       const dayEvents = calendarEvents.filter(e => e.startDate.toDateString() === d.toDateString());
@@ -713,12 +719,14 @@ const AppHome = () => {
                         <button
                           key={i}
                           onClick={() => { if (dayEvents.length > 0) setSnippetDay(d); else navigate('/app/calendar'); }}
-                          className={`p-2 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-grape-600 text-white' : 'hover:bg-muted/70'}`}
+                          className="flex flex-col items-center gap-0.5 py-1"
                         >
-                          <div className="text-xs opacity-70">{labels[i]}</div>
-                          <div className="text-sm font-semibold">{d.getDate()}</div>
+                          <div className="text-[10px] text-muted-foreground">{labels[i]}</div>
+                          <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold transition-colors ${isToday ? 'text-white' : 'hover:bg-muted/70 text-foreground'}`} style={isToday ? { background: "#6B3FBF" } : {}}>
+                            {d.getDate()}
+                          </div>
                           {dayEvents.length > 0 && (
-                            <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-grape-600'}`} />
+                            <div className="w-1 h-1 rounded-full" style={{ background: isToday ? "#FFC861" : "#6E8FE5" }} />
                           )}
                         </button>
                       );
@@ -759,7 +767,7 @@ const AppHome = () => {
                         >
                           {day}
                           {dayEvents.length > 0 && (
-                            <div className={`w-1 h-1 rounded-full mt-0.5 ${isToday ? 'bg-white' : 'bg-grape-600'}`} />
+                            <div className="w-1 h-1 rounded-full mt-0.5" style={{ background: isToday ? "#FFC861" : "#6E8FE5" }} />
                           )}
                         </button>
                       );
@@ -811,15 +819,15 @@ const AppHome = () => {
           className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => navigate('/app/calendar')}
         >
-          <div className="text-2xl font-bold text-primary">{upcomingEventsCount}</div>
-          <div className="text-sm text-muted-foreground">{t('home.upcomingEvents')}</div>
+          <div className="text-2xl font-bold" style={{ color: "#6E8FE5" }}>{upcomingEventsCount}</div>
+          <div className="text-xs text-muted-foreground leading-tight mt-1">Upcoming<br/>Events</div>
         </Card>
         <Card
           className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => navigate('/app/todos')}
         >
           <div className="text-2xl font-bold" style={{ color: "#EE7BB0" }}>{pendingTasksCount}</div>
-          <div className="text-sm text-muted-foreground">{t('home.pendingTasks')}</div>
+          <div className="text-xs text-muted-foreground leading-tight mt-1">Pending<br/>Tasks</div>
         </Card>
       </div>
 
@@ -829,18 +837,18 @@ const AppHome = () => {
         <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: t('nav.events'), icon: Search, path: '/app/events' },
-            { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar' },
-            { label: t('nav.community'), icon: Users, path: '/app/community' },
-            { label: "Shopping List", icon: ShoppingCart, path: '/app/todos' },
-          ].map(({ label, icon: Icon, path }) => (
+            { label: t('nav.events'), icon: Search, path: '/app/events', color: "#EE7BB0" },
+            { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar', color: "#6E8FE5" },
+            { label: t('nav.community'), icon: Users, path: '/app/community', color: "#FFC861" },
+            { label: "Shopping List", icon: ShoppingCart, path: '/app/todos', color: "#6B3FBF" },
+          ].map(({ label, icon: Icon, path, color }) => (
             <Button
               key={label}
               variant="outline"
               className="h-auto p-4 flex flex-col gap-2 border-2 border-primary/30 hover:border-primary transition-all"
               onClick={() => { haptic('tap'); navigate(path); }}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" style={{ color }} />
               <span className="text-sm">{label}</span>
             </Button>
           ))}
@@ -1063,6 +1071,7 @@ const QuickToDos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <GlobalTutorial />
     </div>
   );
 };

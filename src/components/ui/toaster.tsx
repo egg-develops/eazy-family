@@ -12,18 +12,20 @@ export function Toaster() {
   const { toasts } = useToast()
 
   return (
-    <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
+    <ToastProvider swipeDirection="up">
+      {toasts.map(function ({ id, title, description, action, variant, ...props }, index) {
+        const isDestructive = variant === "destructive";
+        const colorVariant = isDestructive ? "destructive" : index % 2 === 0 ? "default" : "blush";
         return (
-          <Toast key={id} {...props}>
-            <div className="grid gap-1">
-              {title && <ToastTitle>{title}</ToastTitle>}
+          <Toast key={id} {...props} variant={colorVariant}>
+            <div className="grid gap-0.5">
+              {title && <ToastTitle className="text-white font-semibold text-sm">{title}</ToastTitle>}
               {description && (
-                <ToastDescription>{description}</ToastDescription>
+                <ToastDescription className="text-white/90 text-xs">{description}</ToastDescription>
               )}
             </div>
             {action}
-            <ToastClose />
+            <ToastClose className="text-white/70 hover:text-white" />
           </Toast>
         )
       })}

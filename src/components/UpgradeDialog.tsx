@@ -130,7 +130,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   };
 
   const freeFeatures = [
-    "Up to 5 family members",
+    "Up to 4 family members",
     "Calendar & reminders",
     "Shopping & to-do lists with voice input",
     "Eazy AI Assistant — 10 messages/month",

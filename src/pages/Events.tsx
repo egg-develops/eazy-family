@@ -123,7 +123,7 @@ const Events = () => {
   const [distance, setDistance] = useState<string>('10');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMap, setShowMap] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({ lat: 47.3769, lng: 8.5417 });
   const [dbEvents, setDbEvents] = useState<NearbyEvent[]>([]);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -137,12 +137,9 @@ const Events = () => {
         },
         (err) => {
           logError("Location error:", err);
-          setUserLocation({ lat: 47.3769, lng: 8.5417 });
         },
         { timeout: 10000 }
       );
-    } else {
-      setUserLocation({ lat: 47.3769, lng: 8.5417 });
     }
   }, []);
 
@@ -183,7 +180,7 @@ const Events = () => {
 
   // Load Leaflet map (OpenStreetMap — no API key required)
   useEffect(() => {
-    if (!showMap || !mapContainerRef.current || !userLocation) return;
+    if (!showMap || !mapContainerRef.current) return;
 
     let map: any = null;
 

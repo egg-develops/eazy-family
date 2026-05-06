@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckSquare, ShoppingCart, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2, RefreshCw } from "lucide-react";
+import { CheckSquare, ShoppingCart, ClipboardList, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
@@ -583,31 +583,31 @@ const ToDoList = () => {
                       {isExpanded
                         ? <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                         : <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
-                      <ShoppingCart className="w-4 h-4 text-primary flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
+                      <ClipboardList className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0 space-y-1">
                         <p className="font-semibold text-sm truncate">{list.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {items.length === 0 ? "No items yet" : `${doneCount}/${items.length} done`}
-                          {list.shared_with && list.shared_with.length > 0 && ` · ${list.shared_with.length} member(s)`}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground whitespace-nowrap">
+                            {items.length === 0 ? "No items yet" : `${doneCount}/${items.length} done`}
+                            {list.shared_with && list.shared_with.length > 0 && ` · ${list.shared_with.length} member(s)`}
+                          </p>
+                          {items.length > 0 && (
+                            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full bg-green-500 rounded-full transition-all"
+                                style={{ width: `${(doneCount / items.length) * 100}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {items.length > 0 && (
-                          <div className="w-12 sm:w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full bg-green-500 rounded-full transition-all"
-                              style={{ width: `${(doneCount / items.length) * 100}%` }}
-                            />
-                          </div>
-                        )}
-                        <button
-                          onClick={e => { e.stopPropagation(); deleteTask(list.id); }}
-                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                          aria-label="Delete list"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteTask(list.id); }}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1 flex-shrink-0"
+                        aria-label="Delete list"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
 
                     {isExpanded && (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, Sparkles } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
+import * as chrono from "chrono-node";
 
 interface Event {
   id: string;
@@ -182,6 +183,10 @@ const Calendar = () => {
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
 
+  // Voice-to-calendar state
+  const [isListeningVoice, setIsListeningVoice] = useState(false);
+  const calendarRecognitionRef = useRef<any>(null);
+
   // Re-hydrate synced state when cloud preferences arrive
   useEffect(() => {
     const handler = () => {
@@ -191,6 +196,19 @@ const Calendar = () => {
       if (saved) { try { setGoogleEvents(JSON.parse(saved)); } catch {} }
       const savedOutlook = localStorage.getItem('eazy-outlook-calendar-events');
       if (savedOutlook) { try { setOutlookEvents(JSON.parse(savedOutlook).map((e: any) => ({ ...e, startDate: new Date(e.startDate), endDate: new Date(e.endDate) }))); } catch {} }
+      // Re-hydrate local calendar items from cloud (cross-device sync)
+      const savedItems = localStorage.getItem('eazy-family-calendar-items');
+      if (savedItems) {
+        try {
+          const parsed = JSON.parse(savedItems).map((item: any) => ({
+            ...item,
+            startDate: item.startDate ? new Date(item.startDate) : undefined,
+            endDate: item.endDate ? new Date(item.endDate) : undefined,
+            dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+          })).filter(Boolean);
+          setItems(parsed);
+        } catch {}
+      }
     };
     window.addEventListener('eazy-prefs-loaded', handler);
     return () => window.removeEventListener('eazy-prefs-loaded', handler);
@@ -464,6 +482,64 @@ const Calendar = () => {
     setEditingItemId(null);
   };
 
+  const startCalendarVoice = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({ title: "Voice not supported", description: "Try typing your event instead.", variant: "destructive" });
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      const transcript: string = event.results[0][0].transcript;
+      setIsListeningVoice(false);
+
+      // Parse date/time from transcript
+      const parsed = chrono.parse(transcript, new Date(), { forwardDate: true });
+      const dateResult = parsed[0]?.start.date();
+      const titleText = parsed.length > 0
+        ? transcript.replace(parsed[0].text, "").replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim()
+        : transcript.replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim();
+
+      resetEventForm();
+      setEventTitle(titleText || transcript);
+      if (dateResult) {
+        setEventStartDate(dateResult);
+        setEventEndDate(dateResult);
+        if (parsed[0]?.start.isCertain("hour")) {
+          setEventStartTime(format(dateResult, "HH:mm"));
+          const end = new Date(dateResult);
+          end.setHours(end.getHours() + 1);
+          setEventEndTime(format(end, "HH:mm"));
+        }
+      }
+      setDialogTab("event");
+      setIsDialogOpen(true);
+    };
+
+    recognition.onerror = (event: any) => {
+      setIsListeningVoice(false);
+      if (event.error !== "no-speech") {
+        toast({ title: "Voice error", description: "Could not capture speech. Try again.", variant: "destructive" });
+      }
+    };
+
+    recognition.onend = () => setIsListeningVoice(false);
+
+    calendarRecognitionRef.current = recognition;
+    recognition.start();
+    setIsListeningVoice(true);
+  };
+
+  const stopCalendarVoice = () => {
+    calendarRecognitionRef.current?.stop();
+    calendarRecognitionRef.current = null;
+    setIsListeningVoice(false);
+  };
+
   const handleEditItem = (item: CalendarItem) => {
     setEditingItemId(item.id);
     if (item.type === "event") {
@@ -672,22 +748,27 @@ const Calendar = () => {
                 <button
                   key={day.toISOString()}
                   className={`
-                    aspect-square p-0.5 sm:p-2 flex flex-col items-center justify-center 
-                    cursor-pointer transition-all rounded-lg relative text-xs sm:text-base
+                    aspect-square flex flex-col items-center justify-center
+                    cursor-pointer transition-all relative
                     ${!isCurrentMonth ? "text-muted-foreground/40" : "text-foreground"}
-                    ${isTodayDate ? "bg-primary text-primary-foreground font-bold ring-2 ring-primary" : ""}
-                    ${isSelected && !isTodayDate ? "bg-accent" : ""}
-                    ${!isTodayDate && !isSelected ? "hover:bg-muted" : ""}
+                    ${!isTodayDate && !isSelected ? "hover:bg-muted rounded-full" : ""}
                   `}
                   onClick={() => setSelectedDate(day)}
                 >
-                  <span className="text-sm sm:text-base">{format(day, "d")}</span>
+                  <div className={`
+                    w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-xs sm:text-sm font-medium transition-all
+                    ${isTodayDate ? "font-bold text-white" : ""}
+                    ${isSelected && !isTodayDate ? "bg-accent" : ""}
+                  `}
+                  style={isTodayDate ? { background: "#6B3FBF" } : {}}>
+                  {format(day, "d")}
+                  </div>
                   {hasItems && (
-                    <div className="flex gap-0.5 sm:gap-1 mt-0.5 sm:mt-1 absolute bottom-0.5 sm:bottom-1">
+                    <div className="flex gap-0.5 mt-0.5 absolute bottom-1">
                       {dayItems.slice(0, 3).map((item, idx) => (
-                        <div 
-                          key={idx} 
-                          className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full"
+                        <div
+                          key={idx}
+                          className="w-1 h-1 rounded-full"
                           style={{ backgroundColor: item.type === "event" ? item.color : "hsl(var(--primary))" }}
                         />
                       ))}
@@ -750,19 +831,33 @@ const Calendar = () => {
         </Card>
       )}
 
-      {/* Voice assistant nudge */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#6B3FBF" }}>
-          <Mic className="w-4 h-4 text-white" />
-        </div>
+      {/* Voice assistant nudge — functional mic */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isListeningVoice ? "#F0E4FB" : "#F8F1FF", border: "1px solid #F0E4FB", transition: "background 0.2s" }}>
+        <button
+          onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative transition-colors"
+          style={{ background: isListeningVoice ? "#EE7BB0" : "#6B3FBF" }}
+          aria-label={isListeningVoice ? "Stop listening" : "Start voice input"}
+        >
+          {isListeningVoice ? (
+            <MicOff className="w-4 h-4 text-white" />
+          ) : (
+            <Mic className="w-4 h-4 text-white" />
+          )}
+          {!isListeningVoice && (
+            <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
+          )}
+        </button>
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
-            Tap the mic and say&nbsp;
-            <span className="italic" style={{ color: "#6B3FBF" }}>"Schedule dentist Monday at 3pm"</span>
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: "#8A5FE0" }}>Eazy Assistant adds it to your calendar instantly.</p>
+          {isListeningVoice ? (
+            <p className="text-xs font-medium animate-pulse" style={{ color: "#EE7BB0" }}>Listening…</p>
+          ) : (
+            <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
+              Say <span className="italic" style={{ color: "#6B3FBF" }}>"Dentist Oct 10 at 3pm"</span>
+              {" "}— Voice adds it instantly.
+            </p>
+          )}
         </div>
-        <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: "#FFC861" }} />
       </div>
 
       {/* Outlook Admin Consent Dialog */}
@@ -829,131 +924,89 @@ const Calendar = () => {
 
       {/* Calendar Sync Dialog for Premium Users */}
       <Dialog open={showCalendarSyncDialog} onOpenChange={setShowCalendarSyncDialog}>
-        <DialogContent className="max-w-md w-[95%] sm:w-full">
+        <DialogContent className="max-w-sm w-[92%] sm:w-full">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <RefreshCw className="h-4 w-4" style={{ color: "#6E8FE5" }} />
               {t('calendar.syncYourCalendars')}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              {t('calendar.selectCalendarToSync')}
-            </p>
-            <div className="space-y-3">
-              {/* Google Calendar — Available */}
-              {googleSynced ? (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-green-500/40 bg-green-500/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">Google Calendar</p>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-600 text-[10px] font-semibold">
-                          <Check className="h-2.5 w-2.5" /> Connected
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{googleEvents.length} events synced</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={handleGoogleConnect} disabled={isSyncing}>
-                      {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDisconnectGoogle}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 rounded-lg border border-border hover:border-primary/40 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">Google Calendar</p>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">Available</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Two-way sync with Google Calendar</p>
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={handleGoogleConnect} disabled={isSyncing} className="gradient-primary text-white border-0">
-                      {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
-                    </Button>
-                  </div>
-                </div>
-              )}
+          <div className="space-y-3 py-2">
+            <p className="text-xs text-muted-foreground">Connect a calendar to import your events.</p>
 
-              {/* Apple Calendar — Coming Soon */}
-              <div className="p-3 rounded-lg border border-border/50 bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shadow-sm">
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-muted-foreground">Apple Calendar</p>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold">Coming Soon</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground/70">iCloud calendar integration</p>
-                    </div>
-                  </div>
+            {/* Google Calendar */}
+            <div className={`p-3 rounded-xl border ${googleSynced ? 'border-green-400/40 bg-green-50 dark:bg-green-950/20' : 'border-border'}`}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-sm font-bold text-red-500 shadow-sm flex-shrink-0">G</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Google Calendar</p>
+                  <p className="text-xs text-muted-foreground">
+                    {googleSynced ? `${googleEvents.length} events synced` : "Two-way sync"}
+                  </p>
                 </div>
+                {googleSynced && (
+                  <span className="text-[10px] font-semibold text-green-600 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-full flex-shrink-0">✓ On</span>
+                )}
               </div>
-
-              {/* Outlook Calendar — Live */}
-              {outlookSynced ? (
-                <div className="flex items-center justify-between p-3 rounded-lg border border-blue-500/40 bg-blue-500/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
-                      <span className="text-white text-xs font-bold">O</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">Outlook Calendar</p>
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-600 text-[10px] font-semibold">
-                          <Check className="h-2.5 w-2.5" /> Connected
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{outlookEvents.length} events synced</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={handleOutlookResync} disabled={isSyncingOutlook}>
-                      {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-destructive" onClick={handleDisconnectOutlook}>
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
+              {googleSynced ? (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1" onClick={handleGoogleConnect} disabled={isSyncing}>
+                    {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> Resync</>}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectGoogle}>
+                    Disconnect
+                  </Button>
                 </div>
               ) : (
-                <div className="p-3 rounded-lg border border-border hover:border-blue-400/40 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm">
-                        <span className="text-white text-xs font-bold">O</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">Outlook Calendar</p>
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-grape-100/50 text-grape-600 text-[10px] font-semibold">Available</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Microsoft 365 & Outlook.com</p>
-                      </div>
-                    </div>
-                    <Button size="sm" onClick={handleOutlookConnect} disabled={isSyncingOutlook} className="bg-[#0078d4] hover:bg-[#106ebe] text-white border-0">
-                      {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect'}
-                    </Button>
-                  </div>
-                </div>
+                <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#6B3FBF" }} onClick={handleGoogleConnect} disabled={isSyncing}>
+                  {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Google Calendar'}
+                </Button>
               )}
             </div>
-            <div className="pt-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <Check className="h-4 w-4 text-primary" />
-              <span>Premium feature unlocked</span>
+
+            {/* Outlook Calendar */}
+            <div className={`p-3 rounded-xl border ${outlookSynced ? 'border-blue-400/40 bg-blue-50 dark:bg-blue-950/20' : 'border-border'}`}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0">
+                  <span className="text-white text-xs font-bold">O</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Outlook Calendar</p>
+                  <p className="text-xs text-muted-foreground">
+                    {outlookSynced ? `${outlookEvents.length} events synced` : "Microsoft 365 & Outlook.com"}
+                  </p>
+                </div>
+                {outlookSynced && (
+                  <span className="text-[10px] font-semibold text-blue-600 bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full flex-shrink-0">✓ On</span>
+                )}
+              </div>
+              {outlookSynced ? (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1" onClick={handleOutlookResync} disabled={isSyncingOutlook}>
+                    {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> Resync</>}
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectOutlook}>
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button size="sm" className="w-full h-8 text-xs text-white border-0 bg-[#0078d4] hover:bg-[#106ebe]" onClick={handleOutlookConnect} disabled={isSyncingOutlook}>
+                  {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Outlook Calendar'}
+                </Button>
+              )}
+            </div>
+
+            {/* Apple Calendar — Coming Soon */}
+            <div className="p-3 rounded-xl border border-border/50 bg-muted/20 opacity-60">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Apple Calendar</p>
+                  <p className="text-xs text-muted-foreground/70">Coming soon — iCloud integration</p>
+                </div>
+              </div>
             </div>
           </div>
         </DialogContent>
@@ -963,7 +1016,7 @@ const Calendar = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+            <CalendarIcon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: "#6E8FE5" }} />
             {t('calendar.title')}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{t('calendar.subtitle')}</p>
@@ -982,6 +1035,7 @@ const Calendar = () => {
           <ParticleButton
             className="gap-2 gradient-primary text-white border-0 flex-1 sm:flex-none"
             onClick={() => {
+              resetEventForm();
               setDialogTab("event");
               setIsDialogOpen(true);
             }}
@@ -1020,10 +1074,17 @@ const Calendar = () => {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold truncate">{item.title}</h4>
                           {item.location && (
-                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <a
+                              href={`https://maps.google.com/?q=${encodeURIComponent(item.location)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm flex items-center gap-1 mt-0.5 hover:underline"
+                              style={{ color: "#6E8FE5" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <MapPin className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">{item.location}</span>
-                            </p>
+                            </a>
                           )}
                           {item.repeat && (
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -1116,12 +1177,30 @@ const Calendar = () => {
               </div>
 
               <div className="space-y-2">
-                <Input
-                  placeholder={t('calendar.location')}
-                  value={eventLocation}
-                  onChange={(e) => setEventLocation(e.target.value)}
-                  className="w-full text-xs sm:text-sm min-h-[44px]"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={t('calendar.location')}
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    className="flex-1 text-xs sm:text-sm min-h-[44px]"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    className="h-11 w-11 flex-shrink-0"
+                    onClick={() => {
+                      const q = eventLocation.trim() || "";
+                      const url = q
+                        ? `https://maps.google.com/?q=${encodeURIComponent(q)}`
+                        : "https://maps.google.com/";
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    }}
+                    title="Open in Maps"
+                  >
+                    <MapPin className="h-4 w-4" style={{ color: "#6E8FE5" }} />
+                  </Button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between py-2">
@@ -1149,14 +1228,14 @@ const Calendar = () => {
                           setEventEndDate(newEnd);
                         }
                       }}
-                      className="flex-1 min-w-0"
+                      className="flex-1 min-w-0 h-11 min-h-[44px]"
                     />
                     {!eventAllDay && (
                       <Input
                         type="time"
                         value={eventStartTime}
                         onChange={(e) => setEventStartTime(e.target.value)}
-                        className="w-20 sm:w-24 flex-shrink-0"
+                        className="w-24 flex-shrink-0 h-11 min-h-[44px]"
                       />
                     )}
                   </div>
@@ -1169,14 +1248,14 @@ const Calendar = () => {
                       type="date"
                       value={format(eventEndDate, "yyyy-MM-dd")}
                       onChange={(e) => setEventEndDate(new Date(e.target.value))}
-                      className="flex-1 min-w-0"
+                      className="flex-1 min-w-0 h-11 min-h-[44px]"
                     />
                     {!eventAllDay && (
                       <Input
                         type="time"
                         value={eventEndTime}
                         onChange={(e) => setEventEndTime(e.target.value)}
-                        className="w-20 sm:w-24 flex-shrink-0"
+                        className="w-24 flex-shrink-0 h-11 min-h-[44px]"
                       />
                     )}
                   </div>

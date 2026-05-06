@@ -303,14 +303,11 @@ const Community = () => {
                     <div className="flex-1">
                       <h4 className="font-semibold">{group.name}</h4>
                       <p className="text-sm text-muted-foreground">{group.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {group.member_count || 0} members
-                        </Badge>
-                        {group.category && (
+                      {group.category && (
+                        <div className="mt-1">
                           <Badge variant="outline" className="text-xs">{group.category}</Badge>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                     {joinedGroupIds.has(group.id) ? (
                       <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleLeaveGroup(group.id); }}>
@@ -395,16 +392,6 @@ const Community = () => {
                 <p className="text-xs text-muted-foreground truncate">{selectedGroup.description}</p>
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge variant="secondary" className="text-xs">
-                {groupMembers.length || selectedGroup?.member_count || 0} members
-              </Badge>
-              {selectedGroup && (
-                <Button variant="ghost" size="icon" onClick={() => handleShareGroup(selectedGroup)} aria-label="Invite to group">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
           </div>
 
           {/* Tabs */}
@@ -478,6 +465,16 @@ const Community = () => {
 
             {/* Members Tab */}
             <TabsContent value="members" className="flex-1 overflow-y-auto p-4 mt-0">
+              {selectedGroup && (
+                <Button
+                  variant="outline"
+                  className="w-full mb-4 gap-2"
+                  onClick={() => handleShareGroup(selectedGroup)}
+                >
+                  <Share2 className="w-4 h-4" />
+                  Invite to Group
+                </Button>
+              )}
               {groupMembers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />

@@ -10,14 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun, Mail, MessageCircle } from "lucide-react";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun, Mail, MessageCircle, Loader2, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
-import { PrivacySettings } from "@/components/PrivacySettings";
 import { validateImageFile } from "@/lib/fileValidation";
 import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
@@ -73,6 +70,12 @@ const Settings = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
   const [loadingSubscription, setLoadingSubscription] = useState(true);
 
+  // Privacy settings state
+  const [displayName, setDisplayName] = useState("");
+  const [shareEmail, setShareEmail] = useState(false);
+  const [sharePhone, setSharePhone] = useState(false);
+  const [loadingPrivacy, setLoadingPrivacy] = useState(true);
+
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
@@ -83,7 +86,7 @@ const Settings = () => {
             .select('subscription_tier')
             .eq('user_id', user.id)
             .single();
-          
+
           if (data) {
             setSubscriptionTier(data.subscription_tier || 'free');
           }
@@ -94,9 +97,32 @@ const Settings = () => {
         setLoadingSubscription(false);
       }
     };
-    
+
     fetchSubscription();
   }, []);
+
+  useEffect(() => {
+    const loadPrivacySettings = async () => {
+      if (!user) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("display_name, share_email, share_phone")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (data) {
+          setDisplayName(data.display_name || "");
+          setShareEmail(data.share_email ?? false);
+          setSharePhone(data.share_phone ?? false);
+        }
+      } catch (error) {
+        logError("Error loading privacy settings:", error);
+      } finally {
+        setLoadingPrivacy(false);
+      }
+    };
+    loadPrivacySettings();
+  }, [user]);
 
   // Re-hydrate state when cloud preferences arrive
   useEffect(() => {
@@ -144,10 +170,6 @@ const Settings = () => {
   const handleDarkModeToggle = () => {
     const newTheme = isDark ? 'light' : 'dark';
     setTheme(newTheme);
-    toast({
-      title: isDark ? t('settings.appearance.lightEnabled') : t('settings.appearance.darkEnabled'),
-      description: t('settings.language.description'),
-    });
   };
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
@@ -172,7 +194,6 @@ const Settings = () => {
   };
 
   const handleFileUpload = async (file: File, type: 'profile' | 'header') => {
-    // Validate file before upload
     const validationResult = validateImageFile(file);
     if (!validationResult.valid) {
       toast({
@@ -211,10 +232,6 @@ const Settings = () => {
     }
   };
 
-  const handleCalendarToggle = () => {
-    saveHomeConfig({ showCalendar: !homeConfig.showCalendar });
-  };
-
   const handleLogout = async () => {
     await signOut();
     toast({
@@ -233,11 +250,20 @@ const Settings = () => {
     });
   };
 
-  const handleUpgrade = () => {
-    toast({
-      title: t('settings.account.upgradePro'),
-      description: t('upgrade.description'),
-    });
+  const savePrivacyField = async (field: string, value: boolean | string | null) => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ user_id: user.id, [field]: value }, { onConflict: "user_id" });
+      if (error) throw error;
+      if (field === "display_name") {
+        await supabase.from("family_members").update({ display_name: value || null }).eq("user_id", user.id);
+      }
+    } catch (error) {
+      logError("Error saving privacy setting:", error);
+      toast({ title: "Save failed", description: "Could not save your changes. Please try again.", variant: "destructive" });
+    }
   };
 
   return (
@@ -248,14 +274,83 @@ const Settings = () => {
         <p className="text-xs sm:text-sm text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
-      {/* Homepage Customization */}
+      {/* 1. Account */}
+      <Card className="shadow-custom-md">
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="text-lg sm:text-xl">{t('settings.account.title')}</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">{t('settings.account.description')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
+          <div className="p-3 sm:p-4 rounded-lg border bg-muted/50">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium">{t('settings.account.subscription')}</span>
+              {subscriptionTier === 'family' && (
+                <Crown className="h-4 w-4 flex-shrink-0" style={{ color: "#FFC861" }} />
+              )}
+            </div>
+            <p className="text-xl sm:text-2xl font-bold capitalize">
+              {loadingSubscription ? t('common.loading') : `${subscriptionTier} Plan`}
+            </p>
+            {subscriptionTier === 'family' && (
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                {t('settings.account.allFeaturesUnlocked')}
+              </p>
+            )}
+          </div>
+
+          {subscriptionTier === 'free' && (
+            <UpgradeDialog>
+              <Button className="w-full gap-2 text-white border-0 h-10 sm:h-11 bg-[#6B3FBF] dark:bg-[#9B7ADE] hover:opacity-90 transition-opacity">
+                <Crown className="h-4 w-4 flex-shrink-0" style={{ color: "#FFC861" }} />
+                {t('settings.account.upgradeFamily')}
+              </Button>
+            </UpgradeDialog>
+          )}
+
+          {(subscriptionTier === 'family' || subscriptionTier === 'premium') && (
+            <Button
+              variant="outline"
+              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 h-10 sm:h-11 text-sm"
+              onClick={async () => {
+                if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error('Not authenticated');
+                    const { error } = await supabase
+                      .from('profiles')
+                      .update({ subscription_tier: 'free' })
+                      .eq('user_id', user.id);
+                    if (error) throw error;
+                    setSubscriptionTier('free');
+                    toast({ title: "Subscription Cancelled", description: "Your plan has been downgraded to Free." });
+                  } catch (err) {
+                    logError('Cancel subscription error:', err);
+                    toast({ title: "Error", description: "Failed to cancel subscription. Please try again.", variant: "destructive" });
+                  }
+                }
+              }}
+            >
+              Cancel / Downgrade to Free
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            className="w-full h-10 sm:h-11 text-sm"
+            onClick={() => navigate('/app/family')}
+          >
+            {t('settings.account.manageFamily')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 2. Homepage Customization */}
       <Card className="shadow-custom-md">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">{t('settings.homepage.title')}</CardTitle>
           <CardDescription className="text-xs sm:text-sm">{t('settings.homepage.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-          {/* Profile Icon Upload */}
           <div className="space-y-2" data-tutorial="custom-images">
             <Label className="text-sm sm:text-base">{t('settings.homepage.profileIcon')}</Label>
             <div className="flex items-center gap-3">
@@ -274,7 +369,6 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Header Image Upload */}
           <div className="space-y-2">
             <Label className="text-sm sm:text-base">{t('settings.homepage.headerImage')}</Label>
             {homeConfig.headerImage && (
@@ -282,100 +376,42 @@ const Settings = () => {
             )}
             <label htmlFor="header-image" className="cursor-pointer block">
               <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
-                {uploadingHeader ? t('common.loading') : homeConfig.headerImage ? 'Change background' : 'Upload background'}
+                {uploadingHeader ? t('common.loading') : 'Add background'}
               </span>
               <input id="header-image" type="file" accept="image/*" className="hidden"
                 onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'header'); }}
                 disabled={uploadingHeader} />
             </label>
           </div>
-
         </CardContent>
       </Card>
 
-      {/* Account Settings */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">{t('settings.account.title')}</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">{t('settings.account.description')}</CardDescription>
+      {/* 3. Appearance */}
+      <Card className="shadow-custom-md" data-tutorial="appearance">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Palette className="h-5 w-5" />
+            {t('settings.appearance.title')}
+          </CardTitle>
+          <CardDescription>{t('settings.appearance.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-          {/* Subscription Status */}
-          <div className="p-3 sm:p-4 rounded-lg border bg-muted/50">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm font-medium">{t('settings.account.subscription')}</span>
-              {subscriptionTier === 'family' && (
-                <Crown className="h-4 w-4 text-primary flex-shrink-0" />
-              )}
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              <div>
+                <Label>{t('settings.appearance.darkMode')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {isDark ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled')}
+                </p>
+              </div>
             </div>
-            <p className="text-xl sm:text-2xl font-bold capitalize">
-              {loadingSubscription ? t('common.loading') : `${subscriptionTier} Plan`}
-            </p>
-            {subscriptionTier === 'family' && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {t('settings.account.allFeaturesUnlocked')}
-              </p>
-            )}
+            <Switch checked={isDark} onCheckedChange={handleDarkModeToggle} />
           </div>
-
-          {subscriptionTier === 'free' && (
-            <UpgradeDialog>
-              <Button className="w-full gap-2 gradient-primary text-white border-0 h-10 sm:h-11">
-                <Crown className="h-4 w-4 flex-shrink-0" />
-                {t('settings.account.upgradeFamily')}
-              </Button>
-            </UpgradeDialog>
-          )}
-
-          {(subscriptionTier === 'family' || subscriptionTier === 'premium') && (
-            <Button 
-              variant="outline" 
-              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 h-10 sm:h-11 text-sm"
-              onClick={async () => {
-                if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
-                  try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) throw new Error('Not authenticated');
-                    
-                    const { error } = await supabase
-                      .from('profiles')
-                      .update({ subscription_tier: 'free' })
-                      .eq('user_id', user.id);
-                    
-                    if (error) throw error;
-                    
-                    setSubscriptionTier('free');
-                    toast({
-                      title: "Subscription Cancelled",
-                      description: "Your plan has been downgraded to Free.",
-                    });
-                  } catch (err) {
-                    logError('Cancel subscription error:', err);
-                    toast({
-                      title: "Error",
-                      description: "Failed to cancel subscription. Please try again.",
-                      variant: "destructive",
-                    });
-                  }
-                }
-              }}
-            >
-              Cancel / Downgrade to Free
-            </Button>
-          )}
-          
-          <Button 
-            variant="outline" 
-            className="w-full h-10 sm:h-11 text-sm"
-            onClick={() => navigate('/app/family')}
-          >
-            {t('settings.account.manageFamily')}
-          </Button>
-
         </CardContent>
       </Card>
 
-      {/* Calendar Integrations */}
+      {/* 4. Calendar Integrations */}
       <Card className="shadow-custom-md" data-tutorial="calendar-integrations">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -387,101 +423,62 @@ const Settings = () => {
         <CardContent className="space-y-3">
           {/* Google Calendar */}
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
-            <div className={`flex items-center justify-between p-3 border rounded-lg ${googleSynced ? 'bg-green-50 dark:bg-green-950/30 border-green-200' : 'bg-card border-border'}`}>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm flex-shrink-0">G</div>
-                <div>
-                  <h4 className="font-medium text-sm">Google Calendar</h4>
-                  <p className="text-xs text-muted-foreground">{googleSynced ? 'Connected' : 'Not connected'}</p>
-                </div>
+            <div className={`flex items-center gap-3 p-3 border rounded-lg ${googleSynced ? 'bg-green-50 dark:bg-green-950/30 border-green-200' : 'bg-card border-border'}`}>
+              <div className="w-8 h-8 min-w-[2rem] rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+                <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
               </div>
-              <Button size="sm" variant={googleSynced ? 'outline' : 'default'} className={googleSynced ? '' : 'gradient-primary text-white border-0'} onClick={() => navigate('/app/calendar?sync=1')}>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm">Google Calendar</h4>
+                <p className="text-xs text-muted-foreground">{googleSynced ? 'Connected' : 'Not connected'}</p>
+              </div>
+              <Button size="sm" variant={googleSynced ? 'outline' : 'default'} className={`flex-shrink-0 ${googleSynced ? '' : 'gradient-primary text-white border-0'}`} onClick={() => navigate('/app/calendar?sync=1')}>
                 {googleSynced ? 'Manage' : 'Connect'}
               </Button>
             </div>
           ) : (
             <UpgradeDialog>
-              <div className="p-3 border rounded-lg bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-base font-bold text-red-500 shadow-sm">G</div>
-                    <div>
-                      <h4 className="font-medium text-sm">Google Calendar</h4>
-                      <p className="text-xs text-muted-foreground">Upgrade to sync</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-primary text-primary-foreground">Premium</Badge>
+              <div className="flex items-center gap-3 p-3 border rounded-lg bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition">
+                <div className="w-8 h-8 min-w-[2rem] rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm">Google Calendar</h4>
+                  <p className="text-xs text-muted-foreground">Upgrade to sync</p>
+                </div>
+                <Badge className="bg-primary text-primary-foreground flex-shrink-0">Premium</Badge>
               </div>
             </UpgradeDialog>
           )}
 
           {/* Apple Calendar - Coming Soon */}
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 border-border/50 opacity-70">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shadow-sm">
-                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground">Apple Calendar</h4>
-                <p className="text-xs text-muted-foreground/70">iCloud integration</p>
-              </div>
+          <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30 border-border/50 opacity-70">
+            <div className="w-8 h-8 min-w-[2rem] rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
             </div>
-            <Badge variant="secondary">Coming Soon</Badge>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm text-muted-foreground">Apple Calendar</h4>
+              <p className="text-xs text-muted-foreground/70">iCloud integration</p>
+            </div>
+            <Badge variant="secondary" className="flex-shrink-0 whitespace-nowrap">Coming Soon</Badge>
           </div>
 
           {/* Outlook Calendar */}
-          <div className={`flex items-center justify-between p-3 border rounded-lg ${outlookSynced ? 'bg-grape-100/50 dark:bg-grape-900/30 border-grape-300' : 'bg-card border-border'}`}>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0">
-                <span className="text-white text-xs font-bold">O</span>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm">Outlook Calendar</h4>
-                <p className="text-xs text-muted-foreground">{outlookSynced ? 'Connected' : 'Not connected'}</p>
-              </div>
+          <div className={`flex items-center gap-3 p-3 border rounded-lg ${outlookSynced ? 'bg-grape-100/50 dark:bg-grape-900/30 border-grape-300' : 'bg-card border-border'}`}>
+            <div className="w-8 h-8 min-w-[2rem] rounded-lg bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+              <span className="text-white text-xs font-bold leading-none">O</span>
             </div>
-            <Button size="sm" variant={outlookSynced ? 'outline' : 'default'} className={outlookSynced ? '' : 'bg-[#0078d4] hover:bg-[#006cbd] text-white border-0'} onClick={() => navigate('/app/calendar?sync=1')}>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm">Outlook Calendar</h4>
+              <p className="text-xs text-muted-foreground">{outlookSynced ? 'Connected' : 'Not connected'}</p>
+            </div>
+            <Button size="sm" variant={outlookSynced ? 'outline' : 'default'} className={`flex-shrink-0 ${outlookSynced ? '' : 'bg-[#0078d4] hover:bg-[#006cbd] text-white border-0'}`} onClick={() => navigate('/app/calendar?sync=1')}>
               {outlookSynced ? 'Manage' : 'Connect'}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Privacy Settings */}
-      <PrivacySettings />
-
-      {/* Appearance Settings */}
-      <Card className="shadow-custom-md" data-tutorial="appearance">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            {t('settings.appearance.title')}
-          </CardTitle>
-          <CardDescription>{t('settings.appearance.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Dark Mode Toggle */}
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="flex items-center gap-3">
-              {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-              <div>
-                <Label>{t('settings.appearance.darkMode')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {isDark ? t('settings.appearance.darkEnabled') : t('settings.appearance.lightEnabled')}
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={isDark}
-              onCheckedChange={handleDarkModeToggle}
-            />
-          </div>
-
-        </CardContent>
-      </Card>
-
-      {/* Language Settings */}
+      {/* 5. Language */}
       <Card className="shadow-custom-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -490,29 +487,33 @@ const Settings = () => {
           </CardTitle>
           <CardDescription>{t('settings.language.description')}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <RadioGroup value={language} onValueChange={handleLanguageChange} className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="en" id="en" />
-              <Label htmlFor="en" className="cursor-pointer">{t('settings.language.english')}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="de" id="de" />
-              <Label htmlFor="de" className="cursor-pointer">{t('settings.language.german')}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="fr" id="fr" />
-              <Label htmlFor="fr" className="cursor-pointer">{t('settings.language.french')}</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="it" id="it" />
-              <Label htmlFor="it" className="cursor-pointer">{t('settings.language.italian')}</Label>
-            </div>
-          </RadioGroup>
+        <CardContent className="space-y-1 p-3 sm:p-6">
+          {[
+            { value: "en", label: t('settings.language.english'), flag: "🇬🇧" },
+            { value: "de", label: t('settings.language.german'), flag: "🇩🇪" },
+            { value: "fr", label: t('settings.language.french'), flag: "🇫🇷" },
+            { value: "it", label: t('settings.language.italian'), flag: "🇮🇹" },
+          ].map(({ value, label, flag }) => (
+            <button
+              key={value}
+              onClick={() => handleLanguageChange(value)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors text-left ${
+                language === value
+                  ? "bg-primary/10 border border-primary/30"
+                  : "hover:bg-muted border border-transparent"
+              }`}
+            >
+              <span className="flex items-center gap-3 text-sm font-medium">
+                <span className="text-base">{flag}</span>
+                {label}
+              </span>
+              {language === value && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+            </button>
+          ))}
         </CardContent>
       </Card>
 
-      {/* Privacy & Security */}
+      {/* 6. Privacy & Security (combined) */}
       <Card className="shadow-custom-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -521,53 +522,79 @@ const Settings = () => {
           </CardTitle>
           <CardDescription>{t('settings.privacy.description')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <Lock className="h-5 w-5 mt-0.5 text-primary" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">{t('settings.privacy.encryption')}</p>
-                <p className="text-xs text-muted-foreground">{t('settings.privacy.encryptionDesc')}</p>
+        <CardContent className="space-y-6">
+          {loadingPrivacy ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              {/* Display name */}
+              <div className="space-y-2">
+                <Label htmlFor="display-name">{t('privacySettings.displayName')}</Label>
+                <Input
+                  id="display-name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  onBlur={() => savePrivacyField("display_name", displayName.trim() || null)}
+                  placeholder={t('privacySettings.displayNamePlaceholder')}
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground">{t('privacySettings.displayNameHint')}</p>
               </div>
-              <Switch checked={true} disabled />
+
+              {/* Share toggles */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="share-email">{t('privacySettings.shareEmail')}</Label>
+                    <p className="text-sm text-muted-foreground">{t('privacySettings.shareEmailDesc')}</p>
+                  </div>
+                  <Switch id="share-email" checked={shareEmail} onCheckedChange={(v) => { setShareEmail(v); savePrivacyField("share_email", v); }} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="share-phone">{t('privacySettings.sharePhone')}</Label>
+                    <p className="text-sm text-muted-foreground">{t('privacySettings.sharePhoneDesc')}</p>
+                  </div>
+                  <Switch id="share-phone" checked={sharePhone} onCheckedChange={(v) => { setSharePhone(v); savePrivacyField("share_phone", v); }} />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="border-t pt-4 space-y-4">
+            {/* Security indicators */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <Lock className="h-5 w-5 mt-0.5 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{t('settings.privacy.encryption')}</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.privacy.encryptionDesc')}</p>
+                </div>
+                <Switch checked={true} disabled />
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                <Eye className="h-5 w-5 mt-0.5 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{t('settings.privacy.dataVisibility')}</p>
+                  <p className="text-xs text-muted-foreground">{t('settings.privacy.dataVisibilityDesc')}</p>
+                </div>
+                <Switch checked={true} disabled />
+              </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-              <Eye className="h-5 w-5 mt-0.5 text-primary" />
-              <div className="flex-1">
-                <p className="font-medium text-sm">{t('settings.privacy.dataVisibility')}</p>
-                <p className="text-xs text-muted-foreground">{t('settings.privacy.dataVisibilityDesc')}</p>
-              </div>
-              <Switch checked={true} disabled />
+            {/* Policy links */}
+            <div className="space-y-1">
+              <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => navigate('/privacy')}>
+                {t('settings.privacy.privacyPolicy')}
+              </Button>
             </div>
-
-          </div>
-
-          <div className="pt-4 border-t space-y-1">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sm"
-              onClick={() => navigate('/privacy')}
-            >
-              {t('settings.privacy.privacyPolicy')}
-            </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-sm"
-              onClick={() => {
-                toast({
-                  title: t('settings.privacy.downloadData'),
-                  description: t('common.success'),
-                });
-              }}
-            >
-              {t('settings.privacy.downloadData')}
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* App Settings */}
+      {/* 7. Notifications */}
       <Card className="shadow-custom-md">
         <CardHeader>
           <CardTitle>{t('settings.notifications.title')}</CardTitle>
@@ -582,12 +609,8 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">{t('settings.notifications.pushDesc')}</p>
               </div>
             </div>
-            <Switch
-              checked={pushNotifications}
-              onCheckedChange={setPushNotifications}
-            />
+            <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
           </div>
-
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5 text-muted-foreground" />
@@ -596,20 +619,17 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">{t('settings.notifications.emailDesc')}</p>
               </div>
             </div>
-            <Switch
-              checked={emailNotifications}
-              onCheckedChange={setEmailNotifications}
-            />
+            <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
           </div>
         </CardContent>
       </Card>
 
-      {/* Referral System */}
+      {/* 8. Refer Friends, Get Premium */}
       <div data-tutorial="referral-system">
         <ReferralSystem />
       </div>
 
-      {/* Actions */}
+      {/* 9 & 10. Replay Feature Tour + Sign Out */}
       <div className="space-y-3">
         <Button
           variant="outline"
@@ -632,7 +652,7 @@ const Settings = () => {
         </Button>
       </div>
 
-      {/* Contact Us */}
+      {/* 11. Contact Us */}
       <Card className="shadow-custom-md">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -648,15 +668,8 @@ const Settings = () => {
             </div>
             <div>
               <p className="font-medium text-sm">Feedback & Feature Requests</p>
-              <a
-                href="mailto:hello@eazy.family"
-                className="text-sm text-primary hover:underline"
-              >
-                hello@eazy.family
-              </a>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Ideas, suggestions, or anything you'd love to see
-              </p>
+              <a href="mailto:hello@eazy.family" className="text-sm text-primary hover:underline">hello@eazy.family</a>
+              <p className="text-xs text-muted-foreground mt-0.5">Ideas, suggestions, or anything you'd love to see</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
@@ -665,15 +678,8 @@ const Settings = () => {
             </div>
             <div>
               <p className="font-medium text-sm">Technical Support</p>
-              <a
-                href="mailto:support@eazy.family"
-                className="text-sm text-primary hover:underline"
-              >
-                support@eazy.family
-              </a>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Bugs, account issues, or anything not working right
-              </p>
+              <a href="mailto:support@eazy.family" className="text-sm text-primary hover:underline">support@eazy.family</a>
+              <p className="text-xs text-muted-foreground mt-0.5">Bugs, account issues, or anything not working right</p>
             </div>
           </div>
         </CardContent>

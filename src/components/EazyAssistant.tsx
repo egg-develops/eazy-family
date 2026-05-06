@@ -394,11 +394,11 @@ export const EazyAssistant = () => {
     "Lista della spesa: pane, burro, mele",
     "Ricetta cena veloce con 5 ingredienti",
   ] : [
-    "Add milk and eggs to our shopping list",
-    "Schedule dentist Monday 5 May at 3pm",
-    "Swimming lessons every Tuesday at 4pm",
+    "Add milk and eggs to shopping list",
+    "Add Dentist Mon 10 Sept at 2pm",
+    "Add Swimming every Tue at 9am",
     "What's on our shopping list?",
-    "Add this event to my calendar",
+    "Add event to my calendar",
     "Quick dinner recipe with 5 ingredients",
   ];
 
@@ -460,7 +460,7 @@ export const EazyAssistant = () => {
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-4">
-              <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 opacity-50" />
+              <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3" style={{ color: "#FFC861" }} />
               <p className="mb-4 text-sm">
                 {i18n.language === "de" ? "Wie kann ich helfen?" : i18n.language === "fr" ? "Comment puis-je vous aider?" : i18n.language === "it" ? "Come posso aiutarti?" : "Ask me anything"}
               </p>
@@ -523,7 +523,7 @@ export const EazyAssistant = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
-            placeholder={isListening ? "Listening..." : "How can I help you?"}
+            placeholder={isListening ? "Listening..." : "How can I help?"}
             disabled={isLoading}
             className="flex-1 bg-background"
           />

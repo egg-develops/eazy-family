@@ -139,22 +139,16 @@ const FamilyProfile = () => {
       }
 
       // 3) Load pending invitations sent by this user (tokens are never exposed)
-      const { data: invites, error: invitesError } = await supabase
+      const { data: invites } = await supabase
         .from("family_invitations")
         .select("id, invitee_email, invitee_phone, role, status, expires_at, created_at")
         .eq("inviter_id", user.id)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
-      if (invitesError) throw invitesError;
       setInvitations(invites || []);
     } catch (error) {
       logError("Error loading family data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load family members",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -565,20 +559,15 @@ if (error) throw error;
               Invite Family Members
             </CardTitle>
             <CardDescription>
-              Share this code for anyone to join {familyInfo.name}
+              Share this code to invite people into <strong>{familyInfo.name}</strong> on Eazy.Family
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Invite Code Display */}
-            <div className="space-y-3">
-              <Label>Family Invite Code</Label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-card p-4 rounded-lg border-2 border-dashed border-primary/30">
-                  <p className="text-3xl font-mono font-bold text-center tracking-widest text-primary">
-                    {familyInfo.invite_code}
-                  </p>
-                </div>
-              </div>
+            <div className="bg-card p-4 rounded-lg border-2 border-dashed border-primary/30">
+              <p className="text-3xl font-mono font-bold text-center tracking-widest text-primary">
+                {familyInfo.invite_code}
+              </p>
             </div>
 
             {/* Action Buttons */}
@@ -586,9 +575,9 @@ if (error) throw error;
               <Button
                 variant="outline"
                 onClick={copyInviteCode}
-                className="gap-2 flex-1 min-w-[100px]"
+                className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
-                <Copy className="h-4 w-4" />
+                <Copy className="h-4 w-4 flex-shrink-0" />
                 Copy Code
               </Button>
               <Button
@@ -599,17 +588,17 @@ if (error) throw error;
                   navigator.clipboard.writeText(url);
                   toast({ title: "Link copied!", description: "Paste it anywhere to share" });
                 }}
-                className="gap-2 flex-1 min-w-[100px]"
+                className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
-                <Copy className="h-4 w-4" />
+                <Copy className="h-4 w-4 flex-shrink-0" />
                 Copy Link
               </Button>
               <Button
                 variant="outline"
                 onClick={shareInviteLink}
-                className="gap-2 flex-1 min-w-[100px]"
+                className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
-                <Share2 className="h-4 w-4" />
+                <Share2 className="h-4 w-4 flex-shrink-0" />
                 Share
               </Button>
             </div>
@@ -621,11 +610,12 @@ if (error) throw error;
                 size="sm"
                 onClick={regenerateInviteCode}
                 disabled={regeneratingCode}
-                className="w-full text-muted-foreground hover:text-destructive gap-2"
+                className="w-full text-muted-foreground hover:text-destructive gap-2 min-h-[40px]"
               >
-                <RefreshCw className={`h-4 w-4 ${regeneratingCode ? 'animate-spin' : ''}`} />
-                {regeneratingCode ? 'Regenerating...' : 'Regenerate Code (old code will stop working)'}
+                <RefreshCw className={`h-4 w-4 flex-shrink-0 ${regeneratingCode ? 'animate-spin' : ''}`} />
+                {regeneratingCode ? 'Regenerating…' : 'Regenerate Code'}
               </Button>
+              <p className="text-xs text-muted-foreground text-center mt-1">Old code will stop working</p>
             </div>
           </CardContent>
         </Card>
