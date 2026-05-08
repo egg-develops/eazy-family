@@ -667,7 +667,6 @@ const ToDoList = () => {
                 })()}
             </div>
           )}
-      </div>
 
       {/* FAB */}
       <button
