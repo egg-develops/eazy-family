@@ -5,10 +5,10 @@ import { MapPin, Calendar, Users, Star, ArrowRight, Music, Palette, BookOpen, Tr
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/PublicNav";
 
-const HEADING = { color: "#1A0B2E" };
-const MUTED   = { color: "#522793" };
-const SUBTLE  = { color: "#8A5FE0" };
-const CARD    = { background: "#FFFFFF", border: "1px solid #F0E4FB" };
+const HEADING = { color: "#1C1C18" };
+const MUTED   = { color: "#964735" };
+const SUBTLE  = { color: "#7A6660" };
+const CARD    = { background: "#FFFFFF", border: "1px solid #EBE8E2" };
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -73,13 +73,13 @@ export default function EventsPublic() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FBF8FF", color: "#1A0B2E" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FDF9F3", color: "#1C1C18" }}>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #C7AEEF, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
         <div className="absolute top-1/2 -right-20 w-[300px] h-[300px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #EE7BB0, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #D97B66, transparent 70%)" }} />
       </div>
 
       <PublicNav />
@@ -89,7 +89,7 @@ export default function EventsPublic() {
         {/* Hero */}
         <section className="text-center max-w-2xl mx-auto space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border"
-            style={{ background: "#F0E4FB", borderColor: "#C7AEEF", color: "#522793" }}>
+            style={{ background: "#EBE8E2", borderColor: "#DAC1BB", color: "#964735" }}>
             <MapPin className="w-3.5 h-3.5" />
             {t("website.events.badge")}
           </div>
@@ -104,7 +104,7 @@ export default function EventsPublic() {
 
           <Button onClick={() => navigate("/onboarding")}
             className="text-white border-0 px-8 py-5 text-sm font-medium rounded-2xl"
-            style={{ background: "#6B3FBF" }}>
+            style={{ background: "#964735" }}>
             {t("website.events.ctaPrimary")}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -121,7 +121,7 @@ export default function EventsPublic() {
               return (
                 <div key={e.title} className="rounded-2xl p-5 text-center space-y-3" style={CARD}>
                   <div className="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center"
-                    style={{ background: "#6B3FBF" }}>
+                    style={{ background: "#964735" }}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="font-medium text-sm" style={HEADING}>{e.title}</h3>
@@ -138,7 +138,7 @@ export default function EventsPublic() {
             const Icon = item.icon;
             return (
               <div key={item.stat} className="space-y-2">
-                <Icon className="w-6 h-6 mx-auto" style={{ color: "#C7AEEF" }} />
+                <Icon className="w-6 h-6 mx-auto" style={{ color: "#DAC1BB" }} />
                 <p className="font-serif text-2xl font-light" style={HEADING}>{item.stat}</p>
                 <p className="text-sm" style={SUBTLE}>{item.label}</p>
               </div>
@@ -148,8 +148,8 @@ export default function EventsPublic() {
 
         {/* Coming soon CTA */}
         <section className="rounded-3xl p-10 text-center space-y-5"
-          style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
-          <Star className="w-8 h-8 mx-auto" style={{ color: "#C7AEEF" }} />
+          style={{ background: "#F7F3ED", border: "1px solid #EBE8E2" }}>
+          <Star className="w-8 h-8 mx-auto" style={{ color: "#DAC1BB" }} />
           <h2 className="font-serif text-xl font-light" style={HEADING}>
             {t("website.events.comingSoonTitle")}
           </h2>
@@ -158,7 +158,7 @@ export default function EventsPublic() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button onClick={() => navigate("/onboarding")} className="text-white border-0 px-8 py-5 text-sm rounded-2xl"
-              style={{ background: "#6B3FBF" }}>
+              style={{ background: "#964735" }}>
               {t("website.events.comingSoonCta")}
             </Button>
             <Button variant="ghost" onClick={() => navigate("/")} style={MUTED}>
@@ -168,7 +168,7 @@ export default function EventsPublic() {
         </section>
       </main>
 
-      <footer className="py-10 px-5 border-t" style={{ borderColor: "#F0E4FB" }}>
+      <footer className="py-10 px-5 border-t" style={{ borderColor: "#EBE8E2" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="Eazy.Family" className="w-7 h-7" />
@@ -182,7 +182,7 @@ export default function EventsPublic() {
             <Link to="/privacy" className="hover:opacity-80">Privacy Policy</Link>
             <Link to="/terms" className="hover:opacity-80">Terms of Service</Link>
           </nav>
-          <p className="text-xs" style={{ color: "#C7AEEF" }}>© {new Date().getFullYear()} Eazy.Family</p>
+          <p className="text-xs" style={{ color: "#DAC1BB" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>
       </footer>
     </div>

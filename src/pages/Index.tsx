@@ -8,11 +8,11 @@ import {
   ChevronRight, CheckCircle, Globe, Apple, Smartphone, Sparkles,
 } from "lucide-react";
 
-const ICON_BG = { background: "#6B3FBF" };
-const CARD_STYLE = { background: "#FFFFFF", border: "1px solid #F0E4FB" };
-const HEADING = { color: "#1A0B2E" };
-const MUTED = { color: "#522793" };
-const SUBTLE = { color: "#8A5FE0" };
+const ICON_BG = { background: "#964735" };
+const CARD_STYLE = { background: "#FFFFFF", border: "1px solid #EBE8E2" };
+const HEADING = { color: "#1C1C18" };
+const MUTED = { color: "#964735" };
+const SUBTLE = { color: "#7A6660" };
 
 export default function Index() {
   const { user, loading } = useAuth();
@@ -38,16 +38,16 @@ export default function Index() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FBF8FF", color: "#1A0B2E" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FDF9F3", color: "#1C1C18" }}>
 
       {/* Soft background blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #C7AEEF, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
         <div className="absolute top-1/3 -right-20 w-[350px] h-[350px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #EE7BB0, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #D97B66, transparent 70%)" }} />
         <div className="absolute bottom-0 -left-20 w-[300px] h-[300px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #C7AEEF, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
       </div>
 
       <PublicNav />
@@ -56,7 +56,7 @@ export default function Index() {
       <section className="pt-32 pb-20 px-5 text-center">
         <div className="max-w-3xl mx-auto space-y-6">
           <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-light tracking-tight leading-[1.1]"
-            style={{ color: "#1A0B2E" }}>
+            style={{ color: "#1C1C18" }}>
             One <em>Eazy</em> place for your family
           </h1>
 
@@ -67,13 +67,13 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Button size="lg" onClick={() => navigate("/onboarding")}
               className="w-full sm:w-auto text-white border-0 px-8 py-6 text-base font-medium rounded-2xl"
-              style={{ background: "#6B3FBF" }}>
+              style={{ background: "#964735" }}>
               {t("website.home.ctaPrimary")}
               <ChevronRight className="w-5 h-5 ml-1" />
             </Button>
             <Button variant="ghost" size="lg" onClick={() => navigate("/auth")}
               className="w-full sm:w-auto px-8 py-6 text-base rounded-2xl"
-              style={{ color: "#522793" }}>
+              style={{ color: "#964735" }}>
               {t("website.home.ctaSecondary")}
             </Button>
           </div>
@@ -81,7 +81,7 @@ export default function Index() {
           <div className="flex items-center justify-center gap-6 pt-2 text-xs" style={HEADING}>
             {[t("website.home.check1"), t("website.home.check2"), t("website.home.check3")].map(text => (
               <span key={text} className="flex items-center gap-1.5">
-                <CheckCircle className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+                <CheckCircle className="w-3.5 h-3.5" style={{ color: "#964735" }} />
                 {text}
               </span>
             ))}
@@ -127,7 +127,7 @@ export default function Index() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {steps.map(s => (
               <div key={s.n} className="text-center space-y-3">
-                <div className="text-4xl font-serif font-light" style={{ color: "#C7AEEF" }}>{s.n}</div>
+                <div className="text-4xl font-serif font-light" style={{ color: "#DAC1BB" }}>{s.n}</div>
                 <h3 className="font-medium text-sm" style={HEADING}>{s.title}</h3>
                 <p className="text-sm leading-relaxed" style={SUBTLE}>{s.body}</p>
               </div>
@@ -139,7 +139,7 @@ export default function Index() {
       {/* ── Download CTA ── */}
       <section className="py-20 px-5">
         <div className="max-w-2xl mx-auto text-center rounded-3xl p-10"
-          style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
+          style={{ background: "#F7F3ED", border: "1px solid #EBE8E2" }}>
           <h2 className="font-serif text-2xl sm:text-3xl font-light mb-3" style={HEADING}>
             {t("website.home.downloadTitle")}
           </h2>
@@ -148,15 +148,15 @@ export default function Index() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <span className="flex items-center gap-2.5 px-5 py-3 rounded-xl opacity-40 text-sm font-medium border cursor-not-allowed"
-              style={{ background: "#F0E4FB", borderColor: "#C7AEEF", color: "#522793" }}>
+              style={{ background: "#EBE8E2", borderColor: "#DAC1BB", color: "#964735" }}>
               <Apple className="w-4 h-4" />{t("website.home.appStore")}
             </span>
             <span className="flex items-center gap-2.5 px-5 py-3 rounded-xl opacity-40 text-sm font-medium border cursor-not-allowed"
-              style={{ background: "#F0E4FB", borderColor: "#C7AEEF", color: "#522793" }}>
+              style={{ background: "#EBE8E2", borderColor: "#DAC1BB", color: "#964735" }}>
               <Smartphone className="w-4 h-4" />{t("website.home.googlePlay")}
             </span>
             <Button onClick={() => navigate("/onboarding")} className="text-white border-0 px-5 py-3 text-sm font-medium rounded-xl"
-              style={{ background: "#6B3FBF" }}>
+              style={{ background: "#964735" }}>
               <Globe className="w-4 h-4 mr-2" />{t("website.home.useWebApp")}
             </Button>
           </div>
@@ -164,11 +164,11 @@ export default function Index() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto py-10 px-5 border-t" style={{ borderColor: "#F0E4FB" }}>
+      <footer className="mt-auto py-10 px-5 border-t" style={{ borderColor: "#EBE8E2" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="Eazy.Family" className="w-7 h-7" />
-            <span className="font-medium text-sm" style={{ color: "#1A0B2E" }}>Eazy.Family</span>
+            <span className="font-medium text-sm" style={{ color: "#1C1C18" }}>Eazy.Family</span>
           </Link>
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={SUBTLE}>
             <Link to="/about" className="hover:opacity-80">{t("website.nav.about")}</Link>
@@ -181,7 +181,7 @@ export default function Index() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
           </nav>
-          <p className="text-xs" style={{ color: "#C7AEEF" }}>© {new Date().getFullYear()} Eazy.Family</p>
+          <p className="text-xs" style={{ color: "#DAC1BB" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>
       </footer>
     </div>

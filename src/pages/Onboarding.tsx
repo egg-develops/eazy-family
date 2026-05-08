@@ -217,13 +217,13 @@ const Onboarding = () => {
   return (
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, #1A0B2E, #2A1248)" }}
+      style={{ background: "linear-gradient(160deg, #3D1A13, #5E2D1F)" }}
     >
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #6B3FBF, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, #964735, transparent 70%)" }}
         />
       </div>
 
@@ -233,13 +233,13 @@ const Onboarding = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8 object-contain" />
-            <span className="font-serif text-sm" style={{ color: "#FBF8FF" }}>
-              <em>Eazy</em><span style={{ color: "#EE7BB0" }}>.</span>Family
+            <span className="font-serif text-sm" style={{ color: "#FDF9F3" }}>
+              <em>Eazy</em><span style={{ color: "#D97B66" }}>.</span>Family
             </span>
           </div>
           <span
             className="text-xs font-medium px-3 py-1 rounded-full"
-            style={{ background: "rgba(107, 63, 191, 0.3)", color: "#C7AEEF" }}
+            style={{ background: "rgba(150, 71, 53, 0.3)", color: "#B5A09A" }}
           >
             {currentStep} / {steps.length}
           </span>
@@ -247,12 +247,12 @@ const Onboarding = () => {
 
         {/* Progress bar */}
         <div className="mb-8">
-          <div className="w-full rounded-full h-1.5" style={{ background: "rgba(107, 63, 191, 0.2)" }}>
+          <div className="w-full rounded-full h-1.5" style={{ background: "rgba(150, 71, 53, 0.2)" }}>
             <div
               className="h-1.5 rounded-full transition-all duration-500"
               style={{
                 width: `${(currentStep / steps.length) * 100}%`,
-                background: "#6B3FBF"
+                background: "#964735"
               }}
             />
           </div>
@@ -262,8 +262,8 @@ const Onboarding = () => {
         <div
           className="rounded-2xl p-6 flex-1 animate-fade-in"
           style={{
-            background: "rgba(42, 18, 72, 0.85)",
-            border: "1px solid rgba(107, 63, 191, 0.35)",
+            background: "rgba(94, 45, 31, 0.85)",
+            border: "1px solid rgba(150, 71, 53, 0.35)",
             backdropFilter: "blur(8px)"
           }}
         >
@@ -277,7 +277,7 @@ const Onboarding = () => {
             onClick={prevStep}
             disabled={currentStep === 1}
             className="flex items-center gap-2 rounded-xl h-12 flex-1 border-0 hover:opacity-80"
-            style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 80%)" }}
+            style={{ background: "rgba(94, 45, 31, 0.7)", color: "#B5A09A" }}
           >
             <ArrowLeft className="w-4 h-4" />
             {t('onboarding.back')}
@@ -286,7 +286,7 @@ const Onboarding = () => {
             onClick={nextStep}
             disabled={!canProceed()}
             className="flex items-center gap-2 rounded-xl h-12 flex-1 text-white font-semibold border-0 hover:opacity-90 transition-opacity disabled:opacity-40"
-            style={{ background: "#6B3FBF" }}
+            style={{ background: "#964735" }}
           >
             {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
             <ArrowRight className="w-4 h-4" />

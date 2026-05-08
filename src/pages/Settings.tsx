@@ -331,7 +331,7 @@ const Settings = () => {
 
           {subscriptionTier === 'free' && (
             <UpgradeDialog>
-              <Button className="w-full gap-2 text-white border-0 h-10 sm:h-11 bg-[#6B3FBF] dark:bg-[#9B7ADE] hover:opacity-90 transition-opacity">
+              <Button className="w-full gap-2 text-white border-0 h-10 sm:h-11 bg-[#964735] dark:bg-[#7A6660] hover:opacity-90 transition-opacity">
                 <Crown className="h-4 w-4 flex-shrink-0" style={{ color: "#FFC861" }} />
                 {t('settings.account.upgradeFamily')}
               </Button>
@@ -511,7 +511,7 @@ const Settings = () => {
           </div>
 
           {/* Outlook Calendar */}
-          <div className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg ${outlookSynced ? 'bg-grape-100/50 dark:bg-grape-900/30 border-grape-300' : 'bg-card border-border'}`}>
+          <div className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg ${outlookSynced ? 'bg-[#F1EDE7]/50 dark:bg-[#55433F]/30 border-[#DAC1BB]' : 'bg-card border-border'}`}>
             <div className="w-7 h-7 rounded-md bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
               <span className="text-white text-xs font-bold leading-none">O</span>
             </div>
@@ -590,7 +590,7 @@ const Settings = () => {
                   <Button
                     size="sm"
                     className="flex-shrink-0 text-white border-0 h-10"
-                    style={{ background: "#6B3FBF" }}
+                    style={{ background: "#964735" }}
                     onClick={() => savePrivacyField("display_name", displayName.trim() || null)}
                   >
                     Save

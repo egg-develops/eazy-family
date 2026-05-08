@@ -4,10 +4,10 @@ import { Heart, Shield, Users, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PublicNav } from "@/components/PublicNav";
 
-const HEADING = { color: "#1A0B2E" };
-const MUTED   = { color: "#522793" };
-const SUBTLE  = { color: "#8A5FE0" };
-const CARD    = { background: "#FFFFFF", border: "1px solid #F0E4FB" };
+const HEADING = { color: "#1C1C18" };
+const MUTED   = { color: "#964735" };
+const SUBTLE  = { color: "#7A6660" };
+const CARD    = { background: "#FFFFFF", border: "1px solid #EBE8E2" };
 
 export default function About() {
   const navigate = useNavigate();
@@ -20,11 +20,11 @@ export default function About() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FBF8FF", color: "#1A0B2E" }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FDF9F3", color: "#1C1C18" }}>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #C7AEEF, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
       </div>
 
       <PublicNav />
@@ -52,7 +52,7 @@ export default function About() {
               return (
                 <div key={v.title} className="rounded-2xl p-5 flex gap-4" style={CARD}>
                   <div className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
-                    style={{ background: "#6B3FBF" }}>
+                    style={{ background: "#964735" }}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -80,7 +80,7 @@ export default function About() {
 
         {/* CTA */}
         <section className="text-center rounded-3xl p-10"
-          style={{ background: "#F8F1FF", border: "1px solid #F0E4FB" }}>
+          style={{ background: "#F7F3ED", border: "1px solid #EBE8E2" }}>
           <h2 className="font-serif text-xl font-light mb-3" style={HEADING}>
             {t("website.about.ctaTitle")}
           </h2>
@@ -88,13 +88,13 @@ export default function About() {
             {t("website.about.ctaSub")}
           </p>
           <Button onClick={() => navigate("/onboarding")} className="text-white border-0 px-8 py-5 text-base rounded-2xl"
-            style={{ background: "#6B3FBF" }}>
+            style={{ background: "#964735" }}>
             {t("website.about.ctaButton")} <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </section>
       </main>
 
-      <footer className="py-10 px-5 border-t" style={{ borderColor: "#F0E4FB" }}>
+      <footer className="py-10 px-5 border-t" style={{ borderColor: "#EBE8E2" }}>
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="Eazy.Family" className="w-7 h-7" />
@@ -111,7 +111,7 @@ export default function About() {
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
           </nav>
-          <p className="text-xs" style={{ color: "#C7AEEF" }}>© {new Date().getFullYear()} Eazy.Family</p>
+          <p className="text-xs" style={{ color: "#DAC1BB" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>
       </footer>
     </div>

@@ -76,30 +76,30 @@ export default {
     				border: 'hsl(var(--sidebar-border))',
     				ring: 'hsl(var(--sidebar-ring))'
     			},
-    			/* Brand palette */
+    			/* Brand palette — terracotta/cream system */
     			grape: {
-    				50:  '#F8F1FF',
-    				100: '#F0E4FB',
-    				300: '#C7AEEF',
-    				500: '#8A5FE0',
-    				600: '#6B3FBF',
-    				700: '#522793',
-    				900: '#2A1248',
-    				950: '#1A0B2E',
+    				50:  '#FDF9F3',
+    				100: '#F1EDE7',
+    				300: '#DAC1BB',
+    				500: '#D97B66',
+    				600: '#964735',
+    				700: '#7A3D2D',
+    				900: '#3D1A10',
+    				950: '#1C1C18',
     			},
     			blush: {
-    				100: '#FCE0EC',
-    				500: '#EE7BB0',
+    				100: '#FFDAD3',
+    				500: '#D97B66',
     			},
     			sky: {
-    				100: '#DCE6F8',
-    				500: '#6E8FE5',
+    				100: '#C3E8FB',
+    				500: '#7A9EAF',
     			},
     			sun: {
     				500: '#FFC861',
     			},
-    			paper: '#FBF8FF',
-    			ink:   '#1A0B2E',
+    			paper: '#FDF9F3',
+    			ink:   '#1C1C18',
     			terracotta: {
     				DEFAULT: '#964735',
     				light: '#D97B66',

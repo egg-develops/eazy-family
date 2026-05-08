@@ -21,9 +21,9 @@ import { cloudSet } from "@/lib/preferencesSync";
 import * as chrono from "chrono-node";
 
 const TAGS = {
-  school:   { label: "School",   bg: "#EDE9F8", border: "#6B3FBF", dot: "#6B3FBF" },
+  school:   { label: "School",   bg: "#F1EDE7", border: "#964735", dot: "#964735" },
   travel:   { label: "Travel",   bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
-  birthday: { label: "Birthday", bg: "#FFE4F0", border: "#EE7BB0", dot: "#EE7BB0" },
+  birthday: { label: "Birthday", bg: "#FFE4F0", border: "#D97B66", dot: "#D97B66" },
   personal: { label: "Personal", bg: "#FFFBE6", border: "#FFC861", dot: "#FFC861" },
 } as const;
 type EventTag = keyof typeof TAGS;
@@ -93,7 +93,7 @@ const getInitialItems = (): CalendarItem[] => {
       allDay: false,
       location: "Aquatic Center",
       type: "event",
-      color: "#6B3FBF"
+      color: "#964735"
     },
     {
       id: "2",
@@ -641,7 +641,7 @@ const Calendar = () => {
         repeat: repeatValue,
         travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
         type: "event",
-        color: eventTag ? TAGS[eventTag].border : "#6B3FBF",
+        color: eventTag ? TAGS[eventTag].border : "#964735",
         tag: eventTag || undefined,
       };
 
@@ -709,18 +709,18 @@ const Calendar = () => {
   const renderTimeGrid = (days: Date[]) => {
     const columnWidth = days.length === 1 ? "w-full" : days.length === 3 ? "w-1/3" : "w-1/7";
     return (
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
         {/* Column headers */}
-        <div className="flex border-b" style={{ borderColor: "#F0E4FB" }}>
+        <div className="flex border-b" style={{ borderColor: "#EBE8E2" }}>
           <div className="w-12 flex-shrink-0" />
           {days.map(day => {
             const isTodayDate = isToday(day);
             return (
-              <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#6B3FBF" : "#9B7ADE" }}>
+              <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#964735" : "#7A6660" }}>
                 <div>{format(day, "EEE")}</div>
                 <div
                   className="w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-semibold"
-                  style={{ background: isTodayDate ? "#6B3FBF" : "transparent", color: isTodayDate ? "#fff" : "#1A0B2E" }}
+                  style={{ background: isTodayDate ? "#964735" : "transparent", color: isTodayDate ? "#fff" : "#1C1C18" }}
                 >
                   {format(day, "d")}
                 </div>
@@ -731,24 +731,24 @@ const Calendar = () => {
         {/* Time slots */}
         <div className="overflow-y-auto max-h-[60vh]">
           {HOURS.map(hour => (
-            <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "#F8F1FF" }}>
+            <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "#F7F3ED" }}>
               <div className="w-12 flex-shrink-0 text-right pr-2 pt-1">
-                <span className="text-[10px]" style={{ color: "#C4B0E8" }}>
+                <span className="text-[10px]" style={{ color: "#B5A09A" }}>
                   {hour === 12 ? "12pm" : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
                 </span>
               </div>
               {days.map(day => {
                 const events = getEventsForDateAndHour(day, hour);
                 return (
-                  <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "#F0E4FB" }}>
+                  <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "#EBE8E2" }}>
                     {events.map(item => {
                       if (item.type !== "event") return null;
-                      const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#EDE9F8", border: "#6B3FBF", label: "Event" };
+                      const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#F1EDE7", border: "#964735", label: "Event" };
                       return (
                         <div
                           key={item.id}
                           className="text-[10px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
-                          style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "#1A0B2E" }}
+                          style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "#1C1C18" }}
                           onClick={() => handleEditItem(item)}
                         >
                           {item.title}
@@ -772,24 +772,24 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         {/* Mini week strip for navigation */}
-        <div className="rounded-2xl p-3" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+        <div className="rounded-2xl p-3" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+            <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
               {format(selectedDate, "MMMM")}{" "}
-              <em style={{ color: "#6B3FBF" }}>'{format(selectedDate, "yy")}</em>
+              <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
             </h2>
             <div className="flex gap-1">
-              <button onClick={() => setSelectedDate(d => subDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-                <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+              <button onClick={() => setSelectedDate(d => subDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+                <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
               </button>
-              <button onClick={() => setSelectedDate(d => addDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-                <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+              <button onClick={() => setSelectedDate(d => addDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+                <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
               </button>
             </div>
           </div>
           <div className="grid grid-cols-7">
             {weekDays.map((d, i) => (
-              <div key={i} className="text-center text-[10px] font-medium py-1" style={{ color: "#9B7ADE" }}>{d}</div>
+              <div key={i} className="text-center text-[10px] font-medium py-1" style={{ color: "#7A6660" }}>{d}</div>
             ))}
             {weekDates.map(day => {
               const isTodayDate = isToday(day);
@@ -799,8 +799,8 @@ const Calendar = () => {
                   <span
                     className="w-6 h-6 text-xs font-medium rounded-full flex items-center justify-center"
                     style={{
-                      background: isTodayDate ? "#6B3FBF" : isSel ? "#EDE9F8" : "transparent",
-                      color: isTodayDate ? "#fff" : isSel ? "#3D1F8A" : "#1A0B2E",
+                      background: isTodayDate ? "#964735" : isSel ? "#F1EDE7" : "transparent",
+                      color: isTodayDate ? "#fff" : isSel ? "#964735" : "#1C1C18",
                     }}
                   >{format(day, "d")}</span>
                 </button>
@@ -818,15 +818,15 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+          <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
             {format(days[0], "MMM d")} – {format(days[2], "d")}
           </h2>
           <div className="flex gap-1">
-            <button onClick={() => setSelectedDate(d => subDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            <button onClick={() => setSelectedDate(d => subDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
             </button>
-            <button onClick={() => setSelectedDate(d => addDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            <button onClick={() => setSelectedDate(d => addDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
             </button>
           </div>
         </div>
@@ -841,15 +841,15 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="font-serif text-lg font-light" style={{ color: "#1A0B2E" }}>
+          <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
             {format(days[0], "MMM d")} – {format(days[6], "MMM d")}
           </h2>
           <div className="flex gap-1">
-            <button onClick={() => setSelectedDate(d => subDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            <button onClick={() => setSelectedDate(d => subDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
             </button>
-            <button onClick={() => setSelectedDate(d => addDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-purple-50" style={{ border: "1px solid #E8DCF8" }}>
-              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
+            <button onClick={() => setSelectedDate(d => addDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
+              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
             </button>
           </div>
         </div>
@@ -867,27 +867,27 @@ const Calendar = () => {
     const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
 
     return (
-      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FAFAFE", border: "1px solid #F0E4FB" }}>
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
         {/* Header: "May '26" style */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif text-2xl font-light" style={{ color: "#1A0B2E" }}>
+          <h2 className="font-serif text-2xl font-light" style={{ color: "#1C1C18" }}>
             {format(selectedDate, "MMMM")}{" "}
-            <em style={{ color: "#6B3FBF" }}>'{format(selectedDate, "yy")}</em>
+            <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
           </h2>
           <div className="flex gap-1.5">
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-purple-50"
-              style={{ border: "1px solid #E8DCF8" }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
+              style={{ border: "1px solid #DAC1BB" }}
             >
-              <ChevronLeft className="w-4 h-4" style={{ color: "#6B3FBF" }} />
+              <ChevronLeft className="w-4 h-4" style={{ color: "#964735" }} />
             </button>
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-purple-50"
-              style={{ border: "1px solid #E8DCF8" }}
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
+              style={{ border: "1px solid #DAC1BB" }}
             >
-              <ChevronRight className="w-4 h-4" style={{ color: "#6B3FBF" }} />
+              <ChevronRight className="w-4 h-4" style={{ color: "#964735" }} />
             </button>
           </div>
         </div>
@@ -895,7 +895,7 @@ const Calendar = () => {
         {/* Day headers */}
         <div className="grid grid-cols-7 mb-1">
           {weekDays.map((d, i) => (
-            <div key={i} className="text-center text-xs font-medium py-1.5" style={{ color: "#9B7ADE" }}>
+            <div key={i} className="text-center text-xs font-medium py-1.5" style={{ color: "#7A6660" }}>
               {d}
             </div>
           ))}
@@ -919,8 +919,8 @@ const Calendar = () => {
                 <span
                   className="text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full leading-none"
                   style={{
-                    background: isTodayDate ? "#6B3FBF" : isSelected ? "#EDE9F8" : "transparent",
-                    color: isTodayDate ? "#FFFFFF" : isSelected ? "#3D1F8A" : "#1A0B2E",
+                    background: isTodayDate ? "#964735" : isSelected ? "#F1EDE7" : "transparent",
+                    color: isTodayDate ? "#FFFFFF" : isSelected ? "#964735" : "#1C1C18",
                   }}
                 >
                   {format(day, "d")}
@@ -943,11 +943,11 @@ const Calendar = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 pt-3" style={{ borderTop: "1px solid #F0E4FB" }}>
+        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 pt-3" style={{ borderTop: "1px solid #EBE8E2" }}>
           {(Object.entries(TAGS) as [EventTag, typeof TAGS[EventTag]][]).map(([key, tag]) => (
             <div key={key} className="flex items-center gap-1.5 text-xs">
               <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
-              <span className="font-medium" style={{ color: "#1A0B2E" }}>{tag.label}</span>
+              <span className="font-medium" style={{ color: "#1C1C18" }}>{tag.label}</span>
             </div>
           ))}
         </div>
@@ -1318,7 +1318,7 @@ const Calendar = () => {
                   </Button>
                 </div>
               ) : (
-                <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#6B3FBF" }} onClick={handleGoogleConnect} disabled={isSyncing}>
+                <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#964735" }} onClick={handleGoogleConnect} disabled={isSyncing}>
                   {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Google Calendar'}
                 </Button>
               )}
@@ -1372,182 +1372,6 @@ const Calendar = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Header */}
-      <div className="flex gap-2 justify-end">
-          <div className="relative">
-            <Button
-              variant="outline"
-              className="gap-1.5 h-9 px-3 text-sm"
-              onClick={() => setShowViewPicker(v => !v)}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="capitalize">{calendarView === '3day' ? '3 Day' : calendarView}</span>
-            </Button>
-            {showViewPicker && (
-              <div className="absolute right-0 top-10 z-50 w-36 rounded-xl border shadow-lg overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
-                {(['month', 'week', '3day', 'day'] as const).map(v => (
-                  <button
-                    key={v}
-                    onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
-                    className="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-purple-50 flex items-center justify-between"
-                    style={{ color: calendarView === v ? "#6B3FBF" : "#1A0B2E", fontWeight: calendarView === v ? 600 : 400 }}
-                  >
-                    {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
-                    {calendarView === v && <Check className="h-3.5 w-3.5" style={{ color: "#6B3FBF" }} />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            className="gap-1.5 h-9 px-3 text-sm"
-            onClick={() => setShowCalendarSyncDialog(true)}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            <span>Sync</span>
-            {(googleSynced || outlookSynced) && <span className="w-1.5 h-1.5 rounded-full bg-grape-500 ml-0.5" />}
-          </Button>
-          <ParticleButton
-            className="gap-2 gradient-primary text-white border-0 h-9 px-3 text-sm flex-1 sm:flex-none"
-            onClick={() => {
-              resetEventForm();
-              setDialogTab("event");
-              setIsDialogOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            <span>{t('calendar.new')}</span>
-          </ParticleButton>
-      </div>
-
-      {/* Voice assistant nudge — under header */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: isListeningVoice ? "#F0E4FB" : "#F8F1FF", border: "1px solid #F0E4FB", transition: "background 0.2s" }}>
-        <button
-          onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative transition-colors"
-          style={{ background: isListeningVoice ? "#EE7BB0" : "#6B3FBF" }}
-          aria-label={isListeningVoice ? "Stop listening" : "Start voice input"}
-        >
-          {isListeningVoice ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-white" />}
-          {!isListeningVoice && <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />}
-        </button>
-        <div className="flex-1 min-w-0">
-          {isListeningVoice ? (
-            <p className="text-xs font-medium animate-pulse" style={{ color: "#EE7BB0" }}>Listening…</p>
-          ) : (
-            <p className="text-xs font-medium" style={{ color: "#1A0B2E" }}>
-              Say <span className="italic" style={{ color: "#6B3FBF" }}>"Dentist Oct 10 at 3pm"</span>{" "}— Voice adds it instantly.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Calendar View */}
-      {calendarView === 'month' && renderMonthCalendar()}
-      {calendarView === 'week' && renderWeekCalendar()}
-      {calendarView === '3day' && render3DayCalendar()}
-      {calendarView === 'day' && renderDayCalendar()}
-
-      {/* Day Events — only in month view */}
-      {calendarView === 'month' && <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FFFFFF", border: "1px solid #F0E4FB" }}>
-        {/* Header */}
-        <p className="text-xs font-semibold tracking-wide uppercase mb-1" style={{ color: "#9B7ADE" }}>
-          {isToday(selectedDate) ? "TODAY · " : ""}{format(selectedDate, "EEEE, MMMM d").toUpperCase()}
-        </p>
-        <h2 className="font-serif text-2xl font-light mb-4" style={{ color: "#1A0B2E" }}>
-          {(() => {
-            const count = getItemsForDate(selectedDate).length;
-            if (count === 0) return "A clear, open day.";
-            if (count <= 2) return "A gentle day ahead.";
-            if (count <= 4) return "A busy day ahead.";
-            return "A full day ahead.";
-          })()}
-        </h2>
-
-        {getItemsForDate(selectedDate).length > 0 ? (
-          <div className="space-y-3">
-            {getItemsForDate(selectedDate)
-              .sort((a, b) => {
-                const aTime = a.type === "event" ? new Date(a.startDate).getTime() : (a.dueDate ? new Date(a.dueDate).getTime() : 0);
-                const bTime = b.type === "event" ? new Date(b.startDate).getTime() : (b.dueDate ? new Date(b.dueDate).getTime() : 0);
-                return aTime - bTime;
-              })
-              .map((item) => {
-                if (item.type === "event") {
-                  const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#EDE9F8", border: "#6B3FBF", dot: "#6B3FBF", label: "Event" };
-                  const timeStr = item.allDay ? "All day" : format(item.startDate, "HH:mm");
-                  return (
-                    <div key={item.id} className="flex gap-3 group cursor-pointer" onClick={() => handleEditItem(item)}>
-                      <div className="text-right w-10 flex-shrink-0 pt-3">
-                        <span className="text-xs font-medium" style={{ color: "#9B7ADE" }}>{timeStr}</span>
-                      </div>
-                      <div
-                        className="flex-1 rounded-xl p-3 transition-opacity hover:opacity-90 relative overflow-hidden"
-                        style={{ background: tagStyle.bg, borderLeft: `3px solid ${tagStyle.border}` }}
-                      >
-                        <p className="font-semibold text-sm" style={{ color: "#1A0B2E" }}>{item.title}</p>
-                        <p className="text-xs mt-0.5" style={{ color: tagStyle.border }}>
-                          {item.tag ? TAGS[item.tag].label : "Event"}
-                          {item.location ? ` · ${item.location}` : ""}
-                        </p>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1.5 py-0.5 rounded"
-                          style={{ color: "#EE7BB0" }}
-                        >×</button>
-                      </div>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={item.id} className="flex gap-3 group cursor-pointer" onClick={() => handleEditItem(item)}>
-                      <div className="text-right w-10 flex-shrink-0 pt-3">
-                        <span className="text-xs font-medium" style={{ color: "#9B7ADE" }}>
-                          {item.dueTime || ""}
-                        </span>
-                      </div>
-                      <div
-                        className="flex-1 rounded-xl p-3 transition-opacity hover:opacity-90 flex items-center gap-3"
-                        style={{ background: "#FFFBE6", borderLeft: "3px solid #FFC861" }}
-                      >
-                        <Checkbox
-                          checked={item.completed}
-                          onCheckedChange={() => toggleReminder(item.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-semibold text-sm ${item.completed ? "line-through opacity-50" : ""}`} style={{ color: "#1A0B2E" }}>
-                            {item.title}
-                          </p>
-                          <p className="text-xs" style={{ color: "#FFC861" }}>Reminder</p>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                          style={{ color: "#EE7BB0" }}
-                        >×</button>
-                      </div>
-                    </div>
-                  );
-                }
-              })}
-          </div>
-        ) : (
-          <p className="text-sm py-4" style={{ color: "#9B7ADE" }}>{t('calendar.noEventsForDay')}</p>
-        )}
-
-        {/* Quick add button */}
-        <button
-          onClick={() => { resetEventForm(); setDialogTab("event"); setIsDialogOpen(true); }}
-          className="mt-4 w-full py-2 rounded-xl text-sm font-medium transition-colors hover:bg-purple-50 flex items-center justify-center gap-2"
-          style={{ border: "1px dashed #E8DCF8", color: "#9B7ADE" }}
-        >
-          <Plus className="w-4 h-4" /> Add event
-        </button>
-      </div>}
-
       {/* Add Event/Reminder Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95%] sm:w-full">
@@ -1590,8 +1414,8 @@ const Calendar = () => {
                       className="px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5"
                       style={{
                         background: eventTag === key ? tag.bg : "transparent",
-                        borderColor: eventTag === key ? tag.border : "#E8DCF8",
-                        color: eventTag === key ? tag.border : "#9B7ADE",
+                        borderColor: eventTag === key ? tag.border : "#DAC1BB",
+                        color: eventTag === key ? tag.border : "#7A6660",
                       }}
                     >
                       <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />

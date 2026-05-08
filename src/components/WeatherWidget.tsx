@@ -202,7 +202,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   // No saved locations — show city search as primary UI
   if (locations.length === 0) {
     return (
-      <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
+      <Card className="p-6 shadow-custom-md border-2 border-[#DAC1BB] relative overflow-hidden">
         <button
           onClick={onRemove}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
@@ -238,7 +238,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
 
   if (loading && !weatherData) {
     return (
-      <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
+      <Card className="p-6 shadow-custom-md border-2 border-[#DAC1BB] relative overflow-hidden">
         <div className="flex items-center gap-3">
           <CloudSun className="w-8 h-8" style={{ color: "#FFC861" }} />
           <div>
@@ -251,7 +251,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
   }
 
   return (
-    <Card className="p-6 shadow-custom-md border-2 border-grape-300/50 relative overflow-hidden">
+    <Card className="p-6 shadow-custom-md border-2 border-[#DAC1BB] relative overflow-hidden">
       <button
         onClick={onRemove}
         className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"

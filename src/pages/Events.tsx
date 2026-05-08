@@ -478,23 +478,23 @@ const Events = () => {
       {/* AI Search Results */}
       {searchQuery.trim() && (
         <div className="space-y-3">
-          <h3 className="text-base font-semibold flex items-center gap-2" style={{ color: "#6B3FBF" }}>
+          <h3 className="text-base font-semibold flex items-center gap-2" style={{ color: "#964735" }}>
             <Search className="w-4 h-4" />
             {isAiSearching ? "Searching beyond the list…" : `AI-powered results for "${searchQuery}"`}
           </h3>
           {isAiSearching && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: "#F8F1FF", border: "1px solid #EDE9F8" }}>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: "#F7F3ED", border: "1px solid #F1EDE7" }}>
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <p className="text-sm text-muted-foreground">Finding events from across the web…</p>
             </div>
           )}
           {!isAiSearching && aiResults.length > 0 && aiResults.map(event => (
-            <Card key={event.id} className="shadow-custom-md" style={{ borderLeft: "3px solid #6B3FBF" }}>
+            <Card key={event.id} className="shadow-custom-md" style={{ borderLeft: "3px solid #964735" }}>
               <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-semibold text-sm">{event.title}</h4>
-                    <Badge className="text-[10px] px-1.5 py-0.5 flex-shrink-0" style={{ background: "#EDE9F8", color: "#6B3FBF", border: "none" }}>AI</Badge>
+                    <Badge className="text-[10px] px-1.5 py-0.5 flex-shrink-0" style={{ background: "#F1EDE7", color: "#964735", border: "none" }}>AI</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{event.description}</p>
                   <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
