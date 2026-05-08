@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap");
@@ -16,46 +17,46 @@
 
 @layer base {
   :root {
-    /* ── Eazy.Family Design System v1.0 ── */
+    /* ── Eazy.Family Design System v2.0 — Terracotta & Cream ── */
 
-    /* Surfaces — light-first */
-    --background: 270 100% 99%;        /* paper #FBF8FF */
-    --foreground: 266 61% 11%;         /* ink  #1A0B2E */
+    /* Surfaces */
+    --background: 40 60% 97%;          /* warm cream #FDF9F3 */
+    --foreground: 60 5% 10%;           /* near black #1C1C18 */
 
     --card: 0 0% 100%;                 /* white */
-    --card-foreground: 266 61% 11%;
+    --card-foreground: 60 5% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 266 61% 11%;
+    --popover-foreground: 60 5% 10%;
 
-    /* Primary — Grape 600 */
-    --primary: 261 50% 50%;            /* #6B3FBF */
-    --primary-foreground: 270 100% 99%;
+    /* Primary — Terracotta */
+    --primary: 14 51% 40%;             /* #964735 */
+    --primary-foreground: 0 0% 100%;
 
-    /* Secondary — Grape 100 */
-    --secondary: 271 74% 94%;          /* #F0E4FB */
-    --secondary-foreground: 264 58% 37%;
+    /* Secondary — Sage Green */
+    --secondary: 138 20% 34%;          /* #44664F */
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted — Grape 50 */
-    --muted: 270 100% 97%;             /* #F8F1FF */
-    --muted-foreground: 260 68% 63%;   /* #8A5FE0 */
+    /* Muted */
+    --muted: 40 25% 92%;               /* #F1EDE7 */
+    --muted-foreground: 15 12% 43%;    /* #7A6660 */
 
-    /* Accent — Grape 100 */
-    --accent: 271 74% 94%;
-    --accent-foreground: 261 50% 50%;
+    /* Accent */
+    --accent: 40 15% 89%;              /* #EBE8E2 */
+    --accent-foreground: 60 5% 10%;
 
     /* Status */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     --success: 145 65% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 39 100% 69%;            /* sun-500 #FFC861 */
-    --warning-foreground: 266 61% 11%;
+    --warning: 39 100% 69%;
+    --warning-foreground: 60 5% 10%;
 
     /* Chrome */
-    --border: 263 40% 88%;
-    --input: 263 40% 88%;
-    --ring: 261 50% 50%;
+    --border: 14 24% 80%;              /* #DAC1BB */
+    --input: 14 24% 80%;
+    --ring: 14 51% 40%;
 
     --radius: 1rem;
 
@@ -75,91 +76,91 @@
     --sun-500: 39 100% 69%;
 
     /* Fonts */
-    --font-sans: 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', 'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-serif: 'Fraunces', ui-serif, Georgia, Cambria, serif;
     --font-mono: 'DM Mono', ui-monospace, SFMono-Regular, monospace;
 
     /* Sidebar */
     --sidebar: 0 0% 100%;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 266 61% 11%;
-    --sidebar-primary: 261 50% 50%;
-    --sidebar-primary-foreground: 270 100% 99%;
-    --sidebar-accent: 271 74% 94%;
-    --sidebar-accent-foreground: 264 58% 37%;
-    --sidebar-border: 263 40% 88%;
-    --sidebar-ring: 261 50% 50%;
+    --sidebar-foreground: 60 5% 10%;
+    --sidebar-primary: 14 51% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 25% 92%;
+    --sidebar-accent-foreground: 60 5% 10%;
+    --sidebar-border: 14 24% 80%;
+    --sidebar-ring: 14 51% 40%;
 
-    /* Charts — brand palette */
-    --chart-1: 261 50% 50%;
+    /* Charts — terracotta palette */
+    --chart-1: 14 51% 40%;
     --chart-2: 332 77% 71%;
     --chart-3: 223 70% 67%;
     --chart-4: 39 100% 69%;
-    --chart-5: 260 68% 63%;
+    --chart-5: 138 20% 34%;
 
-    /* Shadows — grape-tinted */
-    --shadow-2xs: 0 1px 2px 0 rgb(26 11 46 / 0.04);
-    --shadow-xs: 0 1px 3px 0 rgb(26 11 46 / 0.06);
-    --shadow-sm: 0 1px 3px 0 rgb(26 11 46 / 0.08), 0 1px 2px -1px rgb(26 11 46 / 0.06);
-    --shadow: 0 2px 6px -1px rgb(26 11 46 / 0.10), 0 1px 4px -2px rgb(26 11 46 / 0.06);
-    --shadow-md: 0 4px 8px -2px rgb(26 11 46 / 0.12), 0 2px 4px -2px rgb(26 11 46 / 0.06);
-    --shadow-lg: 0 8px 16px -4px rgb(26 11 46 / 0.10), 0 4px 6px -4px rgb(26 11 46 / 0.06);
-    --shadow-xl: 0 16px 24px -8px rgb(26 11 46 / 0.12), 0 8px 12px -8px rgb(26 11 46 / 0.08);
-    --shadow-2xl: 0 24px 40px -12px rgb(26 11 46 / 0.18);
+    /* Shadows — terracotta-tinted */
+    --shadow-2xs: 0 1px 2px 0 rgb(28 20 18 / 0.04);
+    --shadow-xs: 0 1px 3px 0 rgb(28 20 18 / 0.06);
+    --shadow-sm: 0 1px 3px 0 rgb(28 20 18 / 0.08), 0 1px 2px -1px rgb(28 20 18 / 0.06);
+    --shadow: 0 2px 6px -1px rgb(28 20 18 / 0.10), 0 1px 4px -2px rgb(28 20 18 / 0.06);
+    --shadow-md: 0 4px 8px -2px rgb(28 20 18 / 0.12), 0 2px 4px -2px rgb(28 20 18 / 0.06);
+    --shadow-lg: 0 8px 16px -4px rgb(28 20 18 / 0.10), 0 4px 6px -4px rgb(28 20 18 / 0.06);
+    --shadow-xl: 0 16px 24px -8px rgb(28 20 18 / 0.12), 0 8px 12px -8px rgb(28 20 18 / 0.08);
+    --shadow-2xl: 0 24px 40px -12px rgb(28 20 18 / 0.18);
 
     --tracking-normal: 0em;
     --spacing: 0.25rem;
   }
 
   .dark {
-    /* ── Dark mode — ink surfaces ── */
-    --background: 266 61% 11%;         /* ink #1A0B2E */
-    --foreground: 270 100% 99%;        /* paper */
+    /* ── Dark mode — warm dark tones ── */
+    --background: 15 10% 14%;          /* dark cream #2A2420 */
+    --foreground: 40 40% 95%;          /* warm white #F5F0EA */
 
-    --card: 267 60% 15%;
-    --card-foreground: 270 100% 99%;
+    --card: 15 10% 18%;
+    --card-foreground: 40 40% 95%;
 
-    --popover: 267 60% 15%;
-    --popover-foreground: 270 100% 99%;
+    --popover: 15 10% 18%;
+    --popover-foreground: 40 40% 95%;
 
-    --primary: 262 68% 72%;            /* #A985E8 grape on dark */
-    --primary-foreground: 266 61% 11%;
+    --primary: 14 60% 60%;             /* terracotta on dark */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 267 60% 18%;          /* grape-900 */
-    --secondary-foreground: 263 67% 81%;
+    --secondary: 138 20% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 267 60% 18%;
-    --muted-foreground: 263 67% 81%;   /* grape-300 */
+    --muted: 15 10% 22%;
+    --muted-foreground: 15 12% 65%;
 
-    --accent: 267 60% 22%;
-    --accent-foreground: 263 67% 81%;
+    --accent: 15 10% 26%;
+    --accent-foreground: 40 40% 95%;
 
     --destructive: 0 72% 60%;
     --destructive-foreground: 0 0% 100%;
     --success: 145 65% 50%;
     --success-foreground: 0 0% 100%;
     --warning: 39 100% 69%;
-    --warning-foreground: 266 61% 11%;
+    --warning-foreground: 60 5% 10%;
 
-    --border: 267 60% 22%;
-    --input: 267 60% 22%;
-    --ring: 262 68% 72%;
+    --border: 15 10% 28%;
+    --input: 15 10% 28%;
+    --ring: 14 60% 60%;
 
-    --sidebar: 267 60% 12%;
-    --sidebar-background: 267 60% 9%;
-    --sidebar-foreground: 270 100% 99%;
-    --sidebar-primary: 262 68% 72%;
-    --sidebar-primary-foreground: 266 61% 11%;
-    --sidebar-accent: 267 60% 18%;
-    --sidebar-accent-foreground: 263 67% 81%;
-    --sidebar-border: 267 60% 22%;
-    --sidebar-ring: 262 68% 72%;
+    --sidebar: 15 10% 12%;
+    --sidebar-background: 15 10% 10%;
+    --sidebar-foreground: 40 40% 95%;
+    --sidebar-primary: 14 60% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 15 10% 22%;
+    --sidebar-accent-foreground: 40 40% 95%;
+    --sidebar-border: 15 10% 28%;
+    --sidebar-ring: 14 60% 60%;
 
-    --chart-1: 262 68% 72%;
+    --chart-1: 14 60% 60%;
     --chart-2: 332 77% 71%;
     --chart-3: 223 70% 67%;
     --chart-4: 39 100% 69%;
-    --chart-5: 263 67% 81%;
+    --chart-5: 138 20% 50%;
   }
 }
 
@@ -194,7 +195,7 @@
 
 @layer utilities {
   .gradient-primary {
-    background: #6B3FBF;
+    background: linear-gradient(135deg, #964735 0%, #D97B66 100%);
   }
 
   .gradient-warm {

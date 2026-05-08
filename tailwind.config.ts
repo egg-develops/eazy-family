@@ -20,7 +20,7 @@ export default {
     	},
     	extend: {
     		fontFamily: {
-    			sans: ['DM Sans', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif'],
+    			sans: ['Plus Jakarta Sans', 'DM Sans', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif'],
     			serif: ['Fraunces', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
     			mono: ['DM Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
     		},
@@ -100,6 +100,20 @@ export default {
     			},
     			paper: '#FBF8FF',
     			ink:   '#1A0B2E',
+    			terracotta: {
+    				DEFAULT: '#964735',
+    				light: '#D97B66',
+    				50: '#FDF3EE',
+    				100: '#FAE0D5',
+    			},
+    			cream: {
+    				DEFAULT: '#FDF9F3',
+    				dim: '#F1EDE7',
+    			},
+    			sage: {
+    				DEFAULT: '#44664F',
+    				light: '#C6ECCF',
+    			},
     		},
     		borderRadius: {
     			lg: 'var(--radius)',

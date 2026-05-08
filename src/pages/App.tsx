@@ -3,7 +3,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { 
+import {
   Bell,
   Plus,
   Settings,
@@ -23,6 +23,7 @@ import {
   Trash2,
   ImagePlus
 } from "lucide-react";
+import { EZCapture } from "@/components/EZCapture";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,12 +56,14 @@ import { error as logError } from "@/lib/logger";
 import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
+import { format } from "date-fns";
 
 const AppLayout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
+  const [ezOpen, setEzOpen] = useState(false);
 
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
@@ -91,124 +94,110 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b px-4 py-3" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            {/* Hamburger Dropdown Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-background border shadow-lg z-50">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <DropdownMenuItem
-                      key={item.id}
-                      onClick={() => navigate(item.path)}
-                      className={`flex items-center gap-3 cursor-pointer transition-colors ${
-                        isActive(item.path)
-                          ? "bg-primary text-primary-foreground font-semibold"
-                          : "hover:bg-accent hover:text-accent-foreground"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {isHomePath ? (
-              <button onClick={() => navigate('/app')} className="flex-shrink-0" aria-label="Home">
-                {(() => {
-                  let iconUrl: string | undefined;
-                  try {
-                    const savedConfig = localStorage.getItem('eazy-family-home-config');
-                    if (savedConfig) iconUrl = JSON.parse(savedConfig)?.iconImage;
-                  } catch {}
-                  return iconUrl ? (
-                    <img src={iconUrl} alt="Home" className="w-8 h-8 rounded-full object-cover" />
-                  ) : (
-                    <img src="/logo.png" alt="Home" className="w-8 h-8 rounded-xl object-contain" />
-                  );
-                })()}
-              </button>
-            ) : (() => {
-              const currentNav = navigationItems.find(item => item.path === currentPath);
-              const NavIcon = currentNav?.icon;
-              return NavIcon ? <NavIcon className="h-5 w-5 flex-shrink-0 text-primary" /> : null;
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+        <div className="flex items-center justify-between px-4 h-14 max-w-7xl mx-auto">
+          {/* Left: user avatar → settings */}
+          <button onClick={() => navigate('/app/settings')} className="flex-shrink-0">
+            {(() => {
+              let iconUrl: string | undefined;
+              try { const s = localStorage.getItem('eazy-family-home-config'); if (s) iconUrl = JSON.parse(s)?.iconImage; } catch {}
+              return iconUrl
+                ? <img src={iconUrl} alt="Profile" className="w-9 h-9 rounded-full object-cover" style={{ border: '2px solid #D97B66' }} />
+                : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#D97B66' }}>{userInitials.slice(0,2)}</div>;
             })()}
-            <h1 className="font-bold text-lg text-foreground truncate">
-              {isHomePath
-                ? t('app.name')
-                : navigationItems.find(item => item.path === currentPath)?.label ?? t('app.name')}
-            </h1>
-          </div>
+          </button>
+          {/* Center: page title */}
+          <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
+            {isHomePath ? 'Eazy.Family' : (() => {
+              const allNav = [
+                { path: '/app/calendar', label: 'Calendar' },
+                { path: '/app/todos', label: 'Tasks' },
+                { path: '/app/shopping', label: 'Shopping' },
+                { path: '/app/family', label: 'Family' },
+                { path: '/app/rituals', label: 'Rituals' },
+                { path: '/app/settings', label: 'Settings' },
+                { path: '/app/messaging', label: 'Messages' },
+                { path: '/app/events', label: 'Events' },
+                { path: '/app/community', label: 'Community' },
+              ];
+              return allNav.find(n => currentPath.startsWith(n.path))?.label ?? 'Eazy.Family';
+            })()}
+          </h1>
+          {/* Right: settings gear */}
+          <button onClick={() => navigate('/app/settings')} className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
+            <Settings className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden" style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top))' }}>
+      <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden" style={{ paddingTop: '3.5rem' }}>
         <div className="max-w-7xl mx-auto px-4 pb-6 pt-3">
           {isHomePath ? <AppHome /> : <Outlet />}
         </div>
       </main>
 
-      {/* Bottom Navigation - Mobile and Tablet */}
-      <nav className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <div className="flex items-center gap-3 rounded-full px-4 py-3 shadow-custom-lg" style={{ background: "#6B3FBF" }}>
-          {/* Menu Icon - Opens Settings Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-full"
-                style={{ background: "rgba(255,255,255,0.15)" }}
-              >
-                <div className="grid grid-cols-2 gap-[3px]">
-                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#6B3FBF" }} />
-                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#EE7BB0" }} />
-                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#6E8FE5" }} />
-                  <div className="w-1.5 h-1.5 rounded-sm" style={{ background: "#FFC861" }} />
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 bg-card border shadow-lg mb-2">
-              {navigationItems.slice(1).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <DropdownMenuItem
-                    key={item.id}
-                    onClick={() => { haptic('tap'); navigate(item.path); }}
-                    className={isActive(item.path) ? "bg-primary/10 text-primary font-medium" : ""}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    <span>{item.label}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* Bottom Navigation */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
+        style={{
+          background: '#FDF9F3',
+          borderTop: '1px solid #DAC1BB',
+          height: '80px',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
+        {/* Calendar */}
+        <button
+          onClick={() => { haptic('tap'); navigate('/app/calendar'); }}
+          className="flex flex-col items-center justify-center w-12 h-12"
+        >
+          <Calendar className="w-6 h-6" style={{ color: isActive('/app/calendar') ? '#964735' : '#B5A09A' }} />
+        </button>
 
-          {/* Home Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => { haptic('tap'); navigate("/app"); }}
-            className="h-10 w-10 rounded-full transition-all"
-            style={isHomePath
-              ? { background: "rgba(255,255,255,0.25)", boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }
-              : { background: "rgba(255,255,255,0.1)" }}
+        {/* Tasks */}
+        <button
+          onClick={() => { haptic('tap'); navigate('/app/todos'); }}
+          className="flex flex-col items-center justify-center w-12 h-12"
+        >
+          <CheckSquare className="w-6 h-6" style={{ color: isActive('/app/todos') ? '#964735' : '#B5A09A' }} />
+        </button>
+
+        {/* EZ Button — center, elevated */}
+        <div className="relative flex items-center justify-center" style={{ marginBottom: '20px' }}>
+          <button
+            onClick={() => { haptic('medium'); setEzOpen(true); }}
+            className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
+            style={{
+              width: '64px',
+              height: '64px',
+              background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)',
+              boxShadow: '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
+            }}
           >
-            <Home className="h-5 w-5" style={{ color: "#FFC861" }} />
-          </Button>
+            <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
+          </button>
         </div>
+
+        {/* Shopping */}
+        <button
+          onClick={() => { haptic('tap'); navigate('/app/shopping'); }}
+          className="flex flex-col items-center justify-center w-12 h-12"
+        >
+          <ShoppingCart className="w-6 h-6" style={{ color: isActive('/app/shopping') ? '#964735' : '#B5A09A' }} />
+        </button>
+
+        {/* Family */}
+        <button
+          onClick={() => { haptic('tap'); navigate('/app/family'); }}
+          className="flex flex-col items-center justify-center w-12 h-12"
+        >
+          <Users className="w-6 h-6" style={{ color: isActive('/app/family') ? '#964735' : '#B5A09A' }} />
+        </button>
       </nav>
+
+      {/* EZ Capture Overlay */}
+      {ezOpen && <EZCapture onClose={() => setEzOpen(false)} />}
     </div>
   );
 };
@@ -498,8 +487,9 @@ const AppHome = () => {
   }, [headerImages.length]);
 
   return (
-    <div className="space-y-6">
-      {/* Hero Image Carousel */}
+    <div className="space-y-4 pb-4">
+
+      {/* Hidden file input for gallery management */}
       <input
         ref={headerImageInputRef}
         type="file"
@@ -510,50 +500,6 @@ const AppHome = () => {
           if (file) handleHeaderImageUpload(file);
         }}
       />
-      {headerImages.length > 0 ? (
-        <div className="relative rounded-2xl overflow-hidden bg-muted w-full" style={{ aspectRatio: '16/9' }}>
-          {headerImages.map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt={`Hero ${i + 1}`}
-              className={`carousel-image ${i === carouselIndex % headerImages.length ? 'active' : ''}`}
-              style={{ objectFit: 'contain', objectPosition: 'center' }}
-              loading={i === 0 ? "eager" : "lazy"}
-            />
-          ))}
-          {headerImages.length > 1 && (
-            <div className="carousel-dots">
-              {headerImages.map((_, i) => (
-                <button
-                  key={i}
-                  className={`carousel-dot ${i === carouselIndex % headerImages.length ? 'active' : ''}`}
-                  onClick={() => setCarouselIndex(i)}
-                  aria-label={`Show image ${i + 1}`}
-                />
-              ))}
-            </div>
-          )}
-          <button
-            onClick={() => setShowGalleryDialog(true)}
-            className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-background/60 hover:bg-background/80 rounded-full text-foreground transition-colors z-10"
-            title="Manage images"
-          >
-            <Camera className="w-3 h-3" />
-          </button>
-        </div>
-      ) : (
-        <div
-          onClick={() => headerImageInputRef.current?.click()}
-          className="relative rounded-2xl overflow-hidden bg-primary flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group w-full"
-          style={{ aspectRatio: '16/9' }}
-        >
-          <div className="text-center text-primary-foreground">
-            <Camera className="w-8 h-8 mx-auto mb-2 opacity-80 group-hover:opacity-100 transition-opacity" />
-            <p className="font-semibold text-base">Add Hero Image</p>
-          </div>
-        </div>
-      )}
 
       {/* Gallery Management Dialog */}
       <Dialog open={showGalleryDialog} onOpenChange={setShowGalleryDialog}>
@@ -591,320 +537,112 @@ const AppHome = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Eazy Assistant */}
-      <div data-tutorial="eazy-assistant">
-        <ErrorBoundary>
-          <EazyAssistant />
-        </ErrorBoundary>
+      {/* Morning greeting */}
+      <div className="space-y-0.5">
+        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#B5A09A' }}>
+          {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
+        </p>
+        <h1 className="text-2xl font-bold leading-tight" style={{ color: '#1C1C18' }}>
+          {homeConfig.greeting || 'Your Family'}
+        </h1>
+        <p className="text-sm" style={{ color: '#7A6660' }}>
+          {homeConfig.byline || 'The house is quiet, and your day is beautifully mapped out.'}
+        </p>
       </div>
 
-      {/* First-time Invite Family banner */}
-      {showInviteBanner && (
-        <Card
-          className="p-4 border-2 border-primary/40 bg-primary/5 shadow-custom-md relative"
-          onTouchStart={(e) => { inviteTouchY.current = e.touches[0].clientY; inviteTouchX.current = e.touches[0].clientX; }}
-          onTouchEnd={(e) => {
-            const dy = e.changedTouches[0].clientY - inviteTouchY.current;
-            const dx = Math.abs(e.changedTouches[0].clientX - inviteTouchX.current);
-            if (dy < -60 && dx < 40) {
-              localStorage.setItem('eazy-family-invite-dismissed', '1');
-              setShowInviteBanner(false);
-            }
-          }}
-        >
-          <button
-            onClick={() => {
-              localStorage.setItem('eazy-family-invite-dismissed', '1');
-              setShowInviteBanner(false);
-            }}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-lg font-light transition-colors"
-            aria-label="Dismiss"
-          >×</button>
-          <div className="flex items-start gap-3 pr-6">
-            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">Invite your family</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Share the app with your family members to start syncing calendars, lists, and more.
-              </p>
-              <Button
-                size="sm"
-                className="mt-3 text-white border-0" style={{ background: "#6B3FBF" }}
-                onClick={() => navigate('/app/settings')}
-              >
-                Invite Family Members
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Add Widget Buttons */}
-      {(!homeConfig.showCalendar || !homeConfig.showWeather) && (
-        <div className="grid grid-cols-2 gap-3">
-          {!homeConfig.showCalendar && (
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-500/30 hover:border-grape-600 transition-all"
-              onClick={addCalendar}
-            >
-              <Calendar className="w-5 h-5" style={{ color: "#6E8FE5" }} />
-              <span className="text-sm">Calendar</span>
-            </Button>
-          )}
-          {!homeConfig.showWeather && (
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col gap-2 border-2 border-grape-300/50 hover:border-grape-500 transition-all"
-              onClick={addWeather}
-            >
-              <CloudSun className="w-5 h-5" style={{ color: "#FFC861" }} />
-              <span className="text-sm">Weather</span>
-            </Button>
-          )}
+      {/* Today's Rituals card */}
+      <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
+          <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
+            {(() => {
+              const completed = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
+              return `You're at ${Math.round((completed.length / 5) * 100)}% completion`;
+            })()}
+          </p>
+          <p className="text-xs" style={{ color: '#7A6660' }}>3 of 5 family connection moments shared. The evening storytime is next.</p>
         </div>
-      )}
+        <button
+          onClick={() => navigate('/app/rituals')}
+          className="px-4 py-2 rounded-full text-sm font-semibold text-white flex-shrink-0"
+          style={{ background: '#964735' }}
+        >
+          Open Rituals
+        </button>
+      </div>
 
-      {/* Weather Widget */}
-      {homeConfig.showWeather && (
-        <ErrorBoundary>
-          <WeatherWidget onRemove={removeWeather} />
-        </ErrorBoundary>
-      )}
-
-      {/* Today's Highlights */}
-      {homeConfig.showCalendar && (
-        <Card className="p-4 shadow-custom-md border-2 border-grape-500/30">
-          <div className="space-y-4">
+      {/* Next Up */}
+      {(() => {
+        const all = calendarEvents.filter(e => e.startDate >= new Date()).sort((a,b) => a.startDate.getTime() - b.startDate.getTime());
+        const next = all[0];
+        if (!next) return null;
+        return (
+          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 flex-shrink-0" style={{ color: "#6E8FE5" }} />
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1 bg-muted rounded-lg p-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 px-3 ${calendarView === 'week' ? 'bg-background shadow-sm' : ''}`}
-                    onClick={() => setCalendarView('week')}
-                  >
-                    Week
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 px-3 ${calendarView === 'month' ? 'bg-background shadow-sm' : ''}`}
-                    onClick={() => setCalendarView('month')}
-                  >
-                    Month
-                  </Button>
-                </div>
-                <button
-                  onClick={removeCalendar}
-                  className="w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors text-lg font-light"
-                  aria-label="Remove calendar"
-                >×</button>
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Next Up</p>
             </div>
-
-            {calendarView === 'week' && (() => {
-              const now = new Date();
-              const weekStart = new Date(now);
-              // Start week on Monday
-              const day = now.getDay();
-              const diff = day === 0 ? -6 : 1 - day;
-              weekStart.setDate(now.getDate() + diff);
-              const weekDays = Array.from({ length: 7 }, (_, i) => {
-                const d = new Date(weekStart);
-                d.setDate(weekStart.getDate() + i);
-                return d;
-              });
-              const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-              return (
-                <Card className="p-3 shadow-custom-md">
-                  <div className="grid grid-cols-7 text-center">
-                    {weekDays.map((d, i) => {
-                      const isToday = d.toDateString() === now.toDateString();
-                      const dayEvents = calendarEvents.filter(e => e.startDate.toDateString() === d.toDateString());
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => { if (dayEvents.length > 0) setSnippetDay(d); else navigate('/app/calendar'); }}
-                          className="flex flex-col items-center gap-0.5 py-1"
-                        >
-                          <div className="text-[10px] text-muted-foreground">{labels[i]}</div>
-                          <div className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold transition-colors ${isToday ? 'text-white' : 'hover:bg-muted/70 text-foreground'}`} style={isToday ? { background: "#6B3FBF" } : {}}>
-                            {d.getDate()}
-                          </div>
-                          {dayEvents.length > 0 && (
-                            <div className="w-1 h-1 rounded-full" style={{ background: isToday ? "#FFC861" : "#6E8FE5" }} />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Card>
-              );
-            })()}
-
-            {calendarView === 'month' && (() => {
-              const now = new Date();
-              const year = now.getFullYear();
-              const month = now.getMonth();
-              const today = now.getDate();
-              const firstDay = new Date(year, month, 1).getDay();
-              const daysInMonth = new Date(year, month + 1, 0).getDate();
-              const monthName = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-              const cells = Array.from({ length: firstDay + daysInMonth }, (_, i) =>
-                i < firstDay ? null : i - firstDay + 1
-              );
-              return (
-                <Card className="p-4 shadow-custom-md">
-                  <h4 className="font-semibold mb-3">{monthName}</h4>
-                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                      <div key={i} className="text-muted-foreground p-1">{d}</div>
-                    ))}
-                    {cells.map((day, i) => {
-                      if (!day) return <div key={i} />;
-                      const cellDate = new Date(year, month, day);
-                      const dayEvents = calendarEvents.filter(e => e.startDate.toDateString() === cellDate.toDateString());
-                      const isToday = day === today;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => { if (dayEvents.length > 0) setSnippetDay(cellDate); else navigate('/app/calendar'); }}
-                          className={`p-1 rounded flex flex-col items-center transition-colors ${isToday ? 'bg-grape-600 text-white font-bold' : 'hover:bg-muted/70'}`}
-                        >
-                          {day}
-                          {dayEvents.length > 0 && (
-                            <div className="w-1 h-1 rounded-full mt-0.5" style={{ background: isToday ? "#FFC861" : "#6E8FE5" }} />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Card>
-              );
-            })()}
-
-            {/* Day snippet popover */}
-            {snippetDay && (() => {
-              const dayEvts = calendarEvents.filter(e => e.startDate.toDateString() === snippetDay.toDateString());
-              return (
-                <Card className="p-4 shadow-custom-md border-l-4 border-l-grape-600 animate-in fade-in slide-in-from-top-2">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-semibold text-sm">{snippetDay.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
-                      <p className="text-xs text-muted-foreground">{dayEvts.length} item{dayEvts.length !== 1 ? 's' : ''}</p>
-                    </div>
-                    <button onClick={() => setSnippetDay(null)} className="text-muted-foreground hover:text-foreground p-1">×</button>
-                  </div>
-                  <div className="space-y-2 mb-3">
-                    {dayEvts.slice(0, 4).map(evt => (
-                      <div key={evt.id} className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${evt.itemType === 'task' ? 'bg-orange-400' : evt.itemType === 'reminder' ? 'bg-purple-400' : 'bg-grape-600'}`} />
-                        <span className="text-sm truncate">{evt.title}</span>
-                        {!evt.allDay && evt.itemType !== 'task' && (
-                          <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
-                            {evt.startDate.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                    {dayEvts.length > 4 && <p className="text-xs text-muted-foreground">+{dayEvts.length - 4} more</p>}
-                  </div>
-                  <Button size="sm" onClick={() => { setSnippetDay(null); navigate('/app/calendar'); }} className="w-full">
-                    Open Calendar
-                  </Button>
-                </Card>
-              );
-            })()}
+            <div>
+              <p className="font-bold text-base" style={{ color: '#1C1C18' }}>{next.title}</p>
+              <p className="text-sm" style={{ color: '#7A6660' }}>
+                {next.startDate.toDateString() === new Date().toDateString() ? 'Today' : format(next.startDate, 'EEE MMM d')} · {format(next.startDate, 'h:mm a')}
+              </p>
+            </div>
           </div>
-        </Card>
-      )}
+        );
+      })()}
 
-      {/* Quick Stats — always visible */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card
-          className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => navigate('/app/calendar')}
-        >
-          <div className="text-2xl font-bold" style={{ color: "#6E8FE5" }}>{upcomingEventsCount}</div>
-          <div className="text-xs text-muted-foreground leading-tight mt-1">Upcoming<br/>Events</div>
-        </Card>
-        <Card
-          className="p-4 text-center shadow-custom-md cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => navigate('/app/todos')}
-        >
-          <div className="text-2xl font-bold" style={{ color: "#EE7BB0" }}>{pendingTasksCount}</div>
-          <div className="text-xs text-muted-foreground leading-tight mt-1">Pending<br/>Tasks</div>
-        </Card>
+      {/* Top Tasks */}
+      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Top Tasks</p>
+          <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+        </div>
+        <QuickToDos navigate={navigate} />
       </div>
 
-
-      {/* Quick Actions — fixed set */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('home.quickActions')}</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: t('nav.events'), icon: Search, path: '/app/events', color: "#EE7BB0" },
-            { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar', color: "#6E8FE5" },
-            { label: t('nav.community'), icon: Users, path: '/app/community', color: "#FFC861" },
-            { label: "Shopping List", icon: ShoppingCart, path: '/app/todos', color: "#6B3FBF" },
-          ].map(({ label, icon: Icon, path, color }) => (
-            <Button
-              key={label}
-              variant="outline"
-              className="h-auto p-4 flex flex-col gap-2 border-2 border-primary/30 hover:border-primary transition-all"
-              onClick={() => { haptic('tap'); navigate(path); }}
-            >
-              <Icon className="w-5 h-5" style={{ color }} />
-              <span className="text-sm">{label}</span>
-            </Button>
+      {/* Family Feed */}
+      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Feed</p>
+          <button className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+        </div>
+        <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
+          {todayEvents.slice(0, 3).map(event => (
+            <div key={event.id} className="flex items-start gap-3 px-4 py-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm" style={{ background: '#F1EDE7' }}>📅</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: '#1C1C18' }}>{event.title}</p>
+                <p className="text-xs" style={{ color: '#7A6660' }}>{format(event.startDate, 'h:mm a')}</p>
+              </div>
+            </div>
           ))}
+          {todayEvents.length === 0 && (
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm" style={{ color: '#7A6660' }}>Nothing yet today. A calm start.</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Quick To-Do's Widget */}
-      <QuickToDos />
-
-      {/* Community Updates */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">{t('home.community')}</h3>
-        
-        <Card 
-          className="p-4 shadow-custom-md cursor-pointer hover:shadow-custom-lg transition-shadow"
-          onClick={() => navigate('/app/community')}
-        >
-          <div className="flex flex-col items-center text-center py-4">
-            <Users className="w-10 h-10 text-muted-foreground mb-3" />
-            <h4 className="font-medium text-sm mb-1">No community updates yet</h4>
-            <p className="text-sm text-muted-foreground mb-3">
-              Join groups to connect with other families
-            </p>
-            <Button 
-              size="sm" 
-              className="gradient-primary text-white border-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/app/community');
-              }}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              Explore Community
-            </Button>
-          </div>
-        </Card>
-      </div>
+      {/* Gallery */}
+      {headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
+        <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
+          <img src={headerImages[carouselIndex % headerImages.length]} alt="Family" className="w-full h-full object-cover" />
+          <button
+            onClick={() => setShowGalleryDialog(true)}
+            className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(253,249,243,0.9)' }}
+          >
+            <Camera className="w-4 h-4" style={{ color: '#964735' }} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
 // Quick To-Do's Component
-const QuickToDos = () => {
+const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
@@ -1010,50 +748,41 @@ const QuickToDos = () => {
   const hasCompletedTasks = quickTasks.some(t => t.completed);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Quick To-Do's</h3>
-        {hasCompletedTasks && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={clearCompletedTasks}
-            className="h-8 w-8 p-0"
-            title="Clear completed tasks"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+    <div>
+      <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
+        {quickTasks.map((task) => (
+          <div key={task.id} className="flex items-center gap-3 px-4 py-3">
+            <Checkbox
+              id={task.id}
+              checked={task.completed}
+              onCheckedChange={() => toggleTask(task.id)}
+            />
+            <label
+              htmlFor={task.id}
+              className={`text-sm flex-1 cursor-pointer ${task.completed ? 'line-through' : ''}`}
+              style={{ color: task.completed ? '#7A6660' : '#1C1C18' }}
+            >
+              {task.title}
+            </label>
+            {hasCompletedTasks && task.completed && (
+              <button onClick={clearCompletedTasks} className="text-xs" style={{ color: '#DAC1BB' }}>✓</button>
+            )}
+          </div>
+        ))}
+        {quickTasks.length === 0 && (
+          <div className="px-4 py-4 text-center">
+            <p className="text-sm" style={{ color: '#7A6660' }}>No tasks yet. Tap below to add one.</p>
+          </div>
         )}
+        <button
+          className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium"
+          style={{ color: '#964735' }}
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <Plus className="w-4 h-4" />
+          Add To-Do
+        </button>
       </div>
-      
-      <Card className="p-4 shadow-custom-md">
-        <div className="space-y-3">
-          {quickTasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-3">
-              <Checkbox 
-                id={task.id} 
-                checked={task.completed}
-                onCheckedChange={() => toggleTask(task.id)}
-              />
-              <label 
-                htmlFor={task.id} 
-                className={`text-sm flex-1 cursor-pointer ${task.completed ? 'line-through text-muted-foreground' : ''}`}
-              >
-                {task.title}
-              </label>
-            </div>
-          ))}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full justify-start gap-2"
-            onClick={() => setIsAddDialogOpen(true)}
-          >
-            <Plus className="w-4 h-4" />
-            Add To-Do
-          </Button>
-        </div>
-      </Card>
 
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent>

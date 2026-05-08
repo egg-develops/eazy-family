@@ -32,6 +32,8 @@ import NotFound from "./pages/NotFound";
 const Calendar = lazy(() => import("./pages/Calendar"));
 const ToDoList = lazy(() => import("./pages/ToDoList"));
 const Events = lazy(() => import("./pages/Events"));
+const Shopping = lazy(() => import("./pages/Shopping"));
+const Rituals = lazy(() => import("./pages/Rituals"));
 
 const Community = lazy(() => import("./pages/Community"));
 const Messaging = lazy(() => import("./pages/Messaging"));
@@ -88,6 +90,8 @@ const App = () => (
                 <Route path="messaging" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Messaging /></Suspense></ErrorBoundary>} />
                 <Route path="settings" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></ErrorBoundary>} />
                 <Route path="family" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense></ErrorBoundary>} />
+                <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
+                <Route path="rituals" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Rituals /></Suspense></ErrorBoundary>} />
               </Route>
               
               {/* Admin Dashboard */}
