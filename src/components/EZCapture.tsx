@@ -142,29 +142,18 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex flex-col justify-end"
+      className="fixed inset-0 z-[200] flex flex-col"
       style={{ background: 'rgba(28, 20, 18, 0.55)', backdropFilter: 'blur(6px)' }}
       onClick={onClose}
     >
-      {/* Bottom sheet style: card + AI strip + nav spacer */}
-      <div onClick={e => e.stopPropagation()} className="space-y-3 px-4 pb-28">
-
-        {/* AI message strip */}
-        <div
-          className="px-4 py-3 rounded-2xl flex items-center gap-3"
-          style={{ background: 'rgba(253, 249, 243, 0.95)', border: '1px solid #DAC1BB' }}
-        >
-          <img src="/logo.png" alt="" className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
-            style={{ background: '#D97B66', padding: '3px' }} />
-          <p className="text-sm" style={{ color: '#55433F', fontStyle: 'italic' }}>
-            "I'll help you organize this. Take a deep breath."
-          </p>
-        </div>
+      {/* Center: capture card */}
+      <div onClick={e => e.stopPropagation()} className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm">
 
         {/* Main capture card */}
         <div
           className="rounded-3xl p-6 space-y-5"
-          style={{ background: '#FFFFFF', boxShadow: '0 -4px 40px rgba(28,20,18,0.12)' }}
+          style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}
         >
           <div className="text-center space-y-1">
             <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#1C1C18' }}>
@@ -248,6 +237,21 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
               {isProcessing ? 'Creating…' : 'Create'}
             </button>
           </div>
+        </div>
+        </div>
+      </div>
+
+      {/* Bottom: AI strip above nav */}
+      <div onClick={e => e.stopPropagation()} className="px-4 pb-28">
+        <div
+          className="px-4 py-3 rounded-2xl flex items-center gap-3"
+          style={{ background: 'rgba(253, 249, 243, 0.95)', border: '1px solid #DAC1BB' }}
+        >
+          <img src="/logo.png" alt="" className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
+            style={{ background: '#D97B66', padding: '3px' }} />
+          <p className="text-sm" style={{ color: '#55433F', fontStyle: 'italic' }}>
+            "I'll help you organize this. Take a deep breath."
+          </p>
         </div>
       </div>
     </div>

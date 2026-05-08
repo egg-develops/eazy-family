@@ -59,6 +59,7 @@ const ToDoList = () => {
   const [expandedLists, setExpandedLists] = useState<Set<string>>(new Set());
   const [addingToListId, setAddingToListId] = useState<string | null>(null);
   const [newListItemTitle, setNewListItemTitle] = useState("");
+  const [timeTab, setTimeTab] = useState<'today'|'upcoming'|'complete'>('today');
 
   const currentUserId = user?.id || '';
 
@@ -372,181 +373,110 @@ const ToDoList = () => {
     }
   };
 
-  return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
-      {/* Header */}
+  // Time-based filter for "Today" tab
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
-      {/* Tabs */}
-      <Tabs
-  value={activeTab}
-  onValueChange={(v) => {
-    if (v === "task" || v === "shopping" || v === "shared") {
-      setActiveTab(v);
+  const tasksByTime = (view: string) => tasks.filter(t => {
+    if (t.type !== 'task' || !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (t.type !== 'task') return false;
+      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (view === 'today') {
+        if (t.completed) return false;
+        if (!t.due_date) return true; // no due date = treat as today
+        const d = new Date(t.due_date); d.setHours(0,0,0,0);
+        return d <= tomorrow;
+      }
+      if (view === 'upcoming') {
+        if (t.completed) return false;
+        if (!t.due_date) return false;
+        const d = new Date(t.due_date); d.setHours(0,0,0,0);
+        return d >= tomorrow;
+      }
+      if (view === 'complete') return t.completed;
     }
-  }}
->
-        <TabsList className="grid w-full grid-cols-3 gap-1 sm:gap-0 h-auto">
-          <TabsTrigger value="task" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <CheckSquare className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Tasks</span>
-          </TabsTrigger>
-          <TabsTrigger value="shopping" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Shopping</span>
-          </TabsTrigger>
-          <TabsTrigger value="shared" className="gap-1 sm:gap-2 text-xs sm:text-sm">
-            <Users className="w-5 h-5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Shared</span>
-          </TabsTrigger>
-        </TabsList>
+    return false;
+  });
 
-        <TabsContent value={activeTab} className="space-y-6 mt-6">
-          {/* Stats Cards */}
-          {activeTab === "shared" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="shadow-custom-md">
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold">{sharedStats.sharedLists}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Shared Lists</div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-custom-md">
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-grape-600">{sharedStats.collaborators}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Members</div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-custom-md">
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{sharedStats.completedShared}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-custom-md">
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-orange-600">{sharedStats.active}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Active</div>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all" onClick={() => setFilterView("all")}>
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold">{stats.total}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">
-                    {activeTab === "shopping" ? "Total Items" : "Total Tasks"}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-green-400/50 transition-all" onClick={() => setFilterView("completed")}>
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.completed}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
-                </CardContent>
-              </Card>
-              {activeTab !== "shopping" && (
-                <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-orange-400/50 transition-all" onClick={() => setFilterView("overdue")}>
-                  <CardContent className="p-3 sm:p-4 text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-orange-600">{stats.overdue}</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Overdue</div>
-                  </CardContent>
-                </Card>
-              )}
-              <Card className="shadow-custom-md cursor-pointer hover:ring-2 hover:ring-grape-400/50 transition-all" onClick={() => setFilterView("pending")}>
-                <CardContent className="p-3 sm:p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-grape-600">{stats.pending}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Pending</div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+  const guessCategory = (title: string): string => {
+    const lower = title.toLowerCase();
+    if (/school|homework|lesson|class|pick up|drop off|practice|leo|mia|kid|child|son|daughter/.test(lower)) return 'Kids';
+    if (/budget|bill|review|admin|account|insurance|tax|bank|report/.test(lower)) return 'Admin';
+    if (/clean|laundry|water|plant|groceries|cook|kitchen|garden|fix|repair|furnace|filter/.test(lower)) return 'Home';
+    return 'Personal';
+  };
 
-          {/* Add New Task/Item and Voice Assistant */}
-          <div className="space-y-3 sm:space-y-4">
-            <ParticleButton 
-              className="w-full gradient-primary text-white border-0 h-10 sm:h-11"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {activeTab === "shopping" ? "New Item" : activeTab === "shared" ? "New List" : "New Task"}
-            </ParticleButton>
-            
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border rounded-lg bg-muted/50">
-              <div className="flex-1">
-                <p className="text-xs sm:text-sm font-medium mb-1">Voice Assistant</p>
-                <p className="text-xs text-muted-foreground">
-                  {activeTab === "task"
-                    ? "Tap the mic and say your tasks"
-                    : activeTab === "shared"
-                    ? "Expand a list, then tap the mic to add items by voice"
-                    : "Tap the mic and say your shopping items"}
-                </p>
-              </div>
-              <VoiceShoppingAssistant
-                onItemsAdded={handleVoiceItemsAdded}
-                mode={activeTab}
-                listenerDescription={
-                  activeTab === "task"
-                    ? "Speak your tasks"
-                    : activeTab === "shared"
-                    ? "Speak items to add to the list"
-                    : "Speak your shopping items"
-                }
-              />
-            </div>
-          </div>
+  const groupByCategory = (taskList: Task[]) => {
+    const groups: Record<string, Task[]> = {};
+    taskList.forEach(t => {
+      const cat = guessCategory(t.title);
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(t);
+    });
+    return groups;
+  };
 
-          {/* Search + Filter */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={activeTab === "shopping" ? "Search items..." : activeTab === "shared" ? "Search lists..." : "Search tasks..."}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 h-10"
-              />
-            </div>
-            <div className="flex gap-2">
-              {activeTab !== "shared" && (
-                <Select value={filterView} onValueChange={setFilterView}>
-                  <SelectTrigger className="h-10 flex-1 sm:w-40">
-                    <Filter className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{activeTab === "shopping" ? "All Items" : "All"}</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    {activeTab === "task" && <SelectItem value="overdue">Overdue</SelectItem>}
-                  </SelectContent>
-                </Select>
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 flex-shrink-0"
-                aria-label="Refresh"
-                disabled={isRefreshing}
-                onClick={async () => {
-                  setIsRefreshing(true);
-                  const completedIds = tasks
-                    .filter(t => t.type === activeTab && t.completed)
-                    .map(t => t.id);
-                  if (completedIds.length > 0) {
-                    await supabase.from('tasks').delete().in('id', completedIds);
-                  }
-                  await loadTasks();
-                  setIsRefreshing(false);
-                }}
-              >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-          </div>
+  return (
+    <div className="space-y-4 pb-4">
 
-          {/* Tasks List */}
+      {/* Time tabs */}
+      <div className="flex gap-1 p-1 rounded-2xl" style={{ background: '#F1EDE7' }}>
+        {(['today','upcoming','complete'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setTimeTab(tab)}
+            className="flex-1 py-2 rounded-xl text-sm font-semibold capitalize transition-all"
+            style={{
+              background: timeTab === tab ? '#964735' : 'transparent',
+              color: timeTab === tab ? '#FFFFFF' : '#7A6660',
+            }}
+          >
+            {tab === 'today' ? 'Today' : tab === 'upcoming' ? 'Upcoming' : 'Complete'}
+          </button>
+        ))}
+      </div>
+
+      {/* Smart suggestion banner */}
+      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: '#C6ECCF', border: '1px solid #AACFB4' }}>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#44664F' }}>
+          <span className="text-white text-sm">✦</span>
+        </div>
+        <p className="text-sm flex-1" style={{ color: '#2D4E39' }}>
+          You usually plan your week on Sundays. <span className="font-semibold">Add to list?</span>
+        </p>
+        <button
+          onClick={() => setIsDialogOpen(true)}
+          className="px-3 py-1.5 rounded-full text-xs font-bold"
+          style={{ background: '#44664F', color: '#FFFFFF' }}
+        >
+          Add
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5A09A' }} />
+        <input
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none"
+          style={{ background: '#F1EDE7', border: '1px solid #DAC1BB', color: '#1C1C18' }}
+        />
+      </div>
+
+      {/* Shared lists toggle */}
+      <button
+        onClick={() => setActiveTab(activeTab === 'shared' ? 'task' : 'shared')}
+        className="flex items-center gap-2 text-sm font-medium"
+        style={{ color: activeTab === 'shared' ? '#964735' : '#7A6660' }}
+      >
+        <Users className="w-4 h-4" />
+        {activeTab === 'shared' ? 'Back to My Tasks' : 'View Shared Lists'}
+      </button>
+
+      {/* Shared Lists */}
           {activeTab === "shared" ? (
             <div className="space-y-3">
               {filteredTasks.length === 0 ? (
@@ -658,60 +588,97 @@ const ToDoList = () => {
               })}
             </div>
           ) : (
-            <Card className="shadow-custom-md min-h-[300px]">
-              <CardContent className="p-4 sm:p-6">
-                {filteredTasks.length > 0 ? (
-                  <div className="space-y-2 sm:space-y-3">
-                    {filteredTasks.map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                      >
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => toggleTask(task.id)}
-                          className="flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <span className={`text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                            {task.title}
-                          </span>
-                          {task.due_date && (
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {new Date(task.due_date) < new Date() && !task.completed ? (
-                                <span className="text-destructive font-medium">Overdue: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
-                              ) : (
-                                <span>Due: {format(new Date(task.due_date), "MMM d, yyyy")}</span>
-                              )}
-                            </div>
-                          )}
+            <div className="min-h-[200px]">
+                {(() => {
+                  const listed = tasksByTime(timeTab);
+                  if (listed.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: '#F1EDE7' }}>
+                          <CheckSquare className="w-7 h-7" style={{ color: '#B5A09A' }} />
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteTask(task.id)}
-                          className="text-destructive hover:text-destructive text-xs sm:text-sm h-8 sm:h-9 w-full sm:w-auto"
-                        >
-                          Delete
-                        </Button>
+                        <p className="font-semibold" style={{ color: '#1C1C18' }}>
+                          {timeTab === 'complete' ? 'No completed tasks yet' : 'All clear!'}
+                        </p>
+                        <p className="text-sm mt-1" style={{ color: '#7A6660' }}>
+                          {timeTab === 'complete' ? 'Complete a task to see it here.' : 'Tap + to add something.'}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <ParticleButton onClick={() => setIsDialogOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {activeTab === "shopping" ? "Add a New Item" : "Add a New Task"}
-                    </ParticleButton>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    );
+                  }
+                  const groups = groupByCategory(listed);
+                  return (
+                    <div className="space-y-5">
+                      {Object.entries(groups).map(([cat, catTasks]) => (
+                        <div key={cat}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#7A6660' }}>{cat}</h3>
+                            <span className="text-xs" style={{ color: '#B5A09A' }}>{catTasks.length} task{catTasks.length !== 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #EBE8E2' }}>
+                            {catTasks.map((task, i) => {
+                              const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
+                              return (
+                                <div
+                                  key={task.id}
+                                  className="flex items-center gap-3 px-4 py-3 transition-colors"
+                                  style={{
+                                    background: '#FFFFFF',
+                                    borderTop: i > 0 ? '1px solid #F1EDE7' : 'none',
+                                  }}
+                                >
+                                  <button
+                                    onClick={() => toggleTask(task.id)}
+                                    className="flex-shrink-0 w-5 h-5 rounded flex items-center justify-center transition-all"
+                                    style={{
+                                      border: task.completed ? 'none' : '2px solid #DAC1BB',
+                                      background: task.completed ? '#964735' : 'transparent',
+                                    }}
+                                  >
+                                    {task.completed && <Check className="w-3 h-3 text-white" />}
+                                  </button>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-sm" style={{
+                                      color: task.completed ? '#B5A09A' : '#1C1C18',
+                                      textDecoration: task.completed ? 'line-through' : 'none',
+                                    }}>
+                                      {task.title}
+                                    </span>
+                                    {task.due_date && (
+                                      <div className="text-xs mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
+                                        {isOverdue ? '! Urgent · ' : ''}{format(new Date(task.due_date), "EEE, h:mm a")}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => deleteTask(task.id)}
+                                    className="opacity-40 hover:opacity-100 transition-opacity p-1"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" style={{ color: '#7A6660' }} />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+            </div>
           )}
-        </TabsContent>
-      </Tabs>
+      </div>
 
-      {/* Add Task/Item Dialog */}
+      {/* FAB */}
+      <button
+        onClick={() => { setActiveTab('task'); setIsDialogOpen(true); }}
+        className="fixed bottom-24 right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40 transition-transform active:scale-95"
+        style={{ background: '#964735' }}
+      >
+        <Plus className="w-6 h-6 text-white" />
+      </button>
+
+      {/* Add Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto w-[95%] sm:w-full p-4 sm:p-6">
           <DialogHeader>
