@@ -96,8 +96,8 @@ const AppLayout = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between px-4 h-14 max-w-7xl mx-auto">
-          {/* Left: user avatar → settings */}
-          <button onClick={() => navigate('/app/settings')} className="flex-shrink-0">
+          {/* Left: user avatar → home */}
+          <button onClick={() => navigate('/app')} className="flex-shrink-0">
             {(() => {
               let iconUrl: string | undefined;
               try { const s = localStorage.getItem('eazy-family-home-config'); if (s) iconUrl = JSON.parse(s)?.iconImage; } catch {}
