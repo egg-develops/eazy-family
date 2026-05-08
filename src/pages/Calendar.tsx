@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -126,6 +127,7 @@ const Calendar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { isPremium } = useAuth();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day'>('month');
   const [showViewPicker, setShowViewPicker] = useState(false);
@@ -953,53 +955,270 @@ const Calendar = () => {
     );
   };
 
+  // Infer user initials from localStorage for avatar
+  const userInitials = (() => { try { const s = localStorage.getItem('eazy-family-onboarding'); return s ? (JSON.parse(s).userInitials || 'EF') : 'EF'; } catch { return 'EF'; } })();
+  const userIconUrl = (() => { try { const s = localStorage.getItem('eazy-family-home-config'); return s ? JSON.parse(s)?.iconImage : undefined; } catch { return undefined; } })();
+
+  const selectedDayEvents = getItemsForDate(selectedDate)
+    .filter(i => i.type === 'event')
+    .sort((a, b) => new Date((a as Event).startDate).getTime() - new Date((b as Event).startDate).getTime());
+
   return (
-    <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 w-full max-w-full overflow-x-hidden">
-      {/* Calendar Sync Banner */}
-      {showSyncBanner && (
-        <Card className="border-primary/30 bg-primary/5 shadow-custom-md">
-          <CardContent className="py-3 px-3 sm:px-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
-                <div className="p-2 rounded-full bg-primary/10 flex-shrink-0">
-                  <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-xs sm:text-sm">{t('calendar.syncYourCalendars')}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    {t('calendar.syncDescription')}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {isPremium ? (
-                  <Button
-                    size="sm"
-                    className="gradient-primary text-white border-0 whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9"
-                    onClick={() => setShowCalendarSyncDialog(true)}
-                  >
-                    {t('calendar.connect')}
-                  </Button>
-                ) : (
-                  <UpgradeDialog>
-                    <Button size="sm" className="gradient-primary text-white border-0 whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9">
-                      {t('calendar.connect')}
-                    </Button>
-                  </UpgradeDialog>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={handleDismissSyncBanner}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="flex flex-col min-h-screen" style={{ background: '#FDF9F3', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+
+      {/* Own Header */}
+      <div className="flex items-center justify-between px-4 h-14" style={{ background: '#FDF9F3' }}>
+        <button onClick={() => navigate('/app')} className="flex-shrink-0">
+          {userIconUrl
+            ? <img src={userIconUrl} alt="Profile" className="w-9 h-9 rounded-full object-cover" style={{ border: '2px solid #D97B66' }} />
+            : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#D97B66' }}>{userInitials.slice(0,2)}</div>}
+        </button>
+        <div className="flex items-center gap-2">
+          <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>{format(selectedDate, 'MMMM yyyy')}</h1>
+          <button
+            onClick={() => setShowViewPicker(v => !v)}
+            className="w-7 h-7 flex items-center justify-center rounded"
+          >
+            <LayoutGrid className="w-4 h-4" style={{ color: '#964735' }} />
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
+            <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+          <button onClick={() => navigate('/app/settings')} className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
+            <Settings className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+        </div>
+      </div>
+
+      {/* View picker dropdown */}
+      {showViewPicker && (
+        <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+          {(['day', 'week', '3day', 'month'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
+              className="w-full text-left px-4 py-3 text-sm flex items-center justify-between"
+              style={{ color: calendarView === v ? '#964735' : '#1C1C18', fontWeight: calendarView === v ? 600 : 400, borderBottom: '1px solid #F1EDE7' }}
+            >
+              {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
+              {calendarView === v && <Check className="w-3.5 h-3.5" style={{ color: '#964735' }} />}
+            </button>
+          ))}
+        </div>
       )}
+
+      {/* Day/Week/Month pill tabs */}
+      <div className="flex gap-1 mx-4 mb-3 p-1 rounded-2xl" style={{ background: '#F1EDE7' }}>
+        {(['day', 'week', 'month'] as const).map(v => (
+          <button
+            key={v}
+            onClick={() => setCalendarView(v === 'day' ? 'day' : v === 'week' ? 'week' : 'month')}
+            className="flex-1 py-2 rounded-xl text-sm font-semibold capitalize transition-all"
+            style={{
+              background: (calendarView === v || (v === 'month' && calendarView === 'month') || (v === 'week' && (calendarView === 'week' || calendarView === '3day')) || (v === 'day' && calendarView === 'day')) ? '#964735' : 'transparent',
+              color: (calendarView === v || (v === 'month' && calendarView === 'month') || (v === 'week' && (calendarView === 'week' || calendarView === '3day')) || (v === 'day' && calendarView === 'day')) ? '#FFFFFF' : '#7A6660',
+            }}
+          >
+            {v.charAt(0).toUpperCase() + v.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto pb-48">
+
+      {/* Month nav row */}
+      {calendarView === 'month' && (
+        <div className="flex items-center justify-between px-4 mb-2">
+          <button onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
+            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
+            <ChevronLeft className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+          <button onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
+            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
+            <ChevronRight className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+        </div>
+      )}
+
+      {/* Calendar Grid — full width */}
+      {calendarView === 'month' && (() => {
+        const monthStart = startOfMonth(selectedDate);
+        const monthEnd = endOfMonth(selectedDate);
+        const startDt = startOfWeek(monthStart);
+        const endDt = endOfWeek(monthEnd);
+        const days = eachDayOfInterval({ start: startDt, end: endDt });
+        const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+        return (
+          <div className="px-2">
+            <div className="grid grid-cols-7 mb-1">
+              {weekDays.map((d, i) => (
+                <div key={i} className="text-center text-xs font-semibold py-1" style={{ color: '#B5A09A' }}>{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7">
+              {days.map(day => {
+                const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
+                const hasEvents = getItemsForDate(day).length > 0;
+                const isSelected = isSameDay(day, selectedDate);
+                const isTodayDate = isToday(day);
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => setSelectedDate(day)}
+                    className="relative flex flex-col items-center py-1.5 min-h-[44px]"
+                    style={{ opacity: isCurrentMonth ? 1 : 0.3 }}
+                  >
+                    <span className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium"
+                      style={{
+                        background: isTodayDate ? '#964735' : isSelected ? '#F1EDE7' : 'transparent',
+                        color: isTodayDate ? '#FFFFFF' : '#1C1C18',
+                        fontWeight: isTodayDate || isSelected ? 700 : 400,
+                      }}>
+                      {format(day, 'd')}
+                    </span>
+                    {hasEvents && (
+                      <span className="w-1 h-1 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Non-month views */}
+      {calendarView !== 'month' && (
+        <div className="px-4">
+          {calendarView === 'week' && renderWeekCalendar()}
+          {calendarView === '3day' && render3DayCalendar()}
+          {calendarView === 'day' && renderDayCalendar()}
+        </div>
+      )}
+
+      {/* Family Agenda section */}
+      {calendarView === 'month' && (
+        <div className="mt-5 px-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
+            <button className="text-xs font-semibold" style={{ color: '#964735' }}>VIEW ALL</button>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
+              const ev = item as Event;
+              const initials = ev.title.slice(0, 1).toUpperCase();
+              return (
+                <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: ev.color || '#964735' }}>
+                      {initials}
+                    </div>
+                    <span className="text-xs font-medium truncate" style={{ color: '#7A6660' }}>{ev.title.split(' ')[0]}</span>
+                  </div>
+                  <p className="text-sm font-semibold leading-tight" style={{ color: '#1C1C18' }}>{ev.title}</p>
+                  <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
+                </div>
+              );
+            })}
+            {allItems.filter(i => i.type === 'event').length === 0 && (
+              <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: '#F7F3ED', border: '1px dashed #DAC1BB' }}>
+                <p className="text-xs text-center" style={{ color: '#B5A09A' }}>No events yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Day Detail — selected date events */}
+      {calendarView === 'month' && (
+        <div className="mt-5 px-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>
+                {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEEE, MMM d')}
+              </h2>
+            </div>
+            <span className="text-sm" style={{ color: '#7A6660' }}>
+              {selectedDayEvents.length} EVENT{selectedDayEvents.length !== 1 ? 'S' : ''}
+            </span>
+          </div>
+
+          {selectedDayEvents.length > 0 ? (
+            <div className="space-y-2">
+              {selectedDayEvents.map((item) => {
+                const ev = item as Event;
+                const timeStr = ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm\naa');
+                const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66', label: 'Event' };
+                return (
+                  <div key={ev.id}
+                    className="flex gap-3 rounded-2xl p-4 cursor-pointer"
+                    style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}
+                    onClick={() => handleEditItem(ev)}
+                  >
+                    <div className="text-right flex-shrink-0 w-12">
+                      <span className="text-xs font-semibold whitespace-pre-line" style={{ color: ev.color || '#964735' }}>{timeStr}</span>
+                    </div>
+                    <div className="w-px self-stretch" style={{ background: ev.color || '#964735', borderRadius: '1px' }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{ev.title}</p>
+                      {ev.location && <p className="text-xs mt-0.5" style={{ color: '#B5A09A' }}>{ev.location}</p>}
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleDeleteItem(ev.id); }}
+                      className="opacity-30 hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" style={{ color: '#7A6660' }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl p-6 text-center" style={{ background: '#FFFFFF', border: '1px dashed #DAC1BB' }}>
+              <p className="text-sm" style={{ color: '#B5A09A' }}>Nothing scheduled. A clear, open day.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { resetEventForm(); setEventStartDate(selectedDate); setEventEndDate(selectedDate); setDialogTab('event'); setIsDialogOpen(true); }}
+            className="mt-3 w-full py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+            style={{ border: '1px dashed #DAC1BB', color: '#964735' }}
+          >
+            <Plus className="w-4 h-4" /> Add event
+          </button>
+        </div>
+      )}
+
+      </div>{/* end scrollable */}
+
+      {/* Voice capture bar — pinned above nav */}
+      <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg"
+          style={{ background: '#FFFFFF', border: '1px solid #EBE8E2', boxShadow: '0 4px 24px rgba(28,20,18,0.1)' }}>
+          <button
+            onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: isListeningVoice ? '#D97B66' : 'transparent' }}
+          >
+            <Mic className="w-5 h-5" style={{ color: isListeningVoice ? '#FFFFFF' : '#964735' }} />
+          </button>
+          <p className="flex-1 text-sm" style={{ color: '#B5A09A' }}>
+            {isListeningVoice ? 'Listening…' : 'Try: "Dinner with grandma Friday at 7pm"'}
+          </p>
+          <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
+          <button
+            onClick={() => { resetEventForm(); setDialogTab('event'); setIsDialogOpen(true); }}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: '#964735' }}
+          >
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
 
       {/* Outlook Admin Consent Dialog */}
       <Dialog open={outlookAdminConsentNeeded} onOpenChange={setOutlookAdminConsentNeeded}>

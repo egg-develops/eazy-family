@@ -89,12 +89,13 @@ const AppLayout = () => {
 
   const currentPath = location.pathname;
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
+  const isCalendarPath = currentPath === "/app/calendar";
   const isActive = (path: string) => currentPath === path;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+      {/* Header — hidden on Calendar (it has its own) */}
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: isCalendarPath ? 'none' : undefined }}>
         <div className="flex items-center justify-between px-4 h-14 max-w-7xl mx-auto">
           {/* Left: user avatar → home */}
           <button onClick={() => navigate('/app')} className="flex-shrink-0">
@@ -131,10 +132,14 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-24 lg:pb-6 overflow-x-hidden" style={{ paddingTop: '3.5rem' }}>
-        <div className="max-w-7xl mx-auto px-4 pb-6 pt-3">
-          {isHomePath ? <AppHome /> : <Outlet />}
-        </div>
+      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: isCalendarPath ? 0 : '3.5rem', paddingBottom: isCalendarPath ? 0 : undefined }}>
+        {isCalendarPath ? (
+          <Outlet />
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 pb-24 pt-3">
+            {isHomePath ? <AppHome /> : <Outlet />}
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation */}
