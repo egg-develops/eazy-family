@@ -10,7 +10,6 @@ import {
   Calendar,
   MapPin,
   Camera,
-  Users,
   ShoppingCart,
   Home,
   Search,
@@ -69,10 +68,8 @@ const AppLayout = () => {
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
     { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/todos" },
-    { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
-    
-    { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
-    { id: "messaging", label: "Messages", icon: MessageCircle, path: "/app/messaging" },
+    { id: "shopping", label: "Shopping", icon: ShoppingCart, path: "/app/shopping" },
+    { id: "rituals", label: "Rituals", icon: Home, path: "/app/rituals" },
     { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ];
 
@@ -192,12 +189,19 @@ const AppLayout = () => {
           <ShoppingCart className="w-6 h-6" style={{ color: isActive('/app/shopping') ? '#964735' : '#B5A09A' }} />
         </button>
 
-        {/* Family */}
+        {/* Journal / Rituals */}
         <button
-          onClick={() => { haptic('tap'); navigate('/app/family'); }}
+          onClick={() => { haptic('tap'); navigate('/app/rituals'); }}
           className="flex flex-col items-center justify-center w-12 h-12"
         >
-          <Users className="w-6 h-6" style={{ color: isActive('/app/family') ? '#964735' : '#B5A09A' }} />
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="3" width="13" height="18" rx="2" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" fill="none"/>
+            <path d="M17 3h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-1" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8"/>
+            <line x1="8" y1="8" x2="13" y2="8" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="8" y1="12" x2="13" y2="12" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
+            <line x1="8" y1="16" x2="11" y2="16" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
+            <circle cx="17.5" cy="10" r="1.5" fill={isActive('/app/rituals') ? '#964735' : '#B5A09A'}/>
+          </svg>
         </button>
       </nav>
 

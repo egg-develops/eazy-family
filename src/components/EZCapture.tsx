@@ -1,66 +1,119 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, Sparkles, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import * as chrono from "chrono-node";
+import { format } from "date-fns";
 
 type CaptureType = 'event' | 'task' | 'shopping' | 'reminder' | 'ritual' | 'journal';
+type Step = 'capture' | 'processing' | 'preview';
 
 interface EZCaptureProps {
   onClose: () => void;
 }
 
-const TYPES: { id: CaptureType; label: string; emoji: string }[] = [
-  { id: 'event',    label: 'Event',    emoji: '📅' },
-  { id: 'task',     label: 'Task',     emoji: '✓'  },
-  { id: 'shopping', label: 'Shopping', emoji: '🛒' },
-  { id: 'reminder', label: 'Reminder', emoji: '🔔' },
-  { id: 'ritual',   label: 'Ritual',   emoji: '✨' },
-  { id: 'journal',  label: 'Journal',  emoji: '📝' },
+interface ParsedEntry {
+  type: CaptureType;
+  title: string;
+  date: string | null;
+  time: string | null;
+  endTime: string | null;
+  location: string | null;
+  assignees: string[] | null;
+  reminder: string | null;
+  notes: string | null;
+  mood: string | null;
+}
+
+const TYPES: { id: CaptureType; label: string; icon: string }[] = [
+  { id: 'event',    label: 'Event',    icon: '📅' },
+  { id: 'task',     label: 'Task',     icon: '✓'  },
+  { id: 'shopping', label: 'Shopping', icon: '🛒' },
+  { id: 'reminder', label: 'Reminder', icon: '🔔' },
+  { id: 'ritual',   label: 'Ritual',   icon: '✨' },
+  { id: 'journal',  label: 'Journal',  icon: '📝' },
 ];
+
+const LOCALE_TO_LANG: Record<string, string> = {
+  en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT',
+  'en-US': 'en-US', 'en-GB': 'en-GB',
+  'de-DE': 'de-DE', 'de-CH': 'de-DE', 'de-AT': 'de-DE',
+  'fr-FR': 'fr-FR', 'fr-CH': 'fr-FR', 'fr-BE': 'fr-FR',
+  'it-IT': 'it-IT', 'it-CH': 'it-IT',
+};
+
+const AI_MESSAGES: Record<CaptureType, (name: string) => string> = {
+  event:    (n) => n ? `I'll add this to your calendar, ${n}.` : "I'll add this to your calendar.",
+  task:     (n) => n ? `Got it, ${n}. Adding to your task list.` : "Got it. Adding to your task list.",
+  shopping: (n) => n ? `On the list, ${n}. Anything else?` : "On the list. Anything else?",
+  reminder: (n) => n ? `I'll make sure you don't forget, ${n}.` : "I'll make sure you don't forget.",
+  ritual:   (n) => n ? `Beautiful ritual, ${n}. I'll track this.` : "Beautiful ritual. I'll track this.",
+  journal:  (n) => n ? `Your thoughts are safe with me, ${n}.` : "Your thoughts are safe with me.",
+};
+
+const getUserLocale = (): string => {
+  const saved = localStorage.getItem('i18nextLng') || navigator.language || 'en';
+  const base = saved.split('-')[0];
+  return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
+};
+
+const getUserFirstName = (): string => {
+  try {
+    const s = localStorage.getItem('eazy-family-onboarding');
+    if (s) {
+      const d = JSON.parse(s);
+      const fn = (d.firstName || d.name || '') as string;
+      return fn.split(' ')[0] || '';
+    }
+  } catch {}
+  return '';
+};
 
 export const EZCapture = ({ onClose }: EZCaptureProps) => {
   const [text, setText] = useState('');
   const [type, setType] = useState<CaptureType>('event');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState<Step>('capture');
+  const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const userName = getUserFirstName();
 
   useEffect(() => {
     haptic('medium');
     setTimeout(() => textareaRef.current?.focus(), 150);
   }, []);
 
-  // Auto-detect type from text as user types
+  // Auto-detect type from keywords as user types
   useEffect(() => {
     if (!text.trim()) return;
     const lower = text.toLowerCase();
     if (/\b(buy|get|pick up|need|grab)\b/.test(lower)) { setType('shopping'); return; }
     if (/\b(remind|don't forget|remember)\b/.test(lower)) { setType('reminder'); return; }
-    if (/\b(feel|journal|today i|grateful|reflection)\b/.test(lower)) { setType('journal'); return; }
-    if (/\b(ritual|morning|evening|routine|meditat|exercise)\b/.test(lower)) { setType('ritual'); return; }
-    if (/\b(task|todo|to-do|finish|complete|do )\b/.test(lower)) { setType('task'); return; }
-    if (chrono.parseDate(text)) { setType('event'); }
+    if (/\b(feel|journal|today i|grateful|reflection|dear diary)\b/.test(lower)) { setType('journal'); return; }
+    if (/\b(ritual|morning|evening|routine|meditat|exercise|habit)\b/.test(lower)) { setType('ritual'); return; }
+    if (/\b(task|todo|to-do|finish|complete)\b/.test(lower)) { setType('task'); return; }
+    if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
+    if (!SR) { toast({ title: 'Voice not supported in this browser' }); return; }
     const r = new SR();
-    r.lang = 'en-US';
+    r.lang = getUserLocale();
     r.interimResults = true;
+    r.continuous = true;
     r.onresult = (e: any) => {
       const t = Array.from(e.results).map((r: any) => r[0].transcript).join('');
       setText(t);
     };
     r.onend = () => setIsListening(false);
+    r.onerror = () => setIsListening(false);
     r.start();
     recognitionRef.current = r;
     setIsListening(true);
@@ -72,185 +125,391 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
     setIsListening(false);
   };
 
-  const handleCreate = async () => {
-    if (!text.trim() || isProcessing) return;
-    setIsProcessing(true);
+  const parseWithAI = async (): Promise<ParsedEntry | null> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+
+      const today = new Date().toISOString().split('T')[0];
+      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation. JSON fields: type ("event"|"task"|"shopping"|"reminder"|"ritual"|"journal"), title (string, clean and concise), date ("YYYY-MM-DD" or null), time ("HH:MM" 24h or null), endTime ("HH:MM" 24h or null), location (string or null), assignees (array of first names or null), reminder (human-readable string like "1 week before" or null), notes (string or null), mood (string or null, only for journal). Today is ${today}. Infer type from context. Return ONLY the raw JSON object.`;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: text.trim() }],
+          context: systemContext,
+        }),
+      });
+
+      if (!response.ok || !response.body) return null;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split('\n')) {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) fullContent += content;
+            } catch {}
+          }
+        }
+      }
+
+      const cleaned = fullContent.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+      return JSON.parse(cleaned) as ParsedEntry;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleParseAndPreview = async () => {
+    if (!text.trim()) return;
     haptic('medium');
+    if (isListening) stopListening();
+    setStep('processing');
+
+    const result = await parseWithAI();
+
+    if (result && result.title) {
+      if (result.type) setType(result.type);
+      setParsed(result);
+    } else {
+      // Fallback: use raw text with detected type
+      setParsed({
+        type,
+        title: text.trim(),
+        date: null, time: null, endTime: null,
+        location: null, assignees: null, reminder: null,
+        notes: null, mood: null,
+      });
+    }
+    setStep('preview');
+    haptic('light');
+  };
+
+  const handleConfirm = async () => {
+    if (!parsed) return;
+    haptic('medium');
+    const entryType = parsed.type || type;
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
-      if (type === 'event' || type === 'reminder') {
-        const parsed = chrono.parse(text)[0];
-        const startDate = parsed?.date() ?? new Date();
-        const rawTitle = text.replace(parsed?.text ?? '', '').trim() || text;
-        const title = rawTitle.replace(/\b(on|at|next|this|tomorrow|today)\b\s*/gi, '').trim() || text;
+      if (entryType === 'event' || entryType === 'reminder') {
+        let startDate: Date;
+        if (parsed.date && parsed.time) {
+          startDate = new Date(`${parsed.date}T${parsed.time}`);
+        } else if (parsed.date) {
+          startDate = new Date(`${parsed.date}T00:00:00`);
+        } else {
+          startDate = new Date();
+        }
+        let endDate = new Date(startDate.getTime() + 3600000);
+        if (parsed.endTime && parsed.date) {
+          const ed = new Date(`${parsed.date}T${parsed.endTime}`);
+          if (ed > startDate) endDate = ed;
+        }
         const newEvent = {
           id: crypto.randomUUID(),
-          title,
+          title: parsed.title,
           startDate: startDate.toISOString(),
-          endDate: new Date(startDate.getTime() + 3600000).toISOString(),
-          allDay: !(parsed?.start.isCertain('hour')),
+          endDate: endDate.toISOString(),
+          allDay: !parsed.time,
           type: 'event',
           color: '#D97B66',
-          tag: type === 'reminder' ? 'personal' : undefined,
+          location: parsed.location || undefined,
+          notes: parsed.notes || undefined,
         };
         const existing = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: type === 'reminder' ? 'Reminder set' : 'Added to Calendar' });
+        toast({ title: entryType === 'reminder' ? 'Reminder set' : '✓ Added to Calendar' });
         onClose(); navigate('/app/calendar');
 
-      } else if (type === 'task') {
+      } else if (entryType === 'task') {
         if (!user || !session) return;
-        await supabase.from('tasks').insert({ title: text.trim(), type: 'task', user_id: user.id, completed: false });
+        await supabase.from('tasks').insert({
+          title: parsed.title,
+          type: 'task',
+          user_id: user.id,
+          completed: false,
+        });
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: 'Task added' });
+        toast({ title: '✓ Task added' });
         onClose(); navigate('/app/todos');
 
-      } else if (type === 'shopping') {
+      } else if (entryType === 'shopping') {
         if (!user || !session) return;
-        const items = text.split(/,|;|\band\b/i).map(s => s.trim()).filter(Boolean);
+        const items = parsed.title.split(/[,;]/).map(s => s.trim()).filter(Boolean);
         await Promise.all(items.map(item =>
           supabase.from('tasks').insert({ title: item, type: 'shopping', user_id: user.id, completed: false })
         ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: `${items.length} item${items.length > 1 ? 's' : ''} added` });
+        toast({ title: `✓ ${items.length} item${items.length > 1 ? 's' : ''} added` });
         onClose(); navigate('/app/shopping');
 
-      } else if (type === 'ritual') {
-        const entry = { id: crypto.randomUUID(), title: text.trim(), date: new Date().toISOString(), type: 'ritual' };
+      } else if (entryType === 'ritual') {
+        const entry = {
+          id: crypto.randomUUID(),
+          title: parsed.title,
+          date: new Date().toISOString(),
+          type: 'ritual',
+          notes: parsed.notes || undefined,
+        };
         const ex = JSON.parse(localStorage.getItem('eazy-rituals') || '[]');
         localStorage.setItem('eazy-rituals', JSON.stringify([entry, ...ex]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: 'Ritual captured' });
+        toast({ title: '✓ Ritual captured' });
         onClose(); navigate('/app/rituals');
 
-      } else if (type === 'journal') {
-        const entry = { id: crypto.randomUUID(), text: text.trim(), date: new Date().toISOString() };
+      } else if (entryType === 'journal') {
+        const entry = {
+          id: crypto.randomUUID(),
+          text: parsed.title + (parsed.notes ? `\n\n${parsed.notes}` : ''),
+          date: new Date().toISOString(),
+          mood: parsed.mood || undefined,
+        };
         const ex = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...ex]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: 'Journal entry saved' });
+        toast({ title: '✓ Journal entry saved' });
         onClose(); navigate('/app/rituals');
       }
     } catch {
       toast({ title: 'Something went wrong', variant: 'destructive' });
-    } finally {
-      setIsProcessing(false);
     }
   };
+
+  const formatPreviewDate = (date: string | null, time: string | null): string | null => {
+    if (!date) return null;
+    try {
+      const d = new Date(`${date}T${time || '00:00'}`);
+      if (time) return format(d, 'EEE, MMM d · h:mm a');
+      return format(d, 'EEE, MMM d');
+    } catch { return date; }
+  };
+
+  const activeType = parsed?.type || type;
 
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col"
-      style={{ background: 'rgba(28, 20, 18, 0.55)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
-      {/* Center: capture card */}
+      {/* Center card */}
       <div onClick={e => e.stopPropagation()} className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-sm">
 
-        {/* Main capture card */}
-        <div
-          className="rounded-3xl p-6 space-y-5"
-          style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}
-        >
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#1C1C18' }}>
-              What's on your mind?
-            </h2>
-            <p className="text-sm" style={{ color: '#7A6660' }}>Capture a moment or a task.</p>
-          </div>
+          {/* ── CAPTURE STEP ── */}
+          {step === 'capture' && (
+            <div className="rounded-3xl p-6 space-y-5" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+              <div className="text-center space-y-1">
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#1C1C18' }}>What's on your mind?</h2>
+                <p className="text-sm" style={{ color: '#7A6660' }}>Capture a thought — Schedule a task.</p>
+              </div>
 
-          {/* Input */}
-          <div className="relative">
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              placeholder="Brunch with Family and Friends next Saturday at 11:00"
-              rows={3}
-              className="w-full resize-none rounded-2xl p-4 pr-12 text-base outline-none"
-              style={{
-                background: '#F7F3ED',
-                border: `1.5px solid ${text ? '#D97B66' : '#DAC1BB'}`,
-                color: '#1C1C18',
-                fontSize: '15px',
-                lineHeight: '1.5',
-                transition: 'border-color 0.2s',
-              }}
-              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleCreate(); }}
-            />
-            <button
-              onClick={isListening ? stopListening : startListening}
-              className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all"
-              style={{
-                background: isListening ? '#D97B66' : '#964735',
-                boxShadow: isListening ? '0 0 0 4px rgba(217,123,102,0.3)' : 'none',
-              }}
-            >
-              {isListening
-                ? <MicOff className="w-4 h-4 text-white" />
-                : <Mic className="w-4 h-4 text-white" />}
-            </button>
-          </div>
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  placeholder="Calendar, Add Brunch with Family Aug 24, 10:30 to 12:30, Assign to Me and Sarah, Reminder 1 week before. Location The Artisan."
+                  rows={4}
+                  className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
+                  style={{
+                    background: '#F7F3ED',
+                    border: `1.5px solid ${text ? '#D97B66' : '#DAC1BB'}`,
+                    color: '#1C1C18',
+                    lineHeight: '1.6',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
+                />
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                  style={{
+                    background: isListening ? '#D97B66' : '#964735',
+                    boxShadow: isListening ? '0 0 0 4px rgba(217,123,102,0.3)' : 'none',
+                  }}
+                >
+                  {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-white" />}
+                </button>
+              </div>
 
-          {/* Type chips */}
-          <div className="flex flex-wrap gap-2">
-            {TYPES.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setType(t.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all"
-                style={{
-                  background: type === t.id ? '#964735' : '#F1EDE7',
-                  color: type === t.id ? '#FFFFFF' : '#55433F',
-                  border: `1px solid ${type === t.id ? '#964735' : '#DAC1BB'}`,
-                  transform: type === t.id ? 'scale(1.04)' : 'scale(1)',
-                }}
-              >
-                <span style={{ fontSize: '12px' }}>{t.emoji}</span>
-                {t.label}
-              </button>
-            ))}
-          </div>
+              {/* Type chips */}
+              <div className="flex flex-wrap gap-2">
+                {TYPES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setType(t.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+                    style={{
+                      background: type === t.id ? '#964735' : '#F1EDE7',
+                      color: type === t.id ? '#FFFFFF' : '#55433F',
+                      border: `1px solid ${type === t.id ? '#964735' : '#DAC1BB'}`,
+                      transform: type === t.id ? 'scale(1.04)' : 'scale(1)',
+                    }}
+                  >
+                    <span style={{ fontSize: '12px' }}>{t.icon}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-1">
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 rounded-full text-sm font-semibold"
-              style={{ background: '#F1EDE7', color: '#55433F' }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreate}
-              disabled={!text.trim() || isProcessing}
-              className="flex-1 py-3 rounded-full text-sm font-semibold transition-all"
-              style={{
-                background: text.trim() ? '#964735' : '#DAC1BB',
-                color: '#FFFFFF',
-                cursor: text.trim() ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {isProcessing ? 'Creating…' : 'Create'}
-            </button>
-          </div>
-        </div>
+              <div className="flex gap-3 pt-1">
+                <button onClick={onClose} className="flex-1 py-3 rounded-full text-sm font-semibold" style={{ background: '#F1EDE7', color: '#55433F' }}>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleParseAndPreview}
+                  disabled={!text.trim()}
+                  className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  style={{
+                    background: text.trim() ? '#964735' : '#DAC1BB',
+                    color: '#FFFFFF',
+                    cursor: text.trim() ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Parse & Preview
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── PROCESSING STEP ── */}
+          {step === 'processing' && (
+            <div className="rounded-3xl p-8 flex flex-col items-center gap-5" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '3px solid #F1EDE7', borderTopColor: '#964735' }} />
+                <img src="/logo.png" alt="" className="absolute inset-0 m-auto w-8 h-8 object-contain" />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-bold" style={{ color: '#1C1C18' }}>Parsing with AI…</p>
+                <p className="text-sm" style={{ color: '#7A6660' }}>Understanding your intent</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── PREVIEW STEP ── */}
+          {step === 'preview' && parsed && (
+            <div className="rounded-3xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+              <div className="px-6 pt-6 pb-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setStep('capture')}
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: '#F1EDE7' }}
+                  >
+                    <ChevronLeft className="w-4 h-4" style={{ color: '#55433F' }} />
+                  </button>
+                  <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Confirm</h2>
+                </div>
+
+                {/* Type badge */}
+                <div className="flex">
+                  {(() => {
+                    const t = TYPES.find(t => t.id === activeType);
+                    return t ? (
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold" style={{ background: '#964735', color: '#FFFFFF' }}>
+                        <span style={{ fontSize: '12px' }}>{t.icon}</span> {t.label}
+                      </span>
+                    ) : null;
+                  })()}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Title</p>
+                    <p className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{parsed.title}</p>
+                  </div>
+
+                  {(parsed.date || parsed.time) && (
+                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>When</p>
+                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>
+                        {formatPreviewDate(parsed.date, parsed.time)}
+                        {parsed.endTime && ` → ${formatPreviewDate(parsed.date, parsed.endTime)?.split('·')[1]?.trim() ?? parsed.endTime}`}
+                      </p>
+                    </div>
+                  )}
+
+                  {parsed.location && (
+                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Location</p>
+                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.location}</p>
+                    </div>
+                  )}
+
+                  {parsed.assignees && parsed.assignees.length > 0 && (
+                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>With</p>
+                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.assignees.join(', ')}</p>
+                    </div>
+                  )}
+
+                  {parsed.reminder && (
+                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Reminder</p>
+                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.reminder}</p>
+                    </div>
+                  )}
+
+                  {parsed.mood && (
+                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Mood</p>
+                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.mood}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-6 pb-6">
+                <button
+                  onClick={handleConfirm}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+                  style={{ background: '#964735', color: '#FFFFFF' }}
+                >
+                  <Check className="w-4 h-4" />
+                  Confirm & Save
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* Bottom: AI strip above nav */}
+      {/* AI message strip above nav */}
       <div onClick={e => e.stopPropagation()} className="px-4 pb-28">
         <div
           className="px-4 py-3 rounded-2xl flex items-center gap-3"
           style={{ background: 'rgba(253, 249, 243, 0.95)', border: '1px solid #DAC1BB' }}
         >
-          <img src="/logo.png" alt="" className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
-            style={{ background: '#D97B66', padding: '3px' }} />
+          <img
+            src="/logo.png"
+            alt=""
+            className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
+            style={{ background: '#D97B66', padding: '3px' }}
+          />
           <p className="text-sm" style={{ color: '#55433F', fontStyle: 'italic' }}>
-            "I'll help you organize this. Take a deep breath."
+            {step === 'capture' && `"${userName ? `Hey ${userName}, speak` : 'Speak'} or type anything — I'll figure out the rest."`}
+            {step === 'processing' && '"Reading between the lines…"'}
+            {step === 'preview' && parsed && `"${AI_MESSAGES[activeType](userName)}"`}
           </p>
         </div>
       </div>

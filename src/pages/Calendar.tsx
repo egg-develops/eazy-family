@@ -129,7 +129,7 @@ const Calendar = () => {
   const { isPremium } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
   const [showViewPicker, setShowViewPicker] = useState(false);
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
   const [showSyncBanner, setShowSyncBanner] = useState(() => {
@@ -963,6 +963,71 @@ const Calendar = () => {
     .filter(i => i.type === 'event')
     .sort((a, b) => new Date((a as Event).startDate).getTime() - new Date((b as Event).startDate).getTime());
 
+  const renderYearCalendar = () => {
+    const year = selectedDate.getFullYear();
+    const months = Array.from({ length: 12 }, (_, i) => i);
+    return (
+      <div className="px-3 pt-2 pb-4">
+        <div className="grid grid-cols-2 gap-3">
+          {months.map(monthIdx => {
+            const monthDate = new Date(year, monthIdx, 1);
+            const monthStart = startOfMonth(monthDate);
+            const monthEnd = endOfMonth(monthDate);
+            const startDt = startOfWeek(monthStart);
+            const endDt = endOfWeek(monthEnd);
+            const days = eachDayOfInterval({ start: startDt, end: endDt });
+            const hasEventInMonth = allItems.some(item => {
+              const d = item.type === 'event' ? (item as Event).startDate : (item as Reminder).dueDate;
+              if (!d) return false;
+              const dt = new Date(d);
+              return dt.getMonth() === monthIdx && dt.getFullYear() === year;
+            });
+            return (
+              <button
+                key={monthIdx}
+                onClick={() => { const d = new Date(year, monthIdx, 1); setSelectedDate(d); setCalendarView('month'); }}
+                className="rounded-2xl p-3 text-left transition-all active:scale-95"
+                style={{
+                  background: selectedDate.getMonth() === monthIdx ? '#964735' : '#FFFFFF',
+                  border: `1px solid ${selectedDate.getMonth() === monthIdx ? '#964735' : '#EBE8E2'}`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold" style={{ color: selectedDate.getMonth() === monthIdx ? '#FFFFFF' : '#1C1C18' }}>
+                    {format(monthDate, 'MMM')}
+                  </p>
+                  {hasEventInMonth && (
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: selectedDate.getMonth() === monthIdx ? '#D97B66' : '#D97B66' }} />
+                  )}
+                </div>
+                <div className="grid grid-cols-7 gap-px">
+                  {days.slice(0, 35).map((day, i) => {
+                    const isCurrentMonth = day.getMonth() === monthIdx;
+                    const isTodayDate = isToday(day);
+                    return (
+                      <div
+                        key={i}
+                        className="w-full aspect-square flex items-center justify-center rounded-sm"
+                        style={{
+                          fontSize: '7px',
+                          color: !isCurrentMonth ? 'transparent' : isTodayDate ? '#FFFFFF' : selectedDate.getMonth() === monthIdx ? 'rgba(255,255,255,0.8)' : '#1C1C18',
+                          background: isTodayDate && isCurrentMonth ? '#D97B66' : 'transparent',
+                          fontWeight: isTodayDate ? 700 : 400,
+                        }}
+                      >
+                        {isCurrentMonth ? format(day, 'd') : ''}
+                      </div>
+                    );
+                  })}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen" style={{ background: '#FDF9F3', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
 
@@ -995,7 +1060,7 @@ const Calendar = () => {
       {/* View picker dropdown */}
       {showViewPicker && (
         <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
-          {(['day', 'week', '3day', 'month'] as const).map(v => (
+          {(['day', 'week', '3day', 'month', 'year'] as const).map(v => (
             <button
               key={v}
               onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
@@ -1009,25 +1074,43 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Day/Week/Month pill tabs */}
+      {/* Day/Week/Month/Year pill tabs */}
       <div className="flex gap-1 mx-4 mb-3 p-1 rounded-2xl" style={{ background: '#F1EDE7' }}>
-        {(['day', 'week', 'month'] as const).map(v => (
-          <button
-            key={v}
-            onClick={() => setCalendarView(v === 'day' ? 'day' : v === 'week' ? 'week' : 'month')}
-            className="flex-1 py-2 rounded-xl text-sm font-semibold capitalize transition-all"
-            style={{
-              background: (calendarView === v || (v === 'month' && calendarView === 'month') || (v === 'week' && (calendarView === 'week' || calendarView === '3day')) || (v === 'day' && calendarView === 'day')) ? '#964735' : 'transparent',
-              color: (calendarView === v || (v === 'month' && calendarView === 'month') || (v === 'week' && (calendarView === 'week' || calendarView === '3day')) || (v === 'day' && calendarView === 'day')) ? '#FFFFFF' : '#7A6660',
-            }}
-          >
-            {v.charAt(0).toUpperCase() + v.slice(1)}
-          </button>
-        ))}
+        {(['day', 'week', 'month', 'year'] as const).map(v => {
+          const isActive = calendarView === v || (v === 'week' && calendarView === '3day');
+          return (
+            <button
+              key={v}
+              onClick={() => setCalendarView(v)}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold capitalize transition-all"
+              style={{
+                background: isActive ? '#964735' : 'transparent',
+                color: isActive ? '#FFFFFF' : '#7A6660',
+              }}
+            >
+              {v.charAt(0).toUpperCase() + v.slice(1)}
+            </button>
+          );
+        })}
       </div>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-48">
+
+      {/* Year header row */}
+      {calendarView === 'year' && (
+        <div className="flex items-center justify-between px-4 mb-3">
+          <button onClick={() => { const d = new Date(selectedDate); d.setFullYear(d.getFullYear() - 1); setSelectedDate(d); }}
+            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
+            <ChevronLeft className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+          <p className="font-bold text-base" style={{ color: '#1C1C18' }}>{selectedDate.getFullYear()}</p>
+          <button onClick={() => { const d = new Date(selectedDate); d.setFullYear(d.getFullYear() + 1); setSelectedDate(d); }}
+            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
+            <ChevronRight className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+        </div>
+      )}
 
       {/* Month nav row */}
       {calendarView === 'month' && (
@@ -1090,8 +1173,11 @@ const Calendar = () => {
         );
       })()}
 
-      {/* Non-month views */}
-      {calendarView !== 'month' && (
+      {/* Year view */}
+      {calendarView === 'year' && renderYearCalendar()}
+
+      {/* Non-month, non-year views */}
+      {calendarView !== 'month' && calendarView !== 'year' && (
         <div className="px-4">
           {calendarView === 'week' && renderWeekCalendar()}
           {calendarView === '3day' && render3DayCalendar()}

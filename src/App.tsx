@@ -31,12 +31,8 @@ import NotFound from "./pages/NotFound";
 // Lazy load heavy pages
 const Calendar = lazy(() => import("./pages/Calendar"));
 const ToDoList = lazy(() => import("./pages/ToDoList"));
-const Events = lazy(() => import("./pages/Events"));
 const Shopping = lazy(() => import("./pages/Shopping"));
 const Rituals = lazy(() => import("./pages/Rituals"));
-
-const Community = lazy(() => import("./pages/Community"));
-const Messaging = lazy(() => import("./pages/Messaging"));
 const Settings = lazy(() => import("./pages/Settings"));
 const FamilyProfile = lazy(() => import("./pages/FamilyProfile"));
 
@@ -84,10 +80,6 @@ const App = () => (
                 <Route path="calendar" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Calendar /></Suspense></ErrorBoundary>} />
                 <Route path="calendar/outlook-callback" element={<ProtectedRoute><OutlookCallback /></ProtectedRoute>} />
                 <Route path="todos" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><ToDoList /></Suspense></ErrorBoundary>} />
-                <Route path="events" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Events /></Suspense></ErrorBoundary>} />
-
-                <Route path="community" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Community /></Suspense></ErrorBoundary>} />
-                <Route path="messaging" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Messaging /></Suspense></ErrorBoundary>} />
                 <Route path="settings" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></ErrorBoundary>} />
                 <Route path="family" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense></ErrorBoundary>} />
                 <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
