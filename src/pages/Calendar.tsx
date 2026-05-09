@@ -1074,26 +1074,6 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Day/Week/Month/Year pill tabs */}
-      <div className="flex gap-1 mx-4 mb-3 p-1 rounded-2xl" style={{ background: '#F1EDE7' }}>
-        {(['day', 'week', 'month', 'year'] as const).map(v => {
-          const isActive = calendarView === v || (v === 'week' && calendarView === '3day');
-          return (
-            <button
-              key={v}
-              onClick={() => setCalendarView(v)}
-              className="flex-1 py-2 rounded-xl text-xs font-semibold capitalize transition-all"
-              style={{
-                background: isActive ? '#964735' : 'transparent',
-                color: isActive ? '#FFFFFF' : '#7A6660',
-              }}
-            >
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </button>
-          );
-        })}
-      </div>
-
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto pb-48">
 

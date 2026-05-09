@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Minus, Trash2, Mic, MicOff, Sparkles } from "lucide-react";
+import { Plus, Minus, Trash2, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -134,21 +134,6 @@ const Shopping = () => {
           style={{ background: isListening ? TL : '#F1EDE7' }}>
           {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4" style={{ color: MUTED }} />}
         </button>
-      </div>
-
-      {/* AI Suggestion banner */}
-      <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: '#F1EDE7', border: `1px solid ${BORDER}` }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#769AAB' }}>
-          <Sparkles className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm" style={{ color: '#1C1C18' }}>
-            Based on your meal plan: Add <span style={{ color: TC, fontWeight: 600 }}>chicken</span> and <span style={{ color: TC, fontWeight: 600 }}>spinach</span>?
-          </p>
-          <button className="mt-2 px-4 py-1.5 rounded-full text-sm font-semibold text-white" style={{ background: '#44664F' }}>
-            Add All
-          </button>
-        </div>
       </div>
 
       {/* Grouped uncompleted items */}

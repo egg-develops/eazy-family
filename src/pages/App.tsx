@@ -554,9 +554,6 @@ const AppHome = () => {
         <h1 className="text-2xl font-bold leading-tight" style={{ color: '#1C1C18' }}>
           {homeConfig.greeting || 'Your Family'}
         </h1>
-        <p className="text-sm" style={{ color: '#7A6660' }}>
-          {homeConfig.byline || 'The house is quiet, and your day is beautifully mapped out.'}
-        </p>
       </div>
 
       {/* Today's Rituals card */}

@@ -437,23 +437,6 @@ const ToDoList = () => {
         ))}
       </div>
 
-      {/* Smart suggestion banner */}
-      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: '#C6ECCF', border: '1px solid #AACFB4' }}>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#44664F' }}>
-          <span className="text-white text-sm">✦</span>
-        </div>
-        <p className="text-sm flex-1" style={{ color: '#2D4E39' }}>
-          You usually plan your week on Sundays. <span className="font-semibold">Add to list?</span>
-        </p>
-        <button
-          onClick={() => setIsDialogOpen(true)}
-          className="px-3 py-1.5 rounded-full text-xs font-bold"
-          style={{ background: '#44664F', color: '#FFFFFF' }}
-        >
-          Add
-        </button>
-      </div>
-
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5A09A' }} />
