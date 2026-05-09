@@ -69,6 +69,19 @@ const Settings = () => {
   const [editingGreeting, setEditingGreeting] = useState(homeConfig.greeting);
   const [editingByline, setEditingByline] = useState(homeConfig.byline);
   const [uploadingProfile, setUploadingProfile] = useState(false);
+
+  // Journal display settings
+  const [journalSettings, setJournalSettings] = useState<{ showOnRituals: boolean; displayCount: number }>(() => {
+    try {
+      const s = localStorage.getItem('eazy-journal-settings');
+      if (s) return JSON.parse(s);
+    } catch {}
+    return { showOnRituals: true, displayCount: 3 };
+  });
+  const saveJournalSettings = (next: { showOnRituals: boolean; displayCount: number }) => {
+    setJournalSettings(next);
+    localStorage.setItem('eazy-journal-settings', JSON.stringify(next));
+  };
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const { setTheme, isDark } = useTheme();
@@ -647,6 +660,47 @@ const Settings = () => {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Journal settings */}
+      <Card className="shadow-custom-md">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Journal</CardTitle>
+          <CardDescription>Control how journal entries appear on your Rituals page.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Show on Rituals page</Label>
+              <p className="text-sm text-muted-foreground">Display journal entries below your daily rituals</p>
+            </div>
+            <Switch
+              checked={journalSettings.showOnRituals}
+              onCheckedChange={v => saveJournalSettings({ ...journalSettings, showOnRituals: v })}
+            />
+          </div>
+          {journalSettings.showOnRituals && (
+            <div className="space-y-2">
+              <Label>Entries to display</Label>
+              <div className="flex gap-2 flex-wrap">
+                {[3, 5, 10, -1].map(count => (
+                  <button
+                    key={count}
+                    onClick={() => saveJournalSettings({ ...journalSettings, displayCount: count })}
+                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                    style={{
+                      background: journalSettings.displayCount === count ? '#964735' : '#F1EDE7',
+                      color: journalSettings.displayCount === count ? '#FFFFFF' : '#55433F',
+                      border: `1px solid ${journalSettings.displayCount === count ? '#964735' : '#DAC1BB'}`,
+                    }}
+                  >
+                    {count === -1 ? 'All' : count}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

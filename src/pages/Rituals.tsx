@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Mic, MicOff, Plus, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Mic, MicOff, Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 
@@ -27,6 +27,14 @@ const DEFAULT_RITUALS: Ritual[] = [
 
 const RITUAL_EMOJIS = ['☀️', '🌙', '🏃', '🧘', '❤️', '📚', '🎵', '🌿', '🍵', '✍️'];
 
+const getJournalSettings = () => {
+  try {
+    const s = localStorage.getItem('eazy-journal-settings');
+    if (s) return JSON.parse(s) as { showOnRituals: boolean; displayCount: number };
+  } catch {}
+  return { showOnRituals: true, displayCount: 3 };
+};
+
 const Rituals = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [rituals, setRituals] = useState<Ritual[]>(() => {
@@ -42,7 +50,14 @@ const Rituals = () => {
   const [editMode, setEditMode] = useState(false);
   const [newRitualTitle, setNewRitualTitle] = useState('');
   const [showAllJournal, setShowAllJournal] = useState(false);
-  const recognitionRef = { current: null as any };
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+
+  // Swipe gesture state (DOM-level, no re-renders during drag)
+  const touchData = useRef<{ startX: number; id: string; el: HTMLDivElement } | null>(null);
+  const innerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const recognitionRef = useRef<any>(null);
+  const DELETE_W = 72;
 
   const TC = '#964735';
   const TL = '#D97B66';
@@ -116,6 +131,59 @@ const Rituals = () => {
     haptic('light');
   };
 
+  const deleteEntry = (id: string) => {
+    haptic('light');
+    const updated = entries.filter(e => e.id !== id);
+    setEntries(updated);
+    localStorage.setItem('eazy-journal-entries', JSON.stringify(updated));
+    setOpenSwipeId(null);
+  };
+
+  // Close any open swipe when tapping outside
+  const closeSwipe = (id?: string) => {
+    if (openSwipeId && openSwipeId !== id) {
+      const el = innerRefs.current.get(openSwipeId);
+      if (el) { el.style.transition = 'transform 0.2s ease'; el.style.transform = 'translateX(0)'; }
+      setOpenSwipeId(null);
+    }
+  };
+
+  // Touch handlers — DOM manipulation during drag, single setState on end
+  const onTouchStart = (e: React.TouchEvent, id: string) => {
+    closeSwipe(id);
+    const el = innerRefs.current.get(id);
+    if (!el) return;
+    touchData.current = { startX: e.touches[0].clientX, id, el };
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchData.current) return;
+    const { startX, id, el } = touchData.current;
+    const delta = e.touches[0].clientX - startX;
+    const base = openSwipeId === id ? -DELETE_W : 0;
+    const x = Math.min(0, Math.max(delta + base, -DELETE_W));
+    el.style.transition = 'none';
+    el.style.transform = `translateX(${x}px)`;
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchData.current) return;
+    const { startX, id, el } = touchData.current;
+    const delta = e.changedTouches[0].clientX - startX;
+    el.style.transition = 'transform 0.2s ease';
+
+    if (delta < -40) {
+      el.style.transform = `translateX(-${DELETE_W}px)`;
+      setOpenSwipeId(id);
+    } else if (delta > 10 || openSwipeId !== id) {
+      el.style.transform = 'translateX(0)';
+      setOpenSwipeId(null);
+    } else {
+      el.style.transform = `translateX(-${DELETE_W}px)`;
+    }
+    touchData.current = null;
+  };
+
   const pct = rituals.length > 0 ? Math.round((completedRituals.size / rituals.length) * 100) : 0;
 
   const getTimeLabel = (dateStr: string) => {
@@ -125,7 +193,10 @@ const Rituals = () => {
     return `${format(d, 'EEEE')} ${dayTime}`;
   };
 
-  const displayedEntries = showAllJournal ? entries : entries.slice(0, 3);
+  const settings = getJournalSettings();
+  const baseCount = settings.displayCount === -1 ? entries.length : settings.displayCount;
+  const displayedEntries = showAllJournal ? entries : entries.slice(0, baseCount);
+  const hasMore = !showAllJournal && entries.length > baseCount;
 
   return (
     <div className="space-y-5 p-4" style={{ paddingBottom: '2rem' }}>
@@ -201,7 +272,7 @@ const Rituals = () => {
                 <button
                   onClick={() => removeRitual(r.id)}
                   className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: '#964735' }}
+                  style={{ background: TC }}
                 >
                   <X className="w-3 h-3 text-white" />
                 </button>
@@ -233,36 +304,75 @@ const Rituals = () => {
       </div>
 
       {/* Journal section */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>Journal</h2>
-          {entries.length > 3 && (
-            <button
-              onClick={() => setShowAllJournal(p => !p)}
-              className="text-xs font-semibold"
-              style={{ color: TC }}
-            >
-              {showAllJournal ? 'Show Less' : 'View Journal'}
-            </button>
+      {settings.showOnRituals && (
+        <div onClick={() => closeSwipe()}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>Journal</h2>
+            {hasMore && (
+              <button
+                onClick={e => { e.stopPropagation(); setShowAllJournal(true); }}
+                className="text-xs font-semibold"
+                style={{ color: TC }}
+              >
+                View Journal
+              </button>
+            )}
+            {showAllJournal && entries.length > baseCount && (
+              <button
+                onClick={e => { e.stopPropagation(); setShowAllJournal(false); }}
+                className="text-xs font-semibold"
+                style={{ color: TC }}
+              >
+                Show Less
+              </button>
+            )}
+          </div>
+
+          {entries.length > 0 ? (
+            <div className="space-y-2">
+              {displayedEntries.map(entry => (
+                <div
+                  key={entry.id}
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{ border: `1px solid ${BORDER}` }}
+                >
+                  {/* Delete button — revealed by swipe */}
+                  <div
+                    className="absolute right-0 top-0 bottom-0 flex items-center justify-center"
+                    style={{ width: `${DELETE_W}px`, background: '#C0392B' }}
+                  >
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <Trash2 className="w-5 h-5 text-white" />
+                      <span className="text-white text-[10px] font-semibold">Delete</span>
+                    </button>
+                  </div>
+
+                  {/* Entry content — slides left on swipe */}
+                  <div
+                    ref={el => { if (el) innerRefs.current.set(entry.id, el); else innerRefs.current.delete(entry.id); }}
+                    className="relative p-4 space-y-1.5"
+                    style={{ background: '#FFFFFF', willChange: 'transform' }}
+                    onTouchStart={e => onTouchStart(e, entry.id)}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                  >
+                    <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
+                    <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl p-5 text-center" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
+              <p className="text-sm font-medium" style={{ color: MUTED }}>What's on your mind…</p>
+              <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>Use the EZ button or Voice Journal to add an entry.</p>
+            </div>
           )}
         </div>
-
-        {entries.length > 0 ? (
-          <div className="space-y-2">
-            {displayedEntries.map(entry => (
-              <div key={entry.id} className="rounded-2xl p-4 space-y-1.5" style={{ background: '#FFFFFF', border: `1px solid ${BORDER}` }}>
-                <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
-                <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl p-5 text-center" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
-            <p className="text-sm font-medium" style={{ color: MUTED }}>What's on your mind…</p>
-            <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>Use the EZ button or Voice Journal to add an entry.</p>
-          </div>
-        )}
-      </div>
+      )}
 
     </div>
   );
