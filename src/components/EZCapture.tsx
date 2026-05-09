@@ -104,21 +104,29 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
+  const cleanup = () => {
+    isListeningRef.current = false;
+    setIsListening(false);
+    if (capturedRef.current.trim()) setText(capturedRef.current);
+    capturedRef.current = '';
+    baseTextRef.current = '';
+  };
+
   const stopListening = () => {
     isListeningRef.current = false;
     recognitionRef.current?.stop();
-    // onend handles final state reset
+    // onend fires and calls cleanup path
   };
 
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: 'Voice not supported in this browser' }); return; }
+    if (!SR) { toast({ title: 'Voice input not supported in this browser' }); return; }
 
     capturedRef.current = '';
     baseTextRef.current = '';
     isListeningRef.current = true;
 
-    const spawnSession = () => {
+    const spawnSession = (): any => {
       const r = new SR();
       r.lang = getUserLocale();
       r.interimResults = true;
@@ -138,32 +146,40 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
       };
 
       r.onend = () => {
-        if (isListeningRef.current) {
-          // iOS killed the session (10-s limit) — save progress and restart
-          baseTextRef.current = capturedRef.current;
-          setTimeout(() => {
-            if (isListeningRef.current) {
-              try { recognitionRef.current = spawnSession(); } catch {}
-            }
-          }, 80);
-        } else {
+        if (!isListeningRef.current) {
           // User tapped stop
-          setIsListening(false);
-          if (capturedRef.current.trim()) setText(capturedRef.current);
-          capturedRef.current = '';
-          baseTextRef.current = '';
+          cleanup();
+          return;
+        }
+        // Browser/iOS ended session — try synchronous restart (no setTimeout:
+        // iOS blocks recognition started from setTimeout as not a user gesture)
+        baseTextRef.current = capturedRef.current;
+        try {
+          const next = spawnSession();
+          recognitionRef.current = next;
+        } catch {
+          // Restart blocked (iOS strict mode) — surface what was captured
+          cleanup();
         }
       };
 
       r.onerror = (e: any) => {
-        if (e.error === 'aborted' || e.error === 'no-speech') return;
+        if (e.error === 'aborted') return; // intentional stop
+        if (e.error === 'no-speech') return; // silence — onend will handle restart
+        if (e.error === 'not-allowed') {
+          toast({ title: 'Microphone access denied', description: 'Allow microphone in your browser settings.' });
+        }
         isListeningRef.current = false;
-        setIsListening(false);
-        capturedRef.current = '';
-        baseTextRef.current = '';
+        cleanup();
       };
 
-      r.start();
+      try {
+        r.start();
+      } catch {
+        // start() can throw if called too quickly after a previous stop
+        isListeningRef.current = false;
+        setIsListening(false);
+      }
       return r;
     };
 
@@ -330,6 +346,7 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
         };
         const ex = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...ex]));
+        window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: '✓ Journal entry saved' });
         onClose(); navigate('/app/rituals');

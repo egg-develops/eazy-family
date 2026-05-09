@@ -67,11 +67,19 @@ const Rituals = () => {
   const BORDER = '#DAC1BB';
   const MUTED = '#7A6660';
 
-  useEffect(() => {
+  const reloadEntries = () => {
     const stored = localStorage.getItem('eazy-journal-entries');
-    if (stored) setEntries(JSON.parse(stored));
+    setEntries(stored ? JSON.parse(stored) : []);
+  };
+
+  useEffect(() => {
+    reloadEntries();
     const completed = localStorage.getItem('eazy-completed-rituals-today');
     if (completed) setCompletedRituals(new Set(JSON.parse(completed)));
+
+    // Re-read entries when EZCapture saves a journal entry on the same route
+    window.addEventListener('eazy-journal-updated', reloadEntries);
+    return () => window.removeEventListener('eazy-journal-updated', reloadEntries);
   }, []);
 
   const saveRituals = (list: Ritual[]) => {
