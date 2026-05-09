@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Sparkles, ChevronLeft, Check } from "lucide-react";
+import { Mic, Sparkles, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -79,6 +79,9 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
   const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
+  const capturedRef = useRef('');
+  const baseTextRef = useRef('');   // accumulated text across iOS restarts
+  const isListeningRef = useRef(false); // true = user wants mic on
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -101,28 +104,72 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
+  const stopListening = () => {
+    isListeningRef.current = false;
+    recognitionRef.current?.stop();
+    // onend handles final state reset
+  };
+
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) { toast({ title: 'Voice not supported in this browser' }); return; }
-    const r = new SR();
-    r.lang = getUserLocale();
-    r.interimResults = true;
-    r.continuous = true;
-    r.onresult = (e: any) => {
-      const t = Array.from(e.results).map((r: any) => r[0].transcript).join('');
-      setText(t);
+
+    capturedRef.current = '';
+    baseTextRef.current = '';
+    isListeningRef.current = true;
+
+    const spawnSession = () => {
+      const r = new SR();
+      r.lang = getUserLocale();
+      r.interimResults = true;
+      r.continuous = true;
+      r.maxAlternatives = 1;
+
+      r.onresult = (e: any) => {
+        let sessionText = '';
+        for (let i = 0; i < e.results.length; i++) {
+          sessionText += e.results[i][0].transcript;
+        }
+        const combined = baseTextRef.current
+          ? `${baseTextRef.current} ${sessionText}`
+          : sessionText;
+        capturedRef.current = combined;
+        setText(combined);
+      };
+
+      r.onend = () => {
+        if (isListeningRef.current) {
+          // iOS killed the session (10-s limit) — save progress and restart
+          baseTextRef.current = capturedRef.current;
+          setTimeout(() => {
+            if (isListeningRef.current) {
+              try { recognitionRef.current = spawnSession(); } catch {}
+            }
+          }, 80);
+        } else {
+          // User tapped stop
+          setIsListening(false);
+          if (capturedRef.current.trim()) setText(capturedRef.current);
+          capturedRef.current = '';
+          baseTextRef.current = '';
+        }
+      };
+
+      r.onerror = (e: any) => {
+        if (e.error === 'aborted' || e.error === 'no-speech') return;
+        isListeningRef.current = false;
+        setIsListening(false);
+        capturedRef.current = '';
+        baseTextRef.current = '';
+      };
+
+      r.start();
+      return r;
     };
-    r.onend = () => setIsListening(false);
-    r.onerror = () => setIsListening(false);
-    r.start();
-    recognitionRef.current = r;
+
+    recognitionRef.current = spawnSession();
     setIsListening(true);
     haptic('light');
-  };
-
-  const stopListening = () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
   };
 
   const parseWithAI = async (): Promise<ParsedEntry | null> => {
@@ -338,16 +385,19 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                   }}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
                 />
-                <button
-                  onClick={isListening ? stopListening : startListening}
-                  className="absolute bottom-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all"
-                  style={{
-                    background: isListening ? '#D97B66' : '#964735',
-                    boxShadow: isListening ? '0 0 0 4px rgba(217,123,102,0.3)' : 'none',
-                  }}
-                >
-                  {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4 text-white" />}
-                </button>
+                {/* Mic button with pulse ring when active */}
+                <div className="absolute bottom-3 right-3 w-9 h-9">
+                  {isListening && (
+                    <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
+                  )}
+                  <button
+                    onClick={isListening ? stopListening : startListening}
+                    className="relative w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                    style={{ background: isListening ? '#D97B66' : '#964735' }}
+                  >
+                    <Mic className="w-4 h-4 text-white" />
+                  </button>
+                </div>
               </div>
 
               {/* Type chips */}
@@ -370,14 +420,11 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                 ))}
               </div>
 
-              <div className="flex gap-3 pt-1">
-                <button onClick={onClose} className="flex-1 py-3 rounded-full text-sm font-semibold" style={{ background: '#F1EDE7', color: '#55433F' }}>
-                  Cancel
-                </button>
+              <div className="space-y-2 pt-1">
                 <button
                   onClick={handleParseAndPreview}
                   disabled={!text.trim()}
-                  className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                   style={{
                     background: text.trim() ? '#964735' : '#DAC1BB',
                     color: '#FFFFFF',
@@ -385,7 +432,14 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                   }}
                 >
                   <Sparkles className="w-4 h-4" />
-                  Parse & Preview
+                  Create
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-full py-2 text-sm font-medium"
+                  style={{ color: '#B5A09A' }}
+                >
+                  Cancel
                 </button>
               </div>
             </div>
