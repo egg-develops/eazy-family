@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Plus, X, Trash2 } from "lucide-react";
+import { Mic, Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 
@@ -57,6 +57,9 @@ const Rituals = () => {
   const innerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const recognitionRef = useRef<any>(null);
+  // Use refs for transcript capture — avoids closure/race-condition issues on iOS
+  const capturedRef = useRef('');
+  const savedRef = useRef(false);
   const DELETE_W = 72;
 
   const TC = '#964735';
@@ -100,21 +103,62 @@ const Rituals = () => {
     saveRituals(rituals.filter(r => r.id !== id));
   };
 
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    // onend handles save + state reset
+  };
+
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
+
+    capturedRef.current = '';
+    savedRef.current = false;
+    setVoiceText('');
+
     const r = new SR();
     r.lang = 'en-US';
     r.interimResults = true;
-    let captured = '';
+    r.continuous = false;   // iOS doesn't support continuous reliably
+    r.maxAlternatives = 1;
+
     r.onresult = (e: any) => {
-      captured = Array.from(e.results).map((r: any) => r[0].transcript).join('');
-      setVoiceText(captured);
+      // Accumulate all result segments
+      let transcript = '';
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      capturedRef.current = transcript;
+      setVoiceText(transcript);
+
+      // Save immediately on final result — primary path for mobile (iOS fires
+      // onend before onresult in some WebKit versions, this avoids that race)
+      if (e.results[e.results.length - 1].isFinal && !savedRef.current) {
+        savedRef.current = true;
+        saveEntry(transcript);
+      }
     };
+
     r.onend = () => {
       setIsListening(false);
-      if (captured.trim()) saveEntry(captured);
+      setVoiceText('');
+      // Fallback: save if onresult final never fired (network/timeout failure on iOS)
+      if (!savedRef.current && capturedRef.current.trim()) {
+        savedRef.current = true;
+        saveEntry(capturedRef.current);
+      }
+      capturedRef.current = '';
+      savedRef.current = false;
     };
+
+    r.onerror = (e: any) => {
+      if (e.error === 'aborted') return; // user tapped stop — normal
+      setIsListening(false);
+      setVoiceText('');
+      capturedRef.current = '';
+      savedRef.current = false;
+    };
+
     r.start();
     recognitionRef.current = r;
     setIsListening(true);
@@ -206,27 +250,32 @@ const Rituals = () => {
       {/* Voice Journal — compact bar */}
       <div className="rounded-2xl overflow-hidden" style={{ background: TC }}>
         <div className="px-5 py-4 flex items-center gap-4">
-          <button
-            onClick={isListening
-              ? () => { recognitionRef.current?.stop(); setIsListening(false); }
-              : startListening}
-            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
-            style={{
-              background: isListening ? TL : 'rgba(255,255,255,0.2)',
-              boxShadow: isListening ? '0 0 0 6px rgba(217,123,102,0.25)' : 'none',
-            }}
-          >
-            {isListening
-              ? <MicOff className="w-5 h-5 text-white" />
-              : <Mic className="w-5 h-5 text-white" />}
-          </button>
+          {/* Mic button with ping ring when active */}
+          <div className="relative flex-shrink-0 w-11 h-11">
+            {isListening && (
+              <span
+                className="absolute inset-0 rounded-full animate-ping"
+                style={{ background: 'rgba(255,255,255,0.35)' }}
+              />
+            )}
+            <button
+              onClick={isListening ? stopListening : startListening}
+              className="relative w-11 h-11 rounded-full flex items-center justify-center transition-all"
+              style={{ background: isListening ? TL : 'rgba(255,255,255,0.2)' }}
+            >
+              <Mic className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm text-white">
-              {isListening ? 'Listening…' : 'Voice Journal'}
+              {isListening ? 'Tap to stop' : 'Voice Journal'}
             </p>
-            {isListening && voiceText && (
-              <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>{voiceText}</p>
-            )}
+            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              {isListening
+                ? (voiceText || 'Listening…')
+                : 'Tap mic to record a reflection'}
+            </p>
           </div>
         </div>
       </div>
