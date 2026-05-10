@@ -425,8 +425,9 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                     onClick={() => setType(t.id)}
                     className="flex items-center gap-0.5 rounded-full font-medium transition-all"
                     style={{
-                      padding: '2px 9px',
+                      padding: '1px 8px',
                       fontSize: '11px',
+                      lineHeight: '18px',
                       background: type === t.id ? '#964735' : '#F1EDE7',
                       color: type === t.id ? '#FFFFFF' : '#55433F',
                       border: `1px solid ${type === t.id ? '#964735' : '#DAC1BB'}`,

@@ -1,16 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Eye, Languages, Calendar as CalendarIcon, Palette, Moon, Sun, Mail, MessageCircle, Loader2, Check, X, Plus, Trash2 } from "lucide-react";
+import { Bell, LogOut, RefreshCw, Crown, Shield, Lock, Moon, Sun, Mail, MessageCircle, Loader2, Check, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ReferralSystem } from "@/components/ReferralSystem";
@@ -316,515 +311,402 @@ const Settings = () => {
     }
   };
 
+  const CARD = '#FFFFFF';
+  const BORDER = '#DAC1BB';
+  const DIVIDER = '#F1EDE7';
+  const TC = '#964735';
+  const SAGE = '#44664F';
+  const SAGE_BG = '#EEF4F0';
+  const SAGE_BORDER = '#C8DDD0';
+  const MUTED = '#7A6660';
+  const INK = '#1C1C18';
+
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <p className="text-xs font-semibold uppercase tracking-wide px-1 mb-1" style={{ color: MUTED }}>{children}</p>
+  );
+
+  const SettingsCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div className={`rounded-2xl overflow-hidden ${className ?? ''}`} style={{ background: CARD, border: `1px solid ${BORDER}` }}>{children}</div>
+  );
+
+  const Row = ({ children, last }: { children: React.ReactNode; last?: boolean }) => (
+    <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: last ? 'none' : `1px solid ${DIVIDER}` }}>{children}</div>
+  );
+
+  const RowLabel = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+    <div className="flex-1 min-w-0 mr-3">
+      <p className="text-sm font-medium" style={{ color: INK }}>{title}</p>
+      {subtitle && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{subtitle}</p>}
+    </div>
+  );
+
   return (
-    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4" style={{ overscrollBehavior: "contain" }}>
+    <div className="space-y-5 py-2" style={{ overscrollBehavior: "contain" }}>
+
       {/* 1. Account */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">{t('settings.account.title')}</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">{t('settings.account.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-          <div className="p-3 sm:p-4 rounded-lg border bg-muted/50">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs sm:text-sm font-medium">{t('settings.account.subscription')}</span>
-              {subscriptionTier === 'family' && (
-                <Crown className="h-4 w-4 flex-shrink-0" style={{ color: "#FFC861" }} />
-              )}
-            </div>
-            <p className="text-xl sm:text-2xl font-bold capitalize">
-              {loadingSubscription ? t('common.loading') : `${subscriptionTier} Plan`}
-            </p>
-            {subscriptionTier === 'family' && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {t('settings.account.allFeaturesUnlocked')}
+      <div className="space-y-2">
+        <SectionLabel>Account</SectionLabel>
+        <SettingsCard>
+          <div className="px-4 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: MUTED }}>Plan</p>
+              <p className="font-bold text-lg capitalize" style={{ color: INK }}>
+                {loadingSubscription ? '…' : `${subscriptionTier} Plan`}
               </p>
-            )}
+            </div>
+            {subscriptionTier === 'family'
+              ? <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: '#FFF7E0', color: '#B88A00', border: '1px solid #FFD76A' }}><Crown className="w-3 h-3" />Family</span>
+              : <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}>Free</span>
+            }
           </div>
-
           {subscriptionTier === 'free' && (
-            <UpgradeDialog>
-              <Button className="w-full gap-2 text-white border-0 h-10 sm:h-11 bg-[#964735] dark:bg-[#7A6660] hover:opacity-90 transition-opacity">
-                <Crown className="h-4 w-4 flex-shrink-0" style={{ color: "#FFC861" }} />
-                {t('settings.account.upgradeFamily')}
-              </Button>
-            </UpgradeDialog>
+            <div className="px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+              <UpgradeDialog>
+                <button className="w-full py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2" style={{ background: TC }}>
+                  <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
+                  Upgrade to Family Plan
+                </button>
+              </UpgradeDialog>
+            </div>
           )}
-
           {(subscriptionTier === 'family' || subscriptionTier === 'premium') && (
-            <Button
-              variant="outline"
-              className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10 h-10 sm:h-11 text-sm"
-              onClick={async () => {
-                if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
-                  try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) throw new Error('Not authenticated');
-                    const { error } = await supabase
-                      .from('profiles')
-                      .update({ subscription_tier: 'free' })
-                      .eq('user_id', user.id);
-                    if (error) throw error;
-                    setSubscriptionTier('free');
-                    toast({ title: "Subscription Cancelled", description: "Your plan has been downgraded to Free." });
-                  } catch (err) {
-                    logError('Cancel subscription error:', err);
-                    toast({ title: "Error", description: "Failed to cancel subscription. Please try again.", variant: "destructive" });
+            <div className="px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+              <button
+                className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+                style={{ background: '#FFF0EE', color: '#C0392B', border: '1px solid #FFCDD0' }}
+                onClick={async () => {
+                  if (confirm('Are you sure you want to cancel your subscription? You will immediately lose access to premium features.')) {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) throw new Error('Not authenticated');
+                      const { error } = await supabase.from('profiles').update({ subscription_tier: 'free' }).eq('user_id', user.id);
+                      if (error) throw error;
+                      setSubscriptionTier('free');
+                      toast({ title: "Subscription Cancelled", description: "Your plan has been downgraded to Free." });
+                    } catch (err) {
+                      logError('Cancel subscription error:', err);
+                      toast({ title: "Error", description: "Failed to cancel subscription. Please try again.", variant: "destructive" });
+                    }
                   }
-                }
-              }}
-            >
-              Cancel / Downgrade to Free
-            </Button>
+                }}
+              >
+                Cancel Subscription
+              </button>
+            </div>
           )}
+          <Row last>
+            <RowLabel title="Family Members" subtitle="Manage your family group" />
+            <button className="text-sm font-semibold" style={{ color: TC }} onClick={() => navigate('/app/family')}>Manage →</button>
+          </Row>
+        </SettingsCard>
+      </div>
 
-          <Button
-            variant="outline"
-            className="w-full h-10 sm:h-11 text-sm"
-            onClick={() => navigate('/app/family')}
-          >
-            {t('settings.account.manageFamily')}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* 2. Homepage Customization */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="text-lg sm:text-xl">{t('settings.homepage.title')}</CardTitle>
-          <CardDescription className="text-xs sm:text-sm">{t('settings.homepage.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-          <div className="space-y-2" data-tutorial="custom-images">
-            <Label className="text-sm sm:text-base">{t('settings.homepage.profileIcon')}</Label>
-            <div className="flex items-center gap-3">
-              {homeConfig.iconImage
-                ? <img src={homeConfig.iconImage} alt="Profile" className="w-12 h-12 rounded-full object-cover flex-shrink-0 border" />
-                : <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs flex-shrink-0">None</div>
-              }
-              <label htmlFor="profile-icon" className="cursor-pointer">
-                <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
-                  {uploadingProfile ? t('common.loading') : homeConfig.iconImage ? 'Change photo' : 'Upload photo'}
-                </span>
-                <input id="profile-icon" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden"
-                  onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'profile'); e.target.value = ''; }}
-                  disabled={uploadingProfile} />
-              </label>
+      {/* 2. Profile & Gallery */}
+      <div className="space-y-2" data-tutorial="custom-images">
+        <SectionLabel>Profile</SectionLabel>
+        <SettingsCard>
+          <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+            {homeConfig.iconImage
+              ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} />
+              : <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style={{ background: '#D97B66' }}>EF</div>
+            }
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: INK }}>Profile Photo</p>
             </div>
+            <label htmlFor="profile-icon" className="cursor-pointer">
+              <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingProfile ? 'Uploading…' : homeConfig.iconImage ? 'Change' : 'Upload'}</span>
+              <input id="profile-icon" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden"
+                onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'profile'); e.target.value = ''; }}
+                disabled={uploadingProfile} />
+            </label>
           </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm sm:text-base">Background Gallery</Label>
-              <span className="text-xs text-muted-foreground">{(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length}/4</span>
+          <div className="px-4 py-3.5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium" style={{ color: INK }}>Background Gallery</p>
+              <span className="text-xs font-medium" style={{ color: MUTED }}>{(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length}/4</span>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2 mb-3">
               {[0, 1, 2, 3].map((idx) => {
                 const imgs = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
                 const img = imgs[idx];
                 return (
-                  <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border bg-muted/50 flex items-center justify-center">
+                  <div key={idx} className="relative aspect-video rounded-xl overflow-hidden flex items-center justify-center" style={{ background: '#F1EDE7', border: `1px solid ${BORDER}` }}>
                     {img ? (
                       <>
                         <img src={img} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => {
-                            const newImgs = imgs.filter((_, i) => i !== idx);
-                            saveHomeConfig({ headerImages: newImgs, headerImage: newImgs[0] });
-                            deleteStorageFile('user-uploads', img).catch(() => {});
-                          }}
-                          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center"
-                        >
+                        <button onClick={() => { const newImgs = imgs.filter((_, i) => i !== idx); saveHomeConfig({ headerImages: newImgs, headerImage: newImgs[0] }); deleteStorageFile('user-uploads', img).catch(() => {}); }}
+                          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(28,28,24,0.6)' }}>
                           <X className="w-2.5 h-2.5 text-white" />
                         </button>
                       </>
-                    ) : (
-                      <Plus className="w-4 h-4 text-muted-foreground/40" />
-                    )}
+                    ) : <Plus className="w-3.5 h-3.5" style={{ color: MUTED }} />}
                   </div>
                 );
               })}
             </div>
             {(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length < 4 ? (
-              <label htmlFor="header-image" className="cursor-pointer block">
-                <span className="inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium bg-background hover:bg-muted transition-colors">
-                  {uploadingHeader ? t('common.loading') : 'Add background photo'}
-                </span>
+              <label htmlFor="header-image" className="cursor-pointer">
+                <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingHeader ? 'Uploading…' : '+ Add background photo'}</span>
                 <input id="header-image" type="file" accept="image/*" className="hidden"
                   onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(file, 'header'); e.target.value = ''; }}
                   disabled={uploadingHeader} />
               </label>
-            ) : (
-              <p className="text-xs text-muted-foreground">Gallery full — delete a photo to add a new one.</p>
-            )}
+            ) : <p className="text-xs" style={{ color: MUTED }}>Gallery full — delete a photo to add a new one.</p>}
           </div>
-        </CardContent>
-      </Card>
+        </SettingsCard>
+      </div>
 
       {/* 3. Appearance */}
-      <Card className="shadow-custom-md" data-tutorial="appearance">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            {t('settings.appearance.title')}
-          </CardTitle>
-          <CardDescription>Customize how your app looks</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div className="flex items-center gap-3">
-              {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-              <Label>{isDark ? "Dark Mode" : "Light Mode"}</Label>
+      <div className="space-y-2" data-tutorial="appearance">
+        <SectionLabel>Appearance</SectionLabel>
+        <SettingsCard>
+          <Row last>
+            <div className="flex items-center gap-3 flex-1">
+              {isDark ? <Moon className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} /> : <Sun className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />}
+              <RowLabel title={isDark ? 'Dark Mode' : 'Light Mode'} subtitle="Adjust the app's color theme" />
             </div>
             <Switch checked={isDark} onCheckedChange={handleDarkModeToggle} />
-          </div>
-        </CardContent>
-      </Card>
+          </Row>
+        </SettingsCard>
+      </div>
 
       {/* 4. Calendar Integrations */}
-      <Card className="shadow-custom-md" data-tutorial="calendar-integrations">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            {t('calendarIntegrations.title')}
-          </CardTitle>
-          <CardDescription>{t('calendarIntegrations.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4">
-          {/* Google Calendar */}
+      <div className="space-y-2" data-tutorial="calendar-integrations">
+        <SectionLabel>Calendar Integrations</SectionLabel>
+        <SettingsCard>
+          {/* Google */}
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
-            <div className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg ${googleSynced ? 'bg-green-50 dark:bg-green-950/30 border-green-200' : 'bg-card border-border'}`}>
-              <div className="w-7 h-7 rounded-md bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+            <Row>
+              <div className="w-7 h-7 rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 mr-3 overflow-hidden">
                 <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
               </div>
-              <span className="flex-1 text-sm font-medium">Google Calendar</span>
-              <Button size="sm" variant={googleSynced ? 'outline' : 'default'} className={`flex-shrink-0 h-7 text-xs px-2.5 ${googleSynced ? '' : 'gradient-primary text-white border-0'}`} onClick={() => navigate('/app/calendar?sync=1')}>
+              <RowLabel title="Google Calendar" subtitle={googleSynced ? 'Connected' : 'Not connected'} />
+              <button className="text-sm font-semibold px-3 py-1 rounded-full" style={{ background: googleSynced ? SAGE_BG : '#F1EDE7', color: googleSynced ? SAGE : TC, border: `1px solid ${googleSynced ? SAGE_BORDER : BORDER}` }} onClick={() => navigate('/app/calendar?sync=1')}>
                 {googleSynced ? 'Manage' : 'Connect'}
-              </Button>
-            </div>
+              </button>
+            </Row>
           ) : (
             <UpgradeDialog>
-              <div className="flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition">
-                <div className="w-7 h-7 rounded-md bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+              <Row>
+                <div className="w-7 h-7 rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 mr-3 overflow-hidden">
                   <svg viewBox="0 0 24 24" className="w-4 h-4" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 </div>
-                <span className="flex-1 text-sm font-medium">Google Calendar</span>
-                <Badge className="bg-primary text-primary-foreground flex-shrink-0 text-xs">Premium</Badge>
-              </div>
+                <RowLabel title="Google Calendar" subtitle="Requires Family plan" />
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00', border: '1px solid #FFD76A' }}>Premium</span>
+              </Row>
             </UpgradeDialog>
           )}
-
-          {/* Apple Calendar - Coming Soon */}
-          <div className="flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-muted/30 border-border/50 opacity-60">
-            <div className="w-7 h-7 rounded-md bg-white border flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+          {/* Apple */}
+          <Row>
+            <div className="w-7 h-7 rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0 mr-3 overflow-hidden">
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
             </div>
-            <span className="flex-1 text-sm font-medium text-muted-foreground">Apple Calendar</span>
-            <Badge variant="secondary" className="flex-shrink-0 whitespace-nowrap text-xs">Coming Soon</Badge>
-          </div>
-
-          {/* Outlook Calendar */}
-          <div className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg ${outlookSynced ? 'bg-[#F1EDE7]/50 dark:bg-[#55433F]/30 border-[#DAC1BB]' : 'bg-card border-border'}`}>
-            <div className="w-7 h-7 rounded-md bg-[#0078d4] flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
-              <span className="text-white text-xs font-bold leading-none">O</span>
+            <RowLabel title="Apple Calendar" subtitle="Coming soon" />
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}>Soon</span>
+          </Row>
+          {/* Outlook */}
+          <Row last>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0 mr-3 overflow-hidden" style={{ background: '#0078d4' }}>
+              <span className="text-white text-xs font-bold">O</span>
             </div>
-            <span className="flex-1 text-sm font-medium">Outlook Calendar</span>
-            <Button size="sm" variant={outlookSynced ? 'outline' : 'default'} className={`flex-shrink-0 h-7 text-xs px-2.5 ${outlookSynced ? '' : 'bg-[#0078d4] hover:bg-[#006cbd] text-white border-0'}`} onClick={() => navigate('/app/calendar?sync=1')}>
+            <RowLabel title="Outlook Calendar" subtitle={outlookSynced ? 'Connected' : 'Not connected'} />
+            <button className="text-sm font-semibold px-3 py-1 rounded-full" style={{ background: outlookSynced ? SAGE_BG : '#E8F0FB', color: outlookSynced ? SAGE : '#0078d4', border: `1px solid ${outlookSynced ? SAGE_BORDER : '#BFCFEE'}` }} onClick={() => navigate('/app/calendar?sync=1')}>
               {outlookSynced ? 'Manage' : 'Connect'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </button>
+          </Row>
+        </SettingsCard>
+      </div>
 
       {/* 5. Language */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Languages className="h-5 w-5" />
-            {t('settings.language.title')}
-          </CardTitle>
-          <CardDescription>{t('settings.language.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1 p-3 sm:p-6">
+      <div className="space-y-2">
+        <SectionLabel>Language</SectionLabel>
+        <SettingsCard>
           {[
             { value: "en", label: t('settings.language.english'), flag: "🇬🇧" },
             { value: "de", label: t('settings.language.german'), flag: "🇩🇪" },
             { value: "fr", label: t('settings.language.french'), flag: "🇫🇷" },
             { value: "it", label: t('settings.language.italian'), flag: "🇮🇹" },
-          ].map(({ value, label, flag }) => (
-            <button
-              key={value}
-              onClick={() => handleLanguageChange(value)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors text-left ${
-                language === value
-                  ? "bg-primary/10 border border-primary/30"
-                  : "hover:bg-muted border border-transparent"
-              }`}
+          ].map(({ value, label, flag }, i, arr) => (
+            <button key={value} onClick={() => handleLanguageChange(value)}
+              className="w-full flex items-center justify-between px-4 py-3.5 transition-colors text-left"
+              style={{ borderBottom: i < arr.length - 1 ? `1px solid ${DIVIDER}` : 'none', background: language === value ? SAGE_BG : 'transparent' }}
             >
-              <span className="flex items-center gap-3 text-sm font-medium">
-                <span className="text-base">{flag}</span>
-                {label}
+              <span className="flex items-center gap-3 text-sm font-medium" style={{ color: INK }}>
+                <span className="text-base">{flag}</span>{label}
               </span>
-              {language === value && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+              {language === value && <Check className="w-4 h-4 flex-shrink-0" style={{ color: SAGE }} />}
             </button>
           ))}
-        </CardContent>
-      </Card>
+        </SettingsCard>
+      </div>
 
-      {/* 6. Privacy & Security (combined) */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            {t('settings.privacy.title')}
-          </CardTitle>
-          <CardDescription>{t('settings.privacy.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      {/* 6. Privacy & Security */}
+      <div className="space-y-2">
+        <SectionLabel>Privacy & Security</SectionLabel>
+        <SettingsCard>
           {loadingPrivacy ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
+            <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" style={{ color: MUTED }} /></div>
           ) : (
             <>
-              {/* Display name */}
-              <div className="space-y-2">
-                <Label htmlFor="display-name">{t('privacySettings.displayName')}</Label>
+              <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+                <p className="text-sm font-medium mb-2" style={{ color: INK }}>Display Name</p>
                 <div className="flex gap-2">
-                  <Input
-                    id="display-name"
+                  <input
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && savePrivacyField("display_name", displayName.trim() || null)}
-                    placeholder={t('privacySettings.displayNamePlaceholder')}
+                    onChange={e => setDisplayName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && savePrivacyField("display_name", displayName.trim() || null)}
+                    placeholder="Your display name"
                     maxLength={100}
-                    className="flex-1"
+                    className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
+                    style={{ background: '#F7F3ED', border: `1.5px solid ${BORDER}`, color: INK }}
                   />
-                  <Button
-                    size="sm"
-                    className="flex-shrink-0 text-white border-0 h-10"
-                    style={{ background: "#964735" }}
-                    onClick={() => savePrivacyField("display_name", displayName.trim() || null)}
-                  >
-                    Save
-                  </Button>
+                  <button className="px-4 py-2 rounded-xl text-sm font-semibold text-white flex-shrink-0" style={{ background: TC }}
+                    onClick={() => savePrivacyField("display_name", displayName.trim() || null)}>Save</button>
                 </div>
-                <p className="text-xs text-muted-foreground">{t('privacySettings.displayNameHint')}</p>
+                <p className="text-xs mt-1.5" style={{ color: MUTED }}>{t('privacySettings.displayNameHint')}</p>
               </div>
-
-              {/* Share toggles */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="share-email">{t('privacySettings.shareEmail')}</Label>
-                    <p className="text-sm text-muted-foreground">{t('privacySettings.shareEmailDesc')}</p>
-                  </div>
-                  <Switch id="share-email" checked={shareEmail} onCheckedChange={(v) => { setShareEmail(v); savePrivacyField("share_email", v); }} />
+              <Row>
+                <RowLabel title="Share Email with Family" subtitle={t('privacySettings.shareEmailDesc')} />
+                <Switch checked={shareEmail} onCheckedChange={v => { setShareEmail(v); savePrivacyField("share_email", v); }} />
+              </Row>
+              <Row>
+                <RowLabel title="Share Phone with Family" subtitle={t('privacySettings.sharePhoneDesc')} />
+                <Switch checked={sharePhone} onCheckedChange={v => { setSharePhone(v); savePrivacyField("share_phone", v); }} />
+              </Row>
+              <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderTop: `1px solid ${DIVIDER}`, borderBottom: `1px solid ${DIVIDER}` }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
+                  <Lock className="w-4 h-4" style={{ color: SAGE }} />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="share-phone">{t('privacySettings.sharePhone')}</Label>
-                    <p className="text-sm text-muted-foreground">{t('privacySettings.sharePhoneDesc')}</p>
-                  </div>
-                  <Switch id="share-phone" checked={sharePhone} onCheckedChange={(v) => { setSharePhone(v); savePrivacyField("share_phone", v); }} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.privacy.encryption')}</p>
+                  <p className="text-xs" style={{ color: MUTED }}>{t('settings.privacy.encryptionDesc')}</p>
                 </div>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: SAGE_BG, color: SAGE, border: `1px solid ${SAGE_BORDER}` }}>On</span>
               </div>
+              <Row last>
+                <RowLabel title="Privacy Policy" />
+                <button className="text-sm font-semibold" style={{ color: TC }} onClick={() => navigate('/privacy')}>View →</button>
+              </Row>
             </>
           )}
+        </SettingsCard>
+      </div>
 
-          <div className="border-t pt-4 space-y-4">
-            {/* Security indicators */}
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Lock className="h-5 w-5 mt-0.5 text-primary" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{t('settings.privacy.encryption')}</p>
-                  <p className="text-xs text-muted-foreground">{t('settings.privacy.encryptionDesc')}</p>
-                </div>
-                <Switch checked={true} disabled />
-              </div>
-              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Eye className="h-5 w-5 mt-0.5 text-primary" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{t('settings.privacy.dataVisibility')}</p>
-                  <p className="text-xs text-muted-foreground">{t('settings.privacy.dataVisibilityDesc')}</p>
-                </div>
-                <Switch checked={true} disabled />
-              </div>
-            </div>
-
-            {/* Policy links */}
-            <div className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => navigate('/privacy')}>
-                {t('settings.privacy.privacyPolicy')}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Journal settings */}
-      <Card className="shadow-custom-md">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Journal</CardTitle>
-          <CardDescription>Control how journal entries appear on your Rituals page.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Show on Rituals page</Label>
-              <p className="text-sm text-muted-foreground">Display journal entries below your daily rituals</p>
-            </div>
-            <Switch
-              checked={journalSettings.showOnRituals}
-              onCheckedChange={v => saveJournalSettings({ ...journalSettings, showOnRituals: v })}
-            />
-          </div>
+      {/* 7. Journal */}
+      <div className="space-y-2">
+        <SectionLabel>Journal</SectionLabel>
+        <SettingsCard>
+          <Row last={!journalSettings.showOnRituals}>
+            <RowLabel title="Show on Rituals page" subtitle="Display journal entries below your daily rituals" />
+            <Switch checked={journalSettings.showOnRituals} onCheckedChange={v => saveJournalSettings({ ...journalSettings, showOnRituals: v })} />
+          </Row>
           {journalSettings.showOnRituals && (
-            <div className="space-y-2">
-              <Label>Entries to display</Label>
+            <div className="px-4 py-3.5">
+              <p className="text-xs font-medium mb-2.5" style={{ color: MUTED }}>Entries to display</p>
               <div className="flex gap-2 flex-wrap">
                 {[3, 5, 10, -1].map(count => (
-                  <button
-                    key={count}
-                    onClick={() => saveJournalSettings({ ...journalSettings, displayCount: count })}
-                    className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
-                    style={{
-                      background: journalSettings.displayCount === count ? '#964735' : '#F1EDE7',
-                      color: journalSettings.displayCount === count ? '#FFFFFF' : '#55433F',
-                      border: `1px solid ${journalSettings.displayCount === count ? '#964735' : '#DAC1BB'}`,
-                    }}
-                  >
+                  <button key={count} onClick={() => saveJournalSettings({ ...journalSettings, displayCount: count })}
+                    className="px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all"
+                    style={{ background: journalSettings.displayCount === count ? TC : '#F1EDE7', color: journalSettings.displayCount === count ? '#fff' : '#55433F', border: `1px solid ${journalSettings.displayCount === count ? TC : BORDER}` }}>
                     {count === -1 ? 'All' : count}
                   </button>
                 ))}
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </SettingsCard>
+      </div>
 
-      {/* 7. Notifications */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle>{t('settings.notifications.title')}</CardTitle>
-          <CardDescription>{t('settings.notifications.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <Label>{t('settings.notifications.pushNotifications')}</Label>
-                <p className="text-sm text-muted-foreground">{t('settings.notifications.pushDesc')}</p>
-              </div>
+      {/* 8. Notifications */}
+      <div className="space-y-2">
+        <SectionLabel>Notifications</SectionLabel>
+        <SettingsCard>
+          <Row>
+            <div className="flex items-center gap-3 flex-1">
+              <Bell className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />
+              <RowLabel title="Push Notifications" subtitle={t('settings.notifications.pushDesc')} />
             </div>
             <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <Label>{t('settings.notifications.emailNotifications')}</Label>
-                <p className="text-sm text-muted-foreground">{t('settings.notifications.emailDesc')}</p>
-              </div>
+          </Row>
+          <Row last>
+            <div className="flex items-center gap-3 flex-1">
+              <Mail className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />
+              <RowLabel title="Email Notifications" subtitle={t('settings.notifications.emailDesc')} />
             </div>
             <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
-          </div>
-        </CardContent>
-      </Card>
+          </Row>
+        </SettingsCard>
+      </div>
 
-      {/* 8. Refer Friends, Get Premium */}
+      {/* 9. Refer Friends */}
       <div data-tutorial="referral-system">
         <ReferralSystem />
       </div>
 
-      {/* 9 & 10. Replay Feature Tour + Sign Out */}
-      <div className="space-y-3">
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2"
-          onClick={() => {
-            window.dispatchEvent(new Event("tutorial-start"));
-            navigate("/app");
-          }}
-        >
-          <RefreshCw className="h-4 w-4" />
-          Replay Feature Tour
-        </Button>
-        <Button
-          variant="destructive"
-          className="w-full justify-start gap-2"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-4 w-4" />
-          {t('settings.actions.signOut')}
-        </Button>
+      {/* 10. Actions */}
+      <div className="space-y-2">
+        <SectionLabel>App</SectionLabel>
+        <SettingsCard>
+          <Row>
+            <div className="flex items-center gap-3 flex-1">
+              <RefreshCw className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />
+              <RowLabel title="Replay Feature Tour" />
+            </div>
+            <button className="text-sm font-semibold" style={{ color: TC }} onClick={() => { window.dispatchEvent(new Event("tutorial-start")); navigate("/app"); }}>Start →</button>
+          </Row>
+          <Row last>
+            <div className="flex items-center gap-3 flex-1">
+              <LogOut className="w-4 h-4 flex-shrink-0" style={{ color: '#C0392B' }} />
+              <p className="text-sm font-medium" style={{ color: '#C0392B' }}>{t('settings.actions.signOut')}</p>
+            </div>
+            <button className="text-sm font-semibold" style={{ color: '#C0392B' }} onClick={handleLogout}>Sign Out</button>
+          </Row>
+        </SettingsCard>
       </div>
 
-      {/* Delete Account */}
-      <Card className="shadow-custom-md border-destructive/20">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base text-destructive">Delete Account</CardTitle>
-          <CardDescription>Permanently delete your account and all associated data. This cannot be undone.</CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* 11. Contact */}
+      <div className="space-y-2">
+        <SectionLabel>Contact Us</SectionLabel>
+        <SettingsCard>
+          <Row>
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}><MessageCircle className="w-3.5 h-3.5" style={{ color: SAGE }} /></div>
+              <RowLabel title="Feedback & Ideas" subtitle="hello@eazy.family" />
+            </div>
+            <a href="mailto:hello@eazy.family" className="text-sm font-semibold" style={{ color: TC }}>Email →</a>
+          </Row>
+          <Row last>
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0EE' }}><Shield className="w-3.5 h-3.5" style={{ color: '#C0392B' }} /></div>
+              <RowLabel title="Technical Support" subtitle="support@eazy.family" />
+            </div>
+            <a href="mailto:support@eazy.family" className="text-sm font-semibold" style={{ color: TC }}>Email →</a>
+          </Row>
+        </SettingsCard>
+      </div>
+
+      {/* 12. Delete Account */}
+      <div className="space-y-2">
+        <SectionLabel>Danger Zone</SectionLabel>
+        <SettingsCard>
           {!showDeleteConfirm ? (
-            <Button
-              variant="outline"
-              className="w-full border-destructive/30 text-destructive hover:bg-destructive/10"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              Delete My Account
-            </Button>
+            <Row last>
+              <RowLabel title="Delete My Account" subtitle="Permanently removes all data. Cannot be undone." />
+              <button className="text-sm font-semibold" style={{ color: '#C0392B' }} onClick={() => setShowDeleteConfirm(true)}>Delete</button>
+            </Row>
           ) : (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-destructive">Are you sure? This will permanently delete all your data, family members, and messages.</p>
+            <div className="px-4 py-4 space-y-3">
+              <p className="text-sm font-medium" style={{ color: '#C0392B' }}>This will permanently delete all your data, family members, and messages.</p>
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>
-                  Cancel
-                </Button>
-                <Button variant="destructive" className="flex-1" onClick={handleDeleteAccount} disabled={deletingAccount}>
+                <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }} onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>Cancel</button>
+                <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: '#C0392B' }} onClick={handleDeleteAccount} disabled={deletingAccount}>
                   {deletingAccount ? "Deleting…" : "Yes, Delete Everything"}
-                </Button>
+                </button>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* 11. Contact Us */}
-      <Card className="shadow-custom-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Mail className="h-5 w-5" />
-            Contact Us
-          </CardTitle>
-          <CardDescription>We'd love to hear from you</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <MessageCircle className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Feedback & Feature Requests</p>
-              <a href="mailto:hello@eazy.family" className="text-sm text-primary hover:underline">hello@eazy.family</a>
-              <p className="text-xs text-muted-foreground mt-0.5">Ideas, suggestions, or anything you'd love to see</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Shield className="h-4 w-4 text-destructive" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Technical Support</p>
-              <a href="mailto:support@eazy.family" className="text-sm text-primary hover:underline">support@eazy.family</a>
-              <p className="text-xs text-muted-foreground mt-0.5">Bugs, account issues, or anything not working right</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+        </SettingsCard>
+      </div>
     </div>
   );
 };

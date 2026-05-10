@@ -1032,11 +1032,6 @@ const Calendar = () => {
 
       {/* Own Header */}
       <div className="flex items-center justify-between px-4 h-14" style={{ background: '#FDF9F3' }}>
-        <button onClick={() => navigate('/app')} className="flex-shrink-0">
-          {userIconUrl
-            ? <img src={userIconUrl} alt="Profile" className="w-9 h-9 rounded-full object-cover" style={{ border: '2px solid #D97B66' }} />
-            : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#D97B66' }}>{userInitials.slice(0,2)}</div>}
-        </button>
         <div className="flex items-center gap-2">
           <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>{format(selectedDate, 'MMMM yyyy')}</h1>
           <button
@@ -1046,14 +1041,9 @@ const Calendar = () => {
             <LayoutGrid className="w-4 h-4" style={{ color: '#964735' }} />
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
-            <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
-          <button onClick={() => navigate('/app/settings')} className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
-            <Settings className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
-        </div>
+        <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
+          <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
+        </button>
       </div>
 
       {/* View picker dropdown */}
@@ -1245,30 +1235,6 @@ const Calendar = () => {
 
       </div>{/* end scrollable */}
 
-      {/* Voice capture bar — pinned above nav */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 z-40">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg"
-          style={{ background: '#FFFFFF', border: '1px solid #EBE8E2', boxShadow: '0 4px 24px rgba(28,20,18,0.1)' }}>
-          <button
-            onClick={isListeningVoice ? stopCalendarVoice : startCalendarVoice}
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: isListeningVoice ? '#D97B66' : 'transparent' }}
-          >
-            <Mic className="w-5 h-5" style={{ color: isListeningVoice ? '#FFFFFF' : '#964735' }} />
-          </button>
-          <p className="flex-1 text-sm" style={{ color: '#B5A09A' }}>
-            {isListeningVoice ? 'Listening…' : 'Add event by voice…'}
-          </p>
-          <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
-          <button
-            onClick={() => { resetEventForm(); setDialogTab('event'); setIsDialogOpen(true); }}
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: '#964735' }}
-          >
-            <ChevronRight className="w-5 h-5 text-white" />
-          </button>
-        </div>
-      </div>
 
       {/* Outlook Admin Consent Dialog */}
       <Dialog open={outlookAdminConsentNeeded} onOpenChange={setOutlookAdminConsentNeeded}>

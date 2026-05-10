@@ -165,35 +165,30 @@ const Shopping = () => {
     <div className="space-y-4 p-4" style={{ paddingBottom: '2rem' }}>
 
       {/* Add item bar */}
-      <div className="flex gap-2 items-center rounded-2xl px-4 py-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-        <button onClick={addItem} className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full" style={{ background: TC, color: '#fff' }}>
-          <Plus className="w-4 h-4" />
-        </button>
+      <div className="flex items-center rounded-2xl px-4 py-3 gap-3" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
         <input
           value={newItem}
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addItem()}
-          placeholder="Add an item…"
-          className="flex-1 outline-none text-sm"
+          placeholder="+ Add an item…"
+          className="flex-1 outline-none text-sm font-medium"
           style={{ color: '#1C1C18', background: 'transparent' }}
         />
         <button className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7' }} aria-label="Scan barcode">
           <Barcode className="w-4 h-4" style={{ color: MUTED }} />
         </button>
         <button onClick={isListening ? stopListening : startListening}
-          className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-          style={{ background: isListening ? TL : '#F1EDE7' }}>
+          className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
+          style={{ background: isListening ? '#8FB399' : '#F1EDE7' }}>
           {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4" style={{ color: MUTED }} />}
         </button>
       </div>
 
       {/* Smart notice card */}
-      <div className="rounded-2xl px-4 py-3 flex items-start gap-3" style={{ background: '#F7F3ED', border: `1px solid ${BORDER}` }}>
-        <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TC }} />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm" style={{ color: '#1C1C18' }}>Take a picture of your recipe list or the URL — I'll add all items.</p>
-        </div>
-        <button className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: TC, color: '#fff' }}>Add All</button>
+      <div className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
+        <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: '#44664F' }} />
+        <p className="flex-1 text-sm" style={{ color: '#44664F' }}>Take a picture of your recipe list or URL — I'll add all items.</p>
+        <button className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap" style={{ background: '#44664F', color: '#fff' }}>Add All</button>
       </div>
 
       {/* Grouped uncompleted items */}
