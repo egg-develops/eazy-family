@@ -66,14 +66,27 @@ const AppLayout = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(-1);
+  const [isDragMode, setIsDragMode] = useState(false);
+  const [buttonPos, setButtonPos] = useState<{ left: number; bottom: number } | null>(() => {
+    try { const s = localStorage.getItem('eazy-button-pos'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeMenuRef = useRef(false);
-  const ezCaptureOpenedRef = useRef(false);
+  const isDragModeRef = useRef(false);
+  const dragMovedRef = useRef(false);
   const currentPointerYRef = useRef(0);
+  const currentPointerXRef = useRef(0);
   const swipeStartYRef = useRef(0);
   const longPressOriginYRef = useRef(0);
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
+
+  const snapButtonPos = (left: number, bottom: number): { left: number; bottom: number } => {
+    const w = window.innerWidth;
+    const anchors = [24, w / 2 - 32, w - 88];
+    const nearestLeft = anchors.reduce((a, b) => Math.abs(a - left) < Math.abs(b - left) ? a : b);
+    return { left: nearestLeft, bottom: Math.max(16, Math.min(window.innerHeight - 80, bottom)) };
+  };
 
   const openMenu = () => {
     setMenuOpen(true);
@@ -87,22 +100,39 @@ const AppLayout = () => {
 
   const handleEZPointerDown = (e: React.PointerEvent) => {
     isSwipeMenuRef.current = false;
-    ezCaptureOpenedRef.current = false;
+    isDragModeRef.current = false;
+    dragMovedRef.current = false;
     currentPointerYRef.current = e.clientY;
+    currentPointerXRef.current = e.clientX;
     swipeStartYRef.current = e.clientY;
     try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
-    // Long hold → EZ Capture
+    // Long hold → enter drag mode
     longPressTimer.current = setTimeout(() => {
       if (!isSwipeMenuRef.current) {
-        ezCaptureOpenedRef.current = true;
+        isDragModeRef.current = true;
+        setIsDragMode(true);
         haptic('heavy');
-        setEzOpen(true);
       }
     }, 500);
   };
 
   const handleEZPointerMove = (e: React.PointerEvent) => {
     currentPointerYRef.current = e.clientY;
+    currentPointerXRef.current = e.clientX;
+
+    // Drag mode — move the button
+    if (isDragModeRef.current) {
+      dragMovedRef.current = true;
+      const newLeft = e.clientX - 32;
+      const newBottom = window.innerHeight - e.clientY - 32;
+      const pos = {
+        left: Math.max(8, Math.min(window.innerWidth - 72, newLeft)),
+        bottom: Math.max(16, Math.min(window.innerHeight - 80, newBottom)),
+      };
+      setButtonPos(pos);
+      return;
+    }
+
     const swipeDelta = swipeStartYRef.current - e.clientY;
 
     if (!isSwipeMenuRef.current) {
@@ -129,14 +159,35 @@ const AppLayout = () => {
 
   const handleEZPointerUp = () => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+
+    if (isDragModeRef.current) {
+      isDragModeRef.current = false;
+      setIsDragMode(false);
+      if (dragMovedRef.current) {
+        // Snap to nearest horizontal anchor, preserve vertical position
+        setButtonPos(prev => {
+          if (!prev) return prev;
+          const snapped = snapButtonPos(prev.left, prev.bottom);
+          localStorage.setItem('eazy-button-pos', JSON.stringify(snapped));
+          return snapped;
+        });
+        haptic('light');
+      } else {
+        // Long press, no move → EZ Capture
+        haptic('medium');
+        setEzOpen(true);
+      }
+      return;
+    }
+
     if (isSwipeMenuRef.current) {
       if (activeMenuIndex >= 0) navigate(menuItems[activeMenuIndex].path);
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
       isSwipeMenuRef.current = false;
-    } else if (!ezCaptureOpenedRef.current) {
-      // Tap (no swipe, no long press yet) → EZ Capture
+    } else {
+      // Tap → EZ Capture
       haptic('medium');
       setEzOpen(true);
     }
@@ -145,25 +196,29 @@ const AppLayout = () => {
   const handleEZPointerCancel = () => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
     isSwipeMenuRef.current = false;
-    ezCaptureOpenedRef.current = false;
+    isDragModeRef.current = false;
+    dragMovedRef.current = false;
+    setIsDragMode(false);
     setActiveMenuIndex(-1);
     prevActiveIndexRef.current = -1;
     closeMenu();
   };
 
-  // Cancel timer on leave only if swipe menu hasn't opened yet.
+  // Cancel timer on leave only if neither swipe menu nor drag mode is active.
   const handleEZPointerLeave = () => {
-    if (!isSwipeMenuRef.current && longPressTimer.current) {
+    if (!isSwipeMenuRef.current && !isDragModeRef.current && longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
   };
 
-  // Non-passive touchmove to block page scroll during swipe-up gesture.
+  // Non-passive touchmove to block page scroll during swipe-up or drag.
   useEffect(() => {
     const el = ezButtonRef.current;
     if (!el) return;
-    const onTouchMove = (e: TouchEvent) => { if (isSwipeMenuRef.current) e.preventDefault(); };
+    const onTouchMove = (e: TouchEvent) => {
+      if (isSwipeMenuRef.current || isDragModeRef.current) e.preventDefault();
+    };
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => el.removeEventListener('touchmove', onTouchMove);
   }, []);
@@ -274,10 +329,13 @@ const AppLayout = () => {
         />
       )}
 
-      {/* EZ Button + menu — floats above nav strip */}
+      {/* EZ Button + menu */}
       <div
         className="lg:hidden fixed z-50"
-        style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }}
+        style={buttonPos
+          ? { bottom: `${buttonPos.bottom}px`, left: `${buttonPos.left}px`, transition: isDragMode ? 'none' : 'left 0.25s ease, bottom 0.25s ease' }
+          : { bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }
+        }
       >
         <div className="relative flex items-center justify-center">
           {/* Menu items — above button, bottom-to-top */}
@@ -331,9 +389,13 @@ const AppLayout = () => {
               width: '64px',
               height: '64px',
               background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)',
-              boxShadow: menuOpen
-                ? '0 0 0 6px rgba(150,71,53,0.25), 0 8px 24px rgba(150,71,53,0.5)'
-                : '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
+              boxShadow: isDragMode
+                ? '0 0 0 8px rgba(150,71,53,0.2), 0 12px 32px rgba(150,71,53,0.6)'
+                : menuOpen
+                  ? '0 0 0 6px rgba(150,71,53,0.25), 0 8px 24px rgba(150,71,53,0.5)'
+                  : '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
+              transform: isDragMode ? 'scale(1.12)' : undefined,
+              transition: isDragMode ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease',
               touchAction: 'none',
               WebkitUserSelect: 'none',
             }}
