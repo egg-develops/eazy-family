@@ -768,7 +768,7 @@ const AppHome = () => {
         {/* Hourly forecast — drops below full row, toggle via pill */}
         {weatherExpanded && weatherHourly.length > 0 && (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
-            <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+            <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-x' } as React.CSSProperties}>
               {weatherHourly.map((slot, i) => {
                 const isNow = i === 0;
                 return (

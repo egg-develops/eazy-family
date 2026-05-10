@@ -165,10 +165,10 @@ const FamilyAgenda = () => {
   const BORDER = '#DAC1BB';
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#FDF9F3' }}>
+    <div className="space-y-4 pb-4">
 
       {/* Timeline / voice messages */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4 space-y-4">
+      <div className="space-y-4">
 
         {/* Upcoming Events strip */}
         {events.length > 0 && (
@@ -253,7 +253,7 @@ const FamilyAgenda = () => {
       </div>
 
       {/* Mic bar */}
-      <div className="px-4 pb-28 pt-3" style={{ borderTop: `1px solid ${BORDER}`, background: '#FDF9F3' }}>
+      <div className="pt-2" style={{ borderTop: `1px solid ${BORDER}` }}>
         <button
           onClick={handleMicToggle}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-full font-semibold text-sm transition-all"
