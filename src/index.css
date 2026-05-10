@@ -15,6 +15,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent browser image callout / save-image popup on long press (PWA) */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 @layer base {
   :root {
     /* ── Eazy.Family Design System v2.0 — Terracotta & Cream ── */

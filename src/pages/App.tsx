@@ -105,11 +105,30 @@ const AppLayout = () => {
     }
   };
 
-  const menuItems = [
+  const JournalIcon = ({ color }: { color: string }) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <rect x="4" y="3" width="13" height="18" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
+      <path d="M17 3h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-1" stroke={color} strokeWidth="1.8"/>
+      <line x1="8" y1="8" x2="13" y2="8" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="8" y1="12" x2="13" y2="12" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="8" y1="16" x2="11" y2="16" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      <circle cx="17.5" cy="10" r="1.5" fill={color}/>
+    </svg>
+  );
+
+  type MenuItem = {
+    label: string;
+    path: string;
+    icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+    customIcon?: (color: string) => React.ReactNode;
+  };
+
+  const menuItems: MenuItem[] = [
+    { label: 'Home', icon: Home, path: '/app' },
     { label: 'Calendar', icon: Calendar, path: '/app/calendar' },
     { label: 'Tasks', icon: CheckSquare, path: '/app/todos' },
     { label: 'Shopping', icon: ShoppingCart, path: '/app/shopping' },
-    { label: 'Rituals', icon: Home, path: '/app/rituals' },
+    { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: 'Settings', icon: Settings, path: '/app/settings' },
   ];
 
@@ -216,14 +235,18 @@ const AppLayout = () => {
               style={{ bottom: '76px', left: '50%', transform: 'translateX(-50%)', pointerEvents: menuVisible ? 'auto' : 'none' }}
             >
               {menuItems.map((item, i) => {
-                const Icon = item.icon;
                 const delay = i * 40;
+                const iconEl = item.customIcon
+                  ? item.customIcon('#964735')
+                  : item.icon ? <item.icon className="w-4 h-4" style={{ color: '#964735' }} /> : null;
                 return (
                   <button
                     key={item.path}
                     onClick={() => { closeMenu(); haptic('tap'); navigate(item.path); }}
-                    className="flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-sm whitespace-nowrap"
+                    className="flex items-center rounded-full font-semibold text-sm"
                     style={{
+                      width: '200px',
+                      padding: '12px 16px',
                       background: '#FDF9F3',
                       color: '#1C1C18',
                       boxShadow: '0 4px 16px rgba(28,28,24,0.15)',
@@ -233,8 +256,9 @@ const AppLayout = () => {
                       transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms`,
                     }}
                   >
-                    <Icon className="w-4 h-4" style={{ color: '#964735' }} />
-                    {item.label}
+                    <span style={{ width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
+                    <span style={{ flex: 1, textAlign: 'center' }}>{item.label}</span>
+                    <span style={{ width: '20px', flexShrink: 0 }} />
                   </button>
                 );
               })}
