@@ -63,6 +63,55 @@ const AppLayout = () => {
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
   const [ezOpen, setEzOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
+
+  const openMenu = () => {
+    setMenuOpen(true);
+    requestAnimationFrame(() => setMenuVisible(true));
+  };
+
+  const closeMenu = () => {
+    setMenuVisible(false);
+    setTimeout(() => setMenuOpen(false), 200);
+  };
+
+  const handleEZPointerDown = (e: React.PointerEvent) => {
+    isLongPressRef.current = false;
+    longPressTimer.current = setTimeout(() => {
+      isLongPressRef.current = true;
+      haptic('medium');
+      openMenu();
+    }, 500);
+  };
+
+  const handleEZPointerUp = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (!isLongPressRef.current) {
+      haptic('medium');
+      setEzOpen(true);
+    }
+  };
+
+  const handleEZPointerCancel = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const menuItems = [
+    { label: 'Calendar', icon: Calendar, path: '/app/calendar' },
+    { label: 'Tasks', icon: CheckSquare, path: '/app/todos' },
+    { label: 'Shopping', icon: ShoppingCart, path: '/app/shopping' },
+    { label: 'Rituals', icon: Home, path: '/app/rituals' },
+    { label: 'Settings', icon: Settings, path: '/app/settings' },
+  ];
 
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
@@ -139,9 +188,18 @@ const AppLayout = () => {
         )}
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Long press menu backdrop */}
+      {menuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40"
+          style={{ background: menuVisible ? 'rgba(28,28,24,0.4)' : 'transparent', transition: 'background 0.2s' }}
+          onClick={closeMenu}
+        />
+      )}
+
+      {/* Bottom Navigation — EZ only */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center"
         style={{
           background: '#FDF9F3',
           borderTop: '1px solid #DAC1BB',
@@ -149,60 +207,59 @@ const AppLayout = () => {
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        {/* Calendar */}
-        <button
-          onClick={() => { haptic('tap'); navigate('/app/calendar'); }}
-          className="flex flex-col items-center justify-center w-12 h-12"
-        >
-          <Calendar className="w-6 h-6" style={{ color: isActive('/app/calendar') ? '#964735' : '#B5A09A' }} />
-        </button>
-
-        {/* Tasks */}
-        <button
-          onClick={() => { haptic('tap'); navigate('/app/todos'); }}
-          className="flex flex-col items-center justify-center w-12 h-12"
-        >
-          <CheckSquare className="w-6 h-6" style={{ color: isActive('/app/todos') ? '#964735' : '#B5A09A' }} />
-        </button>
-
-        {/* EZ Button — center, elevated */}
+        {/* EZ Button with long-press menu */}
         <div className="relative flex items-center justify-center" style={{ marginBottom: '20px' }}>
+          {/* Menu items — rendered above button, bottom-to-top */}
+          {menuOpen && (
+            <div
+              className="absolute flex flex-col-reverse items-center gap-2"
+              style={{ bottom: '76px', left: '50%', transform: 'translateX(-50%)', pointerEvents: menuVisible ? 'auto' : 'none' }}
+            >
+              {menuItems.map((item, i) => {
+                const Icon = item.icon;
+                const delay = i * 40;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => { closeMenu(); haptic('tap'); navigate(item.path); }}
+                    className="flex items-center gap-3 px-5 py-3 rounded-full font-semibold text-sm whitespace-nowrap"
+                    style={{
+                      background: '#FDF9F3',
+                      color: '#1C1C18',
+                      boxShadow: '0 4px 16px rgba(28,28,24,0.15)',
+                      border: '1px solid #DAC1BB',
+                      transform: menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)',
+                      opacity: menuVisible ? 1 : 0,
+                      transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms`,
+                    }}
+                  >
+                    <Icon className="w-4 h-4" style={{ color: '#964735' }} />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <button
-            onClick={() => { haptic('medium'); setEzOpen(true); }}
-            className="relative flex items-center justify-center rounded-full transition-transform active:scale-95"
+            onPointerDown={handleEZPointerDown}
+            onPointerUp={handleEZPointerUp}
+            onPointerLeave={handleEZPointerCancel}
+            onPointerCancel={handleEZPointerCancel}
+            onContextMenu={(e) => e.preventDefault()}
+            className="relative flex items-center justify-center rounded-full transition-transform active:scale-95 select-none"
             style={{
               width: '64px',
               height: '64px',
               background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)',
-              boxShadow: '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
+              boxShadow: menuOpen
+                ? '0 0 0 6px rgba(150,71,53,0.25), 0 8px 24px rgba(150,71,53,0.5)'
+                : '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
             }}
           >
             <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
           </button>
         </div>
-
-        {/* Shopping */}
-        <button
-          onClick={() => { haptic('tap'); navigate('/app/shopping'); }}
-          className="flex flex-col items-center justify-center w-12 h-12"
-        >
-          <ShoppingCart className="w-6 h-6" style={{ color: isActive('/app/shopping') ? '#964735' : '#B5A09A' }} />
-        </button>
-
-        {/* Journal / Rituals */}
-        <button
-          onClick={() => { haptic('tap'); navigate('/app/rituals'); }}
-          className="flex flex-col items-center justify-center w-12 h-12"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="3" width="13" height="18" rx="2" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" fill="none"/>
-            <path d="M17 3h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-1" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8"/>
-            <line x1="8" y1="8" x2="13" y2="8" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
-            <line x1="8" y1="12" x2="13" y2="12" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
-            <line x1="8" y1="16" x2="11" y2="16" stroke={isActive('/app/rituals') ? '#964735' : '#B5A09A'} strokeWidth="1.8" strokeLinecap="round"/>
-            <circle cx="17.5" cy="10" r="1.5" fill={isActive('/app/rituals') ? '#964735' : '#B5A09A'}/>
-          </svg>
-        </button>
       </nav>
 
       {/* EZ Capture Overlay */}
