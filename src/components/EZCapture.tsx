@@ -403,35 +403,36 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
                 />
                 {/* Mic button with pulse ring when active */}
-                <div className="absolute bottom-3 right-3 w-9 h-9">
+                <div className="absolute bottom-3 right-3 w-7 h-7">
                   {isListening && (
                     <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
                   )}
                   <button
                     onClick={isListening ? stopListening : startListening}
-                    className="relative w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                    className="relative w-7 h-7 rounded-full flex items-center justify-center transition-all"
                     style={{ background: isListening ? '#D97B66' : '#964735' }}
                   >
-                    <Mic className="w-4 h-4 text-white" />
+                    <Mic className="w-3.5 h-3.5 text-white" />
                   </button>
                 </div>
               </div>
 
               {/* Type chips */}
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1">
                 {TYPES.map(t => (
                   <button
                     key={t.id}
                     onClick={() => setType(t.id)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                    className="flex items-center gap-0.5 rounded-full font-medium transition-all"
                     style={{
+                      padding: '2px 9px',
+                      fontSize: '11px',
                       background: type === t.id ? '#964735' : '#F1EDE7',
                       color: type === t.id ? '#FFFFFF' : '#55433F',
                       border: `1px solid ${type === t.id ? '#964735' : '#DAC1BB'}`,
-                      transform: type === t.id ? 'scale(1.04)' : 'scale(1)',
                     }}
                   >
-                    <span style={{ fontSize: '11px' }}>{t.icon}</span>
+                    <span style={{ fontSize: '10px' }}>{t.icon}</span>
                     {t.label}
                   </button>
                 ))}

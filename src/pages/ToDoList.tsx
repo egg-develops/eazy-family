@@ -651,15 +651,6 @@ const ToDoList = () => {
             </div>
           )}
 
-      {/* FAB */}
-      <button
-        onClick={() => { setActiveTab('task'); setIsDialogOpen(true); }}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full flex items-center justify-center shadow-lg z-40 transition-transform active:scale-95"
-        style={{ background: '#964735' }}
-      >
-        <Plus className="w-6 h-6 text-white" />
-      </button>
-
       {/* Add Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto w-[95%] sm:w-full p-4 sm:p-6">

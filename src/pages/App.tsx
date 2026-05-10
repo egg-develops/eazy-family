@@ -172,6 +172,7 @@ const AppLayout = () => {
     { label: 'Tasks', icon: CheckSquare, path: '/app/todos' },
     { label: 'Shopping', icon: ShoppingCart, path: '/app/shopping' },
     { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
+    { label: 'Settings', icon: Settings, path: '/app/settings' },
   ];
 
   const navigationItems = [
@@ -211,17 +212,7 @@ const AppLayout = () => {
     <div className="min-h-screen flex w-full bg-background">
       {/* Header — hidden on Calendar (it has its own) */}
       <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: isCalendarPath ? 'none' : undefined }}>
-        <div className="flex items-center justify-between px-4 h-14 max-w-7xl mx-auto">
-          {/* Left: user avatar → home */}
-          <button onClick={() => navigate('/app')} className="flex-shrink-0">
-            {(() => {
-              let iconUrl: string | undefined;
-              try { const s = localStorage.getItem('eazy-family-home-config'); if (s) iconUrl = JSON.parse(s)?.iconImage; } catch {}
-              return iconUrl
-                ? <img src={iconUrl} alt="Profile" className="w-9 h-9 rounded-full object-cover" style={{ border: '2px solid #D97B66' }} />
-                : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#D97B66' }}>{userInitials.slice(0,2)}</div>;
-            })()}
-          </button>
+        <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
             {isHomePath ? 'Eazy.Family' : (() => {
@@ -232,6 +223,7 @@ const AppLayout = () => {
                 { path: '/app/family', label: 'Family' },
                 { path: '/app/rituals', label: 'Rituals' },
                 { path: '/app/settings', label: 'Settings' },
+                { path: '/app/family-agenda', label: 'Family' },
                 { path: '/app/messaging', label: 'Messages' },
                 { path: '/app/events', label: 'Events' },
                 { path: '/app/community', label: 'Community' },
@@ -239,10 +231,6 @@ const AppLayout = () => {
               return allNav.find(n => currentPath.startsWith(n.path))?.label ?? 'Eazy.Family';
             })()}
           </h1>
-          {/* Right: settings gear */}
-          <button onClick={() => navigate('/app/settings')} className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
-            <Settings className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
         </div>
       </header>
 
@@ -853,7 +841,7 @@ const AppHome = () => {
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Feed</p>
-          <button className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+          <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
         </div>
         <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
           {todayEvents.slice(0, 3).map(event => (

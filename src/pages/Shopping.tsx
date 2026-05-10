@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Plus, Minus, Trash2, Mic, MicOff } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Minus, Trash2, Mic, MicOff, Barcode, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -34,7 +34,10 @@ const Shopping = () => {
   const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(true);
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = { current: null as any };
+  const isListeningRef = useRef(false);
+  const recognitionRef = useRef<any>(null);
+  const capturedRef = useRef('');
+  const baseTextRef = useRef('');
 
   const load = async () => {
     if (!user) return;
@@ -83,16 +86,61 @@ const Shopping = () => {
     await supabase.from('tasks').delete().eq('id', id);
   };
 
+  const stopListening = () => {
+    isListeningRef.current = false;
+    recognitionRef.current?.stop();
+  };
+
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-    const r = new SR();
-    r.lang = 'en-US';
-    r.interimResults = false;
-    r.onresult = (e: any) => { setNewItem(e.results[0][0].transcript); };
-    r.onend = () => setIsListening(false);
-    r.start();
-    recognitionRef.current = r;
+    if (!SR) { toast({ title: 'Voice input not supported in this browser' }); return; }
+    capturedRef.current = '';
+    baseTextRef.current = '';
+    isListeningRef.current = true;
+
+    const spawnSession = (): any => {
+      const r = new SR();
+      r.lang = navigator.language || 'en-US';
+      r.interimResults = true;
+      r.continuous = true;
+      r.maxAlternatives = 1;
+
+      r.onresult = (e: any) => {
+        let sessionText = '';
+        for (let i = 0; i < e.results.length; i++) sessionText += e.results[i][0].transcript;
+        const combined = baseTextRef.current ? `${baseTextRef.current} ${sessionText}` : sessionText;
+        capturedRef.current = combined;
+        setNewItem(combined);
+      };
+
+      r.onend = () => {
+        if (!isListeningRef.current) {
+          setIsListening(false);
+          if (capturedRef.current.trim()) setNewItem(capturedRef.current);
+          return;
+        }
+        baseTextRef.current = capturedRef.current;
+        try {
+          const next = spawnSession();
+          recognitionRef.current = next;
+        } catch {
+          isListeningRef.current = false;
+          setIsListening(false);
+        }
+      };
+
+      r.onerror = (e: any) => {
+        if (e.error === 'aborted' || e.error === 'no-speech') return;
+        if (e.error === 'not-allowed') toast({ title: 'Microphone access denied', description: 'Allow microphone in your browser settings.' });
+        isListeningRef.current = false;
+        setIsListening(false);
+      };
+
+      try { r.start(); } catch { isListeningRef.current = false; setIsListening(false); }
+      return r;
+    };
+
+    recognitionRef.current = spawnSession();
     setIsListening(true);
     haptic('light');
   };
@@ -129,11 +177,23 @@ const Shopping = () => {
           className="flex-1 outline-none text-sm"
           style={{ color: '#1C1C18', background: 'transparent' }}
         />
-        <button onClick={isListening ? () => { recognitionRef.current?.stop(); setIsListening(false); } : startListening}
+        <button className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7' }} aria-label="Scan barcode">
+          <Barcode className="w-4 h-4" style={{ color: MUTED }} />
+        </button>
+        <button onClick={isListening ? stopListening : startListening}
           className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ background: isListening ? TL : '#F1EDE7' }}>
           {isListening ? <MicOff className="w-4 h-4 text-white" /> : <Mic className="w-4 h-4" style={{ color: MUTED }} />}
         </button>
+      </div>
+
+      {/* Smart notice card */}
+      <div className="rounded-2xl px-4 py-3 flex items-start gap-3" style={{ background: '#F7F3ED', border: `1px solid ${BORDER}` }}>
+        <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: TC }} />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm" style={{ color: '#1C1C18' }}>Take a picture of your recipe list or the URL — I'll add all items.</p>
+        </div>
+        <button className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: TC, color: '#fff' }}>Add All</button>
       </div>
 
       {/* Grouped uncompleted items */}
