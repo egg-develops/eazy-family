@@ -759,7 +759,7 @@ const AppHome = () => {
       {/* Morning greeting + weather */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold" style={{ color: '#B5A09A' }}>
+          <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
             {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
           </p>
           <HomeWeatherInline
@@ -796,11 +796,12 @@ const AppHome = () => {
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
           <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
             {(() => {
-              const completed = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
-              return `You're at ${Math.round((completed.length / 5) * 100)}% completion`;
+              const completed: string[] = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
+              const total: Ritual[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
+              const totalCount = total.length || 5;
+              return `${completed.length} / ${totalCount} rituals done`;
             })()}
           </p>
-          <p className="text-xs" style={{ color: '#7A6660' }}>3 of 5 family connection moments shared. The evening storytime is next.</p>
         </div>
         <button
           onClick={() => navigate('/app/rituals')}
