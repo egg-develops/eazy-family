@@ -1150,7 +1150,7 @@ const Calendar = () => {
       )}
 
       {/* Family Agenda section */}
-      {calendarView === 'month' && (
+      {calendarView !== 'year' && (
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
@@ -1184,7 +1184,7 @@ const Calendar = () => {
       )}
 
       {/* Day Detail — selected date events */}
-      {calendarView === 'month' && (
+      {calendarView !== 'year' && (
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -1257,7 +1257,7 @@ const Calendar = () => {
             <Mic className="w-5 h-5" style={{ color: isListeningVoice ? '#FFFFFF' : '#964735' }} />
           </button>
           <p className="flex-1 text-sm" style={{ color: '#B5A09A' }}>
-            {isListeningVoice ? 'Listening…' : 'Try: "Dinner with grandma Friday at 7pm"'}
+            {isListeningVoice ? 'Listening…' : 'Add event by voice…'}
           </p>
           <Sparkles className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
           <button

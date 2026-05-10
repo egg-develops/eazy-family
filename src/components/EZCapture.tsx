@@ -382,7 +382,7 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
             <div className="rounded-3xl p-6 space-y-5" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="text-center space-y-1">
                 <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#1C1C18' }}>What's on your mind?</h2>
-                <p className="text-sm" style={{ color: '#7A6660' }}>Capture a thought — Schedule a task.</p>
+                <p className="text-sm" style={{ color: '#7A6660' }}>Capture thoughts — Schedule tasks</p>
               </div>
 
               <div className="relative">
@@ -390,7 +390,7 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                   ref={textareaRef}
                   value={text}
                   onChange={e => setText(e.target.value)}
-                  placeholder="Calendar, Add Brunch with Family Aug 24, 10:30 to 12:30, Assign to Me and Sarah, Reminder 1 week before. Location The Artisan."
+                  placeholder="Speak or type anything — event, task, note, reminder…"
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{
@@ -418,12 +418,12 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
               </div>
 
               {/* Type chips */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {TYPES.map(t => (
                   <button
                     key={t.id}
                     onClick={() => setType(t.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
                     style={{
                       background: type === t.id ? '#964735' : '#F1EDE7',
                       color: type === t.id ? '#FFFFFF' : '#55433F',
@@ -431,17 +431,24 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                       transform: type === t.id ? 'scale(1.04)' : 'scale(1)',
                     }}
                   >
-                    <span style={{ fontSize: '12px' }}>{t.icon}</span>
+                    <span style={{ fontSize: '11px' }}>{t.icon}</span>
                     {t.label}
                   </button>
                 ))}
               </div>
 
-              <div className="space-y-2 pt-1">
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-3 rounded-full text-sm font-semibold"
+                  style={{ background: '#F1EDE7', color: '#7A6660', border: '1px solid #DAC1BB' }}
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleParseAndPreview}
                   disabled={!text.trim()}
-                  className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                   style={{
                     background: text.trim() ? '#964735' : '#DAC1BB',
                     color: '#FFFFFF',
@@ -450,13 +457,6 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                 >
                   <Sparkles className="w-4 h-4" />
                   Create
-                </button>
-                <button
-                  onClick={onClose}
-                  className="w-full py-2 text-sm font-medium"
-                  style={{ color: '#B5A09A' }}
-                >
-                  Cancel
                 </button>
               </div>
             </div>
