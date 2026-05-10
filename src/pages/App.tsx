@@ -343,15 +343,6 @@ const AppLayout = () => {
         </div>
       </div>
 
-      {/* Nav strip — 32px background bar */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-49"
-        style={{
-          background: '#FDF9F3',
-          borderTop: '1px solid #DAC1BB',
-          height: 'calc(32px + env(safe-area-inset-bottom))',
-        }}
-      />
 
       {/* EZ Capture Overlay */}
       {ezOpen && <EZCapture onClose={() => setEzOpen(false)} />}
