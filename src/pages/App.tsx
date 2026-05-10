@@ -67,8 +67,10 @@ const AppLayout = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(-1);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPressRef = useRef(false);
+  const isSwipeMenuRef = useRef(false);
+  const ezCaptureOpenedRef = useRef(false);
   const currentPointerYRef = useRef(0);
+  const swipeStartYRef = useRef(0);
   const longPressOriginYRef = useRef(0);
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
@@ -84,20 +86,38 @@ const AppLayout = () => {
   };
 
   const handleEZPointerDown = (e: React.PointerEvent) => {
-    isLongPressRef.current = false;
+    isSwipeMenuRef.current = false;
+    ezCaptureOpenedRef.current = false;
     currentPointerYRef.current = e.clientY;
+    swipeStartYRef.current = e.clientY;
     try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+    // Long hold → EZ Capture
     longPressTimer.current = setTimeout(() => {
-      isLongPressRef.current = true;
-      longPressOriginYRef.current = currentPointerYRef.current;
-      haptic('heavy');
-      openMenu();
+      if (!isSwipeMenuRef.current) {
+        ezCaptureOpenedRef.current = true;
+        haptic('heavy');
+        setEzOpen(true);
+      }
     }, 500);
   };
 
   const handleEZPointerMove = (e: React.PointerEvent) => {
     currentPointerYRef.current = e.clientY;
-    if (!isLongPressRef.current) return;
+    const swipeDelta = swipeStartYRef.current - e.clientY;
+
+    if (!isSwipeMenuRef.current) {
+      // Detect upward swipe — open menu
+      if (swipeDelta > 20) {
+        if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+        isSwipeMenuRef.current = true;
+        longPressOriginYRef.current = swipeStartYRef.current;
+        haptic('heavy');
+        openMenu();
+      }
+      return;
+    }
+
+    // Menu open — track which item the finger is over
     const deltaY = longPressOriginYRef.current - e.clientY;
     const newIndex = deltaY < 40 ? -1 : Math.min(Math.floor((deltaY - 40) / 56), menuItems.length - 1);
     if (newIndex !== prevActiveIndexRef.current) {
@@ -109,13 +129,14 @@ const AppLayout = () => {
 
   const handleEZPointerUp = () => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
-    if (isLongPressRef.current) {
+    if (isSwipeMenuRef.current) {
       if (activeMenuIndex >= 0) navigate(menuItems[activeMenuIndex].path);
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
-      isLongPressRef.current = false;
-    } else {
+      isSwipeMenuRef.current = false;
+    } else if (!ezCaptureOpenedRef.current) {
+      // Tap (no swipe, no long press yet) → EZ Capture
       haptic('medium');
       setEzOpen(true);
     }
@@ -123,27 +144,26 @@ const AppLayout = () => {
 
   const handleEZPointerCancel = () => {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
-    isLongPressRef.current = false;
+    isSwipeMenuRef.current = false;
+    ezCaptureOpenedRef.current = false;
     setActiveMenuIndex(-1);
     prevActiveIndexRef.current = -1;
     closeMenu();
   };
 
-  // Only cancel long-press timer on leave if the gesture hasn't fired yet.
-  // Once isLongPressRef is true, pointer capture keeps events coming — leave is irrelevant.
+  // Cancel timer on leave only if swipe menu hasn't opened yet.
   const handleEZPointerLeave = () => {
-    if (!isLongPressRef.current && longPressTimer.current) {
+    if (!isSwipeMenuRef.current && longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
   };
 
-  // Non-passive touchmove listener attached imperatively so we can call preventDefault()
-  // and block the page scroll while the slide-up gesture is active.
+  // Non-passive touchmove to block page scroll during swipe-up gesture.
   useEffect(() => {
     const el = ezButtonRef.current;
     if (!el) return;
-    const onTouchMove = (e: TouchEvent) => { if (isLongPressRef.current) e.preventDefault(); };
+    const onTouchMove = (e: TouchEvent) => { if (isSwipeMenuRef.current) e.preventDefault(); };
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => el.removeEventListener('touchmove', onTouchMove);
   }, []);
