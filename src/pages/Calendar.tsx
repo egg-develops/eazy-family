@@ -318,6 +318,25 @@ const Calendar = () => {
     return () => window.removeEventListener('eazy-prefs-loaded', handler);
   }, []);
 
+  // Refresh items when EZCapture saves a new calendar event
+  useEffect(() => {
+    const handler = () => {
+      const saved = localStorage.getItem('eazy-family-calendar-items');
+      if (!saved) return;
+      try {
+        const parsed = JSON.parse(saved).map((item: any) => ({
+          ...item,
+          startDate: item.startDate ? new Date(item.startDate) : undefined,
+          endDate: item.endDate ? new Date(item.endDate) : undefined,
+          dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+        })).filter(Boolean);
+        setItems(parsed);
+      } catch {}
+    };
+    window.addEventListener('eazy-calendar-updated', handler);
+    return () => window.removeEventListener('eazy-calendar-updated', handler);
+  }, []);
+
   // Auto-open sync dialog when navigated from Settings with ?sync=1
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

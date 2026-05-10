@@ -6,6 +6,7 @@ import { haptic } from "@/lib/haptic";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import * as chrono from "chrono-node";
 
 type CaptureType = 'event' | 'task' | 'shopping' | 'reminder' | 'ritual' | 'journal';
 type Step = 'capture' | 'processing' | 'preview';
@@ -77,6 +78,7 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const [rawDebug, setRawDebug] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
   const capturedRef = useRef('');
@@ -191,10 +193,12 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
   const parseWithAI = async (): Promise<ParsedEntry | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
+      if (!session) { setRawDebug('ERROR: no auth session'); return null; }
 
-      const today = new Date().toISOString().split('T')[0];
-      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation. JSON fields: type ("event"|"task"|"shopping"|"reminder"|"ritual"|"journal"), title (string, clean and concise), date ("YYYY-MM-DD" or null), time ("HH:MM" 24h or null), endTime ("HH:MM" 24h or null), location (string or null), assignees (array of first names or null), reminder (human-readable string like "1 week before" or null), notes (string or null), mood (string or null, only for journal). Today is ${today}. Infer type from context. Return ONLY the raw JSON object.`;
+      // Bug fix: use local date, not UTC
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const dayOfWeek = format(new Date(), 'EEEE');
+      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation. JSON fields: type ("event"|"task"|"shopping"|"reminder"|"ritual"|"journal"), title (string, clean and concise), date ("YYYY-MM-DD" or null), time ("HH:MM" 24h or null), endTime ("HH:MM" 24h or null), location (string or null), assignees (array of first names or null), reminder (human-readable string like "1 week before" or null), notes (string or null), mood (string or null, only for journal). Today is ${today} (${dayOfWeek}). Resolve relative dates like "tomorrow", "next Monday", "in 2 weeks" from this date. Return ONLY the raw JSON object.`;
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
@@ -209,7 +213,10 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
         }),
       });
 
-      if (!response.ok || !response.body) return null;
+      if (!response.ok || !response.body) {
+        setRawDebug(`ERROR: HTTP ${response.status}`);
+        return null;
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -230,9 +237,11 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
         }
       }
 
+      setRawDebug(fullContent || '(empty response)');
       const cleaned = fullContent.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
       return JSON.parse(cleaned) as ParsedEntry;
-    } catch {
+    } catch (e) {
+      setRawDebug(`ERROR: ${e}`);
       return null;
     }
   };
@@ -249,11 +258,18 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
       if (result.type) setType(result.type);
       setParsed(result);
     } else {
-      // Fallback: use raw text with detected type
+      // Fallback: chrono-node extracts date/time from raw text
+      const chronoParsed = chrono.parse(text.trim(), new Date())[0];
+      const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
+      const fallbackHour = chronoParsed?.start.get('hour');
+      const fallbackMin = chronoParsed?.start.get('minute') ?? 0;
+      const fallbackTime = fallbackHour != null
+        ? `${String(fallbackHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
+        : null;
       setParsed({
         type,
         title: text.trim(),
-        date: null, time: null, endTime: null,
+        date: fallbackDate, time: fallbackTime, endTime: null,
         location: null, assignees: null, reminder: null,
         notes: null, mood: null,
       });
@@ -297,6 +313,7 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
         };
         const existing = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
+        window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: entryType === 'reminder' ? 'Reminder set' : '✓ Added to Calendar' });
         onClose(); navigate('/app/calendar');
@@ -550,6 +567,20 @@ export const EZCapture = ({ onClose }: EZCaptureProps) => {
                   )}
                 </div>
               </div>
+
+              {/* Debug panel — shows raw AI response to surface parsing failures */}
+              {rawDebug && (
+                <div className="mx-6 mb-4">
+                  <details>
+                    <summary className="text-xs cursor-pointer select-none" style={{ color: '#B5A09A' }}>
+                      🔍 Debug: AI response
+                    </summary>
+                    <pre className="mt-1 p-2 rounded-xl text-xs overflow-auto" style={{ maxHeight: '100px', background: '#F7F3ED', color: '#55433F', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                      {rawDebug}
+                    </pre>
+                  </details>
+                </div>
+              )}
 
               <div className="px-6 pb-6">
                 <button
