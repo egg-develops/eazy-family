@@ -379,11 +379,17 @@ const getWeatherEmoji = (code: number): string => {
 
 interface HourlySlot { hour: number; emoji: string; temp: number; }
 
-const HomeWeatherInline = () => {
+const HomeWeatherInline = ({
+  expanded,
+  onToggle,
+  onHourly,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+  onHourly: (slots: HourlySlot[]) => void;
+}) => {
   const [emoji, setEmoji] = useState('');
   const [temp, setTemp] = useState<number | null>(null);
-  const [hourly, setHourly] = useState<HourlySlot[]>([]);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -409,7 +415,7 @@ const HomeWeatherInline = () => {
         }));
         const now = new Date().getHours();
         const sorted = [...slots.filter(s => s.hour >= now), ...slots.filter(s => s.hour < now)].slice(0, 6);
-        setHourly(sorted);
+        onHourly(sorted);
       } catch { /* silent */ }
     };
     load();
@@ -418,39 +424,21 @@ const HomeWeatherInline = () => {
   if (!emoji && temp === null) return null;
 
   return (
-    <div className="flex flex-col items-end gap-2">
-      <button
-        onClick={() => setExpanded(p => !p)}
-        className="flex items-center gap-1.5 rounded-full px-3 py-1"
-        style={{ background: '#F1EDE7', border: '1px solid #DAC1BB' }}
-      >
-        <span className="text-base leading-none">{emoji}</span>
-        {temp !== null && <span className="text-sm font-semibold" style={{ color: '#1C1C18' }}>{temp}°</span>}
-      </button>
-
-      {expanded && hourly.length > 0 && (
-        <div
-          className="flex gap-0 rounded-2xl overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)', alignSelf: 'stretch' }}
-        >
-          <div className="flex overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
-            {hourly.map((slot, i) => {
-              const now = new Date().getHours();
-              const isNow = slot.hour === now || (i === 0 && slot.hour <= now);
-              return (
-                <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0 px-4 py-3">
-                  <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.7)' }}>
-                    {isNow ? 'Now' : `${slot.hour}:00`}
-                  </span>
-                  <span className="text-xl leading-none">{slot.emoji}</span>
-                  <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors"
+      style={{
+        background: expanded ? '#964735' : '#F1EDE7',
+        border: '1px solid #DAC1BB',
+      }}
+    >
+      <span className="text-base leading-none">{emoji}</span>
+      {temp !== null && (
+        <span className="text-sm font-semibold" style={{ color: expanded ? '#fff' : '#1C1C18' }}>
+          {temp}°
+        </span>
       )}
-    </div>
+    </button>
   );
 };
 
@@ -552,6 +540,8 @@ const AppHome = () => {
   };
 
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [weatherExpanded, setWeatherExpanded] = useState(false);
+  const [weatherHourly, setWeatherHourly] = useState<HourlySlot[]>([]);
   const [showInviteBanner, setShowInviteBanner] = useState(() =>
     !localStorage.getItem('eazy-family-invite-dismissed')
   );
@@ -767,11 +757,37 @@ const AppHome = () => {
       </Dialog>
 
       {/* Morning greeting + weather */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold" style={{ color: '#B5A09A' }}>
-          {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
-        </p>
-        <HomeWeatherInline />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold" style={{ color: '#B5A09A' }}>
+            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
+          </p>
+          <HomeWeatherInline
+            expanded={weatherExpanded}
+            onToggle={() => setWeatherExpanded(p => !p)}
+            onHourly={setWeatherHourly}
+          />
+        </div>
+
+        {/* Hourly forecast — drops below full row, toggle via pill */}
+        {weatherExpanded && weatherHourly.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
+            <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+              {weatherHourly.map((slot, i) => {
+                const isNow = i === 0;
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0 px-5 py-3">
+                    <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.65)' }}>
+                      {isNow ? 'Now' : `${slot.hour}:00`}
+                    </span>
+                    <span className="text-xl leading-none">{slot.emoji}</span>
+                    <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Today's Rituals card */}
