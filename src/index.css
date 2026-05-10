@@ -29,6 +29,13 @@ img {
   border: 1px solid #DAC1BB !important;
 }
 
+/* Active state while sliding — brown with white text */
+.ez-menu-pill-active {
+  background-color: #964735 !important;
+  color: #fff !important;
+  border-color: #964735 !important;
+}
+
 @layer base {
   :root {
     /* ── Eazy.Family Design System v2.0 — Terracotta & Cream ── */

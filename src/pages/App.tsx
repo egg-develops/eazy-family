@@ -86,7 +86,7 @@ const AppLayout = () => {
   const handleEZPointerDown = (e: React.PointerEvent) => {
     isLongPressRef.current = false;
     currentPointerYRef.current = e.clientY;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
     longPressTimer.current = setTimeout(() => {
       isLongPressRef.current = true;
       longPressOriginYRef.current = currentPointerYRef.current;
@@ -96,10 +96,8 @@ const AppLayout = () => {
   };
 
   const handleEZPointerMove = (e: React.PointerEvent) => {
-    if (!isLongPressRef.current) {
-      currentPointerYRef.current = e.clientY;
-      return;
-    }
+    currentPointerYRef.current = e.clientY;
+    if (!isLongPressRef.current) return;
     const deltaY = longPressOriginYRef.current - e.clientY;
     const newIndex = deltaY < 40 ? -1 : Math.min(Math.floor((deltaY - 40) / 56), menuItems.length - 1);
     if (newIndex !== prevActiveIndexRef.current) {
@@ -110,17 +108,13 @@ const AppLayout = () => {
   };
 
   const handleEZPointerUp = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
     if (isLongPressRef.current) {
-      if (activeMenuIndex >= 0) {
-        navigate(menuItems[activeMenuIndex].path);
-      }
+      if (activeMenuIndex >= 0) navigate(menuItems[activeMenuIndex].path);
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
+      isLongPressRef.current = false;
     } else {
       haptic('medium');
       setEzOpen(true);
@@ -128,22 +122,31 @@ const AppLayout = () => {
   };
 
   const handleEZPointerCancel = () => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+    isLongPressRef.current = false;
     setActiveMenuIndex(-1);
     prevActiveIndexRef.current = -1;
+    closeMenu();
   };
 
+  // Only cancel long-press timer on leave if the gesture hasn't fired yet.
+  // Once isLongPressRef is true, pointer capture keeps events coming — leave is irrelevant.
   const handleEZPointerLeave = () => {
-    if (longPressTimer.current) {
+    if (!isLongPressRef.current && longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-    setActiveMenuIndex(-1);
-    prevActiveIndexRef.current = -1;
   };
+
+  // Non-passive touchmove listener attached imperatively so we can call preventDefault()
+  // and block the page scroll while the slide-up gesture is active.
+  useEffect(() => {
+    const el = ezButtonRef.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => { if (isLongPressRef.current) e.preventDefault(); };
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onTouchMove);
+  }, []);
 
   const JournalIcon = ({ color }: { color: string }) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
@@ -276,23 +279,26 @@ const AppLayout = () => {
               style={{ bottom: '76px', left: '50%', transform: 'translateX(-50%)', pointerEvents: menuVisible ? 'auto' : 'none' }}
             >
               {menuItems.map((item, i) => {
+                const isActive = activeMenuIndex === i;
                 const delay = i * 40;
+                const iconColor = isActive ? '#fff' : '#964735';
                 const iconEl = item.customIcon
-                  ? item.customIcon('#964735')
-                  : item.icon ? <item.icon className="w-4 h-4" style={{ color: '#964735' }} /> : null;
+                  ? item.customIcon(iconColor)
+                  : item.icon ? <item.icon className="w-4 h-4" style={{ color: iconColor }} /> : null;
                 return (
                   <button
                     key={item.path}
                     onClick={() => { closeMenu(); haptic('tap'); navigate(item.path); }}
-                    className="ez-menu-pill flex items-center rounded-full font-semibold text-sm"
+                    className={`${isActive ? 'ez-menu-pill-active' : 'ez-menu-pill'} flex items-center rounded-full font-semibold text-sm`}
                     style={{
                       width: '160px',
                       padding: '12px 16px',
-                      background: activeMenuIndex === i ? '#F1EDE7' : '#FDF9F3',
-                      boxShadow: '0 4px 16px rgba(28,28,24,0.15)',
-                      transform: activeMenuIndex === i ? 'scale(1.04)' : (menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)'),
+                      boxShadow: isActive
+                        ? '0 4px 20px rgba(150,71,53,0.4)'
+                        : '0 4px 16px rgba(28,28,24,0.15)',
+                      transform: isActive ? 'scale(1.06)' : (menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)'),
                       opacity: menuVisible ? 1 : 0,
-                      transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background 0.1s ease`,
+                      transition: `transform 0.15s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background-color 0.1s ease`,
                     }}
                   >
                     <span style={{ width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
@@ -312,7 +318,7 @@ const AppLayout = () => {
             onPointerLeave={handleEZPointerLeave}
             onPointerCancel={handleEZPointerCancel}
             onContextMenu={(e) => e.preventDefault()}
-            className="relative flex items-center justify-center rounded-full transition-transform active:scale-95 select-none"
+            className="relative flex items-center justify-center rounded-full select-none"
             style={{
               width: '64px',
               height: '64px',
@@ -320,6 +326,8 @@ const AppLayout = () => {
               boxShadow: menuOpen
                 ? '0 0 0 6px rgba(150,71,53,0.25), 0 8px 24px rgba(150,71,53,0.5)'
                 : '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
             }}
           >
             <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
@@ -799,7 +807,7 @@ const AppHome = () => {
               const completed: string[] = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
               const total: Ritual[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
               const totalCount = total.length || 5;
-              return `${completed.length} / ${totalCount} rituals done`;
+              return `${completed.length} / ${totalCount} Done!`;
             })()}
           </p>
         </div>
