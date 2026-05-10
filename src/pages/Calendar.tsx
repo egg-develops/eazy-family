@@ -130,6 +130,29 @@ const Calendar = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleSwipeStart = (e: React.TouchEvent) => {
+    swipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleSwipeEnd = (e: React.TouchEvent) => {
+    if (!swipeStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - swipeStartRef.current.x;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartRef.current.y);
+    swipeStartRef.current = null;
+    if (Math.abs(dx) < 55 || dy > Math.abs(dx) * 0.75) return;
+    const fwd = dx < 0;
+    setSelectedDate(prev => {
+      const d = new Date(prev);
+      if (calendarView === 'month') d.setMonth(d.getMonth() + (fwd ? 1 : -1));
+      else if (calendarView === 'week') d.setDate(d.getDate() + (fwd ? 7 : -7));
+      else if (calendarView === '3day') d.setDate(d.getDate() + (fwd ? 3 : -3));
+      else if (calendarView === 'day') d.setDate(d.getDate() + (fwd ? 1 : -1));
+      else if (calendarView === 'year') d.setFullYear(d.getFullYear() + (fwd ? 1 : -1));
+      return d;
+    });
+  };
   const [showViewPicker, setShowViewPicker] = useState(false);
   const [items, setItems] = useState<CalendarItem[]>(getInitialItems);
   const [showSyncBanner, setShowSyncBanner] = useState(() => {
@@ -773,19 +796,11 @@ const Calendar = () => {
       <div className="space-y-3">
         {/* Mini week strip for navigation */}
         <div className="rounded-2xl p-3" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2">
             <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
               {format(selectedDate, "MMMM")}{" "}
               <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
             </h2>
-            <div className="flex gap-1">
-              <button onClick={() => setSelectedDate(d => subDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-                <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-              </button>
-              <button onClick={() => setSelectedDate(d => addDays(d, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-                <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-              </button>
-            </div>
           </div>
           <div className="grid grid-cols-7">
             {weekDays.map((d, i) => (
@@ -817,18 +832,10 @@ const Calendar = () => {
     const days = [subDays(selectedDate, 1), selectedDate, addDays(selectedDate, 1)];
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
+        <div className="px-1">
           <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
             {format(days[0], "MMM d")} – {format(days[2], "d")}
           </h2>
-          <div className="flex gap-1">
-            <button onClick={() => setSelectedDate(d => subDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-            </button>
-            <button onClick={() => setSelectedDate(d => addDays(d, 3))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-            </button>
-          </div>
         </div>
         {renderTimeGrid(days)}
       </div>
@@ -840,18 +847,10 @@ const Calendar = () => {
     const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
+        <div className="px-1">
           <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
             {format(days[0], "MMM d")} – {format(days[6], "MMM d")}
           </h2>
-          <div className="flex gap-1">
-            <button onClick={() => setSelectedDate(d => subDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-              <ChevronLeft className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-            </button>
-            <button onClick={() => setSelectedDate(d => addDays(d, 7))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#F7F3ED]" style={{ border: "1px solid #DAC1BB" }}>
-              <ChevronRight className="w-3.5 h-3.5" style={{ color: "#964735" }} />
-            </button>
-          </div>
         </div>
         {renderTimeGrid(days)}
       </div>
@@ -1074,35 +1073,17 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto pb-48">
+      {/* Scrollable content — swipe left/right to navigate */}
+      <div
+        className="flex-1 overflow-y-auto pb-48"
+        onTouchStart={handleSwipeStart}
+        onTouchEnd={handleSwipeEnd}
+      >
 
       {/* Year header row */}
       {calendarView === 'year' && (
-        <div className="flex items-center justify-between px-4 mb-3">
-          <button onClick={() => { const d = new Date(selectedDate); d.setFullYear(d.getFullYear() - 1); setSelectedDate(d); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
-            <ChevronLeft className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
+        <div className="flex items-center justify-center px-4 mb-3">
           <p className="font-bold text-base" style={{ color: '#1C1C18' }}>{selectedDate.getFullYear()}</p>
-          <button onClick={() => { const d = new Date(selectedDate); d.setFullYear(d.getFullYear() + 1); setSelectedDate(d); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
-            <ChevronRight className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
-        </div>
-      )}
-
-      {/* Month nav row */}
-      {calendarView === 'month' && (
-        <div className="flex items-center justify-between px-4 mb-2">
-          <button onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
-            <ChevronLeft className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
-          <button onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
-            className="w-8 h-8 rounded-full flex items-center justify-center" style={{ border: '1px solid #DAC1BB' }}>
-            <ChevronRight className="w-4 h-4" style={{ color: '#7A6660' }} />
-          </button>
         </div>
       )}
 
@@ -1115,10 +1096,10 @@ const Calendar = () => {
         const days = eachDayOfInterval({ start: startDt, end: endDt });
         const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
         return (
-          <div className="px-2">
+          <div className="px-1">
             <div className="grid grid-cols-7 mb-1">
               {weekDays.map((d, i) => (
-                <div key={i} className="text-center text-xs font-semibold py-1" style={{ color: '#B5A09A' }}>{d}</div>
+                <div key={i} className="text-center text-sm font-semibold py-2" style={{ color: '#B5A09A' }}>{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7">
@@ -1127,23 +1108,26 @@ const Calendar = () => {
                 const hasEvents = getItemsForDate(day).length > 0;
                 const isSelected = isSameDay(day, selectedDate);
                 const isTodayDate = isToday(day);
+                const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                 return (
                   <button
                     key={day.toISOString()}
                     onClick={() => setSelectedDate(day)}
-                    className="relative flex flex-col items-center py-1.5 min-h-[44px]"
-                    style={{ opacity: isCurrentMonth ? 1 : 0.3 }}
+                    className="relative flex flex-col items-center py-1 min-h-[60px]"
+                    style={{ opacity: isCurrentMonth ? 1 : 0.25 }}
                   >
-                    <span className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium"
+                    <span
+                      className="w-10 h-10 flex items-center justify-center rounded-full text-xl font-bold"
                       style={{
                         background: isTodayDate ? '#964735' : isSelected ? '#F1EDE7' : 'transparent',
-                        color: isTodayDate ? '#FFFFFF' : '#1C1C18',
-                        fontWeight: isTodayDate || isSelected ? 700 : 400,
-                      }}>
+                        color: isTodayDate ? '#FFFFFF' : isWeekend && isCurrentMonth ? '#7A6660' : '#1C1C18',
+                        fontWeight: isTodayDate ? 800 : isSelected ? 700 : 600,
+                      }}
+                    >
                       {format(day, 'd')}
                     </span>
                     {hasEvents && (
-                      <span className="w-1 h-1 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
+                      <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
                     )}
                   </button>
                 );
