@@ -129,7 +129,6 @@ const AppLayout = () => {
     { label: 'Tasks', icon: CheckSquare, path: '/app/todos' },
     { label: 'Shopping', icon: ShoppingCart, path: '/app/shopping' },
     { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
-    { label: 'Settings', icon: Settings, path: '/app/settings' },
   ];
 
   const navigationItems = [
@@ -150,6 +149,14 @@ const AppLayout = () => {
         setUserInitials(data.userInitials || "EF");
       }
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    const blockImageContextMenu = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).tagName === 'IMG') e.preventDefault();
+    };
+    document.addEventListener('contextmenu', blockImageContextMenu);
+    return () => document.removeEventListener('contextmenu', blockImageContextMenu);
   }, []);
 
   const currentPath = location.pathname;
@@ -216,19 +223,13 @@ const AppLayout = () => {
         />
       )}
 
-      {/* Bottom Navigation — EZ only */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center"
-        style={{
-          background: '#FDF9F3',
-          borderTop: '1px solid #DAC1BB',
-          height: '80px',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}
+      {/* EZ Button + menu — floats above nav strip */}
+      <div
+        className="lg:hidden fixed z-50"
+        style={{ bottom: 'calc(32px + env(safe-area-inset-bottom) + 6px)', left: '50%', transform: 'translateX(-50%)' }}
       >
-        {/* EZ Button with long-press menu */}
-        <div className="relative flex items-center justify-center" style={{ marginBottom: '20px' }}>
-          {/* Menu items — rendered above button, bottom-to-top */}
+        <div className="relative flex items-center justify-center">
+          {/* Menu items — above button, bottom-to-top */}
           {menuOpen && (
             <div
               className="absolute flex flex-col-reverse items-center gap-2"
@@ -243,14 +244,11 @@ const AppLayout = () => {
                   <button
                     key={item.path}
                     onClick={() => { closeMenu(); haptic('tap'); navigate(item.path); }}
-                    className="flex items-center rounded-full font-semibold text-sm"
+                    className="ez-menu-pill flex items-center rounded-full font-semibold text-sm"
                     style={{
-                      width: '200px',
+                      width: '160px',
                       padding: '12px 16px',
-                      background: '#FDF9F3',
-                      color: '#1C1C18',
                       boxShadow: '0 4px 16px rgba(28,28,24,0.15)',
-                      border: '1px solid #DAC1BB',
                       transform: menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)',
                       opacity: menuVisible ? 1 : 0,
                       transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms`,
@@ -284,7 +282,17 @@ const AppLayout = () => {
             <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
           </button>
         </div>
-      </nav>
+      </div>
+
+      {/* Nav strip — 32px background bar */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-49"
+        style={{
+          background: '#FDF9F3',
+          borderTop: '1px solid #DAC1BB',
+          height: 'calc(32px + env(safe-area-inset-bottom))',
+        }}
+      />
 
       {/* EZ Capture Overlay */}
       {ezOpen && <EZCapture onClose={() => setEzOpen(false)} />}
