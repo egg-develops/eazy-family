@@ -7,7 +7,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings, AlignLeft, Paperclip } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays, subDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -123,6 +123,59 @@ const getInitialItems = (): CalendarItem[] => {
   ];
 };
 
+const WheelCol = ({ items, idx, setIdx, width }: { items: string[]; idx: number; setIdx: (i: number) => void; width: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const ITEM_H = 40;
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    ref.current?.scrollTo({ top: idx * ITEM_H, behavior: 'instant' as ScrollBehavior });
+  }, []);
+  const onScroll = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (!ref.current) return;
+      const clamped = Math.max(0, Math.min(Math.round(ref.current.scrollTop / ITEM_H), items.length - 1));
+      setIdx(clamped);
+      ref.current.scrollTo({ top: clamped * ITEM_H, behavior: 'smooth' });
+    }, 100);
+  };
+  return (
+    <div ref={ref} onScroll={onScroll}
+      style={{ height: ITEM_H * 5, overflowY: 'scroll', scrollSnapType: 'y mandatory', scrollbarWidth: 'none', width: `${width}px`, flexShrink: 0, msOverflowStyle: 'none' } as React.CSSProperties}>
+      <div style={{ height: ITEM_H * 2 }} />
+      {items.map((item, i) => (
+        <div key={i} onClick={() => { setIdx(i); ref.current?.scrollTo({ top: i * ITEM_H, behavior: 'smooth' }); }}
+          style={{ height: ITEM_H, scrollSnapAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: i === idx ? '15px' : '13px', fontWeight: i === idx ? 600 : 400, color: i === idx ? '#1C1C18' : Math.abs(i-idx)===1 ? '#7A6660' : '#C4B5B0', cursor: 'pointer', transition: 'color 0.1s' }}>
+          {item}
+        </div>
+      ))}
+      <div style={{ height: ITEM_H * 2 }} />
+    </div>
+  );
+};
+
+const EZWheelPicker = ({
+  dateItems, hourItems, minItems, ampmItems,
+  dayIdx, setDayIdx, hourIdx, setHourIdx, minIdx, setMinIdx, ampmIdx, setAmPmIdx,
+}: {
+  dateItems: string[]; hourItems: string[]; minItems: string[]; ampmItems: string[];
+  dayIdx: number; setDayIdx: (i: number) => void;
+  hourIdx: number; setHourIdx: (i: number) => void;
+  minIdx: number; setMinIdx: (i: number) => void;
+  ampmIdx: number; setAmPmIdx: (i: number) => void;
+}) => (
+  <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative', background: '#F7F3ED', overflow: 'hidden' }}>
+    {/* Center selection highlight */}
+    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
+    <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
+      <WheelCol items={dateItems} idx={dayIdx} setIdx={setDayIdx} width={110} />
+      <WheelCol items={hourItems} idx={hourIdx} setIdx={setHourIdx} width={48} />
+      <WheelCol items={minItems} idx={minIdx} setIdx={setMinIdx} width={48} />
+      <WheelCol items={ampmItems} idx={ampmIdx} setIdx={setAmPmIdx} width={48} />
+    </div>
+  </div>
+);
+
 const Calendar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -221,6 +274,18 @@ const Calendar = () => {
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [eventNotes, setEventNotes] = useState('');
+  const [eventReminder, setEventReminder] = useState('15min');
+  const [startDayIdx, setStartDayIdx] = useState(30);
+  const [startHourIdx, setStartHourIdx] = useState(8);
+  const [startMinIdx, setStartMinIdx] = useState(0);
+  const [startAmPmIdx, setStartAmPmIdx] = useState(0);
+  const [endDayIdx, setEndDayIdx] = useState(30);
+  const [endHourIdx, setEndHourIdx] = useState(9);
+  const [endMinIdx, setEndMinIdx] = useState(0);
+  const [endAmPmIdx, setEndAmPmIdx] = useState(0);
 
   // Voice-to-calendar state
   const [isListeningVoice, setIsListeningVoice] = useState(false);
@@ -497,6 +562,67 @@ const Calendar = () => {
         : item
     ));
   };
+
+  // Generate 90-day range of date strings centered on today
+  const DATE_ITEMS = (() => {
+    const items: string[] = [];
+    const base = new Date(); base.setHours(0,0,0,0);
+    for (let d = -30; d < 60; d++) {
+      const dt = new Date(base); dt.setDate(base.getDate() + d);
+      items.push(format(dt, 'MMM d'));
+    }
+    return items;
+  })();
+  const HOUR_ITEMS = ['12','1','2','3','4','5','6','7','8','9','10','11'];
+  const MIN_ITEMS = Array.from({length:60},(_,i) => String(i).padStart(2,'0'));
+  const AMPM_ITEMS = ['AM','PM'];
+
+  const parsePicker = (date: Date, timeStr: string) => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const d = new Date(date); d.setHours(0,0,0,0);
+    const diff = Math.round((d.getTime()-today.getTime())/86400000);
+    const dayIdx = Math.max(0, Math.min(diff+30, 89));
+    const parts = timeStr.split(':');
+    const hh = parseInt(parts[0]||'9'); const mm = parseInt(parts[1]||'0');
+    const h12 = hh===0?12:hh>12?hh-12:hh;
+    const hourIdx = h12===12?0:h12;
+    return { dayIdx, hourIdx, minIdx: Math.min(mm,59), ampmIdx: hh>=12?1:0 };
+  };
+
+  const pickerToDateTime = (dayIdx: number, hourIdx: number, minIdx: number, ampmIdx: number): [Date, string] => {
+    const base = new Date(); base.setHours(0,0,0,0);
+    base.setDate(base.getDate()+dayIdx-30);
+    const h12 = hourIdx===0?12:hourIdx;
+    const ampm = ampmIdx===0?'AM':'PM';
+    let h24 = h12;
+    if (ampm==='AM'&&h12===12) h24=0;
+    if (ampm==='PM'&&h12!==12) h24=h12+12;
+    return [new Date(base), `${String(h24).padStart(2,'0')}:${String(minIdx).padStart(2,'0')}`];
+  };
+
+  useEffect(()=>{
+    if (!showStartPicker) return;
+    const {dayIdx,hourIdx,minIdx,ampmIdx} = parsePicker(eventStartDate,eventStartTime);
+    setStartDayIdx(dayIdx); setStartHourIdx(hourIdx); setStartMinIdx(minIdx); setStartAmPmIdx(ampmIdx);
+  },[showStartPicker]);
+
+  useEffect(()=>{
+    if (!showStartPicker) return;
+    const [d,t] = pickerToDateTime(startDayIdx,startHourIdx,startMinIdx,startAmPmIdx);
+    setEventStartDate(d); setEventStartTime(t);
+  },[startDayIdx,startHourIdx,startMinIdx,startAmPmIdx]);
+
+  useEffect(()=>{
+    if (!showEndPicker) return;
+    const {dayIdx,hourIdx,minIdx,ampmIdx} = parsePicker(eventEndDate,eventEndTime);
+    setEndDayIdx(dayIdx); setEndHourIdx(hourIdx); setEndMinIdx(minIdx); setEndAmPmIdx(ampmIdx);
+  },[showEndPicker]);
+
+  useEffect(()=>{
+    if (!showEndPicker) return;
+    const [d,t] = pickerToDateTime(endDayIdx,endHourIdx,endMinIdx,endAmPmIdx);
+    setEventEndDate(d); setEventEndTime(t);
+  },[endDayIdx,endHourIdx,endMinIdx,endAmPmIdx]);
 
   const resetEventForm = () => {
     setEventTitle("");
@@ -1048,19 +1174,26 @@ const Calendar = () => {
 
       {/* View picker dropdown */}
       {showViewPicker && (
-        <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
-          {(['day', 'week', '3day', 'month', 'year'] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
-              className="w-full text-left px-4 py-3 text-sm flex items-center justify-between"
-              style={{ color: calendarView === v ? '#964735' : '#1C1C18', fontWeight: calendarView === v ? 600 : 400, borderBottom: '1px solid #F1EDE7' }}
-            >
-              {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
-              {calendarView === v && <Check className="w-3.5 h-3.5" style={{ color: '#964735' }} />}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowViewPicker(false)} />
+          <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+            {(['day', 'week', '3day', 'month', 'year'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
+                className="w-full px-4 py-3 text-sm flex items-center justify-center"
+                style={{
+                  background: calendarView === v ? '#964735' : 'transparent',
+                  color: calendarView === v ? '#FFFFFF' : '#1C1C18',
+                  fontWeight: calendarView === v ? 600 : 400,
+                  borderBottom: '1px solid #F1EDE7',
+                }}
+              >
+                {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Scrollable content — swipe left/right to navigate */}
@@ -1388,289 +1521,148 @@ const Calendar = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Event/Reminder Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[95%] sm:w-full">
-          <DialogHeader>
-            <DialogTitle>{t('calendar.new')}</DialogTitle>
-          </DialogHeader>
+      {/* New Event Overlay */}
+      {isDialogOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#F7F3ED', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 h-14 flex-shrink-0" style={{ background: '#F7F3ED', borderBottom: '1px solid #DAC1BB' }}>
+            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: '#7A6660' }}>Cancel</button>
+            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{editingItemId ? 'Edit Event' : 'New Event'}</h2>
+            <button onClick={dialogTab==='event'?handleAddEvent:handleAddReminder} className="text-sm font-semibold" style={{ color: '#964735' }}>
+              {editingItemId ? 'Update' : 'Add'}
+            </button>
+          </div>
 
-          <Tabs value={dialogTab} onValueChange={(v) => setDialogTab(v as "event" | "reminder")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="event">{t('calendar.event')}</TabsTrigger>
-              <TabsTrigger value="reminder">{t('calendar.reminder')}</TabsTrigger>
-            </TabsList>
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto py-4 space-y-3 px-4 pb-32">
 
-            <TabsContent value="event" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Input
-                  placeholder={t('calendar.eventTitle')}
-                  value={eventTitle}
-                  onChange={(e) => setEventTitle(e.target.value)}
-                  className="w-full text-xs sm:text-sm min-h-[44px]"
+            {/* Title */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+              <div className="px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>Title</p>
+                <input
+                  className="w-full text-base outline-none"
+                  style={{ background: 'transparent', color: '#1C1C18' }}
+                  placeholder={dialogTab === 'event' ? 'Event title' : 'Reminder title'}
+                  value={dialogTab === 'event' ? eventTitle : reminderTitle}
+                  onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
                 />
               </div>
+            </div>
 
-              {/* Tag picker */}
-              <div className="space-y-2">
-                <Label>Tag</Label>
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => setEventTag(null)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${eventTag === null ? "border-gray-400 bg-gray-100" : "border-transparent bg-muted hover:border-gray-300"}`}
-                  >
-                    None
+            {dialogTab === 'event' ? (
+              <>
+                {/* Starts */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <button className="w-full flex items-center justify-between px-4 py-3.5"
+                    onClick={() => { setShowStartPicker(p => !p); setShowEndPicker(false); }}>
+                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Starts</span>
+                    <div className="flex gap-2">
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>
+                    </div>
                   </button>
-                  {(Object.entries(TAGS) as [EventTag, typeof TAGS[EventTag]][]).map(([key, tag]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setEventTag(key)}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5"
-                      style={{
-                        background: eventTag === key ? tag.bg : "transparent",
-                        borderColor: eventTag === key ? tag.border : "#DAC1BB",
-                        color: eventTag === key ? tag.border : "#7A6660",
-                      }}
-                    >
-                      <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
-                      {tag.label}
+                  {showStartPicker && (
+                    <EZWheelPicker
+                      dateItems={DATE_ITEMS} hourItems={HOUR_ITEMS} minItems={MIN_ITEMS} ampmItems={AMPM_ITEMS}
+                      dayIdx={startDayIdx} setDayIdx={setStartDayIdx}
+                      hourIdx={startHourIdx} setHourIdx={setStartHourIdx}
+                      minIdx={startMinIdx} setMinIdx={setStartMinIdx}
+                      ampmIdx={startAmPmIdx} setAmPmIdx={setStartAmPmIdx}
+                    />
+                  )}
+                </div>
+
+                {/* Ends */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <button className="w-full flex items-center justify-between px-4 py-3.5"
+                    onClick={() => { setShowEndPicker(p => !p); setShowStartPicker(false); }}>
+                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Ends</span>
+                    <div className="flex gap-2">
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>
+                    </div>
+                  </button>
+                  {showEndPicker && (
+                    <EZWheelPicker
+                      dateItems={DATE_ITEMS} hourItems={HOUR_ITEMS} minItems={MIN_ITEMS} ampmItems={AMPM_ITEMS}
+                      dayIdx={endDayIdx} setDayIdx={setEndDayIdx}
+                      hourIdx={endHourIdx} setHourIdx={setEndHourIdx}
+                      minIdx={endMinIdx} setMinIdx={setEndMinIdx}
+                      ampmIdx={endAmPmIdx} setAmPmIdx={setEndAmPmIdx}
+                    />
+                  )}
+                </div>
+
+                {/* Reminder */}
+                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Reminder</span>
+                  <select value={eventReminder} onChange={e => setEventReminder(e.target.value)}
+                    className="text-sm font-medium outline-none rounded-lg px-2.5 py-1"
+                    style={{ background: '#F1EDE7', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
+                    <option value="none">None</option>
+                    <option value="5min">5 min before</option>
+                    <option value="15min">15 min before</option>
+                    <option value="30min">30 min before</option>
+                    <option value="1hour">1 hour before</option>
+                    <option value="1day">1 day before</option>
+                  </select>
+                </div>
+
+                {/* Location */}
+                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
+                  <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: '#1C1C18' }}
+                    placeholder="Location" value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
+                </div>
+
+                {/* Notes */}
+                <div className="rounded-2xl flex items-start gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <AlignLeft className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#B5A09A' }} />
+                  <textarea className="flex-1 outline-none text-sm resize-none" style={{ background: 'transparent', color: '#1C1C18', minHeight: '60px' }}
+                    placeholder="Add notes or details..." value={eventNotes} onChange={e => setEventNotes(e.target.value)} />
+                </div>
+
+                {/* Attachment */}
+                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
+                  <span className="flex-1 text-sm" style={{ color: '#B5A09A' }}>Add attachment (PDF, Image)</span>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#DAC1BB' }} />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Reminder form */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid #F1EDE7' }}>
+                    <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>Due Date</span>
+                    <input type="date" value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
+                      onChange={e => setReminderDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
+                  </div>
+                  {reminderDate && (
+                    <div className="px-4 py-3.5 flex items-center justify-between">
+                      <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>Time</span>
+                      <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
+                        className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                  {(['low','medium','high'] as const).map((p, i, arr) => (
+                    <button key={p} onClick={() => setReminderPriority(p)}
+                      className="w-full flex items-center justify-between px-4 py-3.5"
+                      style={{ background: reminderPriority===p ? '#964735' : 'transparent', color: reminderPriority===p ? '#fff' : '#1C1C18', borderBottom: i<arr.length-1 ? '1px solid #F1EDE7' : 'none', fontWeight: reminderPriority===p ? 600 : 400 }}>
+                      {p.charAt(0).toUpperCase()+p.slice(1)} Priority
                     </button>
                   ))}
                 </div>
-              </div>
+              </>
+            )}
 
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t('calendar.location')}
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
-                    className="flex-1 text-xs sm:text-sm min-h-[44px]"
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="outline"
-                    className="h-11 w-11 flex-shrink-0"
-                    onClick={() => {
-                      const q = eventLocation.trim() || "";
-                      const url = q
-                        ? `https://maps.google.com/?q=${encodeURIComponent(q)}`
-                        : "https://maps.google.com/";
-                      window.open(url, "_blank", "noopener,noreferrer");
-                    }}
-                    title="Open in Maps"
-                  >
-                    <MapPin className="h-4 w-4" style={{ color: "#6E8FE5" }} />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between py-2">
-                <Label htmlFor="all-day">{t('calendar.allDay')}</Label>
-                <Switch
-                  id="all-day"
-                  checked={eventAllDay}
-                  onCheckedChange={setEventAllDay}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>{t('calendar.starts')}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="date"
-                      value={format(eventStartDate, "yyyy-MM-dd")}
-                      onChange={(e) => {
-                        const newStart = new Date(e.target.value);
-                        setEventStartDate(newStart);
-                        if (newStart >= eventEndDate) {
-                          const newEnd = new Date(newStart);
-                          newEnd.setHours(newEnd.getHours() + 1);
-                          setEventEndDate(newEnd);
-                        }
-                      }}
-                      className="flex-1 min-w-0 h-11 min-h-[44px]"
-                    />
-                    {!eventAllDay && (
-                      <Input
-                        type="time"
-                        value={eventStartTime}
-                        onChange={(e) => setEventStartTime(e.target.value)}
-                        className="w-24 flex-shrink-0 h-11 min-h-[44px]"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('calendar.ends')}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="date"
-                      value={format(eventEndDate, "yyyy-MM-dd")}
-                      onChange={(e) => setEventEndDate(new Date(e.target.value))}
-                      className="flex-1 min-w-0 h-11 min-h-[44px]"
-                    />
-                    {!eventAllDay && (
-                      <Input
-                        type="time"
-                        value={eventEndTime}
-                        onChange={(e) => setEventEndTime(e.target.value)}
-                        className="w-24 flex-shrink-0 h-11 min-h-[44px]"
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('calendar.travelTime')}</Label>
-                <Select value={eventTravelTime} onValueChange={setEventTravelTime}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t('calendar.none')}</SelectItem>
-                    <SelectItem value="15min">15 {t('calendar.minutes')}</SelectItem>
-                    <SelectItem value="30min">30 {t('calendar.minutes')}</SelectItem>
-                    <SelectItem value="1hour">1 {t('calendar.hour')}</SelectItem>
-                    <SelectItem value="2hours">2 {t('calendar.hours')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('calendar.repeat')}</Label>
-                <Select value={eventRepeat} onValueChange={setEventRepeat}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="never">{t('calendar.never')}</SelectItem>
-                    <SelectItem value="daily">{t('calendar.daily')}</SelectItem>
-                    <SelectItem value="weekly">{t('calendar.weekly')}</SelectItem>
-                    <SelectItem value="monthly">{t('calendar.monthly')}</SelectItem>
-                    <SelectItem value="yearly">{t('calendar.yearly')}</SelectItem>
-                    <SelectItem value="custom">{t('calendar.custom')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {eventRepeat === "custom" && (
-                <div className="space-y-2">
-                  <Label>{t('calendar.custom')}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      min="1"
-                      value={customRepeatNumber}
-                      onChange={(e) => setCustomRepeatNumber(e.target.value)}
-                      className="w-20"
-                    />
-                    <Select value={customRepeatUnit} onValueChange={(v) => setCustomRepeatUnit(v as "days" | "weeks" | "months")}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="days">{t('calendar.days')}</SelectItem>
-                        <SelectItem value="weeks">{t('calendar.weeks')}</SelectItem>
-                        <SelectItem value="months">{t('calendar.months')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-xs sm:text-sm min-h-[44px]"
-                  onClick={() => {
-                    resetEventForm();
-                    setIsDialogOpen(false);
-                  }}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <ParticleButton
-                  className="flex-1 gradient-primary text-white border-0 text-xs sm:text-sm min-h-[44px]"
-                  onClick={handleAddEvent}
-                >
-                  {editingItemId ? t('calendar.updateEvent') : t('calendar.addEvent2')}
-                </ParticleButton>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="reminder" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Input
-                  placeholder={t('calendar.reminderTitle')}
-                  value={reminderTitle}
-                  onChange={(e) => setReminderTitle(e.target.value)}
-                  className="w-full text-xs sm:text-sm min-h-[44px]"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('calendar.dueDate')}</Label>
-                <Input
-                  type="date"
-                  value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
-                  onChange={(e) => setReminderDate(e.target.value ? new Date(e.target.value) : undefined)}
-                />
-              </div>
-
-              {reminderDate && (
-                <div className="space-y-2">
-                  <Label>{t('calendar.time')}</Label>
-                  <Input
-                    type="time"
-                    value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>{t('calendar.priority')}</Label>
-                <Select value={reminderPriority} onValueChange={(v) => setReminderPriority(v as "low" | "medium" | "high")}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">{t('calendar.low')}</SelectItem>
-                    <SelectItem value="medium">{t('calendar.medium')}</SelectItem>
-                    <SelectItem value="high">{t('calendar.high')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-xs sm:text-sm min-h-[44px]"
-                  onClick={() => {
-                    resetReminderForm();
-                    setIsDialogOpen(false);
-                  }}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <ParticleButton
-                  className="flex-1 gradient-primary text-white border-0 text-xs sm:text-sm min-h-[44px]"
-                  onClick={handleAddReminder}
-                >
-                  {editingItemId ? t('calendar.updateReminder') : t('calendar.addReminder')}
-                </ParticleButton>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
