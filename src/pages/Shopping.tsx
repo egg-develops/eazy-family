@@ -126,8 +126,8 @@ const Shopping = () => {
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addItem()}
           placeholder="Add an item…"
-          className="flex-1 bg-transparent outline-none text-sm"
-          style={{ color: '#1C1C18' }}
+          className="flex-1 outline-none text-sm"
+          style={{ color: '#1C1C18', background: 'transparent' }}
         />
         <button onClick={isListening ? () => { recognitionRef.current?.stop(); setIsListening(false); } : startListening}
           className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"

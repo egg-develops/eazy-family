@@ -65,8 +65,13 @@ const AppLayout = () => {
   const [ezOpen, setEzOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [activeMenuIndex, setActiveMenuIndex] = useState(-1);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPressRef = useRef(false);
+  const currentPointerYRef = useRef(0);
+  const longPressOriginYRef = useRef(0);
+  const prevActiveIndexRef = useRef(-1);
+  const ezButtonRef = useRef<HTMLButtonElement>(null);
 
   const openMenu = () => {
     setMenuOpen(true);
@@ -80,11 +85,28 @@ const AppLayout = () => {
 
   const handleEZPointerDown = (e: React.PointerEvent) => {
     isLongPressRef.current = false;
+    currentPointerYRef.current = e.clientY;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     longPressTimer.current = setTimeout(() => {
       isLongPressRef.current = true;
-      haptic('medium');
+      longPressOriginYRef.current = currentPointerYRef.current;
+      haptic('heavy');
       openMenu();
     }, 500);
+  };
+
+  const handleEZPointerMove = (e: React.PointerEvent) => {
+    if (!isLongPressRef.current) {
+      currentPointerYRef.current = e.clientY;
+      return;
+    }
+    const deltaY = longPressOriginYRef.current - e.clientY;
+    const newIndex = deltaY < 40 ? -1 : Math.min(Math.floor((deltaY - 40) / 56), menuItems.length - 1);
+    if (newIndex !== prevActiveIndexRef.current) {
+      prevActiveIndexRef.current = newIndex;
+      setActiveMenuIndex(newIndex);
+      if (newIndex >= 0) haptic('light');
+    }
   };
 
   const handleEZPointerUp = () => {
@@ -92,7 +114,14 @@ const AppLayout = () => {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-    if (!isLongPressRef.current) {
+    if (isLongPressRef.current) {
+      if (activeMenuIndex >= 0) {
+        navigate(menuItems[activeMenuIndex].path);
+      }
+      closeMenu();
+      setActiveMenuIndex(-1);
+      prevActiveIndexRef.current = -1;
+    } else {
       haptic('medium');
       setEzOpen(true);
     }
@@ -103,6 +132,17 @@ const AppLayout = () => {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+    setActiveMenuIndex(-1);
+    prevActiveIndexRef.current = -1;
+  };
+
+  const handleEZPointerLeave = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setActiveMenuIndex(-1);
+    prevActiveIndexRef.current = -1;
   };
 
   const JournalIcon = ({ color }: { color: string }) => (
@@ -226,7 +266,7 @@ const AppLayout = () => {
       {/* EZ Button + menu — floats above nav strip */}
       <div
         className="lg:hidden fixed z-50"
-        style={{ bottom: 'calc(32px + env(safe-area-inset-bottom) + 6px)', left: '50%', transform: 'translateX(-50%)' }}
+        style={{ bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }}
       >
         <div className="relative flex items-center justify-center">
           {/* Menu items — above button, bottom-to-top */}
@@ -248,10 +288,11 @@ const AppLayout = () => {
                     style={{
                       width: '160px',
                       padding: '12px 16px',
+                      background: activeMenuIndex === i ? '#F1EDE7' : '#FDF9F3',
                       boxShadow: '0 4px 16px rgba(28,28,24,0.15)',
-                      transform: menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)',
+                      transform: activeMenuIndex === i ? 'scale(1.04)' : (menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)'),
                       opacity: menuVisible ? 1 : 0,
-                      transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms`,
+                      transition: `transform 0.2s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background 0.1s ease`,
                     }}
                   >
                     <span style={{ width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
@@ -264,9 +305,11 @@ const AppLayout = () => {
           )}
 
           <button
+            ref={ezButtonRef}
             onPointerDown={handleEZPointerDown}
+            onPointerMove={handleEZPointerMove}
             onPointerUp={handleEZPointerUp}
-            onPointerLeave={handleEZPointerCancel}
+            onPointerLeave={handleEZPointerLeave}
             onPointerCancel={handleEZPointerCancel}
             onContextMenu={(e) => e.preventDefault()}
             className="relative flex items-center justify-center rounded-full transition-transform active:scale-95 select-none"
@@ -322,6 +365,94 @@ interface HomeCalendarEvent {
   location?: string;
   itemType?: 'event' | 'reminder' | 'task';
 }
+
+const getWeatherEmoji = (code: number): string => {
+  if (code === 113) return "☀️";
+  if (code === 116) return "⛅";
+  if ([119, 122].includes(code)) return "☁️";
+  if ([143, 248, 260].includes(code)) return "🌫️";
+  if ([176, 185, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 353, 356, 359].includes(code)) return "🌧️";
+  if ([179, 182, 311, 314, 317, 320, 323, 326, 329, 332, 335, 338, 350, 362, 365, 368, 371, 374, 377].includes(code)) return "❄️";
+  if ([200, 386, 389, 392, 395].includes(code)) return "⛈️";
+  return "🌤️";
+};
+
+interface HourlySlot { hour: number; emoji: string; temp: number; }
+
+const HomeWeatherInline = () => {
+  const [emoji, setEmoji] = useState('');
+  const [temp, setTemp] = useState<number | null>(null);
+  const [hourly, setHourly] = useState<HourlySlot[]>([]);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const saved = localStorage.getItem('weather-locations');
+        if (!saved) return;
+        const locs = JSON.parse(saved);
+        if (!locs?.length) return;
+        const loc = locs[0];
+        const query = loc.lat !== 0 ? `${loc.lat},${loc.lon}` : loc.name;
+        const res = await fetch(`https://wttr.in/${encodeURIComponent(query)}?format=j1`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const current = data.current_condition?.[0];
+        if (current) {
+          setTemp(Math.round(parseFloat(current.temp_C)));
+          setEmoji(getWeatherEmoji(parseInt(current.weatherCode, 10)));
+        }
+        const slots: HourlySlot[] = (data.weather?.[0]?.hourly || []).map((h: any) => ({
+          hour: Math.floor(parseInt(h.time, 10) / 100),
+          emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
+          temp: Math.round(parseFloat(h.tempC)),
+        }));
+        const now = new Date().getHours();
+        const sorted = [...slots.filter(s => s.hour >= now), ...slots.filter(s => s.hour < now)].slice(0, 6);
+        setHourly(sorted);
+      } catch { /* silent */ }
+    };
+    load();
+  }, []);
+
+  if (!emoji && temp === null) return null;
+
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <button
+        onClick={() => setExpanded(p => !p)}
+        className="flex items-center gap-1.5 rounded-full px-3 py-1"
+        style={{ background: '#F1EDE7', border: '1px solid #DAC1BB' }}
+      >
+        <span className="text-base leading-none">{emoji}</span>
+        {temp !== null && <span className="text-sm font-semibold" style={{ color: '#1C1C18' }}>{temp}°</span>}
+      </button>
+
+      {expanded && hourly.length > 0 && (
+        <div
+          className="flex gap-0 rounded-2xl overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)', alignSelf: 'stretch' }}
+        >
+          <div className="flex overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
+            {hourly.map((slot, i) => {
+              const now = new Date().getHours();
+              const isNow = slot.hour === now || (i === 0 && slot.hour <= now);
+              return (
+                <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0 px-4 py-3">
+                  <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.7)' }}>
+                    {isNow ? 'Now' : `${slot.hour}:00`}
+                  </span>
+                  <span className="text-xl leading-none">{slot.emoji}</span>
+                  <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const AppHome = () => {
   const { t } = useTranslation();
@@ -635,14 +766,12 @@ const AppHome = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Morning greeting */}
-      <div className="space-y-0.5">
-        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#B5A09A' }}>
+      {/* Morning greeting + weather */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold" style={{ color: '#B5A09A' }}>
           {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
         </p>
-        <h1 className="text-2xl font-bold leading-tight" style={{ color: '#1C1C18' }}>
-          {homeConfig.greeting || 'Your Family'}
-        </h1>
+        <HomeWeatherInline />
       </div>
 
       {/* Today's Rituals card */}

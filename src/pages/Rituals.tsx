@@ -25,7 +25,7 @@ const DEFAULT_RITUALS: Ritual[] = [
   { id: 'r5', title: 'Quality Time', emoji: '❤️', time: 'Evening' },
 ];
 
-const RITUAL_EMOJIS = ['☀️', '🌙', '🏃', '🧘', '❤️', '📚', '🎵', '🌿', '🍵', '✍️'];
+const RITUAL_EMOJIS = ['☀️','🌙','🏃','🧘','❤️','📚','🎵','🌿','🍵','✍️','💪','🎯','🧹','🍳','👨‍👩‍👧','🎨','📝','🌅','🧸','🐕','💤','🏊','🚴','🌺','🧃','🎭','🛁','📖','🎮','🤸'];
 
 const getJournalSettings = () => {
   try {
@@ -51,6 +51,8 @@ const Rituals = () => {
   const [newRitualTitle, setNewRitualTitle] = useState('');
   const [showAllJournal, setShowAllJournal] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
+  const [selectedNewEmoji, setSelectedNewEmoji] = useState('😊');
 
   // Swipe gesture state (DOM-level, no re-renders during drag)
   const touchData = useRef<{ startX: number; id: string; el: HTMLDivElement } | null>(null);
@@ -99,10 +101,10 @@ const Rituals = () => {
 
   const addRitual = () => {
     if (!newRitualTitle.trim()) return;
-    const emoji = RITUAL_EMOJIS[rituals.length % RITUAL_EMOJIS.length];
-    const r: Ritual = { id: crypto.randomUUID(), title: newRitualTitle.trim(), emoji, time: 'Any' };
+    const r: Ritual = { id: crypto.randomUUID(), title: newRitualTitle.trim(), emoji: selectedNewEmoji, time: 'Any' };
     saveRituals([...rituals, r]);
     setNewRitualTitle('');
+    setSelectedNewEmoji('😊');
     haptic('light');
   };
 
@@ -305,9 +307,9 @@ const Rituals = () => {
           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: TC }} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2" onClick={() => setEmojiPickerFor(null)}>
           {rituals.map(r => (
-            <div key={r.id} className="relative">
+            <div key={r.id} className="relative" style={{ overflow: 'visible' }}>
               <button
                 onClick={() => !editMode && toggleRitual(r.id)}
                 className="w-full flex items-center gap-2 p-3 rounded-xl text-left transition-all"
@@ -317,7 +319,11 @@ const Rituals = () => {
                   cursor: editMode ? 'default' : 'pointer',
                 }}
               >
-                <span className="text-lg">{r.emoji}</span>
+                <span
+                  className="text-lg"
+                  style={{ cursor: editMode ? 'pointer' : 'default' }}
+                  onClick={(e) => { if (editMode) { e.stopPropagation(); setEmojiPickerFor(emojiPickerFor === r.id ? null : r.id); } }}
+                >{r.emoji}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
                   {completedRituals.has(r.id) && !editMode && (
@@ -334,27 +340,73 @@ const Rituals = () => {
                   <X className="w-3 h-3 text-white" />
                 </button>
               )}
+              {editMode && emojiPickerFor === r.id && (
+                <div
+                  className="absolute top-full left-0 right-0 z-10 mt-1 p-2 rounded-xl grid grid-cols-5 gap-1"
+                  style={{ background: '#FDF9F3', border: '1px solid #DAC1BB', boxShadow: '0 4px 16px rgba(28,28,24,0.15)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {RITUAL_EMOJIS.map(em => (
+                    <button
+                      key={em}
+                      onClick={() => {
+                        const updated = rituals.map(ritual => ritual.id === r.id ? { ...ritual, emoji: em } : ritual);
+                        saveRituals(updated);
+                        setEmojiPickerFor(null);
+                        haptic('light');
+                      }}
+                      className="text-xl flex items-center justify-center rounded-lg h-8"
+                      style={{ background: r.emoji === em ? '#F1EDE7' : 'transparent' }}
+                    >{em}</button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
 
           {editMode && (
-            <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
-              <input
-                value={newRitualTitle}
-                onChange={e => setNewRitualTitle(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addRitual()}
-                placeholder="New ritual…"
-                className="flex-1 bg-transparent text-xs outline-none min-w-0"
-                style={{ color: '#1C1C18' }}
-                autoFocus
-              />
-              <button
-                onClick={addRitual}
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: TC }}
-              >
-                <Plus className="w-3 h-3 text-white" />
-              </button>
+            <div className="relative">
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEmojiPickerFor(emojiPickerFor === 'new' ? null : 'new'); }}
+                  className="text-base flex-shrink-0"
+                  title="Pick emoji"
+                >
+                  {selectedNewEmoji}
+                </button>
+                <input
+                  value={newRitualTitle}
+                  onChange={e => setNewRitualTitle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addRitual()}
+                  placeholder="New ritual…"
+                  className="flex-1 bg-transparent text-xs outline-none min-w-0"
+                  style={{ color: '#1C1C18' }}
+                  autoFocus
+                />
+                <button
+                  onClick={addRitual}
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: TC }}
+                >
+                  <Plus className="w-3 h-3 text-white" />
+                </button>
+              </div>
+              {emojiPickerFor === 'new' && (
+                <div
+                  className="absolute top-full left-0 right-0 z-10 mt-1 p-2 rounded-xl grid grid-cols-5 gap-1"
+                  style={{ background: '#FDF9F3', border: '1px solid #DAC1BB', boxShadow: '0 4px 16px rgba(28,28,24,0.15)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {RITUAL_EMOJIS.map(em => (
+                    <button
+                      key={em}
+                      onClick={() => { setSelectedNewEmoji(em); setEmojiPickerFor(null); haptic('light'); }}
+                      className="text-xl flex items-center justify-center rounded-lg h-8"
+                      style={{ background: selectedNewEmoji === em ? '#F1EDE7' : 'transparent' }}
+                    >{em}</button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
