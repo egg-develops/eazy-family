@@ -773,7 +773,7 @@ const FamilyAgenda = () => {
       {pollCreatorOpen && (
         <div
           className="fixed left-0 right-0 z-50"
-          style={{ bottom: "calc(96px + env(safe-area-inset-bottom) + 8px)" }}
+          style={{ bottom: "calc(96px + env(safe-area-inset-bottom) + 64px)" }}
         >
           <PollCreator
             onCreate={handleCreatePoll}
@@ -787,7 +787,7 @@ const FamilyAgenda = () => {
         <div
           className="fixed left-0 right-0 z-50"
           style={{
-            bottom: "calc(96px + env(safe-area-inset-bottom) + 8px)",
+            bottom: "calc(96px + env(safe-area-inset-bottom) + 64px)",
             animation: "slideUp 0.2s ease",
           }}
         >
@@ -876,7 +876,7 @@ const FamilyAgenda = () => {
             value={isListening ? liveTranscript : text}
             onChange={e => { if (!isListening) setText(e.target.value); }}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); } }}
-            placeholder={isListening ? "Listening…" : "What's on your mind?"}
+            placeholder={isListening ? "Listening…" : ""}
             disabled={isListening || uploading}
             className="flex-1 bg-transparent outline-none text-sm"
             style={{ color: "#1C1C18", minWidth: 0 }}

@@ -925,34 +925,47 @@ const AppHome = () => {
       </div>
 
       {/* Family Channel */}
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
-          <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
-        </div>
-        {sharedItems.length > 0 ? (
-          <div className="px-4 py-3 space-y-3">
-            {sharedItems.map(item => (
-              <div key={item.id} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: item.color }}>
-                  {item.initials}
+      {(() => {
+        let lastMsg: { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string } | null = null;
+        try {
+          const msgs = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]');
+          if (msgs.length > 0) lastMsg = msgs[msgs.length - 1];
+        } catch { /* ignore */ }
+        return (
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
+              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>Open</button>
+            </div>
+            {lastMsg ? (
+              <button onClick={() => navigate('/app/family-agenda')} className="w-full px-4 py-3 flex items-center gap-3 text-left">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: lastMsg.authorColor || '#964735' }}>
+                  {lastMsg.authorInitials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{item.title}</p>
-                  <p className="text-xs" style={{ color: '#B5A09A' }}>Shared task</p>
+                  <p className="text-xs font-semibold" style={{ color: '#1C1C18' }}>{lastMsg.authorName}</p>
+                  <p className="text-xs truncate" style={{ color: '#7A6660' }}>
+                    {lastMsg.type === 'text' ? lastMsg.content :
+                     lastMsg.type === 'voice' ? '🎤 Voice message' :
+                     lastMsg.type === 'image' ? '📷 Photo' :
+                     lastMsg.type === 'location' ? '📍 Location' :
+                     lastMsg.type === 'poll' ? '📊 Poll' :
+                     lastMsg.type === 'document' ? '📄 Document' : 'New message'}
+                  </p>
                 </div>
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#DAC1BB' }} />
+                <p className="text-xs flex-shrink-0" style={{ color: '#B5A09A' }}>
+                  {format(new Date(lastMsg.timestamp), 'h:mm a')}
+                </p>
+              </button>
+            ) : (
+              <div className="px-4 py-5 text-center">
+                <p className="text-sm" style={{ color: '#7A6660' }}>No messages yet — start the conversation.</p>
+                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>Open Channel</button>
               </div>
-            ))}
+            )}
           </div>
-        ) : (
-          <div className="px-4 py-6 text-center space-y-1">
-            <p className="text-sm font-medium" style={{ color: '#1C1C18' }}>Your family's shared space</p>
-            <p className="text-xs" style={{ color: '#7A6660' }}>Shared tasks, events, and voice notes appear here.</p>
-            <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>Open Channel</button>
-          </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Gallery */}
       {headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
