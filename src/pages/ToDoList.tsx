@@ -584,7 +584,7 @@ const ToDoList = () => {
                           {timeTab === 'complete' ? 'No completed tasks yet' : 'All clear!'}
                         </p>
                         <p className="text-sm mt-1" style={{ color: '#7A6660' }}>
-                          {timeTab === 'complete' ? 'Complete a task to see it here.' : 'Tap + to add something.'}
+                          {timeTab === 'complete' ? 'Complete a task to see it here.' : 'Your upcoming tasks will appear here.'}
                         </p>
                       </div>
                     );

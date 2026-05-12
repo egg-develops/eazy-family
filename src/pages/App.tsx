@@ -609,6 +609,7 @@ const AppHome = () => {
   };
 
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [sharedItems, setSharedItems] = useState<Array<{ id: string; title: string; type: string; initials: string; color: string }>>([]);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
   const [weatherHourly, setWeatherHourly] = useState<HourlySlot[]>([]);
   const [showInviteBanner, setShowInviteBanner] = useState(() =>
@@ -650,12 +651,23 @@ const AppHome = () => {
           .eq('completed', false)
           .eq('type', 'task');
         setPendingTasksCount(count || 0);
-      } catch {
-        // silently fail
-      }
+      } catch { /* silent */ }
     };
     fetchPendingTasks();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
+    supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5)
+      .then(({ data }) => {
+        setSharedItems((data || []).map((t, i) => ({
+          id: t.id, title: t.title, type: 'task',
+          initials: (t.user_id || 'U').slice(0, 2).toUpperCase(),
+          color: COLORS[i % COLORS.length],
+        })));
+      });
+  }, [user]);
 
   // Sync tasks/reminders with due dates into the homepage calendar
   useEffect(() => {
@@ -861,14 +873,14 @@ const AppHome = () => {
 
       {/* Today's Rituals card */}
       <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
-          <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
+          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>
             {(() => {
               const completed: string[] = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
-              const total: Ritual[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
+              const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
               const totalCount = total.length || 5;
-              return `${completed.length} / ${totalCount} Done!`;
+              return `Today's ${completed.length}/${totalCount} Done!`;
             })()}
           </p>
         </div>
@@ -877,7 +889,7 @@ const AppHome = () => {
           className="px-4 py-2 rounded-full text-sm font-semibold text-white flex-shrink-0"
           style={{ background: '#964735' }}
         >
-          Open Rituals
+          Rituals
         </button>
       </div>
 
@@ -910,28 +922,37 @@ const AppHome = () => {
         <QuickToDos navigate={navigate} />
       </div>
 
-      {/* Family Feed */}
+      {/* Family Channel */}
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Feed</p>
+          <div>
+            <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
+            <p className="text-xs" style={{ color: '#B5A09A' }}>SHARED ACTIVITY</p>
+          </div>
           <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
         </div>
-        <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
-          {todayEvents.slice(0, 3).map(event => (
-            <div key={event.id} className="flex items-start gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm" style={{ background: '#F1EDE7' }}>📅</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ color: '#1C1C18' }}>{event.title}</p>
-                <p className="text-xs" style={{ color: '#7A6660' }}>{format(event.startDate, 'h:mm a')}</p>
+        {sharedItems.length > 0 ? (
+          <div className="px-4 py-3 space-y-3">
+            {sharedItems.map(item => (
+              <div key={item.id} className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: item.color }}>
+                  {item.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{item.title}</p>
+                  <p className="text-xs" style={{ color: '#B5A09A' }}>Shared task</p>
+                </div>
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: '#DAC1BB' }} />
               </div>
-            </div>
-          ))}
-          {todayEvents.length === 0 && (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm" style={{ color: '#7A6660' }}>Nothing yet today. A calm start.</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="px-4 py-6 text-center space-y-1">
+            <p className="text-sm font-medium" style={{ color: '#1C1C18' }}>Your family's shared space</p>
+            <p className="text-xs" style={{ color: '#7A6660' }}>Shared tasks, events, and voice notes appear here.</p>
+            <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>Open Channel</button>
+          </div>
+        )}
       </div>
 
       {/* Gallery */}
@@ -956,8 +977,9 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showInlineAdd, setShowInlineAdd] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const inlineInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadQuickTasks();
@@ -1038,7 +1060,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       if (error) throw error;
 
       setNewTaskTitle("");
-      setIsAddDialogOpen(false);
+      setShowInlineAdd(false);
       loadQuickTasks();
       
       toast({
@@ -1062,67 +1084,63 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
         {quickTasks.map((task) => (
           <div key={task.id} className="flex items-center gap-3 px-4 py-3">
-            <Checkbox
-              id={task.id}
-              checked={task.completed}
-              onCheckedChange={() => toggleTask(task.id)}
-            />
-            <label
-              htmlFor={task.id}
-              className={`text-sm flex-1 cursor-pointer ${task.completed ? 'line-through' : ''}`}
+            <button
+              onClick={() => toggleTask(task.id)}
+              className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition-colors"
+              style={{ borderColor: task.completed ? '#964735' : '#DAC1BB', background: task.completed ? '#964735' : 'transparent' }}
+            >
+              {task.completed && <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>}
+            </button>
+            <span
+              className={`text-sm flex-1 ${task.completed ? 'line-through' : ''}`}
               style={{ color: task.completed ? '#7A6660' : '#1C1C18' }}
             >
               {task.title}
-            </label>
-            {hasCompletedTasks && task.completed && (
-              <button onClick={clearCompletedTasks} className="text-xs" style={{ color: '#DAC1BB' }}>✓</button>
-            )}
+            </span>
           </div>
         ))}
-        {quickTasks.length === 0 && (
+        {quickTasks.length === 0 && !showInlineAdd && (
           <div className="px-4 py-4 text-center">
-            <p className="text-sm" style={{ color: '#7A6660' }}>No tasks yet. Tap below to add one.</p>
+            <p className="text-sm" style={{ color: '#7A6660' }}>No tasks yet.</p>
           </div>
         )}
-        <button
-          className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium"
-          style={{ color: '#964735' }}
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Add To-Do
-        </button>
-      </div>
-
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="quick-task-title">Task Title</Label>
-              <Input
-                id="quick-task-title"
-                placeholder="Enter task description..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddTask()}
-                autoFocus
-                onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)}
-              />
-            </div>
+        {showInlineAdd && (
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderTop: quickTasks.length ? '1px solid #F1EDE7' : 'none' }}>
+            <input
+              ref={inlineInputRef}
+              value={newTaskTitle}
+              onChange={e => setNewTaskTitle(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleAddTask();
+                if (e.key === 'Escape') { setShowInlineAdd(false); setNewTaskTitle(''); }
+              }}
+              placeholder="Task name…"
+              className="flex-1 text-sm outline-none bg-transparent"
+              style={{ color: '#1C1C18' }}
+              autoFocus
+            />
+            <button
+              onClick={handleAddTask}
+              disabled={!newTaskTitle.trim()}
+              className="text-xs font-semibold px-3 py-1 rounded-full flex-shrink-0"
+              style={{ background: newTaskTitle.trim() ? '#964735' : '#DAC1BB', color: '#fff' }}
+            >
+              Add
+            </button>
+            <button onClick={() => { setShowInlineAdd(false); setNewTaskTitle(''); }} className="text-xs flex-shrink-0" style={{ color: '#7A6660' }}>✕</button>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddTask} disabled={!newTaskTitle.trim()}>
-              Add Task
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        )}
+        {!showInlineAdd && (
+          <button
+            className="w-full flex items-center gap-2 px-4 py-3 text-sm font-medium"
+            style={{ color: '#964735' }}
+            onClick={() => setShowInlineAdd(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Add Task
+          </button>
+        )}
+      </div>
       <ErrorBoundary>
         <GlobalTutorial />
       </ErrorBoundary>
