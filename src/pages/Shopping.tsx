@@ -205,7 +205,7 @@ const Shopping = () => {
               className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
               style={{ background: listType === t ? TC : 'transparent', color: listType === t ? '#fff' : MUTED }}
             >
-              {t === 'shared' ? '👥 Shared' : '👤 Personal'}
+              {t === 'shared' ? 'Shared' : 'Personal'}
             </button>
           ))}
         </div>
@@ -244,7 +244,7 @@ const Shopping = () => {
           <Sparkles className="w-4 h-4 text-white" />
         </div>
         <p className="flex-1 text-sm leading-snug pt-0.5" style={{ color: '#44664F' }}>
-          Tap Orbe to use voice, take a picture of your recipe list or add the URL — I'll add all items.
+          Add items above, take a picture of your recipe list or Tap EZ Orbe to use voice — I'll add all the items.
         </p>
       </div>
 
@@ -255,34 +255,26 @@ const Shopping = () => {
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
             {catItems.map((item, idx) => (
               <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? `1px solid #F1EDE7` : 'none' }}>
-                {/* Checkbox */}
+                {/* Checkbox — rounded square, text height */}
                 <button onClick={() => toggleItem(item.id)}
-                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors"
-                  style={{ borderColor: item.completed ? TC : BORDER, background: item.completed ? TC : 'transparent' }}>
+                  className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
+                  style={{ border: `1.5px solid ${item.completed ? TC : '#C4AEA8'}`, background: item.completed ? TC : 'transparent' }}>
                   {item.completed && <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>}
                 </button>
                 {/* Title */}
-                <span className="flex-1 text-sm" style={{ color: '#1C1C18' }}>{item.title}</span>
-                {/* Assign avatars */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ background: TL, fontSize: '8px', fontWeight: 700 }}>
-                    {(user?.email?.[0] || 'U').toUpperCase()}
-                  </div>
-                  <button className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#F1EDE7', border: `1px dashed ${BORDER}` }}>
-                    <Users className="w-2.5 h-2.5" style={{ color: MUTED }} />
-                  </button>
+                <span className="flex-1 text-sm" style={{ color: item.completed ? MUTED : '#1C1C18', textDecoration: item.completed ? 'line-through' : 'none' }}>{item.title}</span>
+                {/* Assignee */}
+                <div className="w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: TL, fontSize: '8px', fontWeight: 700 }}>
+                  {(user?.email?.[0] || 'U').toUpperCase()}
                 </div>
-                {/* Quantity */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button onClick={() => updateQty(item.id, -1)}
-                    className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#F1EDE7' }}>
-                    <Minus className="w-2.5 h-2.5" style={{ color: MUTED }} />
-                  </button>
-                  <span className="w-4 text-center text-xs font-semibold" style={{ color: '#1C1C18' }}>{item.quantity}</span>
-                  <button onClick={() => updateQty(item.id, 1)}
-                    className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#F1EDE7' }}>
-                    <Plus className="w-2.5 h-2.5" style={{ color: MUTED }} />
-                  </button>
+                <button className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F1EDE7', border: `1px dashed ${BORDER}` }}>
+                  <Users className="w-2.5 h-2.5" style={{ color: MUTED }} />
+                </button>
+                {/* Quantity pill */}
+                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '2px 6px', gap: '4px' }}>
+                  <button onClick={() => updateQty(item.id, -1)} className="text-xs font-medium leading-none" style={{ color: MUTED, width: '14px', textAlign: 'center' }}>−</button>
+                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
+                  <button onClick={() => updateQty(item.id, 1)} className="text-xs font-medium leading-none" style={{ color: MUTED, width: '14px', textAlign: 'center' }}>+</button>
                 </div>
               </div>
             ))}

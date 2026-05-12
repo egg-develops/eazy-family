@@ -281,12 +281,13 @@ const AppLayout = () => {
   const currentPath = location.pathname;
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
   const isCalendarPath = currentPath === "/app/calendar";
+  const isFamilyAgendaPath = currentPath === "/app/family-agenda";
   const isActive = (path: string) => currentPath === path;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header — hidden on Calendar (it has its own) */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: isCalendarPath ? 'none' : undefined }}>
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath) ? 'none' : undefined }}>
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
@@ -310,8 +311,8 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: isCalendarPath ? 0 : '3.5rem', paddingBottom: isCalendarPath ? 0 : undefined }}>
-        {isCalendarPath ? (
+      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: (isCalendarPath || isFamilyAgendaPath) ? 0 : '3.5rem', paddingBottom: (isCalendarPath || isFamilyAgendaPath) ? 0 : undefined }}>
+        {(isCalendarPath || isFamilyAgendaPath) ? (
           <Outlet />
         ) : (
           <div className="max-w-7xl mx-auto px-4 pb-24 pt-3">
@@ -881,7 +882,7 @@ const AppHome = () => {
               const completed: string[] = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
               const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
               const totalCount = total.length || 5;
-              return `Today's ${completed.length}/${totalCount} Done!`;
+              return `${completed.length}/${totalCount} Done!`;
             })()}
           </p>
         </div>
@@ -926,10 +927,7 @@ const AppHome = () => {
       {/* Family Channel */}
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-          <div>
-            <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
-            <p className="text-xs" style={{ color: '#B5A09A' }}>SHARED ACTIVITY</p>
-          </div>
+          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
           <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
         </div>
         {sharedItems.length > 0 ? (
@@ -1084,11 +1082,11 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
     <div>
       <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
         {quickTasks.map((task) => (
-          <div key={task.id} className="flex items-center gap-3 px-4 py-3">
+          <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: '#F7F3ED' }}>
             <button
               onClick={() => toggleTask(task.id)}
-              className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition-colors"
-              style={{ borderColor: task.completed ? '#964735' : '#DAC1BB', background: task.completed ? '#964735' : 'transparent' }}
+              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all"
+              style={{ borderColor: task.completed ? '#964735' : '#C4AEA8', background: task.completed ? '#964735' : 'transparent' }}
             >
               {task.completed && <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>}
             </button>
