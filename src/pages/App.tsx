@@ -468,7 +468,8 @@ const HomeWeatherInline = ({
         const locs = JSON.parse(saved);
         if (!locs?.length) return;
         const loc = locs[0];
-        const query = loc.lat !== 0 ? `${loc.lat},${loc.lon}` : loc.name;
+        // Prefer GPS coords; fall back to name; last resort auto-detect
+        const query = (loc.lat && loc.lat !== 0) ? `${loc.lat},${loc.lon}` : (loc.name || 'auto');
         const res = await fetch(`https://wttr.in/${encodeURIComponent(query)}?format=j1`);
         if (!res.ok) return;
         const data = await res.json();
@@ -501,7 +502,7 @@ const HomeWeatherInline = ({
         border: '1px solid #DAC1BB',
       }}
     >
-      <span className="text-base leading-none">{emoji}</span>
+      <span style={{ fontSize: '1.1rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{emoji}</span>
       {temp !== null && (
         <span className="text-sm font-semibold" style={{ color: expanded ? '#fff' : '#1C1C18' }}>
           {temp}°
@@ -861,7 +862,7 @@ const AppHome = () => {
                     <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.65)' }}>
                       {isNow ? 'Now' : `${slot.hour}:00`}
                     </span>
-                    <span className="text-xl leading-none">{slot.emoji}</span>
+                    <span style={{ fontSize: '1.25rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{slot.emoji}</span>
                     <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
                   </div>
                 );
