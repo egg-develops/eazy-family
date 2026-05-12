@@ -139,6 +139,7 @@ const Settings = () => {
     const newConfig = { ...homeConfig, ...updates };
     setHomeConfig(newConfig);
     cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
+    window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
     if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
   };
 

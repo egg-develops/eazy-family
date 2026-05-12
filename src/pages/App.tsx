@@ -424,6 +424,9 @@ interface HomeConfig {
   showCalendar: boolean;
   showWeather: boolean;
   showGreeting: boolean;
+  showRituals?: boolean;
+  showTasks?: boolean;
+  showFamilyChannel?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -467,15 +470,8 @@ const HomeWeatherInline = ({
   const [temp, setTemp] = useState<number | null>(null);
 
   useEffect(() => {
-    const load = async () => {
+    const fetchWeather = async (query: string) => {
       try {
-        const saved = localStorage.getItem('weather-locations');
-        if (!saved) return;
-        const locs = JSON.parse(saved);
-        if (!locs?.length) return;
-        const loc = locs[0];
-        // Prefer GPS coords; fall back to name; last resort auto-detect
-        const query = (loc.lat && loc.lat !== 0) ? `${loc.lat},${loc.lon}` : (loc.name || 'auto');
         const res = await fetch(`https://wttr.in/${encodeURIComponent(query)}?format=j1`);
         if (!res.ok) return;
         const data = await res.json();
@@ -484,15 +480,42 @@ const HomeWeatherInline = ({
           setTemp(Math.round(parseFloat(current.temp_C)));
           setEmoji(getWeatherEmoji(parseInt(current.weatherCode, 10)));
         }
+        const now = new Date().getHours();
         const slots: HourlySlot[] = (data.weather?.[0]?.hourly || []).map((h: any) => ({
           hour: Math.floor(parseInt(h.time, 10) / 100),
           emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
           temp: Math.round(parseFloat(h.tempC)),
         }));
-        const now = new Date().getHours();
-        const sorted = [...slots.filter(s => s.hour >= now), ...slots.filter(s => s.hour < now)].slice(0, 6);
+        const sorted = [...slots.filter(s => s.hour >= now), ...slots.filter(s => s.hour < now)].slice(0, 8);
         onHourly(sorted);
       } catch { /* silent */ }
+    };
+
+    const load = async () => {
+      // Try stored location first
+      try {
+        const saved = localStorage.getItem('weather-locations');
+        if (saved) {
+          const locs = JSON.parse(saved);
+          if (locs?.length) {
+            const loc = locs[0];
+            const query = (loc.lat && loc.lat !== 0) ? `${loc.lat},${loc.lon}` : (loc.name || 'auto');
+            await fetchWeather(query);
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+
+      // Try geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => fetchWeather(`${pos.coords.latitude},${pos.coords.longitude}`),
+          () => fetchWeather('auto'),
+          { timeout: 5000 }
+        );
+      } else {
+        fetchWeather('auto');
+      }
     };
     load();
   }, []);
@@ -624,6 +647,18 @@ const AppHome = () => {
   );
   const inviteTouchY = useRef(0);
   const inviteTouchX = useRef(0);
+
+  // Re-read config when Settings page saves changes
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const saved = localStorage.getItem('eazy-family-home-config');
+        if (saved) setHomeConfig(prev => ({ ...prev, ...JSON.parse(saved) }));
+      } catch {}
+    };
+    window.addEventListener('eazy-home-config-updated', handler);
+    return () => window.removeEventListener('eazy-home-config-updated', handler);
+  }, []);
 
   // Sync home_config from Supabase on mount
   useEffect(() => {
@@ -879,7 +914,7 @@ const AppHome = () => {
       </div>
 
       {/* Today's Rituals card */}
-      <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
+      {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
         <div className="space-y-0.5">
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>
@@ -898,10 +933,10 @@ const AppHome = () => {
         >
           Rituals
         </button>
-      </div>
+      </div>}
 
       {/* Today / Next Up */}
-      {(() => {
+      {homeConfig.showCalendar !== false && (() => {
         const now = new Date();
         const todayStr = now.toDateString();
         const todayEvts = calendarEvents
@@ -944,6 +979,7 @@ const AppHome = () => {
       })()}
 
       {/* Top Tasks */}
+      {homeConfig.showTasks !== false && (
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Top Tasks</p>
@@ -951,9 +987,10 @@ const AppHome = () => {
         </div>
         <QuickToDos navigate={navigate} />
       </div>
+      )}
 
       {/* Family Channel */}
-      {(() => {
+      {homeConfig.showFamilyChannel !== false && (() => {
         type ChannelMsg = { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string };
         let recentMsgs: ChannelMsg[] = [];
         try {
@@ -1001,6 +1038,7 @@ const AppHome = () => {
       })()}
 
       {/* Gallery */}
+
       {headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
         <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
           <img src={headerImages[carouselIndex % headerImages.length]} alt="Family" className="w-full h-full object-cover" />
