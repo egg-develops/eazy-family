@@ -55,14 +55,14 @@ const Shopping = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data } = await supabase.from('tasks').select('*').eq('type', 'shopping').order('created_at', { ascending: true });
+      const { data } = await supabase.from('tasks').select('*').in('type', ['shopping', 'shopping_personal']).order('created_at', { ascending: true });
       setItems((data || []).map(d => ({
         id: d.id,
         title: d.title,
         completed: d.completed,
         quantity: 1,
         category: guessCategory(d.title),
-        listType: 'shared' as const,
+        listType: (d.type === 'shopping_personal' ? 'personal' : 'shared') as const,
       })));
       setLastSynced(new Date());
     } catch { /* silent */ } finally { setLoading(false); }
@@ -75,7 +75,7 @@ const Shopping = () => {
     haptic('light');
     try {
       const { data } = await supabase.from('tasks').insert({
-        title: newItem.trim(), type: 'shopping', user_id: user.id, completed: false
+        title: newItem.trim(), type: listType === 'personal' ? 'shopping_personal' : 'shopping', user_id: user.id, completed: false
       }).select().single();
       if (data) {
         setItems(prev => [...prev, {
@@ -174,7 +174,7 @@ const Shopping = () => {
     haptic('light');
   };
 
-  const filtered = items.filter(i => listType === 'shared' || i.listType === listType);
+  const filtered = items.filter(i => i.listType === listType);
   const uncompleted = filtered.filter(i => !i.completed);
   const completed = filtered.filter(i => i.completed);
 

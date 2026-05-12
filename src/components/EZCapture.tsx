@@ -13,6 +13,7 @@ type Step = 'capture' | 'processing' | 'preview';
 
 interface EZCaptureProps {
   onClose: () => void;
+  defaultType?: CaptureType;
 }
 
 interface ParsedEntry {
@@ -72,9 +73,9 @@ const getUserFirstName = (): string => {
   return '';
 };
 
-export const EZCapture = ({ onClose }: EZCaptureProps) => {
+export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [text, setText] = useState('');
-  const [type, setType] = useState<CaptureType>('event');
+  const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isListening, setIsListening] = useState(false);

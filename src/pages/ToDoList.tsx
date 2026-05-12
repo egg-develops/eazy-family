@@ -60,6 +60,15 @@ const ToDoList = () => {
   const [addingToListId, setAddingToListId] = useState<string | null>(null);
   const [newListItemTitle, setNewListItemTitle] = useState("");
   const [timeTab, setTimeTab] = useState<'today'|'upcoming'|'complete'>('today');
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('eazy-task-custom-categories') || '[]'); } catch { return []; }
+  });
+  const [categoryOverrides, setCategoryOverrides] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem('eazy-task-category-overrides') || '{}'); } catch { return {}; }
+  });
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [showNewCategoryField, setShowNewCategoryField] = useState(false);
 
   const currentUserId = user?.id || '';
 
@@ -294,18 +303,25 @@ const ToDoList = () => {
         shared_with: activeTab === "shared" ? selectedMembers : null,
       };
 
-      const { error } = await supabase
+      const { data: insertedTask, error } = await supabase
         .from('tasks')
-        .insert([taskData]);
+        .insert([taskData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Supabase error:', error);
         throw error;
       }
 
+      if (insertedTask && selectedCategory) {
+        saveCategoryOverride(insertedTask.id, selectedCategory);
+      }
+
       setNewTaskTitle("");
       setNewTaskDueDate(undefined);
       setSelectedMembers([]);
+      setSelectedCategory('');
       setIsDialogOpen(false);
       
       toast({
@@ -407,10 +423,30 @@ const ToDoList = () => {
     return 'Personal';
   };
 
+  const allCategories = ['Personal', 'Kids', 'Admin', 'Home', ...customCategories];
+
+  const addCustomCategory = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed || allCategories.includes(trimmed)) return;
+    const updated = [...customCategories, trimmed];
+    setCustomCategories(updated);
+    localStorage.setItem('eazy-task-custom-categories', JSON.stringify(updated));
+    setSelectedCategory(trimmed);
+    setNewCategoryInput('');
+    setShowNewCategoryField(false);
+  };
+
+  const saveCategoryOverride = (taskId: string, cat: string) => {
+    if (!cat) return;
+    const updated = { ...categoryOverrides, [taskId]: cat };
+    setCategoryOverrides(updated);
+    localStorage.setItem('eazy-task-category-overrides', JSON.stringify(updated));
+  };
+
   const groupByCategory = (taskList: Task[]) => {
     const groups: Record<string, Task[]> = {};
     taskList.forEach(t => {
-      const cat = guessCategory(t.title);
+      const cat = categoryOverrides[t.id] || guessCategory(t.title);
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(t);
     });
@@ -685,16 +721,50 @@ const ToDoList = () => {
               />
             </div>
             {activeTab === "task" && (
-              <div className="space-y-2">
-                <Label htmlFor="task-due-date" className="text-xs sm:text-sm font-medium">Due Date (Optional)</Label>
-                <Input
-                  id="task-due-date"
-                  type="date"
-                  value={newTaskDueDate || ""}
-                  onChange={(e) => setNewTaskDueDate(e.target.value || undefined)}
-                  className="w-full h-10 sm:h-11 text-xs sm:text-sm min-h-[44px]"
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="task-due-date" className="text-xs sm:text-sm font-medium">Due Date (Optional)</Label>
+                  <Input
+                    id="task-due-date"
+                    type="date"
+                    value={newTaskDueDate || ""}
+                    onChange={(e) => setNewTaskDueDate(e.target.value || undefined)}
+                    className="w-full h-10 sm:h-11 text-xs sm:text-sm min-h-[44px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Category</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {allCategories.map(cat => (
+                      <button key={cat} type="button"
+                        onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                        style={{ background: selectedCategory === cat ? '#964735' : '#F1EDE7', color: selectedCategory === cat ? '#fff' : '#7A6660', border: `1px solid ${selectedCategory === cat ? '#964735' : '#DAC1BB'}` }}>
+                        {cat}
+                      </button>
+                    ))}
+                    <button type="button"
+                      onClick={() => setShowNewCategoryField(p => !p)}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                      style={{ background: '#F1EDE7', color: '#7A6660', border: '1px dashed #DAC1BB' }}>
+                      + New
+                    </button>
+                  </div>
+                  {showNewCategoryField && (
+                    <div className="flex gap-2">
+                      <Input
+                        autoFocus
+                        placeholder="Category name…"
+                        value={newCategoryInput}
+                        onChange={e => setNewCategoryInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') addCustomCategory(newCategoryInput); }}
+                        className="h-9 text-sm flex-1"
+                      />
+                      <Button size="sm" onClick={() => addCustomCategory(newCategoryInput)}>Add</Button>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
             {activeTab === "shared" && (
               <div className="space-y-3">

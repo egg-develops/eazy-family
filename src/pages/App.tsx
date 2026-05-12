@@ -408,7 +408,12 @@ const AppLayout = () => {
 
 
       {/* EZ Capture Overlay */}
-      {ezOpen && <EZCapture onClose={() => setEzOpen(false)} />}
+      {ezOpen && <EZCapture onClose={() => setEzOpen(false)} defaultType={
+        currentPath.includes('/shopping') ? 'shopping' :
+        currentPath.includes('/todos') ? 'task' :
+        currentPath.includes('/calendar') ? 'event' :
+        'event'
+      } />}
     </div>
   );
 };
@@ -895,23 +900,46 @@ const AppHome = () => {
         </button>
       </div>
 
-      {/* Next Up */}
+      {/* Today / Next Up */}
       {(() => {
-        const all = calendarEvents.filter(e => e.startDate >= new Date()).sort((a,b) => a.startDate.getTime() - b.startDate.getTime());
-        const next = all[0];
-        if (!next) return null;
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const todayEvts = calendarEvents
+          .filter(e => e.startDate.toDateString() === todayStr)
+          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+        if (todayEvts.length > 0) {
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today</p>
+                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>Calendar</button>
+              </div>
+              {todayEvts.map((e, i) => (
+                <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid #F1EDE7' : 'none', background: '#FFFFFF' }}>
+                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{e.title}</p>
+                    <p className="text-xs" style={{ color: '#7A6660' }}>{format(e.startDate, 'h:mm a')}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        const upcoming = calendarEvents
+          .filter(e => e.startDate > now)
+          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
+        if (!upcoming) return null;
         return (
-          <div className="rounded-2xl p-4 space-y-3" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Next Up</p>
-            </div>
-            <div>
-              <p className="font-bold text-base" style={{ color: '#1C1C18' }}>{next.title}</p>
-              <p className="text-sm" style={{ color: '#7A6660' }}>
-                {next.startDate.toDateString() === new Date().toDateString() ? 'Today' : format(next.startDate, 'EEE MMM d')} · {format(next.startDate, 'h:mm a')}
-              </p>
-            </div>
-          </div>
+          <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Next Up</p>
+            <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{upcoming.title}</p>
+            <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>
+              {upcoming.startDate.toDateString() === todayStr ? 'Today' : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
+            </p>
+          </button>
         );
       })()}
 
@@ -926,37 +954,42 @@ const AppHome = () => {
 
       {/* Family Channel */}
       {(() => {
-        let lastMsg: { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string } | null = null;
+        type ChannelMsg = { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string };
+        let recentMsgs: ChannelMsg[] = [];
         try {
-          const msgs = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]');
-          if (msgs.length > 0) lastMsg = msgs[msgs.length - 1];
+          const all: ChannelMsg[] = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]');
+          recentMsgs = all.slice(-3).reverse();
         } catch { /* ignore */ }
+        const msgPreview = (m: ChannelMsg) =>
+          m.type === 'text' ? (m.content || '') :
+          m.type === 'voice' ? '🎤 Voice message' :
+          m.type === 'image' ? '📷 Photo' :
+          m.type === 'location' ? '📍 Location' :
+          m.type === 'poll' ? '📊 Poll' :
+          m.type === 'document' ? '📄 Document' : 'New message';
         return (
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
               <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
               <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>Open</button>
             </div>
-            {lastMsg ? (
-              <button onClick={() => navigate('/app/family-agenda')} className="w-full px-4 py-3 flex items-center gap-3 text-left">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: lastMsg.authorColor || '#964735' }}>
-                  {lastMsg.authorInitials}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: '#1C1C18' }}>{lastMsg.authorName}</p>
-                  <p className="text-xs truncate" style={{ color: '#7A6660' }}>
-                    {lastMsg.type === 'text' ? lastMsg.content :
-                     lastMsg.type === 'voice' ? '🎤 Voice message' :
-                     lastMsg.type === 'image' ? '📷 Photo' :
-                     lastMsg.type === 'location' ? '📍 Location' :
-                     lastMsg.type === 'poll' ? '📊 Poll' :
-                     lastMsg.type === 'document' ? '📄 Document' : 'New message'}
+            {recentMsgs.length > 0 ? (
+              recentMsgs.map((msg, i) => (
+                <button key={i} onClick={() => navigate('/app/family-agenda')}
+                  className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
+                  style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid #F7F3ED' : 'none' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: msg.authorColor || '#964735' }}>
+                    {msg.authorInitials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold" style={{ color: '#1C1C18' }}>{msg.authorName}</p>
+                    <p className="text-xs truncate" style={{ color: '#7A6660' }}>{msgPreview(msg)}</p>
+                  </div>
+                  <p className="text-xs flex-shrink-0" style={{ color: '#B5A09A' }}>
+                    {format(new Date(msg.timestamp), 'h:mm a')}
                   </p>
-                </div>
-                <p className="text-xs flex-shrink-0" style={{ color: '#B5A09A' }}>
-                  {format(new Date(lastMsg.timestamp), 'h:mm a')}
-                </p>
-              </button>
+                </button>
+              ))
             ) : (
               <div className="px-4 py-5 text-center">
                 <p className="text-sm" style={{ color: '#7A6660' }}>No messages yet — start the conversation.</p>
