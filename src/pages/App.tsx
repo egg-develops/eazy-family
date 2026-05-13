@@ -282,12 +282,13 @@ const AppLayout = () => {
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
   const isCalendarPath = currentPath === "/app/calendar";
   const isFamilyAgendaPath = currentPath === "/app/family-agenda";
+  const isHelpPath = currentPath === "/app/help";
   const isActive = (path: string) => currentPath === path;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header — hidden on Calendar (it has its own) */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath) ? 'none' : undefined }}>
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 'none' : undefined }}>
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
@@ -311,8 +312,8 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: (isCalendarPath || isFamilyAgendaPath) ? 0 : '3.5rem', paddingBottom: (isCalendarPath || isFamilyAgendaPath) ? 0 : undefined }}>
-        {(isCalendarPath || isFamilyAgendaPath) ? (
+      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 0 : '3.5rem', paddingBottom: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 0 : undefined }}>
+        {(isCalendarPath || isFamilyAgendaPath || isHelpPath) ? (
           <Outlet />
         ) : (
           <div className="max-w-7xl mx-auto px-4 pb-24 pt-3">

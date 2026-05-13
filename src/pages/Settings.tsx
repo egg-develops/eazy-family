@@ -91,6 +91,7 @@ const Settings = () => {
   // Notifications
   const [quietHours, setQuietHours] = useState(() => localStorage.getItem('eazy-quiet-hours') !== 'false');
   const [morningDigest, setMorningDigest] = useState(() => localStorage.getItem('eazy-morning-digest') === 'true');
+  const [morningDigestEmail, setMorningDigestEmail] = useState(() => localStorage.getItem('eazy-morning-digest-email') === 'true');
 
   // Calendar sync
   const [googleSynced] = useState(() => localStorage.getItem('eazy-google-calendar-synced') === 'true');
@@ -435,10 +436,18 @@ const Settings = () => {
           <Row
             icon={<Sunrise className="w-4 h-4" style={{ color: MUTED }} />}
             title="Morning Digest"
-            subtitle="Daily at 8:00 AM"
+            subtitle="Today's schedule, tasks & what needs attention — 8:00 AM"
             right={<Tog checked={morningDigest} onChange={v => { setMorningDigest(v); localStorage.setItem('eazy-morning-digest', String(v)); }} />}
-            last
           />
+          {morningDigest && (
+            <Row
+              title="Also send by email"
+              subtitle={userEmail || 'Your account email'}
+              right={<Tog checked={morningDigestEmail} onChange={v => { setMorningDigestEmail(v); localStorage.setItem('eazy-morning-digest-email', String(v)); }} />}
+              last
+            />
+          )}
+          {!morningDigest && <div style={{ height: 0 }} />}
         </Card_>
       </div>
 
@@ -579,7 +588,7 @@ const Settings = () => {
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
             title="Help Center"
             right={<ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />}
-            onClick={() => window.open('mailto:hello@eazy.family', '_blank')}
+            onClick={() => navigate('/app/help')}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}

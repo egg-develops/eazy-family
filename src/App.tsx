@@ -36,6 +36,7 @@ const Rituals = lazy(() => import("./pages/Rituals"));
 const Settings = lazy(() => import("./pages/Settings"));
 const FamilyProfile = lazy(() => import("./pages/FamilyProfile"));
 const FamilyAgenda = lazy(() => import("./pages/FamilyAgenda"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -86,6 +87,7 @@ const App = () => (
                 <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
                 <Route path="rituals" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Rituals /></Suspense></ErrorBoundary>} />
                 <Route path="family-agenda" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyAgenda /></Suspense></ErrorBoundary>} />
+                <Route path="help" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><HelpCenter /></Suspense></ErrorBoundary>} />
               </Route>
               
               {/* Admin Dashboard */}
