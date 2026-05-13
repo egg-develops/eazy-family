@@ -26,6 +26,7 @@ interface HomeConfig {
   showRituals?: boolean;
   showTasks?: boolean;
   showFamilyChannel?: boolean;
+  showGallery?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -243,6 +244,7 @@ const Settings = () => {
     { key: 'showRituals', label: "Today's Rituals" },
     { key: 'showTasks', label: 'Top Tasks' },
     { key: 'showFamilyChannel', label: 'Family Channel' },
+    { key: 'showGallery', label: 'Photo Gallery' },
   ] as const;
 
   return (

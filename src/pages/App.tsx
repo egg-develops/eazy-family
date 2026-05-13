@@ -427,6 +427,7 @@ interface HomeConfig {
   showRituals?: boolean;
   showTasks?: boolean;
   showFamilyChannel?: boolean;
+  showGallery?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -885,15 +886,17 @@ const AppHome = () => {
           <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
             {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
           </p>
-          <HomeWeatherInline
-            expanded={weatherExpanded}
-            onToggle={() => setWeatherExpanded(p => !p)}
-            onHourly={setWeatherHourly}
-          />
+          {homeConfig.showWeather !== false && (
+            <HomeWeatherInline
+              expanded={weatherExpanded}
+              onToggle={() => setWeatherExpanded(p => !p)}
+              onHourly={setWeatherHourly}
+            />
+          )}
         </div>
 
         {/* Hourly forecast — drops below full row, toggle via pill */}
-        {weatherExpanded && weatherHourly.length > 0 && (
+        {homeConfig.showWeather !== false && weatherExpanded && weatherHourly.length > 0 && (
           <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
             <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-x' } as React.CSSProperties}>
               {weatherHourly.map((slot, i) => {
@@ -966,14 +969,21 @@ const AppHome = () => {
         const upcoming = calendarEvents
           .filter(e => e.startDate > now)
           .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
-        if (!upcoming) return null;
+        if (upcoming) {
+          return (
+            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Next Up</p>
+              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{upcoming.title}</p>
+              <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>
+                {upcoming.startDate.toDateString() === todayStr ? 'Today' : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
+              </p>
+            </button>
+          );
+        }
         return (
           <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Next Up</p>
-            <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{upcoming.title}</p>
-            <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>
-              {upcoming.startDate.toDateString() === todayStr ? 'Today' : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Today</p>
+            <p className="text-sm" style={{ color: '#7A6660' }}>Nothing scheduled — enjoy your day!</p>
           </button>
         );
       })()}
@@ -1038,8 +1048,7 @@ const AppHome = () => {
       })()}
 
       {/* Gallery */}
-
-      {headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
+      {homeConfig.showGallery !== false && headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
         <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
           <img src={headerImages[carouselIndex % headerImages.length]} alt="Family" className="w-full h-full object-cover" />
           <button
