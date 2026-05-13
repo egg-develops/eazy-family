@@ -60,9 +60,9 @@ const App = () => (
               {/* Public marketing pages — light paper theme (no SplashThemeProvider) */}
               <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />
 
-              {/* Auth + Onboarding — dark ink celebratory theme */}
-              <Route path="/auth" element={<ErrorBoundary><SplashThemeProvider><Auth /></SplashThemeProvider></ErrorBoundary>} />
-              <Route path="/onboarding" element={<ErrorBoundary><SplashThemeProvider><Onboarding /></SplashThemeProvider></ErrorBoundary>} />
+              {/* Auth + Onboarding */}
+              <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
+              <Route path="/onboarding" element={<ErrorBoundary><Onboarding /></ErrorBoundary>} />
               
               {/* Logo splash after login/onboarding */}
               <Route path="/splash" element={<ProtectedRoute><Splash /></ProtectedRoute>} />

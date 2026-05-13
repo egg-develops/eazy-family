@@ -325,7 +325,7 @@ const AppLayout = () => {
       {/* Long press menu backdrop */}
       {menuOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40"
+          className="fixed inset-0 z-40"
           style={{ background: menuVisible ? 'rgba(28,28,24,0.4)' : 'transparent', transition: 'background 0.2s' }}
           onClick={closeMenu}
         />
@@ -333,7 +333,7 @@ const AppLayout = () => {
 
       {/* EZ Button + menu */}
       <div
-        className="lg:hidden fixed z-50"
+        className="fixed z-50"
         style={buttonPos
           ? { bottom: `${buttonPos.bottom}px`, left: `${buttonPos.left}px`, transition: isDragMode ? 'none' : 'left 0.25s ease, bottom 0.25s ease' }
           : { bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }

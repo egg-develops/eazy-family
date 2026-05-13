@@ -3,11 +3,19 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, ArrowLeft } from "lucide-react";
+
+const TC = '#964735';
+const TL = '#D97B66';
+const BG = '#F7F3ED';
+const CARD = '#FFFFFF';
+const BORDER = '#DAC1BB';
+const INPUT_BG = '#FAF7F3';
+const INK = '#1C1C18';
+const MUTED = '#7A6660';
 
 interface OnboardingData {
   userName: string;
@@ -63,7 +71,6 @@ const Onboarding = () => {
         .join('')
         .toUpperCase()
         .substring(0, 2) || 'EF';
-
       const finalData = { ...data, userInitials, children: [], features: [] };
       localStorage.setItem('eazy-family-onboarding', JSON.stringify(finalData));
       navigate('/auth?signup=true');
@@ -84,6 +91,12 @@ const Onboarding = () => {
     }
   };
 
+  const inputStyle = {
+    background: INPUT_BG,
+    border: `1px solid ${BORDER}`,
+    color: INK,
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -92,14 +105,14 @@ const Onboarding = () => {
             <img
               src="/logo.png"
               alt="Eazy.Family"
-              className="w-24 h-24 mx-auto object-contain drop-shadow-2xl"
-              style={{ filter: "drop-shadow(0 0 28px rgba(107, 63, 191, 0.6))" }}
+              className="w-24 h-24 mx-auto object-contain"
+              style={{ filter: "drop-shadow(0 4px 20px rgb(150 71 53 / 0.2))" }}
             />
             <div>
-              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
+              <h2 className="text-2xl font-bold" style={{ color: INK }}>
                 {t('onboarding.welcome.title')}
               </h2>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "hsl(270 40% 68%)" }}>
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: MUTED }}>
                 {t('onboarding.welcome.description')}
               </p>
             </div>
@@ -110,10 +123,10 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
+              <h2 className="text-2xl font-bold" style={{ color: INK }}>
                 {t('onboarding.language.title')}
               </h2>
-              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>
+              <p className="text-sm" style={{ color: MUTED }}>
                 {t('onboarding.language.description')}
               </p>
             </div>
@@ -125,10 +138,7 @@ const Onboarding = () => {
                 cloudSet('eazy-family-language', value);
               }}
             >
-              <SelectTrigger
-                className="h-12 rounded-xl border-0 text-base"
-                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}
-              >
+              <SelectTrigger className="h-12 rounded-xl text-base" style={inputStyle}>
                 <SelectValue placeholder="Select your language" />
               </SelectTrigger>
               <SelectContent>
@@ -144,15 +154,15 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
+              <h2 className="text-2xl font-bold" style={{ color: INK }}>
                 {t('onboarding.name.title')}
               </h2>
-              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>
+              <p className="text-sm" style={{ color: MUTED }}>
                 {t('onboarding.name.description')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name" style={{ color: "hsl(270 40% 80%)" }}>
+              <Label htmlFor="name" className="text-sm font-medium" style={{ color: INK }}>
                 {t('onboarding.name.label')}
               </Label>
               <Input
@@ -161,8 +171,8 @@ const Onboarding = () => {
                 value={data.userName}
                 onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
                 onKeyDown={(e) => e.key === 'Enter' && canProceed() && nextStep()}
-                className="h-12 rounded-xl border-0 text-base"
-                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}
+                className="h-12 rounded-xl text-base"
+                style={inputStyle}
                 autoFocus
               />
             </div>
@@ -173,10 +183,10 @@ const Onboarding = () => {
         return (
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: "hsl(270 40% 96%)" }}>
+              <h2 className="text-2xl font-bold" style={{ color: INK }}>
                 {t('onboarding.location.title')}
               </h2>
-              <p className="text-sm" style={{ color: "hsl(270 40% 68%)" }}>
+              <p className="text-sm" style={{ color: MUTED }}>
                 {t('onboarding.location.description')}
               </p>
             </div>
@@ -184,10 +194,7 @@ const Onboarding = () => {
               value={data.location}
               onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}
             >
-              <SelectTrigger
-                className="h-12 rounded-xl border-0 text-base"
-                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}
-              >
+              <SelectTrigger className="h-12 rounded-xl text-base" style={inputStyle}>
                 <SelectValue placeholder={t('onboarding.location.placeholder')} />
               </SelectTrigger>
               <SelectContent>
@@ -201,8 +208,8 @@ const Onboarding = () => {
                 value={data.customLocation}
                 onChange={(e) => setData(prev => ({ ...prev, customLocation: e.target.value }))}
                 placeholder="Enter your city"
-                className="h-12 rounded-xl border-0 text-base"
-                style={{ background: "hsl(270 40% 18%)", color: "hsl(270 40% 96%)" }}
+                className="h-12 rounded-xl text-base"
+                style={inputStyle}
                 autoFocus
               />
             )}
@@ -217,14 +224,14 @@ const Onboarding = () => {
   return (
     <div
       className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: "linear-gradient(160deg, #3D1A13, #5E2D1F)" }}
+      style={{ background: BG }}
     >
-      {/* Ambient glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #964735, transparent 70%)" }}
-        />
+      {/* Soft ambient blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
+        <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #D97B66, transparent 70%)" }} />
       </div>
 
       <div className="relative max-w-md mx-auto w-full px-4 pt-10 pb-8 flex flex-col flex-1">
@@ -233,13 +240,13 @@ const Onboarding = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8 object-contain" />
-            <span className="font-serif text-sm" style={{ color: "#FDF9F3" }}>
-              <em>Eazy</em><span style={{ color: "#D97B66" }}>.</span>Family
+            <span className="font-serif text-sm font-medium" style={{ color: INK }}>
+              eazy<span style={{ color: TC }}>.</span>family
             </span>
           </div>
           <span
             className="text-xs font-medium px-3 py-1 rounded-full"
-            style={{ background: "rgba(150, 71, 53, 0.3)", color: "#B5A09A" }}
+            style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}
           >
             {currentStep} / {steps.length}
           </span>
@@ -247,50 +254,42 @@ const Onboarding = () => {
 
         {/* Progress bar */}
         <div className="mb-8">
-          <div className="w-full rounded-full h-1.5" style={{ background: "rgba(150, 71, 53, 0.2)" }}>
+          <div className="w-full rounded-full h-1.5" style={{ background: '#EBE8E2' }}>
             <div
               className="h-1.5 rounded-full transition-all duration-500"
-              style={{
-                width: `${(currentStep / steps.length) * 100}%`,
-                background: "#964735"
-              }}
+              style={{ width: `${(currentStep / steps.length) * 100}%`, background: TC }}
             />
           </div>
         </div>
 
-        {/* Step content */}
+        {/* Step content card */}
         <div
           className="rounded-2xl p-6 flex-1 animate-fade-in"
-          style={{
-            background: "rgba(94, 45, 31, 0.85)",
-            border: "1px solid rgba(150, 71, 53, 0.35)",
-            backdropFilter: "blur(8px)"
-          }}
+          style={{ background: CARD, border: `1px solid ${BORDER}` }}
         >
           {renderStepContent()}
         </div>
 
         {/* Navigation */}
         <div className="flex justify-between mt-6 gap-3">
-          <Button
-            variant="outline"
+          <button
             onClick={prevStep}
             disabled={currentStep === 1}
-            className="flex items-center gap-2 rounded-xl h-12 flex-1 border-0 hover:opacity-80"
-            style={{ background: "rgba(94, 45, 31, 0.7)", color: "#B5A09A" }}
+            className="flex items-center justify-center gap-2 rounded-xl h-12 flex-1 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-30"
+            style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}
           >
             <ArrowLeft className="w-4 h-4" />
             {t('onboarding.back')}
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={nextStep}
             disabled={!canProceed()}
-            className="flex items-center gap-2 rounded-xl h-12 flex-1 text-white font-semibold border-0 hover:opacity-90 transition-opacity disabled:opacity-40"
-            style={{ background: "#964735" }}
+            className="flex items-center justify-center gap-2 rounded-xl h-12 flex-1 text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
+            style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}
           >
             {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
             <ArrowRight className="w-4 h-4" />
-          </Button>
+          </button>
         </div>
 
         <div className="text-center mt-4">
@@ -298,10 +297,10 @@ const Onboarding = () => {
             type="button"
             onClick={() => navigate("/auth")}
             className="text-sm hover:opacity-80 transition-opacity"
-            style={{ color: "hsl(270 40% 60%)" }}
+            style={{ color: MUTED }}
           >
             Already have an account?{" "}
-            <span style={{ color: "hsl(262 80% 78%)" }} className="font-semibold">Sign in</span>
+            <span style={{ color: TC }} className="font-semibold">Sign in</span>
           </button>
         </div>
       </div>
