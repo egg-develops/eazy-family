@@ -84,7 +84,7 @@ export function PublicNav() {
       </button>
 
       {/* Desktop links */}
-      <ul style={{ display: "flex", gap: "4px", listStyle: "none", margin: 0, padding: 0 }}
+      <ul style={{ gap: "4px", listStyle: "none", margin: 0, padding: 0 }}
         className="hidden md:flex">
         {navLinks.map(l => (
           <li key={l.label}>
@@ -112,7 +112,7 @@ export function PublicNav() {
       </ul>
 
       {/* Desktop CTAs */}
-      <div className="hidden md:flex" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+      <div className="hidden md:flex" style={{ gap: "8px", alignItems: "center" }}>
         <button
           onClick={() => navigate("/auth")}
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: INK_V, background: "none", border: "none", cursor: "pointer", padding: "7px 12px", borderRadius: "9999px" }}
