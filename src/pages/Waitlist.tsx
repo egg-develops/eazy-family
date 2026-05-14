@@ -77,9 +77,9 @@ export default function Waitlist() {
           <p style={{ fontSize: 12, color: T.faint }}>No spam. One email when we launch.</p>
           <div style={{ marginTop: 48, display: "flex", flexDirection: "column", gap: 14, borderTop: `0.5px solid ${T.outline}`, paddingTop: 40 }}>
             {[
-              ""Your Sunday evening planning ritual ends here."",
-              ""The invisible task list — finally visible."",
-              ""One shared shopping list. Updated by voice. Smarter every week."",
+              "\u201cYour Sunday evening planning ritual ends here.\u201d",
+              "\u201cThe invisible task list \u2014 finally visible.\u201d",
+              "\u201cOne shared shopping list. Updated by voice. Smarter every week.\u201d",
             ].map(t => (
               <p key={t} style={{ fontFamily: lora, fontStyle: "italic", fontSize: 16, color: T.inkV, margin: 0 }}>{t}</p>
             ))}
