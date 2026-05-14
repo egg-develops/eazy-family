@@ -17,7 +17,7 @@ const dm = "'DM Sans', sans-serif";
 
 // Hero Orbe — motion graphic floating on cream, with frosted pulsing halo
 const OrbeMorphic = () => (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", aspectRatio: "1", maxHeight: 520 }}>
+  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
       {/* Halo — outermost, slowest pulse */}
@@ -133,10 +133,10 @@ export default function Index() {
       <PublicNav />
 
       {/* ── Hero ── */}
-      <section style={{ ...sec, paddingBottom: 56 }}>
-        <div style={{ ...max, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }} className="hero-grid">
+      <section style={{ borderBottom: `0.5px solid ${T.outline}`, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", maxWidth: 1200, margin: "0 auto", alignItems: "center" }} className="hero-grid">
           {/* Left: text */}
-          <div>
+          <div style={{ padding: "72px 48px 72px max(40px, 5vw)" }}>
             <Eyebrow>{t('website.hero.eyebrow')}</Eyebrow>
             <h1 style={{ fontFamily: lora, fontSize: "clamp(30px,4.5vw,48px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", marginBottom: 20, color: T.ink }}>
               {t('website.hero.headline')}
@@ -182,8 +182,12 @@ export default function Index() {
               ))}
             </div>
           </div>
-          {/* Right: motion graphic */}
-          <OrbeMorphic />
+          {/* Right: motion graphic — fills full column height */}
+          <div className="hero-orbe-wrap" style={{ position: "relative", width: "100%", paddingBottom: "100%" }}>
+            <div style={{ position: "absolute", inset: 0 }}>
+              <OrbeMorphic />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -407,7 +411,10 @@ export default function Index() {
       />
 
       <style>{`
-        @media (max-width: 768px) { .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; } }
+        @media (max-width: 768px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-orbe-wrap { padding-bottom: 85vw !important; max-height: 380px; }
+        }
         @media (max-width: 720px) { .digest-grid { grid-template-columns: repeat(2,1fr) !important; } }
         @media (max-width: 480px) { .digest-grid { grid-template-columns: 1fr !important; } }
         .intel-grid { grid-template-columns: repeat(2,1fr) !important; }
