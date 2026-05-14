@@ -323,8 +323,8 @@ export default function Index() {
             <div style={{ background: T.primaryS, border: `0.5px solid ${T.primary}`, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 480, width: "100%" }}>
               <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fff", background: T.primary, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>14-Day Free Trial</div>
               <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>Family</div>
-              <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>$4 <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>/ month</span></div>
-              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Billed annually at $48. Or $5.99 month-to-month.<br />Cancel anytime. Card required, not charged for 14 days.</div>
+              <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>$3.75 <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>/ month</span></div>
+              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Billed annually at $44.99. Or $4.99 month-to-month.<br />Cancel anytime. Card required, not charged for 14 days.</div>
               <div style={{ height: "0.5px", background: T.outline }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {["Unlimited calendars, lists & family members", "Full intelligence layer — conflict detection, shopping frequency, task escalation", "Morning Digest — daily & email", "Full voice AI — Orbe & assistant", "One free month for every family you refer"].map(f => (
