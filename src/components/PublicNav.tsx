@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n/config';
 
 const PRIMARY = "#964735";
 const INK = "#1c1c18";
@@ -28,10 +30,43 @@ const CloseIcon = () => (
   </svg>
 );
 
+const LANGUAGES = [
+  { code: "en", flag: "🇬🇧", label: "English" },
+  { code: "de", flag: "🇩🇪", label: "Deutsch" },
+  { code: "fr", flag: "🇫🇷", label: "Français" },
+  { code: "it", flag: "🇮🇹", label: "Italiano" },
+];
+
 export function PublicNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(
+    () => localStorage.getItem('eazy-family-language') || 'en'
+  );
+  const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const changeLanguage = async (code: string) => {
+    setSelectedLang(code);
+    localStorage.setItem('eazy-family-language', code);
+    await i18n.changeLanguage(code);
+    setLangOpen(false);
+    setMenuOpen(false);
+  };
+
+  const currentLang = LANGUAGES.find(l => l.code === selectedLang) ?? LANGUAGES[0];
 
   const goToSection = (id: string) => {
     setMenuOpen(false);
@@ -44,11 +79,11 @@ export function PublicNav() {
   };
 
   const navLinks = [
-    { label: "Features",       action: () => goToSection("features") },
-    { label: "Intelligence",   action: () => goToSection("intelligence") },
-    { label: "Morning Digest", action: () => goToSection("digest") },
-    { label: "Pricing",        action: () => goToSection("pricing") },
-    { label: "About",          action: () => { setMenuOpen(false); navigate("/about"); } },
+    { label: t('website.nav.features'),       action: () => goToSection("features") },
+    { label: t('website.nav.intelligence'),   action: () => goToSection("intelligence") },
+    { label: t('website.nav.morningDigest'), action: () => goToSection("digest") },
+    { label: t('website.nav.pricing'),        action: () => goToSection("pricing") },
+    { label: t('website.nav.about'),          action: () => { setMenuOpen(false); navigate("/about"); } },
   ];
 
   return (
@@ -113,17 +148,59 @@ export function PublicNav() {
 
       {/* Desktop CTAs */}
       <div className="hidden md:flex" style={{ gap: "8px", alignItems: "center" }}>
+        {/* Language dropdown */}
+        <div ref={langRef} style={{ position: "relative" }}>
+          <button
+            onClick={() => setLangOpen(v => !v)}
+            style={{
+              fontFamily: "'DM Sans', sans-serif", fontSize: "12px", fontWeight: 500,
+              color: INK_V, background: "#fdf9f3", border: `1px solid #dac1bb`,
+              cursor: "pointer", padding: "6px 10px", borderRadius: "9999px",
+              display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
+            }}
+          >
+            <span style={{ fontSize: "14px", lineHeight: 1 }}>{currentLang.flag}</span>
+            <span style={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>{currentLang.code.toUpperCase()}</span>
+          </button>
+          {langOpen && (
+            <div style={{
+              position: "absolute", top: "calc(100% + 6px)", right: 0,
+              background: "#fdf9f3", border: `1px solid #dac1bb`, borderRadius: 12,
+              padding: "6px", minWidth: 140, zIndex: 300,
+              boxShadow: "0 4px 16px rgba(28,28,24,0.08)",
+            }}>
+              {LANGUAGES.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8, width: "100%",
+                    padding: "8px 12px", borderRadius: 8, border: "none", cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif", fontSize: "13px",
+                    background: selectedLang === lang.code ? "#ffdad3" : "none",
+                    color: selectedLang === lang.code ? "#964735" : "#55433f",
+                    fontWeight: selectedLang === lang.code ? 500 : 400,
+                    textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>{lang.flag}</span>
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button
           onClick={() => navigate("/auth")}
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: INK_V, background: "none", border: "none", cursor: "pointer", padding: "7px 12px", borderRadius: "9999px" }}
         >
-          Sign in
+          {t('website.nav.signIn')}
         </button>
         <button
           onClick={() => navigate("/onboarding")}
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "9999px" }}
         >
-          Get started
+          {t('website.nav.getStarted')}
         </button>
       </div>
 
@@ -196,14 +273,34 @@ export function PublicNav() {
               {l.label}
             </button>
           ))}
+          {/* Mobile language selector */}
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: "16px 0 8px", borderBottom: `0.5px solid #f1ede7` }}>
+            {LANGUAGES.map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => changeLanguage(lang.code)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  padding: "6px 10px", borderRadius: "9999px", border: `1px solid #dac1bb`,
+                  cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: "12px",
+                  background: selectedLang === lang.code ? "#ffdad3" : "#fdf9f3",
+                  color: selectedLang === lang.code ? "#964735" : "#55433f",
+                  fontWeight: selectedLang === lang.code ? 500 : 400,
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1 }}>{lang.flag}</span>
+                {lang.label}
+              </button>
+            ))}
+          </div>
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
             <button onClick={() => { setMenuOpen(false); navigate("/auth"); }}
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: INK_V, background: "none", border: `1px solid ${OUTLINE}`, cursor: "pointer", padding: "10px", borderRadius: "9999px" }}>
-              Sign in
+              {t('website.nav.signIn')}
             </button>
             <button onClick={() => { setMenuOpen(false); navigate("/onboarding"); }}
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "11px", borderRadius: "9999px" }}>
-              Get started
+              {t('website.nav.getStarted')}
             </button>
           </div>
         </div>

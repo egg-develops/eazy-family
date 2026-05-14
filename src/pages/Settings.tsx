@@ -127,9 +127,9 @@ const Settings = () => {
 
   // Re-hydrate from cloud
   useEffect(() => {
-    const handler = () => {
+    const handler = async () => {
       const lang = localStorage.getItem('eazy-family-language');
-      if (lang) { setLanguage(lang); i18n.changeLanguage(lang); }
+      if (lang) { setLanguage(lang); await i18n.changeLanguage(lang); }
       const cfg = localStorage.getItem('eazy-family-home-config');
       if (cfg) { try { setHomeConfig(p => ({ ...p, ...JSON.parse(cfg) })); } catch {} }
     };
@@ -145,9 +145,9 @@ const Settings = () => {
     if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
   };
 
-  const handleLanguageChange = (lang: string) => {
+  const handleLanguageChange = async (lang: string) => {
     setLanguage(lang);
-    i18n.changeLanguage(lang);
+    await i18n.changeLanguage(lang);
     cloudSet('eazy-family-language', lang);
     setLangOpen(false);
     toast({ title: 'Language updated' });

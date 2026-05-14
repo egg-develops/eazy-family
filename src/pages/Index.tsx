@@ -1,4 +1,5 @@
 import { Navigate, useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
 import { PublicNav } from "@/components/PublicNav";
 
@@ -15,7 +16,7 @@ const lora = "'Lora', serif";
 const dm = "'DM Sans', sans-serif";
 
 // Orbe sizes
-const OrbeLg = () => (
+const OrbeLg = ({ label }: { label?: string }) => (
   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", margin: "48px 0 12px" }}>
     <div className="orbe-pulse" style={{
       width: 96, height: 96, borderRadius: "50%", background: T.primary,
@@ -25,7 +26,7 @@ const OrbeLg = () => (
         <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff" }} />
       </div>
     </div>
-    <span style={{ fontFamily: lora, fontStyle: "italic", fontSize: 13, color: T.faint }}>The Orbe</span>
+    <span style={{ fontFamily: lora, fontStyle: "italic", fontSize: 13, color: T.faint }}>{label ?? "The Orbe"}</span>
   </div>
 );
 
@@ -67,18 +68,18 @@ const PfCheck = () => (
   </span>
 );
 
-const CtaDark = ({ onStart }: { onStart: () => void }) => (
+const CtaDark = ({ onStart, eyebrow, headline, headlineEm, sub, button }: { onStart: () => void; eyebrow: string; headline: string; headlineEm: string; sub: string; button: string }) => (
   <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-    <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Available on Web now · iOS &amp; Android coming soon</div>
+    <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>{eyebrow}</div>
     <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
-      One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
+      {headline} <em style={{ fontStyle: "italic", color: T.primaryL }}>{headlineEm}</em>
     </h2>
-    <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>14-day free trial. Cancel anytime.</p>
+    <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>{sub}</p>
     <button
       onClick={onStart}
       style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
     >
-      Get started free →
+      {button}
     </button>
   </div>
 );
@@ -86,6 +87,7 @@ const CtaDark = ({ onStart }: { onStart: () => void }) => (
 export default function Index() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   if (loading) return null;
   if (user) return <Navigate to="/app" replace />;
@@ -100,40 +102,40 @@ export default function Index() {
       {/* ── Hero ── */}
       <section style={{ ...sec, paddingBottom: 56 }}>
         <div style={max}>
-          <Eyebrow>Available on Web · iOS &amp; Android coming soon</Eyebrow>
+          <Eyebrow>{t('website.hero.eyebrow')}</Eyebrow>
           <h1 style={{ fontFamily: lora, fontSize: "clamp(34px,5vw,52px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", maxWidth: 680, marginBottom: 20, color: T.ink }}>
-            Imagine every family calendar, every task, every list — all running on your voice.
+            {t('website.hero.headline')}
           </h1>
           <p style={{ fontSize: 18, fontWeight: 300, color: T.inkV, maxWidth: 520, lineHeight: 1.65, marginBottom: 32 }}>
-            Eazy.Family brings it all together in one elegant — and surprisingly intelligent — button.
+            {t('website.hero.sub')}
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24, alignItems: "center" }}>
             <button
               onClick={() => document.getElementById("orbe-section")?.scrollIntoView({ behavior: "smooth" })}
               style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", letterSpacing: "0.01em", transition: "all 0.15s" }}
             >
-              Meet the Orbe →
+              {t('website.hero.meetOrbe')}
             </button>
             <button
               onClick={() => navigate("/onboarding")}
               style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
             >
-              Download the app
+              {t('website.hero.downloadApp')}
             </button>
           </div>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {["Secure & Private", "Your data is never sold", "Works across all devices"].map(t => (
-              <span key={t} style={{ fontSize: 12, color: T.faint, display: "flex", alignItems: "center", gap: 6 }}>
+            {([t('website.hero.check1'), t('website.hero.check2'), t('website.hero.check3')] as string[]).map(item => (
+              <span key={item} style={{ fontSize: 12, color: T.faint, display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ width: 16, height: 16, borderRadius: "50%", background: T.secondaryS, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <CheckSvg />
                 </span>
-                {t}
+                {item}
               </span>
             ))}
           </div>
           {/* Language availability row */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T.faint }}>Available in</span>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T.faint }}>{t('website.hero.availableIn')}</span>
             {[
               { flag: "🇬🇧", label: "English" },
               { flag: "🇩🇪", label: "Deutsch" },
@@ -146,36 +148,36 @@ export default function Index() {
               </span>
             ))}
           </div>
-          <OrbeLg />
+          <OrbeLg label={t('website.hero.orbeLabel')} />
         </div>
       </section>
 
       {/* ── Pain Points ── */}
       <section style={sec} id="features">
         <div style={max}>
-          <Eyebrow>Sound familiar?</Eyebrow>
+          <Eyebrow>{t('website.pain.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 12, color: T.ink }}>
-            Your family group chat is not a plan.<br />And synced calendars won't solve it.
+            {t('website.pain.headline')}<br />{t('website.pain.headlineSub')}
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 20, marginTop: 32 }}>
             {[
               {
                 bar: T.primary,
-                q: "\"You shouldn't need 20 minutes to plan your family's week.\"",
-                problem: "Your calendar. Their calendar. The school newsletter. The WhatsApp thread. Every week the same ritual — four sources to build a picture of your week, that still isn't clear.",
-                solution: "Shows every family member's schedule in one view, prepares you for each, and flags conflicts before they happen.",
+                q: t('website.pain.card1Quote'),
+                problem: t('website.pain.card1Problem'),
+                solution: t('website.pain.card1Solution'),
               },
               {
                 bar: T.secondary,
-                q: "\"Every family has two task lists. The one they made. And the one living in everyone's head.\"",
-                problem: "You're thinking about the leaking tap. He's thinking about the car service. Nobody's mentioned the birthday present that needs ordering by Thursday.",
-                solution: "Gives every task a place — shared or personal, assigned or open — so nothing gets missed.",
+                q: t('website.pain.card2Quote'),
+                problem: t('website.pain.card2Problem'),
+                solution: t('website.pain.card2Solution'),
               },
               {
                 bar: T.tertiary,
-                q: "\"It's in your head, his texts, and on three different notes apps.\"",
-                problem: "You're at the store. They're standing in front of the fridge. You guessed on the olive oil and come home to see they already bought bananas!",
-                solution: "Keeps one shared list, updated by voice, visible to everyone, intelligent enough to suggest what you're probably running out of.",
+                q: t('website.pain.card3Quote'),
+                problem: t('website.pain.card3Problem'),
+                solution: t('website.pain.card3Solution'),
               },
             ].map((c, i) => (
               <div key={i} style={{ background: T.warm, border: `0.5px solid ${T.outline}`, borderRadius: 16, padding: "28px 24px", display: "flex", flexDirection: "column" }}>
@@ -193,20 +195,20 @@ export default function Index() {
       {/* ── The Orbe ── */}
       <section style={{ ...sec, background: T.primaryS }} id="orbe-section">
         <div style={max}>
-          <Eyebrow>One button. Everything.</Eyebrow>
+          <Eyebrow>{t('website.orbe.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 12, color: T.ink }}>
-            You're done navigating menus and screens!<br />It's one button from now on.
+            {t('website.orbe.headline')}<br />{t('website.orbe.headlineSub')}
           </h2>
           <p style={{ fontSize: 17, fontWeight: 300, color: T.inkV, maxWidth: 480, lineHeight: 1.65, marginBottom: 40 }}>
-            Press the Orbe. Your whole family's day opens up — schedules, tasks, shopping. Add anything by voice. Let Eazy handle the rest.
+            {t('website.orbe.sub')}
           </p>
           {/* Feature grid */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 1, background: T.outline, border: `0.5px solid ${T.outline}`, borderRadius: 16, overflow: "hidden", marginTop: 32 }}>
             {[
-              { bg: T.primaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="#964735"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="#964735" opacity=".4"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="#964735" opacity=".4"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="#964735"/></svg>, title: "Calendar", desc: "Every family member. Every platform. Always in sync." },
-              { bg: T.secondaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2.5" stroke="#44664f" strokeWidth="1.5" fill="none"/><path d="M6 10L9 13L14 7" stroke="#44664f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: "Tasks", desc: "Shared, personal, assigned. Everything visible, nothing forgotten." },
-              { bg: T.tertiaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h8M4 15h6" stroke="#406373" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Shopping", desc: "One list for everyone. Updated by voice. Organised by category, smarter every week." },
-              { bg: T.primaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#964735" strokeWidth="1.5" fill="none"/><path d="M10 6v4l3 3" stroke="#964735" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: "Rituals", desc: "Daily habits and family routines, tracked with a simple check-in." },
+              { bg: T.primaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" fill="#964735"/><rect x="11" y="2" width="7" height="7" rx="1.5" fill="#964735" opacity=".4"/><rect x="2" y="11" width="7" height="7" rx="1.5" fill="#964735" opacity=".4"/><rect x="11" y="11" width="7" height="7" rx="1.5" fill="#964735"/></svg>, title: t('website.orbe.calendarTitle'), desc: t('website.orbe.calendarDesc') },
+              { bg: T.secondaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="2.5" stroke="#44664f" strokeWidth="1.5" fill="none"/><path d="M6 10L9 13L14 7" stroke="#44664f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>, title: t('website.orbe.tasksTitle'), desc: t('website.orbe.tasksDesc') },
+              { bg: T.tertiaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h8M4 15h6" stroke="#406373" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: t('website.orbe.shoppingTitle'), desc: t('website.orbe.shoppingDesc') },
+              { bg: T.primaryS, ico: <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#964735" strokeWidth="1.5" fill="none"/><path d="M10 6v4l3 3" stroke="#964735" strokeWidth="1.5" strokeLinecap="round"/></svg>, title: t('website.orbe.ritualsTitle'), desc: t('website.orbe.ritualsDesc') },
             ].map(f => (
               <div key={f.title} style={{ background: T.warm, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", background: f.bg, flexShrink: 0 }}>{f.ico}</div>
@@ -216,7 +218,7 @@ export default function Index() {
             ))}
           </div>
           <p style={{ fontFamily: lora, fontStyle: "italic", fontSize: 20, color: T.ink, marginTop: 40, lineHeight: 1.45, maxWidth: 520 }}>
-            "The Orbe doesn't just organise your family. It thinks ahead."
+            {t('website.orbe.quote')}
           </p>
         </div>
       </section>
@@ -224,19 +226,19 @@ export default function Index() {
       {/* ── Intelligence ── */}
       <section style={sec} id="intelligence">
         <div style={max}>
-          <Eyebrow>Family Intelligence</Eyebrow>
+          <Eyebrow>{t('website.intelligence.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 12, color: T.ink }}>
-            Most apps wait for you to tell them what to do.<br />Eazy doesn't.
+            {t('website.intelligence.headline')}<br />{t('website.intelligence.headlineSub')}
           </h2>
           <p style={{ fontSize: 17, fontWeight: 300, color: T.inkV, maxWidth: 480, lineHeight: 1.65, marginBottom: 40 }}>
-            Behind every press of the Orbe, Eazy is quietly working — learning your family's patterns, solving problems before they happen, and thinking ahead so you don't have to.
+            {t('website.intelligence.sub')}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 24, marginTop: 32 }} className="intel-grid">
             {[
-              { pip: T.primary, title: "Conflict Detection", problem: "Soccer pickup at 3pm. Dentist at 3pm. Different calendars, nobody noticed.", solution: "Eazy catches it before it's too late." },
-              { pip: T.tertiary, title: "Shopping Intelligence", problem: "You're running low on olive oil.", solution: "Eazy knows — because it's tracking how often you shop for your essentials. The suggestions are waiting before you open the app." },
-              { pip: T.secondary, title: "Task Escalation", problem: "That broken thing has been on the list for two weeks. The birthday present needs ordering by Thursday.", solution: "Eazy notices what's been sitting too long — before it becomes an issue." },
-              { pip: T.primaryL, title: "Pattern Recognition", problem: "The more your family uses Eazy, the smarter it gets. Shopping cycles, task habits, schedule rhythms…", solution: "Eazy focuses on how to support your family." },
+              { pip: T.primary, title: t('website.intelligence.card1Title'), problem: t('website.intelligence.card1Problem'), solution: t('website.intelligence.card1Solution') },
+              { pip: T.tertiary, title: t('website.intelligence.card2Title'), problem: t('website.intelligence.card2Problem'), solution: t('website.intelligence.card2Solution') },
+              { pip: T.secondary, title: t('website.intelligence.card3Title'), problem: t('website.intelligence.card3Problem'), solution: t('website.intelligence.card3Solution') },
+              { pip: T.primaryL, title: t('website.intelligence.card4Title'), problem: t('website.intelligence.card4Problem'), solution: t('website.intelligence.card4Solution') },
             ].map((c, i) => (
               <div key={i} style={{ background: T.warm, border: `0.5px solid ${T.outline}`, borderRadius: 16, padding: 24, display: "flex", flexDirection: "column" }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: T.ink, display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -253,7 +255,7 @@ export default function Index() {
             This is where Eazy.Family becomes something your family can actually depend on. And it's delivered to you every morning.{" "}
             <button onClick={() => document.getElementById("digest")?.scrollIntoView({ behavior: "smooth" })}
               style={{ color: T.primary, fontWeight: 400, background: "none", border: "none", cursor: "pointer", textDecoration: "none", fontFamily: dm, fontSize: 15 }}>
-              → Meet the Morning Digest
+              {t('website.intelligence.digestLink')}
             </button>
           </p>
         </div>
@@ -262,21 +264,21 @@ export default function Index() {
       {/* ── Morning Digest ── */}
       <section style={{ ...sec, background: T.sLow }} id="digest">
         <div style={max}>
-          <Eyebrow>Every morning</Eyebrow>
+          <Eyebrow>{t('website.digest.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 12, color: T.ink }}>
-            Before your day starts, Eazy already has.
+            {t('website.digest.headline')}
           </h2>
           <p style={{ fontSize: 17, fontWeight: 300, color: T.inkV, maxWidth: 480, lineHeight: 1.65, marginBottom: 40 }}>
-            One notification. No noise — just a clear picture of your family's day.
+            {t('website.digest.sub')}
           </p>
           <div className="digest-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, marginTop: 32 }}>
             {[
-              { label: "Today's Schedule", body: "Every family member. Every commitment. Conflicts flagged, travel time accounted for, nothing missing." },
-              { label: "One Thing", body: "The single most important task your family needs to handle today. Not a list. Just the one thing that matters most." },
-              { label: "Household Pulse", body: "What's open, what's overdue, what's been sitting too long. Eazy notices and organises it." },
-              { label: "Shopping Intelligence", body: "Three items you're probably running low on. Based on your household patterns. Add them with one tap." },
-              { label: "The Wins", body: "Your personal morning routine — 5 days straight! The family event is planned. Small things that deserve a moment." },
-              { label: "Coming Up", body: "The birthday is in 6 days. The car service you keep moving. What's worth preparing for before it sneaks up." },
+              { label: t('website.digest.card1Label'), body: t('website.digest.card1Body') },
+              { label: t('website.digest.card2Label'), body: t('website.digest.card2Body') },
+              { label: t('website.digest.card3Label'), body: t('website.digest.card3Body') },
+              { label: t('website.digest.card4Label'), body: t('website.digest.card4Body') },
+              { label: t('website.digest.card5Label'), body: t('website.digest.card5Body') },
+              { label: t('website.digest.card6Label'), body: t('website.digest.card6Body') },
             ].map(d => (
               <div key={d.label} style={{ background: T.warm, border: `0.5px solid ${T.outline}`, borderRadius: 16, padding: "28px 24px" }}>
                 <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: T.primary, marginBottom: 8 }}>{d.label}</div>
@@ -285,24 +287,24 @@ export default function Index() {
             ))}
           </div>
           <blockquote style={{ fontFamily: lora, fontStyle: "italic", fontSize: 18, color: T.ink, marginTop: 40, maxWidth: 540, lineHeight: 1.6, borderLeft: `2px solid ${T.primaryL}`, paddingLeft: 20 }}>
-            "The Morning Digest isn't about motivating. It organises. It remembers. It notices the things you might have missed when life moves fast."
+            {t('website.digest.blockquote')}
           </blockquote>
-          <p style={{ fontFamily: dm, fontSize: 18, fontWeight: 500, color: T.ink, marginTop: 16 }}>That's a family chief of staff.</p>
+          <p style={{ fontFamily: dm, fontSize: 18, fontWeight: 500, color: T.ink, marginTop: 16 }}>{t('website.digest.chiefOfStaff')}</p>
         </div>
       </section>
 
       {/* ── How It Works ── */}
       <section style={sec}>
         <div style={max}>
-          <Eyebrow>Get started</Eyebrow>
+          <Eyebrow>{t('website.howItWorks.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 32, color: T.ink }}>
-            You're set up in under two minutes.
+            {t('website.howItWorks.headline')}
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 32, marginTop: 32 }}>
             {[
-              { n: "01", title: "Create your space", desc: "Sign up, name your family, invite your partners and members. Everyone gets their own login. Apple or Android, everyone syncs instantly." },
-              { n: "02", title: "Connect your calendars", desc: "Google, Outlook, Apple — connect whatever each person uses. Eazy pulls every calendar into one shared family view. No switching. No double entry." },
-              { n: "03", title: "Press the Orbe", desc: "Add anything by voice or text — events, tasks, shopping items. Eazy routes it to the right place. Your family sees it instantly." },
+              { n: t('website.howItWorks.step1Number'), title: t('website.howItWorks.step1Title'), desc: t('website.howItWorks.step1Desc') },
+              { n: t('website.howItWorks.step2Number'), title: t('website.howItWorks.step2Title'), desc: t('website.howItWorks.step2Desc') },
+              { n: t('website.howItWorks.step3Number'), title: t('website.howItWorks.step3Title'), desc: t('website.howItWorks.step3Desc') },
             ].map(s => (
               <div key={s.n} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ fontFamily: lora, fontSize: 44, fontWeight: 400, color: T.outline, lineHeight: 1, letterSpacing: "-0.02em" }}>{s.n}</div>
@@ -314,13 +316,13 @@ export default function Index() {
           </div>
           <div style={{ background: T.primaryS, borderRadius: 16, padding: "28px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24, flexWrap: "wrap", marginTop: 40 }}>
             <div>
-              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink, marginBottom: 6 }}>Download Eazy.</div>
-              <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>Available on Web · iOS &amp; Android coming soon · English, German, French, Italian</div>
+              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink, marginBottom: 6 }}>{t('website.howItWorks.downloadTitle')}</div>
+              <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>{t('website.howItWorks.downloadSub')}</div>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>App Store — coming soon</button>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>Google Play — coming soon</button>
-              <button onClick={() => navigate("/onboarding")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>Get started on Web →</button>
+              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.appStore')}</button>
+              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.googlePlay')}</button>
+              <button onClick={() => navigate("/onboarding")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.howItWorks.getStartedWeb')}</button>
             </div>
           </div>
         </div>
@@ -329,20 +331,20 @@ export default function Index() {
       {/* ── Pricing ── */}
       <section style={sec} id="pricing">
         <div style={max}>
-          <Eyebrow>Pricing</Eyebrow>
+          <Eyebrow>{t('website.pricing.eyebrow')}</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 32, color: T.ink }}>
-            One plan. Try it free for 14 days.
+            {t('website.pricing.headline')}
           </h2>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
             {/* Family */}
             <div style={{ background: T.primaryS, border: `0.5px solid ${T.primary}`, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 480, width: "100%" }}>
-              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fff", background: T.primary, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>14-Day Free Trial</div>
-              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>Family</div>
-              <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>$3.75 <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>/ month</span></div>
-              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Billed annually at $44.99. Or $4.99 month-to-month.<br />Cancel anytime. Card required, not charged for 14 days.</div>
+              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fff", background: T.primary, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>{t('website.pricing.badge')}</div>
+              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>{t('website.pricing.planName')}</div>
+              <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>{t('website.pricing.price')} <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>{t('website.pricing.perMonth')}</span></div>
+              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>{t('website.pricing.billingNote')}<br />{t('website.pricing.billingNote2')}</div>
               <div style={{ height: "0.5px", background: T.outline }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {["Unlimited calendars, lists & family members", "Full intelligence layer — conflict detection, shopping frequency, task escalation", "Morning Digest — daily & email", "Full voice AI — Orbe & assistant", "One free month for every family you refer"].map(f => (
+                {([t('website.pricing.feature1'), t('website.pricing.feature2'), t('website.pricing.feature3'), t('website.pricing.feature4'), t('website.pricing.feature5')] as string[]).map(f => (
                   <div key={f} style={{ fontSize: 13, fontWeight: 300, color: T.inkV, display: "flex", alignItems: "flex-start", gap: 8, lineHeight: 1.5 }}>
                     <PfCheck />{f}
                   </div>
@@ -350,17 +352,24 @@ export default function Index() {
               </div>
               <div style={{ marginTop: "auto", paddingTop: 4 }}>
                 <button onClick={() => navigate("/onboarding")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
-                  Start your free trial →
+                  {t('website.pricing.startTrial')}
                 </button>
               </div>
-              <div style={{ textAlign: "center", fontSize: 12, color: T.faint, marginTop: -8 }}>Cancel before day 14 and you won't be charged.</div>
+              <div style={{ textAlign: "center", fontSize: 12, color: T.faint, marginTop: -8 }}>{t('website.pricing.cancelNote')}</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Footer CTA ── */}
-      <CtaDark onStart={() => navigate("/onboarding")} />
+      <CtaDark
+        onStart={() => navigate("/onboarding")}
+        eyebrow={t('website.cta.eyebrow')}
+        headline={t('website.cta.headline')}
+        headlineEm={t('website.cta.headlineEm')}
+        sub={t('website.cta.sub')}
+        button={t('website.cta.button')}
+      />
 
       <style>{`
         @media (max-width: 720px) { .digest-grid { grid-template-columns: repeat(2,1fr) !important; } }
