@@ -12,6 +12,22 @@ function scrollToSection(id: string) {
   if (el) el.scrollIntoView({ behavior: "smooth" });
 }
 
+// Radial dots icon (closed state)
+const DotsIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="3.5" r="1.5" fill="white" />
+    <circle cx="3.04" cy="11" r="1.5" fill="white" />
+    <circle cx="12.96" cy="11" r="1.5" fill="white" />
+  </svg>
+);
+
+// × icon (open state)
+const CloseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M2 2L12 12M2 12L12 2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
 export function PublicNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -107,22 +123,56 @@ export function PublicNav() {
           onClick={() => navigate("/onboarding")}
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "9999px" }}
         >
-          Download the app
+          Get started
         </button>
       </div>
 
-      {/* Mobile hamburger */}
+      {/* Mobile Orbe toggle */}
       <button
         className="md:hidden"
         onClick={() => setMenuOpen(v => !v)}
         aria-label="Toggle menu"
-        style={{ background: "none", border: "none", cursor: "pointer", padding: "8px", color: INK }}
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: "50%",
+          background: PRIMARY,
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          boxShadow: menuOpen
+            ? `0 0 0 6px rgba(150,71,53,0.12), 0 0 0 12px rgba(150,71,53,0.06)`
+            : `0 0 0 0px rgba(150,71,53,0)`,
+          animation: menuOpen ? "none" : "nav-orbe-pulse 3s ease-in-out infinite",
+          position: "relative",
+        }}
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          {menuOpen
-            ? <><path d="M4 4L16 16M4 16L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>
-            : <><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>}
-        </svg>
+        <span style={{
+          position: "absolute",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "opacity 0.2s, transform 0.2s",
+          opacity: menuOpen ? 0 : 1,
+          transform: menuOpen ? "scale(0.6)" : "scale(1)",
+        }}>
+          <DotsIcon />
+        </span>
+        <span style={{
+          position: "absolute",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          transition: "opacity 0.2s, transform 0.2s",
+          opacity: menuOpen ? 1 : 0,
+          transform: menuOpen ? "scale(1)" : "scale(0.6)",
+        }}>
+          <CloseIcon />
+        </span>
       </button>
 
       {/* Mobile menu */}
@@ -153,11 +203,18 @@ export function PublicNav() {
             </button>
             <button onClick={() => { setMenuOpen(false); navigate("/onboarding"); }}
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "11px", borderRadius: "9999px" }}>
-              Download the app
+              Get started
             </button>
           </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes nav-orbe-pulse {
+          0%, 100% { box-shadow: 0 0 0 0px rgba(150,71,53,0.18), 0 0 0 0px rgba(150,71,53,0.08); }
+          50%       { box-shadow: 0 0 0 6px rgba(150,71,53,0.12), 0 0 0 12px rgba(150,71,53,0.05); }
+        }
+      `}</style>
     </nav>
   );
 }
