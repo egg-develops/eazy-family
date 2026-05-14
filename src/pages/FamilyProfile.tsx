@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const inviteSchema = z.object({
 }).refine((data) => data.email || data.phone, { message: "Either email or phone is required" });
 
 const FamilyProfile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -157,8 +159,8 @@ const FamilyProfile = () => {
   const handleInviteMember = async () => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "You must be logged in to invite members",
+        title: t('familyProfile.authRequired'),
+        description: t('familyProfile.mustBeLoggedIn'),
         variant: "destructive",
       });
       return;
@@ -166,8 +168,8 @@ const FamilyProfile = () => {
 
     if (!familyId) {
       toast({
-        title: "No family found",
-        description: "Create or join a family first before inviting members.",
+        title: t('familyProfile.noFamilyFound'),
+        description: t('familyProfile.noFamilyCreate'),
         variant: "destructive",
       });
       return;
@@ -233,10 +235,10 @@ if (error) throw error;
       }
 
       toast({
-        title: "Invitation sent!",
+        title: t('familyProfile.invitationSent'),
         description: inviteMethod === "email"
-          ? `Invite email sent to ${validationData.email}`
-          : `Share this link with your family member: ${inviteLink}`,
+          ? `${t('familyProfile.inviteEmailSentTo')} ${validationData.email}`
+          : `${t('familyProfile.shareThisLink')} ${inviteLink}`,
       });
 
       setIsInviteDialogOpen(false);
@@ -247,15 +249,15 @@ if (error) throw error;
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Validation Error",
+          title: t('familyProfile.validationError') || "Validation Error",
           description: error.issues[0].message,
           variant: "destructive",
         });
       } else {
         logError("Error sending invitation:", error);
         toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to send invitation",
+          title: t('common.error'),
+          description: error instanceof Error ? error.message : t('familyProfile.failedToSendInvitation') || "Failed to send invitation",
           variant: "destructive",
         });
       }
@@ -273,11 +275,11 @@ if (error) throw error;
         .eq("id", memberId)
         .eq("family_id", familyId);
       if (error) throw error;
-      toast({ title: "Member removed", description: "Family member has been removed" });
+      toast({ title: t('familyProfile.memberRemoved'), description: t('familyProfile.memberRemovedDesc') });
       loadFamilyData();
     } catch (error) {
       logError("Error removing member:", error);
-      toast({ title: "Error", description: "Failed to remove family member", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('familyProfile.errorRemovingMember'), variant: "destructive" });
     }
   };
 
@@ -290,11 +292,11 @@ if (error) throw error;
         .eq("id", invitationId)
         .eq("inviter_id", user.id);
       if (error) throw error;
-      toast({ title: "Invitation cancelled", description: "Invitation has been cancelled" });
+      toast({ title: t('familyProfile.invitationCancelled'), description: t('familyProfile.invitationCancelledDesc') });
       loadFamilyData();
     } catch (error) {
       logError("Error cancelling invitation:", error);
-      toast({ title: "Error", description: "Failed to cancel invitation", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('familyProfile.errorCancellingInvite'), variant: "destructive" });
     }
   };
 
@@ -317,8 +319,8 @@ if (error) throw error;
     if (!familyInfo) return;
     navigator.clipboard.writeText(familyInfo.invite_code);
     toast({
-      title: "Copied!",
-      description: "Invite code copied to clipboard",
+      title: t('familyProfile.copied'),
+      description: t('familyProfile.copiedDesc'),
     });
   };
 
@@ -330,7 +332,7 @@ if (error) throw error;
       navigator.share({ title: `Join ${familyInfo.name} on Eazy.Family`, text: shareText, url: inviteUrl }).catch(() => {});
     } else {
       navigator.clipboard.writeText(shareText);
-      toast({ title: "Link copied!", description: "Share it with your family members" });
+      toast({ title: t('familyProfile.linkCopied'), description: t('familyProfile.linkCopiedDesc') });
     }
   };
 
@@ -352,16 +354,16 @@ if (error) throw error;
       if (updateError) throw updateError;
 
       toast({
-        title: "Code regenerated",
-        description: "New invite code created. Old code is now invalid.",
+        title: t('familyProfile.codeRegenerated'),
+        description: t('familyProfile.codeRegeneratedDesc'),
       });
 
       loadFamilyData();
     } catch (error) {
       logError('Error regenerating code:', error);
       toast({
-        title: "Error",
-        description: "Failed to regenerate invite code",
+        title: t('common.error'),
+        description: t('familyProfile.codeRegeneratedDesc') || "Failed to regenerate invite code",
         variant: "destructive",
       });
     } finally {
@@ -379,8 +381,8 @@ if (error) throw error;
     const trimmedName = familyName.trim();
     if (!trimmedName) {
       toast({
-        title: "Family name required",
-        description: "Please enter a name for your family",
+        title: t('familyProfile.familyNameRequired'),
+        description: t('familyProfile.enterFamilyName'),
         variant: "destructive",
       });
       return;
@@ -388,8 +390,8 @@ if (error) throw error;
 
     if (trimmedName.length > 100) {
       toast({
-        title: "Name too long",
-        description: "Family name must be less than 100 characters",
+        title: t('familyProfile.nameTooLong'),
+        description: t('familyProfile.nameTooLongDesc'),
         variant: "destructive",
       });
       return;
@@ -397,8 +399,8 @@ if (error) throw error;
 
     if (!/^[a-zA-Z0-9\s'-]+$/.test(trimmedName)) {
       toast({
-        title: "Invalid characters",
-        description: "Family name can only contain letters, numbers, spaces, hyphens, and apostrophes",
+        title: t('familyProfile.invalidCharacters'),
+        description: t('familyProfile.invalidCharactersDesc'),
         variant: "destructive",
       });
       return;
@@ -446,8 +448,8 @@ if (error) throw error;
       if (memberError) throw memberError;
 
       toast({
-        title: "Family created! 🎉",
-        description: "You can now invite family members using your invite code",
+        title: t('familyProfile.familyCreated'),
+        description: t('familyProfile.familyCreatedDesc'),
       });
 
       setFamilyName("");
@@ -456,7 +458,7 @@ if (error) throw error;
     } catch (error) {
       logError('Error creating family:', error);
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: "Failed to create family. Please try again.",
         variant: "destructive",
       });
@@ -473,24 +475,24 @@ if (error) throw error;
         <div className="flex-1 min-w-0">
           <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2 flex-wrap">
             <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-            <span>Family Profile</span>
+            <span>{t('familyProfile.title')}</span>
           </h1>
         </div>
         <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 gradient-primary text-white border-0 flex-shrink-0 whitespace-nowrap">
               <Plus className="h-4 w-4" />
-              Invite Member
+              {t('familyProfile.inviteMember')}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Invite Family Member</DialogTitle>
-              <DialogDescription>Send an invitation to join your family on the Family Plan</DialogDescription>
+              <DialogTitle>{t('familyProfile.inviteFamilyMember')}</DialogTitle>
+              <DialogDescription>{t('familyProfile.inviteDescription')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">Invite Method</Label>
+                <Label className="text-xs sm:text-sm">{t('familyProfile.inviteMethod')}</Label>
                 <Select value={inviteMethod} onValueChange={(value: "email" | "phone") => setInviteMethod(value)}>
                   <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
                     <SelectValue />
@@ -514,35 +516,35 @@ if (error) throw error;
 
               {inviteMethod === "email" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs sm:text-sm">Email Address</Label>
+                  <Label htmlFor="email" className="text-xs sm:text-sm">{t('familyProfile.emailAddress')}</Label>
                   <Input id="email" type="email" placeholder="family@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-xs sm:text-sm">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-xs sm:text-sm">{t('familyProfile.phoneNumber')}</Label>
                   <Input id="phone" type="tel" placeholder="+1 234 567 8900" value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">Role</Label>
+                <Label className="text-xs sm:text-sm">{t('familyProfile.role')}</Label>
                 <Select value={inviteRole} onValueChange={setInviteRole}>
                   <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="parent">Parent</SelectItem>
-                    <SelectItem value="child">Child</SelectItem>
-                    <SelectItem value="grandparent">Grandparent</SelectItem>
-                    <SelectItem value="caretaker">Caretaker</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="parent">{t('familyProfile.roles.parent')}</SelectItem>
+                    <SelectItem value="child">{t('familyProfile.roles.child')}</SelectItem>
+                    <SelectItem value="grandparent">{t('familyProfile.roles.grandparent')}</SelectItem>
+                    <SelectItem value="caretaker">{t('familyProfile.roles.caretaker')}</SelectItem>
+                    <SelectItem value="other">{t('familyProfile.roles.other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <Button onClick={handleInviteMember} disabled={sending} className="w-full text-xs sm:text-sm min-h-[44px]">
                 <Send className="h-4 w-4 mr-2" />
-                {sending ? "Sending..." : "Send Invitation"}
+                {sending ? t('familyProfile.sending') : t('familyProfile.sendInvitation')}
               </Button>
             </div>
           </DialogContent>
@@ -555,10 +557,10 @@ if (error) throw error;
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              Invite Family Members
+              {t('familyProfile.inviteFamilyMembers')}
             </CardTitle>
             <CardDescription>
-              Share this code to invite people into <strong>{familyInfo.name}</strong> on Eazy.Family
+              {t('familyProfile.shareCodeDesc')} <strong>{familyInfo.name}</strong> on Eazy.Family
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -577,7 +579,7 @@ if (error) throw error;
                 className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
                 <Copy className="h-4 w-4 flex-shrink-0" />
-                Copy Code
+                {t('familyProfile.copyCode')}
               </Button>
               <Button
                 variant="outline"
@@ -585,12 +587,12 @@ if (error) throw error;
                   if (!familyInfo) return;
                   const url = `https://eazy.family/join-family?code=${familyInfo.invite_code}`;
                   navigator.clipboard.writeText(url);
-                  toast({ title: "Link copied!", description: "Paste it anywhere to share" });
+                  toast({ title: t('familyProfile.linkCopied'), description: t('familyProfile.linkCopiedDesc') });
                 }}
                 className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
                 <Copy className="h-4 w-4 flex-shrink-0" />
-                Copy Link
+                {t('familyProfile.copyLink')}
               </Button>
               <Button
                 variant="outline"
@@ -598,7 +600,7 @@ if (error) throw error;
                 className="gap-2 flex-1 min-w-[110px] min-h-[44px] px-4"
               >
                 <Share2 className="h-4 w-4 flex-shrink-0" />
-                Share
+                {t('familyProfile.share')}
               </Button>
             </div>
 
@@ -612,9 +614,9 @@ if (error) throw error;
                 className="w-full text-muted-foreground hover:text-destructive gap-2 min-h-[40px]"
               >
                 <RefreshCw className={`h-4 w-4 flex-shrink-0 ${regeneratingCode ? 'animate-spin' : ''}`} />
-                {regeneratingCode ? 'Regenerating…' : 'Regenerate Code'}
+                {regeneratingCode ? t('familyProfile.regeneratingCode') : t('familyProfile.regenerateCode')}
               </Button>
-              <p className="text-xs text-muted-foreground text-center mt-1">Old code will stop working</p>
+              <p className="text-xs text-muted-foreground text-center mt-1">{t('familyProfile.oldCodeWarning')}</p>
             </div>
           </CardContent>
         </Card>
@@ -625,28 +627,28 @@ if (error) throw error;
         <Card className="shadow-custom-md">
           <CardContent className="p-8 text-center">
             <UserPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-medium text-lg mb-2">No Family Found</h3>
+            <h3 className="font-medium text-lg mb-2">{t('familyProfile.noFamilyFound')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Create your family to start inviting members.
+              {t('familyProfile.noFamilyFoundDesc')}
             </p>
             <Dialog open={isCreateFamilyOpen} onOpenChange={setIsCreateFamilyOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary text-white border-0">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Family
+                  {t('familyProfile.createFamily')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Your Family</DialogTitle>
-                  <DialogDescription>Choose a name for your family</DialogDescription>
+                  <DialogTitle>{t('familyProfile.createYourFamily')}</DialogTitle>
+                  <DialogDescription>{t('familyProfile.chooseFamilyName')}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="family-name">Family Name</Label>
-                    <Input 
-                      id="family-name" 
-                      placeholder="e.g., The Johnsons" 
+                    <Label htmlFor="family-name">{t('familyProfile.familyNameLabel')}</Label>
+                    <Input
+                      id="family-name"
+                      placeholder={t('familyProfile.familyNamePlaceholder')}
                       value={familyName}
                       onChange={(e) => setFamilyName(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleCreateFamily()}
@@ -654,10 +656,10 @@ if (error) throw error;
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsCreateFamilyOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setIsCreateFamilyOpen(false)}>{t('familyProfile.cancel')}</Button>
                   <Button onClick={handleCreateFamily} className="gradient-primary text-white border-0">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create
+                    {t('familyProfile.create')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -667,17 +669,17 @@ if (error) throw error;
       ) : (
         <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>Family Members</CardTitle>
-          <CardDescription>Active members of your family</CardDescription>
+          <CardTitle>{t('familyProfile.familyMembers')}</CardTitle>
+          <CardDescription>{t('familyProfile.activeMembers')}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading family members...</div>
+            <div className="text-center py-8 text-muted-foreground">{t('familyProfile.loadingMembers')}</div>
           ) : familyMembers.length === 0 ? (
             <div className="text-center py-8">
               <UserPlus className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p className="text-muted-foreground">No family members yet</p>
-              <p className="text-sm text-muted-foreground">Invite your first family member to get started</p>
+              <p className="text-muted-foreground">{t('familyProfile.noMembersYet')}</p>
+              <p className="text-sm text-muted-foreground">{t('familyProfile.inviteFirstMember')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -703,7 +705,7 @@ if (error) throw error;
                       )}
                       {!member.email && !member.phone && (
                         <p className="text-xs text-muted-foreground italic">
-                          Contact details not shared
+                          {t('familyProfile.contactNotShared')}
                         </p>
                       )}
                     </div>
@@ -723,8 +725,8 @@ if (error) throw error;
       {invitations.length > 0 && (
         <Card className="shadow-custom-md">
           <CardHeader>
-            <CardTitle>Pending Invitations</CardTitle>
-            <CardDescription>Invitations waiting to be accepted</CardDescription>
+            <CardTitle>{t('familyProfile.pendingInvitations')}</CardTitle>
+            <CardDescription>{t('familyProfile.pendingDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -732,7 +734,7 @@ if (error) throw error;
                 <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline">Pending</Badge>
+                      <Badge variant="outline">{t('familyProfile.pending')}</Badge>
                       <Badge variant={getRoleBadgeColor(invitation.role)}>{invitation.role}</Badge>
                     </div>
                     <div className="space-y-1">
@@ -748,11 +750,11 @@ if (error) throw error;
                           {invitation.invitee_phone}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground">Expires: {new Date(invitation.expires_at).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">{t('familyProfile.expires')} {new Date(invitation.expires_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => handleCancelInvitation(invitation.id)}>
-                    Cancel
+                    {t('familyProfile.cancelInvite')}
                   </Button>
                 </div>
               ))}

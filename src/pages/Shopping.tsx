@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
 
 interface ShoppingItem {
   id: string;
@@ -37,6 +38,7 @@ const MUTED = '#7A6660';
 const BG = '#F7F3ED';
 
 const Shopping = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -84,7 +86,7 @@ const Shopping = () => {
         }]);
       }
       setNewItem('');
-    } catch { toast({ title: 'Could not add item', variant: 'destructive' }); }
+    } catch { toast({ title: t('shopping.couldNotAdd'), variant: 'destructive' }); }
   };
 
   const toggleItem = async (id: string) => {
@@ -112,7 +114,7 @@ const Shopping = () => {
     if (!completedIds.length) return;
     setItems(prev => prev.filter(i => !i.completed));
     await supabase.from('tasks').delete().in('id', completedIds);
-    toast({ title: `${completedIds.length} item${completedIds.length > 1 ? 's' : ''} removed` });
+    toast({ title: `${completedIds.length} ${t('shopping.itemsRemoved')}` });
   };
 
   const stopListening = () => {
@@ -122,7 +124,7 @@ const Shopping = () => {
 
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: 'Voice input not supported in this browser' }); return; }
+    if (!SR) { toast({ title: t('shopping.voiceNotSupported') }); return; }
     capturedRef.current = '';
     baseTextRef.current = '';
     isListeningRef.current = true;
@@ -160,7 +162,7 @@ const Shopping = () => {
 
       r.onerror = (e: any) => {
         if (e.error === 'aborted' || e.error === 'no-speech') return;
-        if (e.error === 'not-allowed') toast({ title: 'Microphone access denied', description: 'Allow microphone in your browser settings.' });
+        if (e.error === 'not-allowed') toast({ title: t('shopping.micDenied'), description: t('shopping.micDeniedDesc') });
         isListeningRef.current = false;
         setIsListening(false);
       };
@@ -189,23 +191,23 @@ const Shopping = () => {
 
       {/* Hidden camera input */}
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={() => toast({ title: 'Camera capture coming soon', description: 'AI will extract items from your photo.' })}
+        onChange={() => toast({ title: t('shopping.cameraCaptureSoon'), description: t('shopping.cameraCaptureSoonDesc') })}
       />
 
       {/* Sync row */}
       <div className="flex items-center justify-between">
         <button onClick={load} className="flex items-center gap-1.5 text-xs" style={{ color: MUTED }}>
           <RefreshCw className="w-3 h-3" />
-          Last synced: {format(lastSynced, 'h:mm a')}
+          {t('shopping.lastSynced')} {format(lastSynced, 'h:mm a')}
         </button>
         {/* Personal / Shared toggle */}
         <div className="flex rounded-full p-0.5" style={{ background: BG, border: `1px solid ${BORDER}` }}>
-          {(['personal', 'shared'] as const).map(t => (
-            <button key={t} onClick={() => setListType(t)}
+          {(['personal', 'shared'] as const).map(type => (
+            <button key={type} onClick={() => setListType(type)}
               className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
-              style={{ background: listType === t ? TC : 'transparent', color: listType === t ? '#fff' : MUTED }}
+              style={{ background: listType === type ? TC : 'transparent', color: listType === type ? '#fff' : MUTED }}
             >
-              {t === 'shared' ? 'Shared' : 'Personal'}
+              {type === 'shared' ? t('shopping.sharedList') : t('shopping.personalList')}
             </button>
           ))}
         </div>
@@ -220,7 +222,7 @@ const Shopping = () => {
           value={newItem}
           onChange={e => setNewItem(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && addItem()}
-          placeholder="Add an item…"
+          placeholder={t('shopping.addItemPlaceholder')}
           className="flex-1 outline-none text-sm"
           style={{ color: '#1C1C18', background: 'transparent' }}
         />
@@ -244,14 +246,14 @@ const Shopping = () => {
           <Sparkles className="w-4 h-4 text-white" />
         </div>
         <p className="flex-1 text-sm leading-snug pt-0.5" style={{ color: '#44664F' }}>
-          Add items above, take a picture of your recipe list or Tap EZ Orbe to use voice — I'll add all the items.
+          {t('shopping.smartSuggestion')}
         </p>
       </div>
 
       {/* Grouped uncompleted items */}
       {Object.entries(grouped).map(([cat, catItems]) => (
         <div key={cat} className="space-y-1.5">
-          <p className="text-xs font-semibold tracking-widest uppercase px-1" style={{ color: MUTED }}>{cat}</p>
+          <p className="text-xs font-semibold tracking-widest uppercase px-1" style={{ color: MUTED }}>{t(`shopping.categories.${cat}`, cat)}</p>
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
             {catItems.map((item, idx) => (
               <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? `1px solid #F1EDE7` : 'none' }}>
@@ -286,10 +288,10 @@ const Shopping = () => {
       {completed.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center justify-between px-1">
-            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: MUTED }}>Completed</p>
+            <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: MUTED }}>{t('shopping.completed')}</p>
             <button onClick={clearCompleted} className="flex items-center gap-1 text-xs font-semibold" style={{ color: MUTED }}>
               <RefreshCw className="w-3 h-3" />
-              Remove all
+              {t('shopping.removeAll')}
             </button>
           </div>
           <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
@@ -313,8 +315,8 @@ const Shopping = () => {
       {!loading && filtered.length === 0 && (
         <div className="text-center py-12">
           <p className="text-3xl mb-3">🛒</p>
-          <p className="font-semibold" style={{ color: '#1C1C18' }}>Your list is empty</p>
-          <p className="text-sm mt-1" style={{ color: MUTED }}>Add items above or use EZ Capture</p>
+          <p className="font-semibold" style={{ color: '#1C1C18' }}>{t('shopping.emptyList')}</p>
+          <p className="text-sm mt-1" style={{ color: MUTED }}>{t('shopping.emptyListHint')}</p>
         </div>
       )}
     </div>

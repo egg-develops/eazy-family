@@ -131,6 +131,21 @@ export default function Index() {
               </span>
             ))}
           </div>
+          {/* Language availability row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T.faint }}>Available in</span>
+            {[
+              { flag: "🇬🇧", label: "English" },
+              { flag: "🇩🇪", label: "Deutsch" },
+              { flag: "🇫🇷", label: "Français" },
+              { flag: "🇮🇹", label: "Italiano" },
+            ].map(({ flag, label }) => (
+              <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: T.inkV, background: T.sMid, border: `0.5px solid ${T.outline}`, borderRadius: "9999px", padding: "3px 10px" }}>
+                <span style={{ fontSize: 14, lineHeight: 1 }}>{flag}</span>
+                {label}
+              </span>
+            ))}
+          </div>
           <OrbeLg />
         </div>
       </section>

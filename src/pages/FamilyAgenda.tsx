@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Mic, MicOff, Camera, X, Plus, MapPin, FileText, BarChart2,
   Image, Play, ChevronLeft, Settings2, Send,
@@ -325,6 +326,7 @@ const PollCreator = ({
   onCreate: (question: string, options: string[]) => void;
   onCancel: () => void;
 }) => {
+  const { t } = useTranslation();
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
 
@@ -339,13 +341,13 @@ const PollCreator = ({
   return (
     <div className="mx-4 mb-3 rounded-2xl p-4 shadow-lg" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold" style={{ color: "#1C1C18" }}>Create Poll</p>
+        <p className="text-sm font-semibold" style={{ color: "#1C1C18" }}>{t('familyAgenda.createPoll')}</p>
         <button onClick={onCancel}><X className="w-4 h-4" style={{ color: MUTED }} /></button>
       </div>
       <input
         className="w-full text-sm rounded-xl px-3 py-2 mb-3 outline-none"
         style={{ border: `1px solid ${BORDER}`, color: "#1C1C18" }}
-        placeholder="Ask a question…"
+        placeholder={t('familyAgenda.askQuestion')}
         value={question}
         onChange={e => setQuestion(e.target.value)}
         autoFocus
@@ -355,7 +357,7 @@ const PollCreator = ({
           key={i}
           className="w-full text-sm rounded-xl px-3 py-2 mb-2 outline-none"
           style={{ border: `1px solid ${BORDER}`, color: "#1C1C18" }}
-          placeholder={`Option ${i + 1}`}
+          placeholder={`${t('familyAgenda.optionPlaceholder')} ${i + 1}`}
           value={opt}
           onChange={e => setOption(i, e.target.value)}
         />
@@ -367,7 +369,7 @@ const PollCreator = ({
             className="text-xs px-3 py-1.5 rounded-full"
             style={{ background: SAGE_BG, color: SAGE }}
           >
-            + Add Option
+            {t('familyAgenda.addOption')}
           </button>
         )}
         <button
@@ -376,7 +378,7 @@ const PollCreator = ({
           className="text-xs px-4 py-1.5 rounded-full font-semibold text-white ml-auto"
           style={{ background: valid ? TC : BORDER }}
         >
-          Create Poll
+          {t('familyAgenda.createPollBtn')}
         </button>
       </div>
     </div>
@@ -387,6 +389,7 @@ const PollCreator = ({
 // Main component
 // ─────────────────────────────────────────────
 const FamilyAgenda = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -474,7 +477,7 @@ const FamilyAgenda = () => {
   // ── Voice recording ─────────────────────────
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: "Voice input not supported in this browser" }); return; }
+    if (!SR) { toast({ title: t('familyAgenda.voiceNotSupported') }); return; }
     capturedRef.current = "";
     baseTextRef.current = "";
     isListeningRef.current = true;
@@ -524,7 +527,7 @@ const FamilyAgenda = () => {
 
       r.onerror = (e: any) => {
         if (e.error === "aborted" || e.error === "no-speech") return;
-        if (e.error === "not-allowed") toast({ title: "Microphone access denied", description: "Allow microphone in your browser settings." });
+        if (e.error === "not-allowed") toast({ title: t('familyAgenda.micDenied'), description: t('familyAgenda.micDeniedDesc') });
         isListeningRef.current = false;
         setIsListening(false);
         setLiveTranscript("");
@@ -559,7 +562,7 @@ const FamilyAgenda = () => {
       const url = await compressAndUpload(file, "user-uploads", path);
       addMessage({ type: "image", imageUrl: url });
     } catch {
-      toast({ title: "Image upload failed", variant: "destructive" });
+      toast({ title: t('familyAgenda.imageUploadFailed'), variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -567,7 +570,7 @@ const FamilyAgenda = () => {
 
   // ── Location ────────────────────────────────
   const shareLocation = () => {
-    if (!navigator.geolocation) { toast({ title: "Geolocation not supported" }); return; }
+    if (!navigator.geolocation) { toast({ title: t('familyAgenda.geolocationNotSupported') }); return; }
     setTrayOpen(false);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -584,7 +587,7 @@ const FamilyAgenda = () => {
         } catch { /* use fallback */ }
         addMessage({ type: "location", locationName, lat, lon });
       },
-      () => toast({ title: "Could not get location", description: "Check your location permissions." })
+      () => toast({ title: t('familyAgenda.couldNotGetLocation'), description: t('familyAgenda.checkLocationPermissions') })
     );
   };
 
@@ -684,11 +687,11 @@ const FamilyAgenda = () => {
         >
           <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
         </button>
-        <p className="font-bold text-base" style={{ color: "#1C1C18" }}>Family Channel</p>
+        <p className="font-bold text-base" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
         <button
           className="w-9 h-9 flex items-center justify-center rounded-full"
           style={{ flexShrink: 0 }}
-          onClick={() => toast({ title: "Settings coming soon" })}
+          onClick={() => toast({ title: t('familyAgenda.settingsComingSoon') })}
         >
           <Settings2 className="w-5 h-5" style={{ color: MUTED }} />
         </button>
@@ -704,7 +707,7 @@ const FamilyAgenda = () => {
             className="mx-auto px-4 py-1.5 rounded-full text-xs font-medium"
             style={{ background: SAGE_BG, color: SAGE, marginTop: "6px" }}
           >
-            🌙 QUIET HOURS · ACTIVE UNTIL 7:00 AM
+            {t('familyAgenda.quietHours')}
           </div>
         </div>
       )}
@@ -723,9 +726,9 @@ const FamilyAgenda = () => {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-full gap-3 text-center py-16">
             <div className="text-4xl">💬</div>
-            <p className="font-semibold" style={{ color: "#1C1C18" }}>Family Channel</p>
+            <p className="font-semibold" style={{ color: "#1C1C18" }}>{t('familyAgenda.emptyChannel')}</p>
             <p className="text-sm" style={{ color: MUTED, maxWidth: "240px" }}>
-              Share messages, voice notes, photos, locations, and polls with everyone.
+              {t('familyAgenda.emptyChannelDesc')}
             </p>
           </div>
         )}
@@ -804,7 +807,7 @@ const FamilyAgenda = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: SAGE_BG }}>
                   <Image className="w-5 h-5" style={{ color: SAGE }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: MUTED }}>Photos</span>
+                <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.photos')}</span>
               </button>
 
               {/* LOCATION */}
@@ -815,7 +818,7 @@ const FamilyAgenda = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#FEF3F0" }}>
                   <MapPin className="w-5 h-5" style={{ color: TC }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: MUTED }}>Location</span>
+                <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.location')}</span>
               </button>
 
               {/* DOCUMENT */}
@@ -826,7 +829,7 @@ const FamilyAgenda = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#F3F0FE" }}>
                   <FileText className="w-5 h-5" style={{ color: "#6B5EAD" }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: MUTED }}>Document</span>
+                <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.document')}</span>
               </button>
 
               {/* POLL */}
@@ -837,7 +840,7 @@ const FamilyAgenda = () => {
                 <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#FEF9E7" }}>
                   <BarChart2 className="w-5 h-5" style={{ color: "#B8860B" }} />
                 </div>
-                <span className="text-xs font-medium" style={{ color: MUTED }}>Poll</span>
+                <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.poll')}</span>
               </button>
             </div>
           </div>
@@ -876,7 +879,7 @@ const FamilyAgenda = () => {
             value={isListening ? liveTranscript : text}
             onChange={e => { if (!isListening) setText(e.target.value); }}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); } }}
-            placeholder={isListening ? "Listening…" : ""}
+            placeholder={isListening ? t('familyAgenda.listening') : ""}
             disabled={isListening || uploading}
             className="flex-1 bg-transparent outline-none text-sm"
             style={{ color: "#1C1C18", minWidth: 0 }}
@@ -927,7 +930,7 @@ const FamilyAgenda = () => {
 
         {/* Uploading indicator */}
         {uploading && (
-          <p className="text-xs text-center mt-1" style={{ color: MUTED }}>Uploading…</p>
+          <p className="text-xs text-center mt-1" style={{ color: MUTED }}>{t('familyAgenda.uploading')}</p>
         )}
       </div>
 

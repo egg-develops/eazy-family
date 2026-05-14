@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from 'react-i18next';
 import { CheckSquare, ShoppingCart, ClipboardList, Users, Filter, Plus, Check, UserPlus, Mail, Phone, Send, Search, ChevronDown, ChevronRight, Trash2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ interface FamilyMember {
 }
 
 const ToDoList = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const { user } = useAuth();
@@ -115,8 +117,8 @@ const ToDoList = () => {
     } catch (error) {
       console.error('Error loading tasks:', error);
       toast({
-        title: "Error loading tasks",
-        description: "Could not load your tasks. Please try again.",
+        title: t('todos.errorLoading'),
+        description: t('todos.errorLoadingDesc'),
         variant: "destructive",
       });
     } finally {
@@ -238,7 +240,7 @@ const ToDoList = () => {
           return;
         }
         const targetListId = [...expandedLists][0];
-        const targetList = tasks.find(t => t.id === targetListId);
+        const targetList = tasks.find(task => task.id === targetListId);
         const insertPromises = items.map(item =>
           supabase.from('tasks').insert([{
             title: item,
@@ -251,8 +253,8 @@ const ToDoList = () => {
         const results = await Promise.all(insertPromises);
         if (results.some(r => r.error)) throw new Error("Some items failed to add");
         toast({
-          title: "Items Added",
-          description: `${items.length} item(s) added to "${targetList?.title ?? 'list'}".`,
+          title: t('todos.itemsAdded'),
+          description: `${items.length} ${t('todos.itemsAddedDesc')} "${targetList?.title ?? 'list'}".`,
         });
         return;
       }
@@ -269,14 +271,14 @@ const ToDoList = () => {
       const results = await Promise.all(insertPromises);
       if (results.some(r => r.error)) throw new Error("Some items failed to add");
       toast({
-        title: activeTab === "task" ? "Tasks Added" : "Items Added",
-        description: `${items.length} ${activeTab === "task" ? "task(s)" : "item(s)"} added.`,
+        title: activeTab === "task" ? t('todos.tasksAdded') : t('todos.itemsAdded'),
+        description: `${items.length} ${activeTab === "task" ? t('todos.tasksAddedSimple') : t('todos.itemsAddedSimple')}`,
       });
     } catch (error) {
       console.error('Error adding voice items:', error);
       toast({
-        title: "Error",
-        description: "Could not add all items. Please try again.",
+        title: t('common.error'),
+        description: t('todos.errorLoadingDesc'),
         variant: "destructive",
       });
     }
@@ -287,8 +289,8 @@ const ToDoList = () => {
     
     if (!user?.id) {
       toast({
-        title: "Not authenticated",
-        description: "Please sign in to create tasks.",
+        title: t('todos.notAuthenticated'),
+        description: t('todos.signInToCreate'),
         variant: "destructive",
       });
       return;
@@ -325,14 +327,14 @@ const ToDoList = () => {
       setIsDialogOpen(false);
       
       toast({
-        title: activeTab === "shopping" ? "Item Added" : activeTab === "shared" ? "List Created" : "Task Added",
-        description: `"${newTaskTitle}" has been ${activeTab === "shared" ? "shared with " + selectedMembers.length + " member(s)" : "added to your list"}.`,
+        title: activeTab === "shopping" ? t('todos.itemAdded') : activeTab === "shared" ? t('todos.listCreated') : t('todos.taskAdded'),
+        description: `"${newTaskTitle}" has been ${activeTab === "shared" ? `${t('todos.sharedWith')} ${selectedMembers.length} member(s)` : t('todos.addedToList')}.`,
       });
     } catch (error) {
       console.error('Error adding task:', error);
-      const errorMsg = (error as any)?.message || "Could not add task";
+      const errorMsg = (error as any)?.message || t('todos.errorLoadingDesc');
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: errorMsg,
         variant: "destructive",
       });
@@ -359,8 +361,8 @@ const ToDoList = () => {
     } catch (error) {
       console.error('Error toggling task:', error);
       toast({
-        title: "Error",
-        description: "Could not update task. Please try again.",
+        title: t('common.error'),
+        description: t('todos.errorUpdating'),
         variant: "destructive",
       });
     }
@@ -376,14 +378,14 @@ const ToDoList = () => {
       if (error) throw error;
 
       toast({
-        title: "Task deleted",
-        description: "The task has been removed.",
+        title: t('todos.taskDeleted'),
+        description: t('todos.taskDeletedDesc'),
       });
     } catch (error) {
       console.error('Error deleting task:', error);
       toast({
-        title: "Error",
-        description: "Could not delete task. Please try again.",
+        title: t('common.error'),
+        description: t('todos.errorDeleting'),
         variant: "destructive",
       });
     }
@@ -468,7 +470,7 @@ const ToDoList = () => {
               color: timeTab === tab ? '#FFFFFF' : '#7A6660',
             }}
           >
-            {tab === 'today' ? 'Today' : tab === 'upcoming' ? 'Upcoming' : 'Complete'}
+            {tab === 'today' ? t('todos.today') : tab === 'upcoming' ? t('todos.upcoming') : t('todos.complete')}
           </button>
         ))}
       </div>
@@ -477,7 +479,7 @@ const ToDoList = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5A09A' }} />
         <input
-          placeholder="Search tasks..."
+          placeholder={t('todos.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none"
@@ -492,7 +494,7 @@ const ToDoList = () => {
         style={{ color: activeTab === 'shared' ? '#964735' : '#7A6660' }}
       >
         <Users className="w-4 h-4" />
-        {activeTab === 'shared' ? 'Back to My Tasks' : 'View Shared Lists'}
+        {activeTab === 'shared' ? t('todos.backToMyTasks') : t('todos.viewSharedLists')}
       </button>
 
       {/* Shared Lists */}
@@ -504,11 +506,11 @@ const ToDoList = () => {
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
                       <Users className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-1">No shared lists yet</h3>
-                    <p className="text-muted-foreground mb-4 text-sm">Create a shopping list to share with your family.</p>
+                    <h3 className="text-lg font-semibold mb-1">{t('todos.noSharedLists')}</h3>
+                    <p className="text-muted-foreground mb-4 text-sm">{t('todos.noSharedListsDesc')}</p>
                     <Button onClick={() => setIsDialogOpen(true)} className="gradient-primary text-white border-0">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Shared List
+                      {t('todos.createSharedList')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -530,7 +532,7 @@ const ToDoList = () => {
                         <p className="font-semibold text-sm truncate">{list.title}</p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-muted-foreground whitespace-nowrap">
-                            {items.length === 0 ? "No items yet" : `${doneCount}/${items.length} done`}
+                            {items.length === 0 ? t('todos.noItemsYet') : `${doneCount}/${items.length} ${t('todos.doneCount')}`}
                             {list.shared_with && list.shared_with.length > 0 && ` · ${list.shared_with.length} member(s)`}
                           </p>
                           {items.length > 0 && (
@@ -546,7 +548,7 @@ const ToDoList = () => {
                       <button
                         onClick={e => { e.stopPropagation(); deleteTask(list.id); }}
                         className="text-muted-foreground hover:text-destructive transition-colors p-1 flex-shrink-0"
-                        aria-label="Delete list"
+                        aria-label={t('todos.deleteList')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -579,7 +581,7 @@ const ToDoList = () => {
                           <div className="flex gap-2 p-3 pt-1">
                             <Input
                               autoFocus
-                              placeholder="Item name..."
+                              placeholder={t('todos.itemNamePlaceholder')}
                               value={newListItemTitle}
                               onChange={e => setNewListItemTitle(e.target.value)}
                               onKeyDown={e => {
@@ -588,8 +590,8 @@ const ToDoList = () => {
                               }}
                               className="h-9 text-sm"
                             />
-                            <Button size="sm" onClick={() => handleAddListItem(list.id)}>Add</Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setAddingToListId(null); setNewListItemTitle(""); }}>Cancel</Button>
+                            <Button size="sm" onClick={() => handleAddListItem(list.id)}>{t('todos.add')}</Button>
+                            <Button size="sm" variant="ghost" onClick={() => { setAddingToListId(null); setNewListItemTitle(""); }}>{t('todos.cancel')}</Button>
                           </div>
                         ) : (
                           <button
@@ -597,7 +599,7 @@ const ToDoList = () => {
                             className="flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                           >
                             <Plus className="w-4 h-4" />
-                            Add item
+                            {t('todos.addItem')}
                           </button>
                         )}
                       </div>
@@ -617,10 +619,10 @@ const ToDoList = () => {
                           <CheckSquare className="w-7 h-7" style={{ color: '#B5A09A' }} />
                         </div>
                         <p className="font-semibold" style={{ color: '#1C1C18' }}>
-                          {timeTab === 'complete' ? 'No completed tasks yet' : 'All clear!'}
+                          {timeTab === 'complete' ? t('todos.noCompletedYet') : t('todos.allClear')}
                         </p>
                         <p className="text-sm mt-1" style={{ color: '#7A6660' }}>
-                          {timeTab === 'complete' ? 'Complete a task to see it here.' : 'Your upcoming tasks will appear here.'}
+                          {timeTab === 'complete' ? t('todos.completeToSeeHere') : t('todos.upcomingWillAppear')}
                         </p>
                       </div>
                     );
@@ -632,7 +634,7 @@ const ToDoList = () => {
                         <div key={cat}>
                           <div className="flex items-center justify-between mb-2">
                             <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#7A6660' }}>{cat}</h3>
-                            <span className="text-xs" style={{ color: '#B5A09A' }}>{catTasks.length} task{catTasks.length !== 1 ? 's' : ''}</span>
+                            <span className="text-xs" style={{ color: '#B5A09A' }}>{catTasks.length} {catTasks.length !== 1 ? t('todos.tasksPlural') : t('todos.tasks')}</span>
                           </div>
                           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #EBE8E2' }}>
                             {catTasks.map((task, i) => {
@@ -665,7 +667,7 @@ const ToDoList = () => {
                                     </span>
                                     {task.due_date && (
                                       <div className="text-xs mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
-                                        {isOverdue ? '! Urgent · ' : ''}{format(new Date(task.due_date), "EEE, h:mm a")}
+                                        {isOverdue ? `${t('todos.urgent')} · ` : ''}{format(new Date(task.due_date), "EEE, h:mm a")}
                                       </div>
                                     )}
                                   </div>
@@ -692,27 +694,27 @@ const ToDoList = () => {
         <DialogContent className="max-h-[90vh] overflow-y-auto w-[95%] sm:w-full p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>
-              {activeTab === "shopping" ? "Add New Item" : activeTab === "shared" ? "Create Shared List" : "Add New Task"}
+              {activeTab === "shopping" ? t('todos.addNewItemTitle') : activeTab === "shared" ? t('todos.createSharedListTitle') : t('todos.addNewTask')}
             </DialogTitle>
             {activeTab === "shared" && (
               <DialogDescription>
-                Create a shared list to invite members.
+                {t('todos.createSharedListDesc')}
               </DialogDescription>
             )}
           </DialogHeader>
           <div className="space-y-4 py-3 sm:py-4">
             <div className="space-y-2">
               <Label htmlFor="task-title" className="text-xs sm:text-sm font-medium">
-                {activeTab === "shopping" ? "Item Name" : activeTab === "shared" ? "List Name" : "Task Title"}
+                {activeTab === "shopping" ? t('todos.itemNameLabel') : activeTab === "shared" ? t('todos.listNameLabel') : t('todos.taskTitleLabel')}
               </Label>
               <Input
                 id="task-title"
                 placeholder={
-                  activeTab === "shopping" 
-                    ? "Enter item name..." 
+                  activeTab === "shopping"
+                    ? t('todos.enterItemName')
                     : activeTab === "shared"
-                    ? "Enter list name..."
-                    : "Enter task description..."
+                    ? t('todos.enterListName')
+                    : t('todos.enterTaskDesc')
                 }
                 value={newTaskTitle}
                 onChange={(e) => setNewTaskTitle(e.target.value)}
@@ -723,7 +725,7 @@ const ToDoList = () => {
             {activeTab === "task" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="task-due-date" className="text-xs sm:text-sm font-medium">Due Date (Optional)</Label>
+                  <Label htmlFor="task-due-date" className="text-xs sm:text-sm font-medium">{t('todos.dueDateOptional')}</Label>
                   <Input
                     id="task-due-date"
                     type="date"
@@ -733,7 +735,7 @@ const ToDoList = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm font-medium">Category</Label>
+                  <Label className="text-xs sm:text-sm font-medium">{t('todos.category')}</Label>
                   <div className="flex flex-wrap gap-2">
                     {allCategories.map(cat => (
                       <button key={cat} type="button"
@@ -747,20 +749,20 @@ const ToDoList = () => {
                       onClick={() => setShowNewCategoryField(p => !p)}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold"
                       style={{ background: '#F1EDE7', color: '#7A6660', border: '1px dashed #DAC1BB' }}>
-                      + New
+                      {t('todos.categoryNew')}
                     </button>
                   </div>
                   {showNewCategoryField && (
                     <div className="flex gap-2">
                       <Input
                         autoFocus
-                        placeholder="Category name…"
+                        placeholder={t('todos.categoryNamePlaceholder')}
                         value={newCategoryInput}
                         onChange={e => setNewCategoryInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') addCustomCategory(newCategoryInput); }}
                         className="h-9 text-sm flex-1"
                       />
-                      <Button size="sm" onClick={() => addCustomCategory(newCategoryInput)}>Add</Button>
+                      <Button size="sm" onClick={() => addCustomCategory(newCategoryInput)}>{t('todos.add')}</Button>
                     </div>
                   )}
                 </div>
@@ -769,12 +771,12 @@ const ToDoList = () => {
             {activeTab === "shared" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm sm:text-base">Select Family Members</Label>
-                  <Badge variant="secondary" className="text-xs">{selectedMembers.length} selected</Badge>
+                  <Label className="text-sm sm:text-base">{t('todos.selectMembers')}</Label>
+                  <Badge variant="secondary" className="text-xs">{selectedMembers.length} {t('todos.selectedCount')}</Badge>
                 </div>
                 {loadingMembers ? (
                   <div className="text-center py-4 text-xs sm:text-sm text-muted-foreground">
-                    Loading family members...
+                    {t('todos.loadingMembers')}
                   </div>
                 ) : familyMembers.length === 0 ? (
                   <InlineFamilyInvite onMemberAdded={loadFamilyMembers} />
@@ -806,22 +808,22 @@ const ToDoList = () => {
             )}
           </div>
           <DialogFooter className="flex gap-3 pt-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setIsDialogOpen(false);
                 setSelectedMembers([]);
               }}
               className="h-10 sm:h-11 flex-1 sm:flex-none"
             >
-              Cancel
+              {t('todos.cancel')}
             </Button>
-            <Button 
-              onClick={handleAddTask} 
+            <Button
+              onClick={handleAddTask}
               disabled={!newTaskTitle.trim()}
               className="h-10 sm:h-11 flex-1 sm:flex-none"
             >
-              {activeTab === "shopping" ? "Add Item" : activeTab === "shared" ? "Create List" : "Add Task"}
+              {activeTab === "shopping" ? t('todos.addItemBtn') : activeTab === "shared" ? t('todos.createListBtn') : t('todos.addTaskBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -832,6 +834,7 @@ const ToDoList = () => {
 
 // Inline Family Invite Component
 const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [inviteMethod, setInviteMethod] = useState<"email" | "phone">("email");
@@ -867,8 +870,8 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
     if (!user) return;
     if (!familyId) {
       toast({
-        title: "No family found",
-        description: "You need to create or join a family first. Go to Family Profile to get started.",
+        title: t('todos.noFamilyFound'),
+        description: t('todos.noFamilyFoundDesc'),
         variant: "destructive",
       });
       return;
@@ -905,7 +908,7 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
       if (error) throw error;
 
       toast({
-        title: "Invitation sent",
+        title: t('todos.invitationSent') || "Invitation sent",
         description: `Invitation sent to ${validatedData.email || validatedData.phone}`,
       });
 
@@ -915,18 +918,17 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Validation Error",
+          title: t('todos.validationError'),
           description: error.issues[0].message,
           variant: "destructive",
         });
       } else {
-  toast({
-    title: "Error",
-    description:
-      error instanceof Error ? error.message : "Failed to send invitation",
-    variant: "destructive",
-  });
-}
+        toast({
+          title: t('common.error'),
+          description: error instanceof Error ? error.message : t('todos.failedToSendInvitation'),
+          variant: "destructive",
+        });
+      }
     } finally {
       setSending(false);
     }
@@ -936,9 +938,9 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
     <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
       <div className="text-center mb-2">
         <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm font-medium">Invite a family member</p>
+        <p className="text-sm font-medium">{t('todos.inviteFamilyMember')}</p>
       </div>
-      
+
       <div className="space-y-3">
         <Select value={inviteMethod} onValueChange={(value: "email" | "phone") => setInviteMethod(value)}>
           <SelectTrigger className="h-9">
@@ -948,30 +950,30 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
             <SelectItem value="email">
               <div className="flex items-center gap-2">
                 <Mail className="h-3 w-3" />
-                Email
+                {t('family.email')}
               </div>
             </SelectItem>
             <SelectItem value="phone">
               <div className="flex items-center gap-2">
                 <Phone className="h-3 w-3" />
-                Phone
+                {t('family.phone')}
               </div>
             </SelectItem>
           </SelectContent>
         </Select>
 
         {inviteMethod === "email" ? (
-          <Input 
-            type="email" 
-            placeholder="family@example.com" 
+          <Input
+            type="email"
+            placeholder="family@example.com"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
             className="h-9"
           />
         ) : (
-          <Input 
-            type="tel" 
-            placeholder="+1 234 567 8900" 
+          <Input
+            type="tel"
+            placeholder="+1 234 567 8900"
             value={invitePhone}
             onChange={(e) => setInvitePhone(e.target.value)}
             className="h-9"
@@ -983,22 +985,22 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="parent">Parent</SelectItem>
-            <SelectItem value="child">Child</SelectItem>
-            <SelectItem value="grandparent">Grandparent</SelectItem>
-            <SelectItem value="caretaker">Caretaker</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            <SelectItem value="parent">{t('family.roles.parent')}</SelectItem>
+            <SelectItem value="child">{t('family.roles.child')}</SelectItem>
+            <SelectItem value="grandparent">{t('family.roles.grandparent')}</SelectItem>
+            <SelectItem value="caretaker">{t('family.roles.caretaker')}</SelectItem>
+            <SelectItem value="other">{t('family.roles.other')}</SelectItem>
           </SelectContent>
         </Select>
 
-        <Button 
-          onClick={handleInvite} 
+        <Button
+          onClick={handleInvite}
           disabled={sending}
           size="sm"
           className="w-full gradient-primary text-white border-0"
         >
           <Send className="h-3 w-3 mr-2" />
-          {sending ? "Sending..." : "Send Invitation"}
+          {sending ? t('todos.sending') : t('todos.sendInvitation')}
         </Button>
       </div>
     </div>

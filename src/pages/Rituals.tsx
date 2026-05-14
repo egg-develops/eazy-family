@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Mic, Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
+import { useTranslation } from 'react-i18next';
 
 interface JournalEntry {
   id: string;
@@ -66,6 +67,7 @@ const getJournalSettings = () => {
 };
 
 const Rituals = () => {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [rituals, setRituals] = useState<Ritual[]>(() => {
     try {
@@ -282,7 +284,7 @@ const Rituals = () => {
   return (
     <div className="space-y-5 p-4" style={{ paddingBottom: '2rem' }}>
 
-      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#B5A09A' }}>Private Space</p>
+      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#B5A09A' }}>{t('rituals.privateSpace')}</p>
 
       {/* Voice Journal — compact bar */}
       <div className="rounded-2xl overflow-hidden" style={{ background: TC }}>
@@ -306,12 +308,12 @@ const Rituals = () => {
 
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm text-white">
-              {isListening ? 'Tap to stop' : 'Voice Journal'}
+              {isListening ? t('rituals.tapToStop') : t('rituals.voiceJournal')}
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
               {isListening
-                ? (voiceText || 'Listening…')
-                : 'Tap mic to record a reflection'}
+                ? (voiceText || t('rituals.listening'))
+                : t('rituals.tapMicToRecord')}
             </p>
           </div>
         </div>
@@ -320,13 +322,13 @@ const Rituals = () => {
       {/* Daily Rituals */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>Daily Rituals</h2>
+          <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.title')}</h2>
           <button
             onClick={() => { setEditMode(p => !p); setNewRitualTitle(''); }}
             className="text-xs font-semibold"
             style={{ color: TC }}
           >
-            {editMode ? 'Done' : 'Edit List'}
+            {editMode ? t('rituals.done') : t('rituals.editList')}
           </button>
         </div>
 
@@ -354,7 +356,7 @@ const Rituals = () => {
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
                   {completedRituals.has(r.id) && !editMode && (
-                    <p className="text-[10px]" style={{ color: TC }}>✓ Done</p>
+                    <p className="text-[10px]" style={{ color: TC }}>{t('rituals.ritualDone')}</p>
                   )}
                 </div>
               </button>
@@ -377,7 +379,7 @@ const Rituals = () => {
                 value={newRitualTitle}
                 onChange={e => setNewRitualTitle(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addRitual()}
-                placeholder="New ritual…"
+                placeholder={t('rituals.newRitualPlaceholder')}
                 className="flex-1 bg-transparent text-xs outline-none min-w-0"
                 style={{ color: '#1C1C18', background: 'transparent' }}
                 autoFocus
@@ -398,14 +400,14 @@ const Rituals = () => {
       {settings.showOnRituals && (
         <div onClick={() => closeSwipe()}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>Journal</h2>
+            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.journal')}</h2>
             {hasMore && (
               <button
                 onClick={e => { e.stopPropagation(); setShowAllJournal(true); }}
                 className="text-xs font-semibold"
                 style={{ color: TC }}
               >
-                View Journal
+                {t('rituals.viewJournal')}
               </button>
             )}
             {showAllJournal && entries.length > baseCount && (
@@ -414,7 +416,7 @@ const Rituals = () => {
                 className="text-xs font-semibold"
                 style={{ color: TC }}
               >
-                Show Less
+                {t('rituals.showLess')}
               </button>
             )}
           </div>
@@ -437,7 +439,7 @@ const Rituals = () => {
                       className="flex flex-col items-center gap-1"
                     >
                       <Trash2 className="w-5 h-5 text-white" />
-                      <span className="text-white text-[10px] font-semibold">Delete</span>
+                      <span className="text-white text-[10px] font-semibold">{t('rituals.deleteEntry')}</span>
                     </button>
                   </div>
 
@@ -458,8 +460,8 @@ const Rituals = () => {
             </div>
           ) : (
             <div className="rounded-2xl p-5 text-center" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
-              <p className="text-sm font-medium" style={{ color: MUTED }}>What's on your mind…</p>
-              <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>Use the EZ button or Voice Journal to add an entry.</p>
+              <p className="text-sm font-medium" style={{ color: MUTED }}>{t('rituals.whatsOnYourMind')}</p>
+              <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>{t('rituals.useVoiceHint')}</p>
             </div>
           )}
         </div>
