@@ -15,18 +15,51 @@ const T = {
 const lora = "'Lora', serif";
 const dm = "'DM Sans', sans-serif";
 
-// Orbe sizes
-const OrbeLg = ({ label }: { label?: string }) => (
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", margin: "48px 0 12px" }}>
-    <div className="orbe-pulse" style={{
-      width: 96, height: 96, borderRadius: "50%", background: T.primary,
-      display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+// Hero Orbe — motion graphic (two overlapping circles, screen blend on dark)
+const OrbeMorphic = () => (
+  <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <div style={{
+      position: "relative", width: "min(380px, 100%)", aspectRatio: "1",
+      borderRadius: 28,
+      background: "linear-gradient(145deg, #1f1a17 0%, #1c1c18 60%, #1a1e1c 100%)",
+      overflow: "hidden",
+      boxShadow: "0 32px 80px rgba(28,28,24,0.35), 0 8px 24px rgba(28,28,24,0.2)",
     }}>
-      <div style={{ width: 48, height: 48, borderRadius: "50%", border: "1.5px solid rgba(255,255,255,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff" }} />
+      {/* Ambient glow — terracotta left */}
+      <div className="orbe-glow-left" style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+      }}>
+        <div style={{ width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,123,102,0.28) 0%, transparent 70%)" }} />
+      </div>
+      {/* Ambient glow — sage right */}
+      <div className="orbe-glow-right" style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+      }}>
+        <div style={{ width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(68,102,79,0.32) 0%, transparent 70%)" }} />
+      </div>
+      {/* Outer ring */}
+      <div className="orbe-ring-breathe" style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+      }}>
+        <div style={{ width: 230, height: 230, borderRadius: "50%", border: "1px solid rgba(218,193,187,0.22)" }} />
+      </div>
+      {/* Left circle — terracotta */}
+      <div className="orbe-circle-left" style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{ width: 148, height: 148, borderRadius: "50%", background: "#D97B66", mixBlendMode: "screen", opacity: 0.92 }} />
+      </div>
+      {/* Right circle — sage */}
+      <div className="orbe-circle-right" style={{
+        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        <div style={{ width: 148, height: 148, borderRadius: "50%", background: "#44664f", mixBlendMode: "screen", opacity: 0.88 }} />
+      </div>
+      {/* Wordmark */}
+      <div style={{ position: "absolute", bottom: 24, left: 26, fontFamily: lora, fontStyle: "italic", fontSize: 19, color: "rgba(218,193,187,0.45)", letterSpacing: "-0.01em", pointerEvents: "none" }}>
+        eazy.family
       </div>
     </div>
-    <span style={{ fontFamily: lora, fontStyle: "italic", fontSize: 13, color: T.faint }}>{label ?? "The Orbe"}</span>
   </div>
 );
 
@@ -101,54 +134,56 @@ export default function Index() {
 
       {/* ── Hero ── */}
       <section style={{ ...sec, paddingBottom: 56 }}>
-        <div style={max}>
-          <Eyebrow>{t('website.hero.eyebrow')}</Eyebrow>
-          <h1 style={{ fontFamily: lora, fontSize: "clamp(34px,5vw,52px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", maxWidth: 680, marginBottom: 20, color: T.ink }}>
-            {t('website.hero.headline')}
-          </h1>
-          <p style={{ fontSize: 18, fontWeight: 300, color: T.inkV, maxWidth: 520, lineHeight: 1.65, marginBottom: 32 }}>
-            {t('website.hero.sub')}
-          </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24, alignItems: "center" }}>
-            <button
-              onClick={() => document.getElementById("orbe-section")?.scrollIntoView({ behavior: "smooth" })}
-              style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", letterSpacing: "0.01em", transition: "all 0.15s" }}
-            >
-              {t('website.hero.meetOrbe')}
-            </button>
-            <button
-              onClick={() => navigate("/onboarding")}
-              style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
-            >
-              {t('website.hero.downloadApp')}
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {([t('website.hero.check1'), t('website.hero.check2'), t('website.hero.check3')] as string[]).map(item => (
-              <span key={item} style={{ fontSize: 12, color: T.faint, display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 16, height: 16, borderRadius: "50%", background: T.secondaryS, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <CheckSvg />
+        <div style={{ ...max, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }} className="hero-grid">
+          {/* Left: text */}
+          <div>
+            <Eyebrow>{t('website.hero.eyebrow')}</Eyebrow>
+            <h1 style={{ fontFamily: lora, fontSize: "clamp(30px,4.5vw,48px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", marginBottom: 20, color: T.ink }}>
+              {t('website.hero.headline')}
+            </h1>
+            <p style={{ fontSize: 17, fontWeight: 300, color: T.inkV, lineHeight: 1.65, marginBottom: 32 }}>
+              {t('website.hero.sub')}
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24, alignItems: "center" }}>
+              <button
+                onClick={() => document.getElementById("orbe-section")?.scrollIntoView({ behavior: "smooth" })}
+                style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", letterSpacing: "0.01em", transition: "all 0.15s" }}
+              >
+                {t('website.hero.meetOrbe')}
+              </button>
+              <button
+                onClick={() => navigate("/onboarding")}
+                style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
+              >
+                {t('website.hero.downloadApp')}
+              </button>
+            </div>
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 20 }}>
+              {([t('website.hero.check1'), t('website.hero.check2'), t('website.hero.check3')] as string[]).map(item => (
+                <span key={item} style={{ fontSize: 12, color: T.faint, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 16, height: 16, borderRadius: "50%", background: T.secondaryS, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <CheckSvg />
+                  </span>
+                  {item}
                 </span>
-                {item}
-              </span>
-            ))}
+              ))}
+            </div>
+            {/* Language availability row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T.faint }}>{t('website.hero.availableIn')}</span>
+              {[
+                { flag: "🇺🇸", label: "EN" }, { flag: "🇬🇧", label: "EN-GB" },
+                { flag: "🇩🇪", label: "DE" }, { flag: "🇫🇷", label: "FR" }, { flag: "🇮🇹", label: "IT" },
+              ].map(({ flag, label }) => (
+                <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: T.inkV, background: T.sMid, border: `0.5px solid ${T.outline}`, borderRadius: "9999px", padding: "3px 8px" }}>
+                  <span style={{ fontSize: 13, lineHeight: 1 }}>{flag}</span>
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
-          {/* Language availability row */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: T.faint }}>{t('website.hero.availableIn')}</span>
-            {[
-              { flag: "🇬🇧", label: "English" },
-              { flag: "🇩🇪", label: "Deutsch" },
-              { flag: "🇫🇷", label: "Français" },
-              { flag: "🇮🇹", label: "Italiano" },
-            ].map(({ flag, label }) => (
-              <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: T.inkV, background: T.sMid, border: `0.5px solid ${T.outline}`, borderRadius: "9999px", padding: "3px 10px" }}>
-                <span style={{ fontSize: 14, lineHeight: 1 }}>{flag}</span>
-                {label}
-              </span>
-            ))}
-          </div>
-          <OrbeLg label={t('website.hero.orbeLabel')} />
+          {/* Right: motion graphic */}
+          <OrbeMorphic />
         </div>
       </section>
 
@@ -372,6 +407,7 @@ export default function Index() {
       />
 
       <style>{`
+        @media (max-width: 768px) { .hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; } }
         @media (max-width: 720px) { .digest-grid { grid-template-columns: repeat(2,1fr) !important; } }
         @media (max-width: 480px) { .digest-grid { grid-template-columns: 1fr !important; } }
         .intel-grid { grid-template-columns: repeat(2,1fr) !important; }

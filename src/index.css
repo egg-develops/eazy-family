@@ -29,6 +29,37 @@ img {
 }
 .orbe-pulse { animation: orbe-pulse 3s ease-in-out infinite; }
 
+/* Orbe morphic — hero motion graphic */
+@keyframes orbe-circle-left {
+  0%, 100% { transform: translateX(-38px) scale(1); }
+  50%       { transform: translateX(-28px) scale(1.06); }
+}
+@keyframes orbe-circle-right {
+  0%, 100% { transform: translateX(38px) scale(1); }
+  50%       { transform: translateX(28px) scale(1.06); }
+}
+@keyframes orbe-glow-left {
+  0%, 100% { transform: translateX(-60px); opacity: 0.7; }
+  50%       { transform: translateX(-44px); opacity: 1; }
+}
+@keyframes orbe-glow-right {
+  0%, 100% { transform: translateX(60px); opacity: 0.7; }
+  50%       { transform: translateX(44px); opacity: 1; }
+}
+@keyframes orbe-ring-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50%       { transform: scale(1.07); opacity: 0.15; }
+}
+@keyframes orbe-bg-shift {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.85; }
+}
+.orbe-circle-left  { animation: orbe-circle-left  5s ease-in-out infinite; }
+.orbe-circle-right { animation: orbe-circle-right 5s ease-in-out infinite; }
+.orbe-glow-left    { animation: orbe-glow-left    5s ease-in-out infinite; }
+.orbe-glow-right   { animation: orbe-glow-right   5s ease-in-out infinite; }
+.orbe-ring-breathe { animation: orbe-ring-breathe 5s ease-in-out infinite; }
+
 /* EZ long-press menu pills — always light regardless of dark mode */
 .ez-menu-pill {
   background-color: #FDF9F3 !important;
