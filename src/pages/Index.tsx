@@ -59,14 +59,6 @@ const OrbeMorphic = () => (
         boxShadow: "0 12px 48px rgba(68,102,79,0.24)",
       }} />
 
-      {/* Wordmark */}
-      <div style={{
-        position: "absolute", bottom: "6%",
-        fontFamily: lora, fontStyle: "italic", fontSize: "clamp(13px,2vw,17px)",
-        color: T.faint, letterSpacing: "-0.01em", pointerEvents: "none",
-      }}>
-        eazy.family
-      </div>
     </div>
   </div>
 );
