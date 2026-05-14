@@ -15,48 +15,56 @@ const T = {
 const lora = "'Lora', serif";
 const dm = "'DM Sans', sans-serif";
 
-// Hero Orbe — motion graphic (two overlapping circles, screen blend on dark)
+// Hero Orbe — motion graphic floating on cream, with frosted pulsing halo
 const OrbeMorphic = () => (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-    <div style={{
-      position: "relative", width: "min(380px, 100%)", aspectRatio: "1",
-      borderRadius: 28,
-      background: "linear-gradient(145deg, #1f1a17 0%, #1c1c18 60%, #1a1e1c 100%)",
-      overflow: "hidden",
-      boxShadow: "0 32px 80px rgba(28,28,24,0.35), 0 8px 24px rgba(28,28,24,0.2)",
-    }}>
-      {/* Ambient glow — terracotta left */}
-      <div className="orbe-glow-left" style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
-      }}>
-        <div style={{ width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(217,123,102,0.28) 0%, transparent 70%)" }} />
-      </div>
-      {/* Ambient glow — sage right */}
-      <div className="orbe-glow-right" style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
-      }}>
-        <div style={{ width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(68,102,79,0.32) 0%, transparent 70%)" }} />
-      </div>
-      {/* Outer ring */}
-      <div className="orbe-ring-breathe" style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
-      }}>
-        <div style={{ width: 230, height: 230, borderRadius: "50%", border: "1px solid rgba(218,193,187,0.22)" }} />
-      </div>
+  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "48px 0" }}>
+    <div style={{ position: "relative", width: 320, height: 320, display: "flex", alignItems: "center", justifyContent: "center" }}>
+
+      {/* Halo — outermost, slowest pulse */}
+      <div className="orbe-halo-outer" style={{
+        position: "absolute", width: 320, height: 320, borderRadius: "50%",
+        border: "0.5px solid rgba(218,193,187,0.3)",
+        boxShadow: "0 0 32px rgba(218,193,187,0.18)",
+        pointerEvents: "none",
+      }} />
+      {/* Halo — mid ring */}
+      <div className="orbe-halo-mid" style={{
+        position: "absolute", width: 262, height: 262, borderRadius: "50%",
+        border: "1px solid rgba(150,71,53,0.18)",
+        boxShadow: "0 0 18px rgba(150,71,53,0.08), inset 0 0 18px rgba(253,249,243,0.12)",
+        backdropFilter: "blur(1px)",
+        pointerEvents: "none",
+      }} />
+      {/* Halo — inner frosted ring (clips circle edges softly) */}
+      <div className="orbe-halo-inner" style={{
+        position: "absolute", width: 210, height: 210, borderRadius: "50%",
+        border: "1.5px solid rgba(150,71,53,0.28)",
+        boxShadow: "0 0 24px rgba(150,71,53,0.1), 0 0 48px rgba(218,193,187,0.15)",
+        backdropFilter: "blur(2px)",
+        pointerEvents: "none",
+      }} />
+
       {/* Left circle — terracotta */}
       <div className="orbe-circle-left" style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <div style={{ width: 148, height: 148, borderRadius: "50%", background: "#D97B66", mixBlendMode: "screen", opacity: 0.92 }} />
-      </div>
+        position: "absolute", width: 150, height: 150, borderRadius: "50%",
+        background: "radial-gradient(circle at 40% 40%, #E8956A, #964735)",
+        opacity: 0.82,
+        boxShadow: "0 8px 32px rgba(150,71,53,0.25)",
+      }} />
       {/* Right circle — sage */}
       <div className="orbe-circle-right" style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <div style={{ width: 148, height: 148, borderRadius: "50%", background: "#44664f", mixBlendMode: "screen", opacity: 0.88 }} />
-      </div>
+        position: "absolute", width: 150, height: 150, borderRadius: "50%",
+        background: "radial-gradient(circle at 60% 40%, #6B9A79, #44664f)",
+        opacity: 0.78,
+        boxShadow: "0 8px 32px rgba(68,102,79,0.22)",
+      }} />
+
       {/* Wordmark */}
-      <div style={{ position: "absolute", bottom: 24, left: 26, fontFamily: lora, fontStyle: "italic", fontSize: 19, color: "rgba(218,193,187,0.45)", letterSpacing: "-0.01em", pointerEvents: "none" }}>
+      <div style={{
+        position: "absolute", bottom: -32,
+        fontFamily: lora, fontStyle: "italic", fontSize: 14,
+        color: T.faint, letterSpacing: "-0.01em", pointerEvents: "none",
+      }}>
         eazy.family
       </div>
     </div>

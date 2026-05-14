@@ -60,6 +60,23 @@ img {
 .orbe-glow-right   { animation: orbe-glow-right   5s ease-in-out infinite; }
 .orbe-ring-breathe { animation: orbe-ring-breathe 5s ease-in-out infinite; }
 
+/* Frosted halo rings */
+@keyframes orbe-halo-outer {
+  0%, 100% { transform: scale(1);    opacity: 0.7; }
+  50%       { transform: scale(1.10); opacity: 0.3; }
+}
+@keyframes orbe-halo-mid {
+  0%, 100% { transform: scale(1);    opacity: 0.85; }
+  50%       { transform: scale(1.06); opacity: 0.45; }
+}
+@keyframes orbe-halo-inner {
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.04); opacity: 0.55; }
+}
+.orbe-halo-outer { animation: orbe-halo-outer 5s ease-in-out infinite; }
+.orbe-halo-mid   { animation: orbe-halo-mid   5s ease-in-out infinite 0.4s; }
+.orbe-halo-inner { animation: orbe-halo-inner 5s ease-in-out infinite 0.8s; }
+
 /* EZ long-press menu pills — always light regardless of dark mode */
 .ez-menu-pill {
   background-color: #FDF9F3 !important;
