@@ -95,7 +95,7 @@ export default function About() {
         <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
           One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
         </h2>
-        <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>Free to start. No credit card required.</p>
+        <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>14-day free trial. Cancel anytime.</p>
         <button
           onClick={() => navigate("/onboarding")}
           style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}

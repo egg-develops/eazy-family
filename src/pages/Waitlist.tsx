@@ -97,7 +97,7 @@ export default function Waitlist() {
           {referralCode && (
             <>
               <p style={{ fontSize: 16, color: T.ink, marginBottom: 14, lineHeight: 1.5 }}>
-                Know another family who'd love this?<br />Share your link and get a free month when they subscribe.
+                Know another family who'd love this?<br />Share your link and get one month free when they subscribe.
               </p>
               <div style={{ background: T.primaryS, border: `1px solid rgba(150,71,53,0.2)`, borderRadius: 12, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: T.primary, wordBreak: "break-all" }}>
                 {referralLink}

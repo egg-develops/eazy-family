@@ -73,7 +73,7 @@ const CtaDark = ({ onStart }: { onStart: () => void }) => (
     <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
       One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
     </h2>
-    <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>Free to start. No credit card required.</p>
+    <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>14-day free trial. Cancel anytime.</p>
     <button
       onClick={onStart}
       style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
@@ -316,35 +316,15 @@ export default function Index() {
         <div style={max}>
           <Eyebrow>Pricing</Eyebrow>
           <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 32, color: T.ink }}>
-            Simple pricing.
+            One plan. Try it free for 14 days.
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 20, marginTop: 32 }}>
-            {/* Free */}
-            <div style={{ background: T.warm, border: `0.5px solid ${T.outline}`, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: T.primary, background: T.primaryS, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>Free</div>
-              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>Get started</div>
-              <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>$0 <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>forever</span></div>
-              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Try Eazy with your family. No card required.</div>
-              <div style={{ height: "0.5px", background: T.outline }} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {["Calendar sync — up to 2 calendars", "Shared tasks & shopping — one list each", "Voice input via the Orbe", "Rituals — basic tracking", "Up to 2 family members"].map(f => (
-                  <div key={f} style={{ fontSize: 13, fontWeight: 300, color: T.inkV, display: "flex", alignItems: "flex-start", gap: 8, lineHeight: 1.5 }}>
-                    <PfCheck />{f}
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: "auto", paddingTop: 4 }}>
-                <button onClick={() => navigate("/onboarding")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", textAlign: "center" }}>
-                  Get started free
-                </button>
-              </div>
-            </div>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
             {/* Family */}
-            <div style={{ background: T.primaryS, border: `0.5px solid ${T.primary}`, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fff", background: T.primary, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>Family</div>
-              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>Everything included</div>
+            <div style={{ background: T.primaryS, border: `0.5px solid ${T.primary}`, borderRadius: 16, padding: 32, display: "flex", flexDirection: "column", gap: 16, maxWidth: 480, width: "100%" }}>
+              <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.10em", textTransform: "uppercase", color: "#fff", background: T.primary, padding: "4px 12px", borderRadius: "9999px", width: "fit-content" }}>14-Day Free Trial</div>
+              <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink }}>Family</div>
               <div style={{ fontFamily: lora, fontSize: 40, fontWeight: 400, color: T.ink, lineHeight: 1, letterSpacing: "-0.02em" }}>$4 <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 300, color: T.inkV, letterSpacing: 0 }}>/ month</span></div>
-              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Billed annually at $48. Or $5.99 month-to-month. Less than a coffee a month for your whole family.</div>
+              <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>Billed annually at $48. Or $5.99 month-to-month.<br />Cancel anytime. Card required, not charged for 14 days.</div>
               <div style={{ height: "0.5px", background: T.outline }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {["Unlimited calendars, lists & family members", "Full intelligence layer — conflict detection, shopping frequency, task escalation", "Morning Digest — daily & email", "Full voice AI — Orbe & assistant", "One free month for every family you refer"].map(f => (
@@ -355,9 +335,10 @@ export default function Index() {
               </div>
               <div style={{ marginTop: "auto", paddingTop: 4 }}>
                 <button onClick={() => navigate("/onboarding")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
-                  Start free trial
+                  Start your free trial →
                 </button>
               </div>
+              <div style={{ textAlign: "center", fontSize: 12, color: T.faint, marginTop: -8 }}>Cancel before day 14 and you won't be charged.</div>
             </div>
           </div>
         </div>
