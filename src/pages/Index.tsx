@@ -17,52 +17,52 @@ const dm = "'DM Sans', sans-serif";
 
 // Hero Orbe — motion graphic floating on cream, with frosted pulsing halo
 const OrbeMorphic = () => (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "48px 0" }}>
-    <div style={{ position: "relative", width: 320, height: 320, display: "flex", alignItems: "center", justifyContent: "center" }}>
+  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", aspectRatio: "1", maxHeight: 520 }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
       {/* Halo — outermost, slowest pulse */}
       <div className="orbe-halo-outer" style={{
-        position: "absolute", width: 320, height: 320, borderRadius: "50%",
+        position: "absolute", width: "90%", height: "90%", borderRadius: "50%",
         border: "0.5px solid rgba(218,193,187,0.3)",
-        boxShadow: "0 0 32px rgba(218,193,187,0.18)",
+        boxShadow: "0 0 48px rgba(218,193,187,0.2)",
         pointerEvents: "none",
       }} />
       {/* Halo — mid ring */}
       <div className="orbe-halo-mid" style={{
-        position: "absolute", width: 262, height: 262, borderRadius: "50%",
-        border: "1px solid rgba(150,71,53,0.18)",
-        boxShadow: "0 0 18px rgba(150,71,53,0.08), inset 0 0 18px rgba(253,249,243,0.12)",
+        position: "absolute", width: "72%", height: "72%", borderRadius: "50%",
+        border: "1px solid rgba(150,71,53,0.2)",
+        boxShadow: "0 0 24px rgba(150,71,53,0.09), inset 0 0 24px rgba(253,249,243,0.1)",
         backdropFilter: "blur(1px)",
         pointerEvents: "none",
       }} />
-      {/* Halo — inner frosted ring (clips circle edges softly) */}
+      {/* Halo — inner frosted ring */}
       <div className="orbe-halo-inner" style={{
-        position: "absolute", width: 210, height: 210, borderRadius: "50%",
-        border: "1.5px solid rgba(150,71,53,0.28)",
-        boxShadow: "0 0 24px rgba(150,71,53,0.1), 0 0 48px rgba(218,193,187,0.15)",
+        position: "absolute", width: "56%", height: "56%", borderRadius: "50%",
+        border: "1.5px solid rgba(150,71,53,0.3)",
+        boxShadow: "0 0 32px rgba(150,71,53,0.12), 0 0 64px rgba(218,193,187,0.16)",
         backdropFilter: "blur(2px)",
         pointerEvents: "none",
       }} />
 
       {/* Left circle — terracotta */}
       <div className="orbe-circle-left" style={{
-        position: "absolute", width: 150, height: 150, borderRadius: "50%",
+        position: "absolute", width: "40%", height: "40%", borderRadius: "50%",
         background: "radial-gradient(circle at 40% 40%, #E8956A, #964735)",
-        opacity: 0.82,
-        boxShadow: "0 8px 32px rgba(150,71,53,0.25)",
+        opacity: 0.84,
+        boxShadow: "0 12px 48px rgba(150,71,53,0.28)",
       }} />
       {/* Right circle — sage */}
       <div className="orbe-circle-right" style={{
-        position: "absolute", width: 150, height: 150, borderRadius: "50%",
+        position: "absolute", width: "40%", height: "40%", borderRadius: "50%",
         background: "radial-gradient(circle at 60% 40%, #6B9A79, #44664f)",
-        opacity: 0.78,
-        boxShadow: "0 8px 32px rgba(68,102,79,0.22)",
+        opacity: 0.8,
+        boxShadow: "0 12px 48px rgba(68,102,79,0.24)",
       }} />
 
       {/* Wordmark */}
       <div style={{
-        position: "absolute", bottom: -32,
-        fontFamily: lora, fontStyle: "italic", fontSize: 14,
+        position: "absolute", bottom: "6%",
+        fontFamily: lora, fontStyle: "italic", fontSize: "clamp(13px,2vw,17px)",
         color: T.faint, letterSpacing: "-0.01em", pointerEvents: "none",
       }}>
         eazy.family
