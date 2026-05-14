@@ -67,18 +67,18 @@ const PfCheck = () => (
   </span>
 );
 
-const CtaDark = ({ onWaitlist }: { onWaitlist: () => void }) => (
+const CtaDark = ({ onStart }: { onStart: () => void }) => (
   <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-    <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Join Eazy.Family</div>
+    <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Available on Web now · iOS &amp; Android coming soon</div>
     <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
       One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
     </h2>
     <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>Free to start. No credit card required.</p>
     <button
-      onClick={onWaitlist}
+      onClick={onStart}
       style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
     >
-      Join the waitlist →
+      Get started free →
     </button>
   </div>
 );
@@ -100,7 +100,7 @@ export default function Index() {
       {/* ── Hero ── */}
       <section style={{ ...sec, paddingBottom: 56 }}>
         <div style={max}>
-          <Eyebrow>Launching on iOS &amp; Android</Eyebrow>
+          <Eyebrow>Available on Web · iOS &amp; Android coming soon</Eyebrow>
           <h1 style={{ fontFamily: lora, fontSize: "clamp(34px,5vw,52px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", maxWidth: 680, marginBottom: 20, color: T.ink }}>
             Imagine every family calendar, every task, every list — all running on your voice.
           </h1>
@@ -300,12 +300,12 @@ export default function Index() {
           <div style={{ background: T.primaryS, borderRadius: 16, padding: "28px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24, flexWrap: "wrap", marginTop: 40 }}>
             <div>
               <div style={{ fontFamily: lora, fontSize: 22, fontWeight: 400, color: T.ink, marginBottom: 6 }}>Download Eazy.</div>
-              <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>Available on iOS and Android · English, German, French, Italian</div>
+              <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>Available on Web · iOS &amp; Android coming soon · English, German, French, Italian</div>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.primary, background: "#fff", border: `1px solid rgba(150,71,53,0.25)`, padding: "9px 16px", borderRadius: "9999px", cursor: "pointer" }}>App Store</button>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.primary, background: "#fff", border: `1px solid rgba(150,71,53,0.25)`, padding: "9px 16px", borderRadius: "9999px", cursor: "pointer" }}>Google Play</button>
-              <button onClick={() => navigate("/onboarding")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>Download now →</button>
+              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>App Store — coming soon</button>
+              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>Google Play — coming soon</button>
+              <button onClick={() => navigate("/onboarding")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>Get started on Web →</button>
             </div>
           </div>
         </div>
@@ -364,7 +364,7 @@ export default function Index() {
       </section>
 
       {/* ── Footer CTA ── */}
-      <CtaDark onWaitlist={() => navigate("/waitlist")} />
+      <CtaDark onStart={() => navigate("/onboarding")} />
 
       <style>{`
         @media (max-width: 720px) { .digest-grid { grid-template-columns: repeat(2,1fr) !important; } }

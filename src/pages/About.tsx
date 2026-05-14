@@ -91,16 +91,16 @@ export default function About() {
 
       {/* ── CTA ── */}
       <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Join Eazy.Family</div>
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Available on Web now · iOS &amp; Android coming soon</div>
         <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
           One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
         </h2>
         <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>Free to start. No credit card required.</p>
         <button
-          onClick={() => navigate("/waitlist")}
+          onClick={() => navigate("/onboarding")}
           style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
         >
-          Join the waitlist →
+          Get started free →
         </button>
       </div>
 
