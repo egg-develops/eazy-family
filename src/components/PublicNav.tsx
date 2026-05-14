@@ -31,10 +31,11 @@ const CloseIcon = () => (
 );
 
 const LANGUAGES = [
-  { code: "en", flag: "🇬🇧", label: "English" },
-  { code: "de", flag: "🇩🇪", label: "Deutsch" },
-  { code: "fr", flag: "🇫🇷", label: "Français" },
-  { code: "it", flag: "🇮🇹", label: "Italiano" },
+  { code: "en",    flag: "🇺🇸", label: "English (US)" },
+  { code: "en-GB", flag: "🇬🇧", label: "English (UK)" },
+  { code: "de",    flag: "🇩🇪", label: "Deutsch" },
+  { code: "fr",    flag: "🇫🇷", label: "Français" },
+  { code: "it",    flag: "🇮🇹", label: "Italiano" },
 ];
 
 export function PublicNav() {
@@ -153,20 +154,22 @@ export function PublicNav() {
           <button
             onClick={() => setLangOpen(v => !v)}
             style={{
-              fontFamily: "'DM Sans', sans-serif", fontSize: "12px", fontWeight: 500,
-              color: INK_V, background: "#fdf9f3", border: `1px solid #dac1bb`,
-              cursor: "pointer", padding: "6px 10px", borderRadius: "9999px",
-              display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
+              fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 400,
+              color: INK_V, background: "none", border: "none",
+              cursor: "pointer", padding: "6px 12px", borderRadius: "9999px",
+              display: "flex", alignItems: "center", gap: "6px", transition: "all 0.15s",
             }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; (e.currentTarget as HTMLElement).style.color = INK; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = INK_V; }}
           >
-            <span style={{ fontSize: "14px", lineHeight: 1 }}>{currentLang.flag}</span>
-            <span style={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>{currentLang.code.toUpperCase()}</span>
+            <span style={{ fontSize: "15px", lineHeight: 1 }}>{currentLang.flag}</span>
+            <span>{currentLang.code === "en-GB" ? "EN-GB" : currentLang.code.toUpperCase()}</span>
           </button>
           {langOpen && (
             <div style={{
               position: "absolute", top: "calc(100% + 6px)", right: 0,
               background: "#fdf9f3", border: `1px solid #dac1bb`, borderRadius: 12,
-              padding: "6px", minWidth: 140, zIndex: 300,
+              padding: "6px", minWidth: 160, zIndex: 300,
               boxShadow: "0 4px 16px rgba(28,28,24,0.08)",
             }}>
               {LANGUAGES.map(lang => (
