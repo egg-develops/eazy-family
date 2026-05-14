@@ -1,119 +1,115 @@
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Heart, Shield, Users, ArrowRight } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { PublicNav } from "@/components/PublicNav";
 
-const HEADING = { color: "#1C1C18" };
-const MUTED   = { color: "#964735" };
-const SUBTLE  = { color: "#7A6660" };
-const CARD    = { background: "#FFFFFF", border: "1px solid #EBE8E2" };
+const T = {
+  bg: "#fdf9f3", warm: "#ffffff", sLow: "#f7f3ed",
+  ink: "#1c1c18", inkV: "#55433f", faint: "#87726e", outline: "#dac1bb",
+  primary: "#964735", primaryL: "#d97b66",
+  secondary: "#44664f", tertiary: "#406373",
+};
+const lora = "'Lora', serif";
+const dm = "'DM Sans', sans-serif";
+
+const Eyebrow = ({ children }: { children: React.ReactNode }) => (
+  <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.primary, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+    <span style={{ width: 6, height: 6, borderRadius: "50%", background: T.primary, flexShrink: 0, display: "inline-block" }} />
+    {children}
+  </div>
+);
 
 export default function About() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-
-  const values = [
-    { icon: Heart,  title: t("website.about.v1t"), body: t("website.about.v1b") },
-    { icon: Shield, title: t("website.about.v2t"), body: t("website.about.v2b") },
-    { icon: Users,  title: t("website.about.v3t"), body: t("website.about.v3b") },
-  ];
+  const sec: React.CSSProperties = { padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` };
+  const max: React.CSSProperties = { maxWidth: 860, margin: "0 auto" };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#FDF9F3", color: "#1C1C18" }}>
-
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
-      </div>
-
+    <div style={{ background: T.bg, color: T.ink, fontFamily: dm, fontSize: 16, lineHeight: 1.6 }}>
       <PublicNav />
 
-      <main className="flex-1 max-w-4xl mx-auto px-5 pt-32 pb-16 space-y-20">
-
-        {/* Mission */}
-        <section className="text-center max-w-2xl mx-auto space-y-5">
-          <h1 className="font-serif text-3xl sm:text-4xl font-light tracking-tight" style={HEADING}>
-            {t("website.about.heroHeadline")}
-          </h1>
-          <p className="text-base leading-relaxed" style={MUTED}>
-            {t("website.about.heroSub")}
-          </p>
-        </section>
-
-        {/* Values */}
-        <section>
-          <h2 className="font-serif text-xl font-light mb-8 text-center" style={HEADING}>
-            {t("website.about.valuesTitle")}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {values.map(v => {
-              const Icon = v.icon;
-              return (
-                <div key={v.title} className="rounded-2xl p-5 flex gap-4" style={CARD}>
-                  <div className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
-                    style={{ background: "#964735" }}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-sm mb-1" style={HEADING}>{v.title}</h3>
-                    <p className="text-xs leading-relaxed whitespace-pre-line" style={SUBTLE}>{v.body}</p>
-                  </div>
-                </div>
-              );
-            })}
+      {/* ── Our Story ── */}
+      <section style={sec}>
+        <div style={max}>
+          <Eyebrow>Our story</Eyebrow>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }} className="about-2col">
+            <h1 style={{ fontFamily: lora, fontSize: "clamp(30px,5vw,44px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", color: T.ink, margin: 0 }}>
+              Built for the <em style={{ fontStyle: "italic", color: T.primary }}>beautiful</em> chaos of family life.
+            </h1>
+            <div>
+              <p style={{ fontSize: 16, fontWeight: 300, color: T.inkV, lineHeight: 1.75, marginBottom: 0 }}>
+                Family life is full of moving parts — schedules that shift, shopping lists that multiply, and conversations split across too many channels.
+              </p>
+              <blockquote style={{ margin: "24px 0", padding: "16px 0 16px 20px", borderLeft: `2px solid ${T.primaryL}`, fontFamily: lora, fontStyle: "italic", fontSize: 18, color: T.ink, lineHeight: 1.5 }}>
+                "Time flies! The days might be long, but the years are short. We built Eazy.Family so you spend less time managing — and more time together."
+              </blockquote>
+              <p style={{ fontSize: 16, fontWeight: 300, color: T.inkV, lineHeight: 1.75, margin: 0 }}>
+                One private, calm space for all of it. No ads, no noise, no strangers. Just your family.
+              </p>
+            </div>
           </div>
-        </section>
-
-        {/* Story */}
-        <section className="max-w-2xl mx-auto space-y-4">
-          <h2 className="font-serif text-xl font-light" style={HEADING}>
-            {t("website.about.storyTitle")}
-          </h2>
-          <p className="text-sm leading-relaxed" style={MUTED}>
-            {t("website.about.storyP1")}
-          </p>
-          <p className="text-sm leading-relaxed" style={MUTED}>
-            {t("website.about.storyP2")}
-          </p>
-        </section>
-
-        {/* CTA */}
-        <section className="text-center rounded-3xl p-10"
-          style={{ background: "#F7F3ED", border: "1px solid #EBE8E2" }}>
-          <h2 className="font-serif text-xl font-light mb-3" style={HEADING}>
-            {t("website.about.ctaTitle")}
-          </h2>
-          <p className="text-sm mb-6" style={SUBTLE}>
-            {t("website.about.ctaSub")}
-          </p>
-          <Button onClick={() => navigate("/onboarding")} className="text-white border-0 px-8 py-5 text-base rounded-2xl"
-            style={{ background: "#964735" }}>
-            {t("website.about.ctaButton")} <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </section>
-      </main>
-
-      <footer className="py-10 px-5 border-t" style={{ borderColor: "#EBE8E2" }}>
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="Eazy.Family" className="w-7 h-7" />
-            <span className="font-medium text-sm" style={HEADING}>Eazy.Family</span>
-          </Link>
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs" style={SUBTLE}>
-            <Link to="/about" className="hover:opacity-80">{t("website.nav.about")}</Link>
-            <Link to="/events" className="hover:opacity-80">{t("website.nav.events")}</Link>
-            <Link to="/resources" className="hover:opacity-80">{t("website.nav.resources")}</Link>
-            <Link to="/download" className="hover:opacity-80">{t("website.nav.getApp")}</Link>
-            <Link to="/privacy" className="hover:opacity-80">Privacy Policy</Link>
-            <Link to="/terms" className="hover:opacity-80">Terms of Service</Link>
-            <a href="https://x.com/eazy_family" target="_blank" rel="noopener noreferrer" className="hover:opacity-80" aria-label="Eazy.Family on X">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
-          </nav>
-          <p className="text-xs" style={{ color: "#DAC1BB" }}>© {new Date().getFullYear()} Eazy.Family</p>
         </div>
-      </footer>
+      </section>
+
+      {/* ── Values ── */}
+      <section style={sec}>
+        <div style={max}>
+          <Eyebrow>What we believe</Eyebrow>
+          <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 32, color: T.ink }}>
+            Three values. No compromise.
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 16, marginTop: 32 }}>
+            {[
+              { bar: T.primary, title: "Families first", desc: "Every product decision starts with one question: does this make family life meaningfully better?" },
+              { bar: T.secondary, title: "Privacy by design", desc: "Your data is encrypted and never sold. We will never run ads. Your family's information is yours alone." },
+              { bar: T.tertiary, title: "Built with families", desc: "Real families shape every feature we build. Your feedback is the roadmap." },
+            ].map(v => (
+              <div key={v.title} style={{ background: T.warm, border: `0.5px solid ${T.outline}`, borderRadius: 16, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ width: 28, height: 3, borderRadius: 9999, background: v.bar }} />
+                <div style={{ fontSize: 14, fontWeight: 500, color: T.ink }}>{v.title}</div>
+                <p style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.65, margin: 0 }}>{v.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Story ── */}
+      <section style={sec}>
+        <div style={max}>
+          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 48, alignItems: "start" }} className="story-2col">
+            <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint, position: "sticky", top: 80 }}>
+              The longer version
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 300, color: T.inkV, lineHeight: 1.8 }}>
+              <p>We started with a frustration most parents know well: <strong style={{ fontWeight: 500, color: T.ink }}>too many apps, too many channels, too much noise.</strong> The family group chat gets buried. Calendars don't sync. Someone misses the school pickup. The shopping list lives in three different places.</p>
+              <p style={{ marginTop: 16 }}>We wanted one place — private, secure, genuinely simple — that brings it all together. And we wanted it to be smart enough to think ahead, so the people using it could think about something else for a change.</p>
+              <p style={{ marginTop: 16 }}><strong style={{ fontWeight: 500, color: T.ink }}>Eazy.Family is built around one smart button: the Orbe.</strong> Everything your family needs, one press away, managed by your voice.</p>
+              <p style={{ marginTop: 16 }}>Eazy is shaped by the families who use it every day. If that sounds like something you'd want to be part of, join us — you'll help make it better for everyone.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>Join Eazy.Family</div>
+        <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
+          One button. Your voice. Every calendar. Every list. <em style={{ fontStyle: "italic", color: T.primaryL }}>Your family in sync.</em>
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>Free to start. No credit card required.</p>
+        <button
+          onClick={() => navigate("/waitlist")}
+          style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
+        >
+          Join the waitlist →
+        </button>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .about-2col { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .story-2col { grid-template-columns: 1fr !important; gap: 32px !important; }
+        }
+      `}</style>
     </div>
   );
 }

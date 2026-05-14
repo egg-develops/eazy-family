@@ -22,6 +22,13 @@ img {
   user-select: none;
 }
 
+/* Orbe pulse animation — used on public marketing pages */
+@keyframes orbe-pulse {
+  0%, 100% { box-shadow: 0 0 0 16px rgba(150,71,53,0.08), 0 0 0 32px rgba(150,71,53,0.04); }
+  50%       { box-shadow: 0 0 0 22px rgba(150,71,53,0.06), 0 0 0 44px rgba(150,71,53,0.02); }
+}
+.orbe-pulse { animation: orbe-pulse 3s ease-in-out infinite; }
+
 /* EZ long-press menu pills — always light regardless of dark mode */
 .ez-menu-pill {
   background-color: #FDF9F3 !important;

@@ -1,203 +1,163 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
-import { Menu, X, ChevronDown, BookOpen, Baby, ShoppingBag } from "lucide-react";
-import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
-const RESOURCES_ITEMS = [
-  { href: "/resources#blog",      icon: BookOpen,     label: "Blog" },
-  { href: "/resources#parenting", icon: Baby,         label: "Parenting" },
-  { href: "/resources#shop",      icon: ShoppingBag,  label: "EZ Shop" },
-];
+const PRIMARY = "#964735";
+const INK = "#1c1c18";
+const INK_V = "#55433f";
+const BG = "rgba(253,249,243,0.95)";
+const OUTLINE = "#dac1bb";
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth" });
+}
 
 export function PublicNav() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const goToSection = (id: string) => {
+    setMenuOpen(false);
+    if (pathname === "/") {
+      scrollToSection(id);
+    } else {
+      navigate("/");
+      setTimeout(() => scrollToSection(id), 120);
+    }
+  };
 
-  useEffect(() => { setMenuOpen(false); setMobileResourcesOpen(false); }, [pathname]);
-
-  const isActive = (href: string) => pathname === href || pathname === href.split("#")[0];
+  const navLinks = [
+    { label: "Features",       action: () => goToSection("features") },
+    { label: "Intelligence",   action: () => goToSection("intelligence") },
+    { label: "Morning Digest", action: () => goToSection("digest") },
+    { label: "Pricing",        action: () => goToSection("pricing") },
+    { label: "About",          action: () => { setMenuOpen(false); navigate("/about"); } },
+  ];
 
   return (
-    <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "shadow-sm border-b" : ""}`}
-      style={{
-        backgroundColor: scrolled ? "rgba(251, 248, 255, 0.95)" : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : undefined,
-        borderColor: "#F0E4FB",
-      }}
-    >
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
-        {/* Branded wordmark */}
-        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
-          <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8" />
-          <span className="font-serif text-base hidden sm:inline" style={{ color: "#1A0B2E", fontStyle: "normal" }}>
-            <em style={{ fontStyle: "italic", color: "#1A0B2E" }}>Eazy</em>
-            <span style={{ color: "#EE7BB0" }}>.</span>
-            <span style={{ color: "#1A0B2E" }}>Family</span>
-          </span>
-        </Link>
+    <nav style={{
+      background: BG,
+      backdropFilter: "blur(12px)",
+      borderBottom: `0.5px solid ${OUTLINE}`,
+      padding: "0 40px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: "64px",
+      position: "sticky",
+      top: 0,
+      zIndex: 200,
+    }}>
+      {/* Logo */}
+      <button
+        onClick={() => navigate("/")}
+        style={{
+          fontFamily: "'Lora', serif",
+          fontSize: "18px",
+          fontWeight: 600,
+          color: PRIMARY,
+          letterSpacing: "-0.02em",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        eazy.family
+      </button>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link
-            to="/about"
-            className={`text-sm transition-colors ${isActive("/about") ? "font-medium" : "opacity-60 hover:opacity-90"}`}
-            style={{ color: "#1A0B2E" }}
-          >
-            {t("website.nav.about")}
-          </Link>
-          <Link
-            to="/events"
-            className={`text-sm transition-colors ${isActive("/events") ? "font-medium" : "opacity-60 hover:opacity-90"}`}
-            style={{ color: "#1A0B2E" }}
-          >
-            {t("website.nav.events")}
-          </Link>
-
-          {/* Resources dropdown — pure CSS hover, no JS state */}
-          <div className="relative group">
-            <Link
-              to="/resources"
-              className={`flex items-center gap-1 text-sm transition-colors ${isActive("/resources") ? "font-medium" : "opacity-60 hover:opacity-90"}`}
-              style={{ color: "#1A0B2E" }}
+      {/* Desktop links */}
+      <ul style={{ display: "flex", gap: "4px", listStyle: "none", margin: 0, padding: 0 }}
+        className="hidden md:flex">
+        {navLinks.map(l => (
+          <li key={l.label}>
+            <button
+              onClick={l.action}
+              style={{
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: "13px",
+                fontWeight: 400,
+                color: INK_V,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "6px 12px",
+                borderRadius: "9999px",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; (e.currentTarget as HTMLElement).style.color = INK; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = INK_V; }}
             >
-              {t("website.nav.resources")}
-              <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
-            </Link>
+              {l.label}
+            </button>
+          </li>
+        ))}
+      </ul>
 
-            {/* Dropdown — visible on group hover; invisible bridge prevents gap-closing */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 hidden group-hover:block" style={{ minWidth: "180px" }}>
-              <div
-                className="rounded-2xl shadow-xl border overflow-hidden"
-                style={{ background: "#FFFFFF", borderColor: "#F0E4FB" }}
-              >
-                {RESOURCES_ITEMS.map(item => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      className="flex items-center gap-3 px-4 py-3 text-sm transition-colors"
-                      style={{ color: "#1A0B2E" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#F8F1FF")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "")}
-                    >
-                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: "#6B3FBF" }} />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <Link
-            to="/download"
-            className={`text-sm transition-colors ${isActive("/download") ? "font-medium" : "opacity-60 hover:opacity-90"}`}
-            style={{ color: "#1A0B2E" }}
-          >
-            {t("website.nav.getApp")}
-          </Link>
-        </nav>
-
-        {/* Desktop right */}
-        <div className="hidden md:flex items-center gap-2">
-          <LanguageSwitcher variant="auto" />
-          <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}
-            className="text-sm" style={{ color: "#522793" }}>
-            {t("website.nav.signIn")}
-          </Button>
-          <Button size="sm" onClick={() => navigate("/onboarding")}
-            className="text-white border-0 text-sm rounded-xl"
-            style={{ background: "#6B3FBF" }}>
-            {t("website.nav.getStarted")}
-          </Button>
-        </div>
-
-        {/* Mobile: language + hamburger */}
-        <div className="md:hidden flex items-center gap-1">
-          <LanguageSwitcher variant="auto" />
-          <button
-            className="p-2" onClick={() => setMenuOpen(v => !v)}
-            aria-label="Toggle menu" style={{ color: "#522793" }}
-          >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
+      {/* Desktop CTAs */}
+      <div className="hidden md:flex" style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+        <button
+          onClick={() => navigate("/auth")}
+          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: INK_V, background: "none", border: "none", cursor: "pointer", padding: "7px 12px", borderRadius: "9999px" }}
+        >
+          Sign in
+        </button>
+        <button
+          onClick={() => navigate("/onboarding")}
+          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "9999px" }}
+        >
+          Download the app
+        </button>
       </div>
+
+      {/* Mobile hamburger */}
+      <button
+        className="md:hidden"
+        onClick={() => setMenuOpen(v => !v)}
+        aria-label="Toggle menu"
+        style={{ background: "none", border: "none", cursor: "pointer", padding: "8px", color: INK }}
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          {menuOpen
+            ? <><path d="M4 4L16 16M4 16L16 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>
+            : <><path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></>}
+        </svg>
+      </button>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div
-          className="md:hidden border-t px-5 py-4 space-y-2"
-          style={{ backgroundColor: "#FBF8FF", borderColor: "#F0E4FB" }}
-        >
-          {[
-            { href: "/about",     label: t("website.nav.about") },
-            { href: "/events",    label: t("website.nav.events") },
-            { href: "/download",  label: t("website.nav.getApp") },
-          ].map(l => (
-            <Link
-              key={l.href}
-              to={l.href}
-              className={`block py-2.5 text-sm ${isActive(l.href) ? "font-medium" : "opacity-70"}`}
-              style={{ color: "#1A0B2E" }}
+        <div style={{
+          position: "absolute",
+          top: "64px",
+          left: 0,
+          right: 0,
+          background: "#fdf9f3",
+          borderBottom: `0.5px solid ${OUTLINE}`,
+          padding: "12px 20px 20px",
+          zIndex: 199,
+        }}>
+          {navLinks.map(l => (
+            <button
+              key={l.label}
+              onClick={l.action}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "12px 0", fontFamily: "'DM Sans', sans-serif", fontSize: "15px", color: INK_V, background: "none", border: "none", cursor: "pointer", borderBottom: `0.5px solid #f1ede7` }}
             >
               {l.label}
-            </Link>
-          ))}
-
-          {/* Resources expandable section in mobile */}
-          <div>
-            <button
-              className="flex items-center gap-1 py-2.5 text-sm opacity-70 w-full text-left"
-              style={{ color: "#1A0B2E" }}
-              onClick={() => setMobileResourcesOpen(v => !v)}
-            >
-              {t("website.nav.resources")}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${mobileResourcesOpen ? "rotate-180" : ""}`} />
             </button>
-            {mobileResourcesOpen && <div className="pl-4 space-y-1">
-              {RESOURCES_ITEMS.map(item => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className="flex items-center gap-2 py-2 text-sm opacity-70"
-                    style={{ color: "#1A0B2E" }}
-                  >
-                    <Icon className="w-3.5 h-3.5" style={{ color: "#6B3FBF" }} />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>}
+          ))}
+          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <button onClick={() => { setMenuOpen(false); navigate("/auth"); }}
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: INK_V, background: "none", border: `1px solid ${OUTLINE}`, cursor: "pointer", padding: "10px", borderRadius: "9999px" }}>
+              Sign in
+            </button>
+            <button onClick={() => { setMenuOpen(false); navigate("/onboarding"); }}
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "11px", borderRadius: "9999px" }}>
+              Download the app
+            </button>
           </div>
-
-          <hr className="my-2" style={{ borderColor: "#F0E4FB" }} />
-          <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => navigate("/auth")}
-            style={{ color: "#522793" }}>
-            {t("website.nav.signIn")}
-          </Button>
-          <Button className="w-full text-white border-0 rounded-xl" onClick={() => navigate("/onboarding")}
-            style={{ background: "#6B3FBF" }}>
-            {t("website.nav.getStarted")}
-          </Button>
         </div>
       )}
-    </header>
+    </nav>
   );
 }

@@ -24,8 +24,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
 import Download from "./pages/Download";
-import EventsPublic from "./pages/EventsPublic";
-import Resources from "./pages/Resources";
+import Waitlist from "./pages/Waitlist";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy pages
@@ -73,9 +72,8 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/about" element={<About />} />
+              <Route path="/waitlist" element={<Waitlist />} />
               <Route path="/download" element={<Download />} />
-              <Route path="/events" element={<EventsPublic />} />
-              <Route path="/resources" element={<Resources />} />
               
               {/* Main App - User's custom theme */}
               <Route path="/app" element={<ProtectedRoute><ErrorBoundary><AppLayout /></ErrorBoundary></ProtectedRoute>}>
