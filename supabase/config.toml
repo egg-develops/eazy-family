@@ -20,3 +20,6 @@ verify_jwt = true
 
 [functions.google-calendar-auth]
 verify_jwt = false
+
+[functions.morning-digest]
+verify_jwt = false

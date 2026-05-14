@@ -437,13 +437,13 @@ const Settings = () => {
             icon={<Sunrise className="w-4 h-4" style={{ color: MUTED }} />}
             title="Morning Digest"
             subtitle="Today's schedule, tasks & what needs attention — 8:00 AM"
-            right={<Tog checked={morningDigest} onChange={v => { setMorningDigest(v); localStorage.setItem('eazy-morning-digest', String(v)); }} />}
+            right={<Tog checked={morningDigest} onChange={v => { setMorningDigest(v); cloudSet('eazy-morning-digest', String(v)); }} />}
           />
           {morningDigest && (
             <Row
               title="Also send by email"
               subtitle={userEmail || 'Your account email'}
-              right={<Tog checked={morningDigestEmail} onChange={v => { setMorningDigestEmail(v); localStorage.setItem('eazy-morning-digest-email', String(v)); }} />}
+              right={<Tog checked={morningDigestEmail} onChange={v => { setMorningDigestEmail(v); cloudSet('eazy-morning-digest-email', String(v)); }} />}
               last
             />
           )}

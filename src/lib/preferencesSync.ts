@@ -14,6 +14,8 @@ const SYNC_KEYS = new Set([
   'eazy-outlook-calendar-synced',
   'eazy-family-calendar-items',
   'eazy-family-points',
+  'eazy-morning-digest',
+  'eazy-morning-digest-email',
 ]);
 
 let _userId: string | null = null;
