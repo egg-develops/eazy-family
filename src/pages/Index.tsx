@@ -413,7 +413,7 @@ export default function Index() {
       <style>{`
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; }
-          .hero-orbe-wrap { padding-bottom: 85vw !important; max-height: 380px; }
+          .hero-orbe-wrap { display: none !important; }
         }
         @media (max-width: 720px) { .digest-grid { grid-template-columns: repeat(2,1fr) !important; } }
         @media (max-width: 480px) { .digest-grid { grid-template-columns: 1fr !important; } }

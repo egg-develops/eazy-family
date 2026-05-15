@@ -478,18 +478,23 @@ const HomeWeatherInline = ({
         if (!res.ok) return;
         const data = await res.json();
         const current = data.current_condition?.[0];
-        if (current) {
-          setTemp(Math.round(parseFloat(current.temp_C)));
-          setEmoji(getWeatherEmoji(parseInt(current.weatherCode, 10)));
-        }
-        const now = new Date().getHours();
-        const slots: HourlySlot[] = (data.weather?.[0]?.hourly || []).map((h: any) => ({
-          hour: Math.floor(parseInt(h.time, 10) / 100),
-          emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
-          temp: Math.round(parseFloat(h.tempC)),
-        }));
-        const sorted = [...slots.filter(s => s.hour >= now), ...slots.filter(s => s.hour < now)].slice(0, 8);
-        onHourly(sorted);
+        if (!current) return;
+        const nowTemp = Math.round(parseFloat(current.temp_C));
+        const nowEmoji = getWeatherEmoji(parseInt(current.weatherCode, 10));
+        setTemp(nowTemp);
+        setEmoji(nowEmoji);
+
+        const currentHour = new Date().getHours();
+        const mapHourly = (arr: any[], offset = 0): HourlySlot[] =>
+          (arr || []).map((h: any) => ({
+            hour: Math.floor(parseInt(h.time, 10) / 100) + offset,
+            emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
+            temp: Math.round(parseFloat(h.tempC)),
+          }));
+        const todaySlots = mapHourly(data.weather?.[0]?.hourly).filter(s => s.hour > currentHour);
+        const tomorrowSlots = mapHourly(data.weather?.[1]?.hourly, 24);
+        const futureSlots = [...todaySlots, ...tomorrowSlots].slice(0, 5);
+        onHourly([{ hour: currentHour, emoji: nowEmoji, temp: nowTemp }, ...futureSlots]);
       } catch { /* silent */ }
     };
 
@@ -905,7 +910,7 @@ const AppHome = () => {
                 return (
                   <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0 px-5 py-3">
                     <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.65)' }}>
-                      {isNow ? 'Now' : `${slot.hour}:00`}
+                      {isNow ? 'Now' : `${slot.hour % 24}:00`}
                     </span>
                     <span style={{ fontSize: '1.25rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{slot.emoji}</span>
                     <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
