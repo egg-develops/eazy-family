@@ -179,15 +179,19 @@ const Settings = () => {
     i18n.changeLanguage(lang).finally(() => window.location.reload());
   };
 
-  const handleReferFriends = () => {
-    const url = 'https://eazy.family';
-    const text = 'Check out Eazy.Family – the smart hub for organized family life!';
+  const handleReferFriends = async () => {
+    let refUrl = 'https://eazy.family';
+    try {
+      const { data } = await supabase.from('profiles').select('referral_code').eq('user_id', user?.id).single();
+      if (data?.referral_code) refUrl = `https://eazy.family?ref=${data.referral_code}`;
+    } catch { /* use base URL */ }
+    const text = `Join me on Eazy.Family – the smart hub for family life! Use my link to get 1 month of Premium free 🎁`;
     if (navigator.share) {
-      navigator.share({ title: 'Eazy.Family', text, url }).catch(() => {});
+      navigator.share({ title: 'Eazy.Family', text, url: refUrl }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url)
-        .then(() => toast({ title: 'Link copied!', description: 'Share eazy.family with friends' }))
-        .catch(() => toast({ title: 'eazy.family', description: 'Share this link with friends' }));
+      navigator.clipboard.writeText(refUrl)
+        .then(() => toast({ title: 'Link copied!', description: refUrl }))
+        .catch(() => toast({ title: 'Share this link', description: refUrl }));
     }
   };
 
@@ -266,14 +270,11 @@ const Settings = () => {
             icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
             title={displayName || user?.email?.split('@')[0] || 'You'}
             subtitle={t('settings.primaryAccount')}
-            right={<Arrow />}
-            onClick={() => navigate('/app/family')}
           />
           <Row
             icon={<Mail className="w-4 h-4" style={{ color: MUTED }} />}
             title={userEmail || 'Email'}
             subtitle={t('settings.verifiedEmail')}
-            right={<Arrow />}
           />
           {subscriptionTier === 'free' ? (
             <UpgradeDialog>
@@ -543,7 +544,7 @@ const Settings = () => {
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title={t('settings.helpCenterFaqs')}
+            title={t('settings.helpCenter', 'Help Center')}
             right={<ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />}
             onClick={() => navigate('/app/help')}
           />
