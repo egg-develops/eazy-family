@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import i18nInstance from "@/i18n/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Switch } from "@/components/ui/switch";
 import {
-  User, Mail, Crown, Share2, Lock, Settings2, Globe, Sparkles, Database,
+  User, Mail, Crown, Share2, Lock, Globe, Sparkles, Database,
   Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
-  UserPlus, LogOut, Trash2, X, Plus, Check, RefreshCw, MessageCircle
+  UserPlus, LogOut, X, Plus, Check
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,7 +115,6 @@ const Settings = () => {
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
 
   // AI & Privacy
   const [aiSuggestions, setAiSuggestions] = useState(() => localStorage.getItem('eazy-ai-suggestions') !== 'false');
@@ -153,12 +151,6 @@ const Settings = () => {
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('family_members').select('id, full_name, display_name, email, role, user_id')
-      .eq('family_id', user.id).eq('is_active', true)
-      .then(({ data }) => setFamilyMembers(data || []));
-  }, [user]);
 
   // Re-hydrate from cloud
   useEffect(() => {
@@ -181,11 +173,22 @@ const Settings = () => {
   };
 
   const handleLanguageChange = (lang: string) => {
-    setLanguage(lang);
-    i18nInstance.changeLanguage(lang);
+    localStorage.setItem('eazy-family-language', lang);
     cloudSet('eazy-family-language', lang);
     setLangOpen(false);
-    toast({ title: 'Language updated' });
+    i18n.changeLanguage(lang).finally(() => window.location.reload());
+  };
+
+  const handleReferFriends = () => {
+    const url = 'https://eazy.family';
+    const text = 'Check out Eazy.Family – the smart hub for organized family life!';
+    if (navigator.share) {
+      navigator.share({ title: 'Eazy.Family', text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url)
+        .then(() => toast({ title: 'Link copied!', description: 'Share eazy.family with friends' }))
+        .catch(() => toast({ title: 'eazy.family', description: 'Share this link with friends' }));
+    }
   };
 
   const handleLogout = async () => {
@@ -242,7 +245,6 @@ const Settings = () => {
   ];
   const currentLang = LANG_OPTIONS.find(l => l.value === language) || LANG_OPTIONS[0];
 
-  const MEMBER_COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
 
   const MODULE_OPTIONS = [
     { key: 'showWeather', label: 'Weather' },
@@ -260,22 +262,19 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>Account</SectionLabel>
         <Card_>
-          {/* Name + role */}
           <Row
             icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
             title={displayName || user?.email?.split('@')[0] || 'You'}
-            subtitle="Primary Guardian"
+            subtitle="Primary Account"
             right={<Arrow />}
             onClick={() => navigate('/app/family')}
           />
-          {/* Email */}
           <Row
             icon={<Mail className="w-4 h-4" style={{ color: MUTED }} />}
             title={userEmail || 'Email'}
             subtitle="Verified Email"
             right={<Arrow />}
           />
-          {/* Premium */}
           {subscriptionTier === 'free' ? (
             <UpgradeDialog>
               <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
@@ -289,56 +288,23 @@ const Settings = () => {
           ) : (
             <Row
               icon={<Crown className="w-4 h-4" style={{ color: '#B88A00' }} />}
-              title={`${subscriptionTier} Plan`}
+              title={`${subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)} Plan`}
               subtitle="Active subscription"
               right={<span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>Active</span>}
             />
           )}
-          {/* Refer */}
+          <Row
+            icon={<UserPlus className="w-4 h-4" style={{ color: MUTED }} />}
+            title="Invite Family Members"
+            right={<Arrow />}
+            onClick={() => navigate('/app/family')}
+          />
           <Row
             icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
             title="Refer Friends"
             right={<Arrow />}
             last
-            onClick={() => navigate('/app/settings#referral')}
-          />
-        </Card_>
-      </div>
-
-      {/* ── Family ── */}
-      <div className="space-y-2">
-        <SectionLabel>Family</SectionLabel>
-        <Card_>
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-            <div className="flex items-center gap-2 flex-wrap">
-              {familyMembers.slice(0, 4).map((m, i) => {
-                const name = (m.display_name || m.full_name || 'Member').split(' ')[0];
-                const initials = name.slice(0, 2).toUpperCase();
-                const color = MEMBER_COLORS[i % MEMBER_COLORS.length];
-                return (
-                  <button key={m.id} onClick={() => navigate('/app/family')}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
-                    style={{ background: BG, border: `1px solid ${BORDER}` }}>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: color, fontSize: '8px', fontWeight: 700 }}>{initials}</div>
-                    <span className="text-xs font-semibold" style={{ color: INK }}>{name}</span>
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => navigate('/app/family')}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
-                style={{ background: BG, border: `1px dashed ${BORDER}` }}>
-                <UserPlus className="w-3.5 h-3.5" style={{ color: MUTED }} />
-                <span className="text-xs font-semibold" style={{ color: MUTED }}>Invite</span>
-              </button>
-            </div>
-          </div>
-          <Row
-            icon={<Lock className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Shared Permissions"
-            right={<Arrow />}
-            last
-            onClick={() => navigate('/app/family')}
+            onClick={handleReferFriends}
           />
         </Card_>
       </div>
@@ -347,7 +313,6 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>Calendar Integrations</SectionLabel>
         <Card_>
-          {/* Google */}
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
             <Row
               icon={<svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>}
@@ -375,54 +340,6 @@ const Settings = () => {
             icon={<div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: '#0078d4' }}><span className="text-white text-xs font-bold" style={{ fontSize: '9px' }}>O</span></div>}
             title="Sync Outlook Calendar"
             right={<Tog checked={outlookSynced} onChange={() => navigate('/app/calendar?sync=1')} />}
-            last
-          />
-        </Card_>
-      </div>
-
-      {/* ── AI & Privacy ── */}
-      <div className="space-y-2">
-        <SectionLabel>AI & Privacy</SectionLabel>
-        <Card_>
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-            <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
-              Configure how Eazy.Family's AI interacts with your family data. We prioritize your privacy and peace of mind.
-            </p>
-          </div>
-          <Row
-            icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Intelligent Suggestions"
-            subtitle="Proactive reminders"
-            right={<Tog checked={aiSuggestions} onChange={v => { setAiSuggestions(v); localStorage.setItem('eazy-ai-suggestions', String(v)); }} />}
-          />
-          {/* Privacy Level */}
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                <Lock className="w-4 h-4" style={{ color: MUTED }} />
-              </div>
-              <p className="text-sm font-medium" style={{ color: INK }}>Privacy Level</p>
-            </div>
-            <div className="relative mt-1 mb-4">
-              <div className="w-full h-1.5 rounded-full" style={{ background: DIVIDER }}>
-                <div className="h-1.5 rounded-full" style={{ background: TC, width: privacyLevel === 0 ? '0%' : privacyLevel === 1 ? '50%' : '100%', transition: 'width 0.2s' }} />
-              </div>
-              <div className="flex justify-between mt-1 -mx-1">
-                {(['Private', 'Shared with Family', 'Full AI Assistance'] as const).map((label, i) => (
-                  <button key={label} onClick={() => { setPrivacyLevel(i as 0|1|2); localStorage.setItem('eazy-privacy-level', String(i)); }}
-                    className="flex flex-col items-center gap-1">
-                    <div className="w-3 h-3 rounded-full border-2 transition-all" style={{ background: privacyLevel >= i ? TC : CARD, borderColor: privacyLevel >= i ? TC : BORDER }} />
-                    <span className="text-xs" style={{ color: privacyLevel === i ? TC : MUTED, fontWeight: privacyLevel === i ? 600 : 400 }}>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <Row
-            icon={<Database className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Data Usage"
-            subtitle="Learn from my patterns"
-            right={<Tog checked={dataUsage} onChange={v => { setDataUsage(v); localStorage.setItem('eazy-data-usage', String(v)); }} />}
             last
           />
         </Card_>
@@ -465,7 +382,6 @@ const Settings = () => {
             title="Dark Mode"
             right={<Tog checked={isDark} onChange={() => setTheme(isDark ? 'light' : 'dark')} />}
           />
-          {/* Language row with dropdown */}
           <div className="relative" style={{ borderBottom: 'none' }}>
             <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" onClick={() => setLangOpen(p => !p)}>
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
@@ -496,7 +412,6 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>Homepage Modules</SectionLabel>
         <Card_>
-          {/* Home title */}
           <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium" style={{ color: INK }}>Home Title</p>
@@ -577,22 +492,49 @@ const Settings = () => {
         </Card_>
       </div>
 
-      {/* ── Rituals ── */}
+      {/* ── AI & Privacy ── */}
       <div className="space-y-2">
-        <SectionLabel>Rituals</SectionLabel>
+        <SectionLabel>AI & Privacy</SectionLabel>
         <Card_>
+          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+            <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
+              Configure how Eazy.Family's AI interacts with your family data. We prioritize your privacy and peace of mind.
+            </p>
+          </div>
           <Row
-            icon={<Settings2 className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Managed Rituals"
-            right={<Arrow />}
-            onClick={() => navigate('/app/rituals')}
+            icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
+            title="Intelligent Suggestions"
+            subtitle="Proactive reminders"
+            right={<Tog checked={aiSuggestions} onChange={v => { setAiSuggestions(v); localStorage.setItem('eazy-ai-suggestions', String(v)); }} />}
           />
+          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
+                <Lock className="w-4 h-4" style={{ color: MUTED }} />
+              </div>
+              <p className="text-sm font-medium" style={{ color: INK }}>Privacy Level</p>
+            </div>
+            <div className="relative mt-1 mb-4">
+              <div className="w-full h-1.5 rounded-full" style={{ background: DIVIDER }}>
+                <div className="h-1.5 rounded-full" style={{ background: TC, width: privacyLevel === 0 ? '0%' : privacyLevel === 1 ? '50%' : '100%', transition: 'width 0.2s' }} />
+              </div>
+              <div className="flex justify-between mt-1 -mx-1">
+                {(['Private', 'Shared with Family', 'Full AI Assistance'] as const).map((label, i) => (
+                  <button key={label} onClick={() => { setPrivacyLevel(i as 0|1|2); localStorage.setItem('eazy-privacy-level', String(i)); }}
+                    className="flex flex-col items-center gap-1">
+                    <div className="w-3 h-3 rounded-full border-2 transition-all" style={{ background: privacyLevel >= i ? TC : CARD, borderColor: privacyLevel >= i ? TC : BORDER }} />
+                    <span className="text-xs" style={{ color: privacyLevel === i ? TC : MUTED, fontWeight: privacyLevel === i ? 600 : 400 }}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           <Row
-            icon={<Lock className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Ritual Privacy"
-            right={<Arrow />}
+            icon={<Database className="w-4 h-4" style={{ color: MUTED }} />}
+            title="Data Usage"
+            subtitle="Learn from my patterns"
+            right={<Tog checked={dataUsage} onChange={v => { setDataUsage(v); localStorage.setItem('eazy-data-usage', String(v)); }} />}
             last
-            onClick={() => navigate('/app/rituals')}
           />
         </Card_>
       </div>
@@ -603,13 +545,13 @@ const Settings = () => {
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Help Center"
+            title="Help Center & FAQs"
             right={<ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />}
             onClick={() => navigate('/app/help')}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Safety Principles"
+            title="Privacy Policy"
             right={<Arrow />}
             last
             onClick={() => navigate('/privacy')}

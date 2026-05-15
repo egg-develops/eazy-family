@@ -296,7 +296,7 @@ const AppLayout = () => {
       <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 'none' : undefined }}>
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
-          <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
+          <h1 className="font-bold text-2xl" style={{ color: '#1C1C18' }}>
             {isHomePath ? appTitle : (() => {
               const allNav = [
                 { path: '/app/calendar', label: 'Calendar' },
