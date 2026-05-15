@@ -1479,15 +1479,15 @@ const Calendar = () => {
               {googleSynced ? (
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1" onClick={handleGoogleConnect} disabled={isSyncing}>
-                    {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> Resync</>}
+                    {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> {t('calendar.resync')}</>}
                   </Button>
                   <Button size="sm" variant="outline" className="h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectGoogle}>
-                    Disconnect
+                    {t('calendar.disconnect')}
                   </Button>
                 </div>
               ) : (
                 <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#964735" }} onClick={handleGoogleConnect} disabled={isSyncing}>
-                  {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Google Calendar'}
+                  {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : t('calendar.connectGoogle')}
                 </Button>
               )}
             </div>
@@ -1511,15 +1511,15 @@ const Calendar = () => {
               {outlookSynced ? (
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1 h-8 text-xs gap-1" onClick={handleOutlookResync} disabled={isSyncingOutlook}>
-                    {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> Resync</>}
+                    {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RefreshCw className="h-3 w-3" /> {t('calendar.resync')}</>}
                   </Button>
                   <Button size="sm" variant="outline" className="h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectOutlook}>
-                    Disconnect
+                    {t('calendar.disconnect')}
                   </Button>
                 </div>
               ) : (
                 <Button size="sm" className="w-full h-8 text-xs text-white border-0 bg-[#0078d4] hover:bg-[#106ebe]" onClick={handleOutlookConnect} disabled={isSyncingOutlook}>
-                  {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Outlook Calendar'}
+                  {isSyncingOutlook ? <Loader2 className="h-3 w-3 animate-spin" /> : t('calendar.connectOutlook')}
                 </Button>
               )}
             </div>
@@ -1531,8 +1531,8 @@ const Calendar = () => {
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Apple Calendar</p>
-                  <p className="text-xs text-muted-foreground/70">Coming soon — iCloud integration</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('calendarIntegrations.appleCalendar')}</p>
+                  <p className="text-xs text-muted-foreground/70">{t('calendar.appleComingSoon')}</p>
                 </div>
               </div>
             </div>
@@ -1545,10 +1545,10 @@ const Calendar = () => {
         <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#F7F3ED', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 h-14 flex-shrink-0" style={{ background: '#F7F3ED', borderBottom: '1px solid #DAC1BB' }}>
-            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: '#7A6660' }}>Cancel</button>
-            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{editingItemId ? 'Edit Event' : 'New Event'}</h2>
+            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: '#7A6660' }}>{t('common.cancel')}</button>
+            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{editingItemId ? t('calendar.editEvent') : t('calendar.newEvent')}</h2>
             <button onClick={dialogTab==='event'?handleAddEvent:handleAddReminder} className="text-sm font-semibold" style={{ color: '#964735' }}>
-              {editingItemId ? 'Update' : 'Add'}
+              {editingItemId ? t('common.update') : t('common.add')}
             </button>
           </div>
 
@@ -1558,11 +1558,11 @@ const Calendar = () => {
             {/* Title */}
             <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
               <div className="px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>Title</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>{t('calendar.titleLabel')}</p>
                 <input
                   className="w-full text-base outline-none"
                   style={{ background: 'transparent', color: '#1C1C18' }}
-                  placeholder={dialogTab === 'event' ? 'Event title' : 'Reminder title'}
+                  placeholder={dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle')}
                   value={dialogTab === 'event' ? eventTitle : reminderTitle}
                   onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
                 />
@@ -1575,7 +1575,7 @@ const Calendar = () => {
                 <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
                     onClick={() => { setShowStartPicker(p => !p); setShowEndPicker(false); }}>
-                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Starts</span>
+                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.starts')}</span>
                     <div className="flex gap-2">
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>
@@ -1596,7 +1596,7 @@ const Calendar = () => {
                 <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
                     onClick={() => { setShowEndPicker(p => !p); setShowStartPicker(false); }}>
-                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Ends</span>
+                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.ends')}</span>
                     <div className="flex gap-2">
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>
@@ -1615,16 +1615,16 @@ const Calendar = () => {
 
                 {/* Reminder */}
                 <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>Reminder</span>
+                  <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.reminder')}</span>
                   <select value={eventReminder} onChange={e => setEventReminder(e.target.value)}
                     className="text-sm font-medium outline-none rounded-lg px-2.5 py-1"
                     style={{ background: '#F1EDE7', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
-                    <option value="none">None</option>
-                    <option value="5min">5 min before</option>
-                    <option value="15min">15 min before</option>
-                    <option value="30min">30 min before</option>
-                    <option value="1hour">1 hour before</option>
-                    <option value="1day">1 day before</option>
+                    <option value="none">{t('calendar.none')}</option>
+                    <option value="5min">{t('calendar.5minBefore')}</option>
+                    <option value="15min">{t('calendar.15minBefore')}</option>
+                    <option value="30min">{t('calendar.30minBefore')}</option>
+                    <option value="1hour">{t('calendar.1hourBefore')}</option>
+                    <option value="1day">{t('calendar.1dayBefore')}</option>
                   </select>
                 </div>
 
@@ -1632,20 +1632,20 @@ const Calendar = () => {
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
                   <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: '#1C1C18' }}
-                    placeholder="Location" value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
+                    placeholder={t('calendar.location')} value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
                 </div>
 
                 {/* Notes */}
                 <div className="rounded-2xl flex items-start gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <AlignLeft className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#B5A09A' }} />
                   <textarea className="flex-1 outline-none text-sm resize-none" style={{ background: 'transparent', color: '#1C1C18', minHeight: '60px' }}
-                    placeholder="Add notes or details..." value={eventNotes} onChange={e => setEventNotes(e.target.value)} />
+                    placeholder={t('calendar.notesPlaceholder')} value={eventNotes} onChange={e => setEventNotes(e.target.value)} />
                 </div>
 
                 {/* Attachment */}
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
-                  <span className="flex-1 text-sm" style={{ color: '#B5A09A' }}>Add attachment (PDF, Image)</span>
+                  <span className="flex-1 text-sm" style={{ color: '#B5A09A' }}>{t('calendar.addAttachment')}</span>
                   <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#DAC1BB' }} />
                 </div>
               </>
@@ -1654,14 +1654,14 @@ const Calendar = () => {
                 {/* Reminder form */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
                   <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid #F1EDE7' }}>
-                    <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>Due Date</span>
+                    <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>{t('calendar.dueDate')}</span>
                     <input type="date" value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
                       onChange={e => setReminderDate(e.target.value ? new Date(e.target.value) : undefined)}
                       className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
                   </div>
                   {reminderDate && (
                     <div className="px-4 py-3.5 flex items-center justify-between">
-                      <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>Time</span>
+                      <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>{t('calendar.time')}</span>
                       <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
                         className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
                     </div>
@@ -1672,7 +1672,7 @@ const Calendar = () => {
                     <button key={p} onClick={() => setReminderPriority(p)}
                       className="w-full flex items-center justify-between px-4 py-3.5"
                       style={{ background: reminderPriority===p ? '#964735' : 'transparent', color: reminderPriority===p ? '#fff' : '#1C1C18', borderBottom: i<arr.length-1 ? '1px solid #F1EDE7' : 'none', fontWeight: reminderPriority===p ? 600 : 400 }}>
-                      {p.charAt(0).toUpperCase()+p.slice(1)} Priority
+                      {t(`calendar.${p}`)} {t('calendar.priority')}
                     </button>
                   ))}
                 </div>

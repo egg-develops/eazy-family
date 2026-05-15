@@ -896,7 +896,7 @@ const AppHome = () => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
-            {new Date().getHours() < 12 ? 'Good Morning' : new Date().getHours() < 17 ? 'Good Afternoon' : 'Good Evening'}
+            {new Date().getHours() < 12 ? t('home.goodMorning') : new Date().getHours() < 17 ? t('home.goodAfternoon') : t('home.goodEvening')}
           </p>
           {homeConfig.showWeather !== false && (
             <HomeWeatherInline
@@ -916,7 +916,7 @@ const AppHome = () => {
                 return (
                   <div key={i} className="flex flex-col items-center gap-1 flex-shrink-0 px-5 py-3">
                     <span className="text-xs font-semibold" style={{ color: isNow ? '#fff' : 'rgba(255,255,255,0.65)' }}>
-                      {isNow ? 'Now' : `${slot.hour % 24}:00`}
+                      {isNow ? t('home.now') : `${slot.hour % 24}:00`}
                     </span>
                     <span style={{ fontSize: '1.25rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{slot.emoji}</span>
                     <span className="text-sm font-bold" style={{ color: '#fff' }}>{slot.temp}°</span>
@@ -931,7 +931,7 @@ const AppHome = () => {
       {/* Today's Rituals card */}
       {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
         <div className="space-y-0.5">
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>{t('home.ritualsSection')}</p>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>
             {(() => {
               const completed: string[] = (() => {
@@ -946,7 +946,7 @@ const AppHome = () => {
               })();
               const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
               const totalCount = total.length || 5;
-              return `${completed.length}/${totalCount} Done!`;
+              return `${completed.length}/${totalCount} ${t('rituals.done')}`;
             })()}
           </p>
         </div>
@@ -955,7 +955,7 @@ const AppHome = () => {
           className="px-4 py-2 rounded-full text-sm font-semibold text-white flex-shrink-0"
           style={{ background: '#964735' }}
         >
-          Rituals
+          {t('rituals.title')}
         </button>
       </div>}
 
@@ -971,8 +971,8 @@ const AppHome = () => {
           return (
             <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
               <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today</p>
-                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>Calendar</button>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>{t('calendar.today')}</p>
+                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
               </div>
               {todayEvts.map((e, i) => (
                 <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid #F1EDE7' : 'none', background: '#FFFFFF' }}>
@@ -993,18 +993,18 @@ const AppHome = () => {
         if (upcoming) {
           return (
             <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Next Up</p>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>{t('home.nextUp')}</p>
               <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{upcoming.title}</p>
               <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>
-                {upcoming.startDate.toDateString() === todayStr ? 'Today' : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
+                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
               </p>
             </button>
           );
         }
         return (
           <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>Today</p>
-            <p className="text-sm" style={{ color: '#7A6660' }}>Nothing scheduled — enjoy your day!</p>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>{t('calendar.today')}</p>
+            <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.nothingScheduled')}</p>
           </button>
         );
       })()}
@@ -1013,8 +1013,8 @@ const AppHome = () => {
       {homeConfig.showTasks !== false && (
       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Top Tasks</p>
-          <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{t('home.topTasks')}</p>
+          <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
         </div>
         <QuickToDos navigate={navigate} />
       </div>
@@ -1038,8 +1038,8 @@ const AppHome = () => {
         return (
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>Family Channel</p>
-              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>Open</button>
+              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{t('home.familyChannel')}</p>
+              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
             </div>
             {recentMsgs.length > 0 ? (
               recentMsgs.map((msg, i) => (
@@ -1060,8 +1060,8 @@ const AppHome = () => {
               ))
             ) : (
               <div className="px-4 py-5 text-center">
-                <p className="text-sm" style={{ color: '#7A6660' }}>No messages yet — start the conversation.</p>
-                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>Open Channel</button>
+                <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.noMessages')}</p>
+                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>{t('home.openChannel')}</button>
               </div>
             )}
           </div>
@@ -1087,6 +1087,7 @@ const AppHome = () => {
 
 // Quick To-Do's Component
 const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
@@ -1144,17 +1145,10 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       if (error) throw error;
       
       loadQuickTasks();
-      toast({
-        title: "Completed tasks cleared",
-        description: `${completedIds.length} task(s) removed.`,
-      });
+      toast({ title: t('home.tasksRemoved') });
     } catch (error) {
       logError('Error clearing completed tasks:', error);
-      toast({
-        title: "Error",
-        description: "Could not clear completed tasks.",
-        variant: "destructive",
-      });
+      toast({ title: t('common.error'), description: t('home.couldNotClear'), variant: "destructive" });
     }
   };
 
@@ -1177,20 +1171,15 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       loadQuickTasks();
       
       toast({
-        title: "Task Added",
-        description: `"${newTaskTitle}" has been added to your list.`,
+        title: t('home.taskAdded'),
       });
     } catch (error) {
       logError('Error adding task:', error);
-      toast({
-        title: "Error",
-        description: "Could not add task. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: t('common.error'), description: t('home.couldNotAdd'), variant: "destructive" });
     }
   };
 
-  const hasCompletedTasks = quickTasks.some(t => t.completed);
+  const hasCompletedTasks = quickTasks.some(task => task.completed);
 
   return (
     <div>
@@ -1214,7 +1203,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
         ))}
         {quickTasks.length === 0 && !showInlineAdd && (
           <div className="px-4 py-4 text-center">
-            <p className="text-sm" style={{ color: '#7A6660' }}>No tasks yet.</p>
+            <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.noTasksYet')}</p>
           </div>
         )}
         {showInlineAdd && (
@@ -1227,7 +1216,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
                 if (e.key === 'Enter') handleAddTask();
                 if (e.key === 'Escape') { setShowInlineAdd(false); setNewTaskTitle(''); }
               }}
-              placeholder="Task name…"
+              placeholder={t('home.taskPlaceholder')}
               className="flex-1 text-sm outline-none bg-transparent"
               style={{ color: '#1C1C18' }}
               autoFocus
@@ -1238,7 +1227,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
               className="text-xs font-semibold px-3 py-1 rounded-full flex-shrink-0"
               style={{ background: newTaskTitle.trim() ? '#964735' : '#DAC1BB', color: '#fff' }}
             >
-              Add
+              {t('common.add')}
             </button>
             <button onClick={() => { setShowInlineAdd(false); setNewTaskTitle(''); }} className="text-xs flex-shrink-0" style={{ color: '#7A6660' }}>✕</button>
           </div>
@@ -1250,7 +1239,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
             onClick={() => setShowInlineAdd(true)}
           >
             <Plus className="w-4 h-4" />
-            Add Task
+            {t('home.addTaskBtn')}
           </button>
         )}
       </div>
