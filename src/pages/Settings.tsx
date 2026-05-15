@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import i18nInstance from "@/i18n/config";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -32,6 +33,7 @@ interface HomeConfig {
   iconImage?: string;
   headerImage?: string;
   headerImages?: string[];
+  appTitle?: string;
 }
 
 interface FamilyMember {
@@ -145,9 +147,9 @@ const Settings = () => {
     if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
   };
 
-  const handleLanguageChange = async (lang: string) => {
+  const handleLanguageChange = (lang: string) => {
     setLanguage(lang);
-    await i18n.changeLanguage(lang);
+    i18nInstance.changeLanguage(lang);
     cloudSet('eazy-family-language', lang);
     setLangOpen(false);
     toast({ title: 'Language updated' });
@@ -199,10 +201,11 @@ const Settings = () => {
   };
 
   const LANG_OPTIONS = [
-    { value: 'en', label: 'English', abbr: 'EN', flag: '🇬🇧' },
-    { value: 'de', label: 'Deutsch', abbr: 'DE', flag: '🇩🇪' },
-    { value: 'fr', label: 'Français', abbr: 'FR', flag: '🇫🇷' },
-    { value: 'it', label: 'Italiano', abbr: 'IT', flag: '🇮🇹' },
+    { value: 'en',    label: 'English (US)', abbr: 'EN',    flag: '🇺🇸' },
+    { value: 'en-GB', label: 'English (UK)', abbr: 'EN-GB', flag: '🇬🇧' },
+    { value: 'de',    label: 'Deutsch',      abbr: 'DE',    flag: '🇩🇪' },
+    { value: 'fr',    label: 'Français',     abbr: 'FR',    flag: '🇫🇷' },
+    { value: 'it',    label: 'Italiano',     abbr: 'IT',    flag: '🇮🇹' },
   ];
   const currentLang = LANG_OPTIONS.find(l => l.value === language) || LANG_OPTIONS[0];
 
@@ -467,10 +470,7 @@ const Settings = () => {
                 <Globe className="w-4 h-4" style={{ color: MUTED }} />
               </div>
               <p className="flex-1 text-sm font-medium" style={{ color: INK }}>Language</p>
-              <span className="text-xs font-semibold mr-1" style={{ color: MUTED }}>
-                {LANG_OPTIONS.filter(l => l.value !== language).slice(0, 2).map(l => l.abbr).join(', ')}
-                {` · ${currentLang.abbr}`}
-              </span>
+              <span style={{ fontSize: 20, lineHeight: 1, marginRight: 2 }}>{currentLang.flag}</span>
               <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" style={{ color: '#C4AEA8', transform: langOpen ? 'rotate(90deg)' : 'none' }} />
             </div>
             {langOpen && (
@@ -494,6 +494,20 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>Homepage Modules</SectionLabel>
         <Card_>
+          {/* Homepage title */}
+          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium" style={{ color: INK }}>Homepage Title</p>
+            </div>
+            <input
+              value={homeConfig.appTitle ?? ''}
+              onChange={e => saveHomeConfig({ appTitle: e.target.value })}
+              placeholder="Eazy.Family"
+              maxLength={32}
+              className="text-sm text-right outline-none bg-transparent"
+              style={{ color: TC, width: 140, fontWeight: 500 }}
+            />
+          </div>
           {MODULE_OPTIONS.map((m, i) => (
             <Row
               key={m.key}

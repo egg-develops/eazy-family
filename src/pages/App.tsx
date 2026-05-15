@@ -57,11 +57,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { format } from "date-fns";
 
+const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
+
 const AppLayout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
+  const [appTitle, setAppTitle] = useState(getAppTitle);
   const [ezOpen, setEzOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -260,7 +263,6 @@ const AppLayout = () => {
   ];
 
   useEffect(() => {
-    // Check if user has completed onboarding (skip for authenticated users)
     try {
       const onboardingData = localStorage.getItem('eazy-family-onboarding');
       if (onboardingData) {
@@ -268,6 +270,9 @@ const AppLayout = () => {
         setUserInitials(data.userInitials || "EF");
       }
     } catch {}
+    const onConfigUpdate = () => setAppTitle(getAppTitle());
+    window.addEventListener('eazy-home-config-updated', onConfigUpdate);
+    return () => window.removeEventListener('eazy-home-config-updated', onConfigUpdate);
   }, []);
 
   useEffect(() => {
@@ -292,7 +297,7 @@ const AppLayout = () => {
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>
-            {isHomePath ? 'Eazy.Family' : (() => {
+            {isHomePath ? appTitle : (() => {
               const allNav = [
                 { path: '/app/calendar', label: 'Calendar' },
                 { path: '/app/todos', label: 'Tasks' },
@@ -434,6 +439,7 @@ interface HomeConfig {
   iconImage?: string;
   headerImage?: string;
   headerImages?: string[];
+  appTitle?: string;
 }
 
 interface HomeCalendarEvent {
