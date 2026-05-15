@@ -121,7 +121,7 @@ export function PublicNav() {
 
       {/* Desktop links */}
       <ul style={{ gap: "4px", listStyle: "none", margin: 0, padding: 0 }}
-        className="hidden md:flex">
+        className="hidden lg:flex">
         {navLinks.map(l => (
           <li key={l.label}>
             <button
@@ -148,7 +148,7 @@ export function PublicNav() {
       </ul>
 
       {/* Desktop CTAs */}
-      <div className="hidden md:flex" style={{ gap: "8px", alignItems: "center" }}>
+      <div className="hidden lg:flex" style={{ gap: "8px", alignItems: "center" }}>
         {/* Language dropdown */}
         <div ref={langRef} style={{ position: "relative" }}>
           <button
@@ -209,7 +209,7 @@ export function PublicNav() {
 
       {/* Mobile Orbe toggle */}
       <button
-        className="md:hidden"
+        className="lg:hidden"
         onClick={() => setMenuOpen(v => !v)}
         aria-label="Toggle menu"
         style={{

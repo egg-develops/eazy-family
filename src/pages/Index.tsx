@@ -138,7 +138,7 @@ export default function Index() {
           {/* Left: text */}
           <div style={{ padding: "72px 48px 72px max(40px, 5vw)" }}>
             <Eyebrow>{t('website.hero.eyebrow')}</Eyebrow>
-            <h1 style={{ fontFamily: lora, fontSize: "clamp(30px,4.5vw,48px)", fontWeight: 400, lineHeight: 1.12, letterSpacing: "-0.025em", marginBottom: 20, color: T.ink }}>
+            <h1 style={{ fontFamily: lora, fontSize: "clamp(30px,4.5vw,48px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: 20, color: T.ink }}>
               {t('website.hero.headline')}
             </h1>
             <p style={{ fontSize: 17, fontWeight: 300, color: T.inkV, lineHeight: 1.65, marginBottom: 32 }}>
