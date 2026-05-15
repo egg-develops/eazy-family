@@ -450,11 +450,11 @@ const getWeatherEmoji = (code: number): string => {
   if (code === 113) return "☀️";
   if (code === 116) return "⛅";
   if ([119, 122].includes(code)) return "☁️";
-  if ([143, 248, 260].includes(code)) return "🌫️";
+  if ([143, 248, 260].includes(code)) return "☁️";
   if ([176, 185, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 353, 356, 359].includes(code)) return "🌧️";
   if ([179, 182, 311, 314, 317, 320, 323, 326, 329, 332, 335, 338, 350, 362, 365, 368, 371, 374, 377].includes(code)) return "❄️";
-  if ([200, 386, 389, 392, 395].includes(code)) return "⛈️";
-  return "🌤️";
+  if ([200, 386, 389, 392, 395].includes(code)) return "⛅";
+  return "⛅";
 };
 
 interface HourlySlot { hour: number; emoji: string; temp: number; }
@@ -928,7 +928,16 @@ const AppHome = () => {
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>Today's Rituals</p>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>
             {(() => {
-              const completed: string[] = JSON.parse(localStorage.getItem('eazy-completed-rituals-today') || '[]');
+              const completed: string[] = (() => {
+                try {
+                  const stored = localStorage.getItem('eazy-completed-rituals-today');
+                  if (!stored) return [];
+                  const parsed = JSON.parse(stored);
+                  if (Array.isArray(parsed)) return parsed; // old format
+                  if (parsed.date === new Date().toDateString()) return parsed.ids || [];
+                  return []; // stale — different day
+                } catch { return []; }
+              })();
               const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
               const totalCount = total.length || 5;
               return `${completed.length}/${totalCount} Done!`;

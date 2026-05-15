@@ -83,6 +83,8 @@ const Rituals = () => {
   const [newRitualTitle, setNewRitualTitle] = useState('');
   const [showAllJournal, setShowAllJournal] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const [emojiPickerFor, setEmojiPickerFor] = useState<string | null>(null);
+  const [justCompletedId, setJustCompletedId] = useState<string | null>(null);
 
   // Swipe gesture state (DOM-level, no re-renders during drag)
   const touchData = useRef<{ startX: number; id: string; el: HTMLDivElement } | null>(null);
@@ -106,25 +108,49 @@ const Rituals = () => {
 
   useEffect(() => {
     reloadEntries();
-    const completed = localStorage.getItem('eazy-completed-rituals-today');
-    if (completed) setCompletedRituals(new Set(JSON.parse(completed)));
-
-    // Re-read entries when EZCapture saves a journal entry on the same route
+    const todayStr = new Date().toDateString();
+    try {
+      const stored = localStorage.getItem('eazy-completed-rituals-today');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // New format: { date, ids }. Old format: plain array (backward compat, treat as today)
+        if (Array.isArray(parsed)) {
+          setCompletedRituals(new Set(parsed));
+        } else if (parsed.date === todayStr) {
+          setCompletedRituals(new Set(parsed.ids || []));
+        }
+        // else: stale (different day) — leave as empty Set
+      }
+    } catch {}
     window.addEventListener('eazy-journal-updated', reloadEntries);
     return () => window.removeEventListener('eazy-journal-updated', reloadEntries);
   }, []);
+
+  const EMOJI_PALETTE = ['☀️','🌙','🏃','🧘','❤️','📚','🎵','🌿','🍵','✍️','💪','🎯','🧹','🍳','👨‍👩‍👧','🎨','🛁','🏊','🚴','🤸','🐕','💤','🌅','📵','💊','🙏','⏱️','✨'];
 
   const saveRituals = (list: Ritual[]) => {
     setRituals(list);
     localStorage.setItem('eazy-rituals-list', JSON.stringify(list));
   };
 
+  const updateRitualEmoji = (id: string, emoji: string) => {
+    const updated = rituals.map(r => r.id === id ? { ...r, emoji } : r);
+    saveRituals(updated);
+    setEmojiPickerFor(null);
+  };
+
   const toggleRitual = (id: string) => {
-    haptic('light');
+    const willComplete = !completedRituals.has(id);
+    haptic(willComplete ? 'medium' : 'light');
+    if (willComplete) {
+      setJustCompletedId(id);
+      setTimeout(() => setJustCompletedId(null), 500);
+    }
     setCompletedRituals(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-      localStorage.setItem('eazy-completed-rituals-today', JSON.stringify([...next]));
+      const todayStr = new Date().toDateString();
+      localStorage.setItem('eazy-completed-rituals-today', JSON.stringify({ date: todayStr, ids: [...next] }));
       return next;
     });
   };
@@ -336,61 +362,123 @@ const Rituals = () => {
           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: TC }} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2" onClick={() => setEmojiPickerFor(null)}>
-          {rituals.map(r => (
-            <div key={r.id} className="relative" style={{ overflow: 'visible' }}>
-              <button
-                onClick={() => !editMode && toggleRitual(r.id)}
-                className="w-full flex items-center gap-2 p-3 rounded-xl text-left transition-all"
-                style={{
-                  background: completedRituals.has(r.id) ? '#FDF3EE' : '#F7F3ED',
-                  border: `1px solid ${completedRituals.has(r.id) ? TL : BORDER}`,
-                  cursor: editMode ? 'default' : 'pointer',
-                }}
-              >
-                <span
-                  className="text-lg"
-                  style={{ cursor: editMode ? 'pointer' : 'default' }}
-                  onClick={(e) => { if (editMode) { e.stopPropagation(); setEmojiPickerFor(emojiPickerFor === r.id ? null : r.id); } }}
-                >{r.emoji}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
-                  {completedRituals.has(r.id) && !editMode && (
-                    <p className="text-[10px]" style={{ color: TC }}>{t('rituals.ritualDone')}</p>
-                  )}
-                </div>
-              </button>
-              {editMode && (
+        <div onClick={() => setEmojiPickerFor(null)}>
+          {/* Active rituals */}
+          <div className="grid grid-cols-2 gap-2">
+            {rituals.filter(r => !completedRituals.has(r.id)).map(r => (
+              <div key={r.id} className="relative" style={{ overflow: 'visible' }}>
                 <button
-                  onClick={() => removeRitual(r.id)}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                  onClick={() => !editMode && toggleRitual(r.id)}
+                  className="w-full flex items-center gap-2 p-3 rounded-xl text-left"
+                  style={{
+                    background: '#F7F3ED',
+                    border: `1px solid ${BORDER}`,
+                    cursor: editMode ? 'default' : 'pointer',
+                    transform: justCompletedId === r.id ? 'scale(1.06)' : 'scale(1)',
+                    transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    position: 'relative',
+                  }}
+                >
+                  <span
+                    className="text-lg"
+                    style={{ cursor: editMode ? 'pointer' : 'default', position: 'relative' }}
+                    onClick={(e) => { if (editMode) { e.stopPropagation(); setEmojiPickerFor(emojiPickerFor === r.id ? null : r.id); } }}
+                  >
+                    {r.emoji}
+                    {/* Emoji picker popover */}
+                    {editMode && emojiPickerFor === r.id && (
+                      <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          position: 'absolute', top: '110%', left: 0, zIndex: 50,
+                          background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12,
+                          padding: 8, display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4,
+                          boxShadow: '0 4px 16px rgba(28,28,24,0.12)', width: 196,
+                        }}
+                      >
+                        {EMOJI_PALETTE.map(em => (
+                          <button
+                            key={em}
+                            onClick={() => updateRitualEmoji(r.id, em)}
+                            style={{ fontSize: 18, lineHeight: 1, padding: 4, borderRadius: 6, border: 'none', background: r.emoji === em ? '#FDF3EE' : 'transparent', cursor: 'pointer' }}
+                          >
+                            {em}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
+                    <p className="text-[10px]" style={{ color: '#B5A09A' }}>{r.time}</p>
+                  </div>
+                </button>
+                {editMode && (
+                  <button
+                    onClick={() => removeRitual(r.id)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: TC }}
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {editMode && (
+              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
+                <span className="text-lg flex-shrink-0">{pickRitualEmoji(newRitualTitle)}</span>
+                <input
+                  value={newRitualTitle}
+                  onChange={e => setNewRitualTitle(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addRitual()}
+                  placeholder={t('rituals.newRitualPlaceholder')}
+                  className="flex-1 bg-transparent text-xs outline-none min-w-0"
+                  style={{ color: '#1C1C18' }}
+                  autoFocus
+                />
+                <button
+                  onClick={addRitual}
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: TC }}
                 >
-                  <X className="w-3 h-3 text-white" />
+                  <Plus className="w-3 h-3 text-white" />
                 </button>
-              )}
-            </div>
-          ))}
+              </div>
+            )}
+          </div>
 
-          {editMode && (
-            <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
-              <span className="text-lg flex-shrink-0">{pickRitualEmoji(newRitualTitle)}</span>
-              <input
-                value={newRitualTitle}
-                onChange={e => setNewRitualTitle(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addRitual()}
-                placeholder={t('rituals.newRitualPlaceholder')}
-                className="flex-1 bg-transparent text-xs outline-none min-w-0"
-                style={{ color: '#1C1C18', background: 'transparent' }}
-                autoFocus
-              />
-              <button
-                onClick={addRitual}
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: TC }}
-              >
-                <Plus className="w-3 h-3 text-white" />
-              </button>
+          {/* Done section */}
+          {completedRituals.size > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={{ flex: 1, height: '0.5px', background: '#DAC1BB' }} />
+                <span style={{ fontSize: 10, color: '#B5A09A', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  Done · {completedRituals.size}/{rituals.length}
+                </span>
+                <div style={{ flex: 1, height: '0.5px', background: '#DAC1BB' }} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {rituals.filter(r => completedRituals.has(r.id)).map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => !editMode && toggleRitual(r.id)}
+                    className="w-full flex items-center gap-2 p-3 rounded-xl text-left"
+                    style={{
+                      background: '#F9F6F2',
+                      border: `1px solid #EDE4DF`,
+                      opacity: 0.7,
+                      cursor: editMode ? 'default' : 'pointer',
+                    }}
+                  >
+                    <span className="text-lg">{r.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold truncate" style={{ color: '#B5A09A', textDecoration: 'line-through' }}>{r.title}</p>
+                      <p className="text-[10px]" style={{ color: TC, fontWeight: 600 }}>✓ {t('rituals.ritualDone')}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
