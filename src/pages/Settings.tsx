@@ -566,8 +566,6 @@ const Settings = () => {
         {t('settings.actions.signOut')}
       </button>
 
-      <p className="text-center text-xs" style={{ color: MUTED }}>Version 2.4.1 (Hearthside)</p>
-
       {/* ── Delete Account ── */}
       {!showDeleteConfirm ? (
         <button

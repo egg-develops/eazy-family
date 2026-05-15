@@ -34,8 +34,6 @@ const Privacy = () => {
             <ul>
               <li>Account information (name, email)</li>
               <li>Content you add (events, tasks, lists, messages)</li>
-              <li>Children's names and ages, if you choose to add them</li>
-              <li>Location (city-level, for local event discovery)</li>
             </ul>
             <Separator className="my-4" />
 

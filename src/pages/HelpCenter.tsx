@@ -20,7 +20,7 @@ const FAQS = [
   },
   {
     q: "Can multiple family members use the same account?",
-    a: "Yes. Go to Settings → Family and invite members by email. Each person gets their own login and all shared content syncs in real time.",
+    a: "Yes. Go to Settings → Account and invite members by email. Each person gets their own login and all shared content syncs in real time.",
   },
   {
     q: "What is the Family Channel?",
@@ -87,128 +87,154 @@ const FAQ = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
+const TABS = ['Features', 'FAQs', 'Contact'] as const;
+type Tab = typeof TABS[number];
+
 const HelpCenter = () => {
   const navigate = useNavigate();
+  const [tab, setTab] = useState<Tab>('Features');
 
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{ background: BG, paddingTop: 'env(safe-area-inset-top)' }}>
 
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center px-4 h-14" style={{ background: BG, borderBottom: `1px solid ${BORDER}` }}>
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center -ml-1">
-          <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
-        </button>
-        <p className="flex-1 text-center font-bold text-base" style={{ color: INK }}>Help Center</p>
-        <div className="w-9" />
+      <div className="sticky top-0 z-10" style={{ background: BG, borderBottom: `1px solid ${BORDER}` }}>
+        <div className="flex items-center px-4 h-14">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center -ml-1">
+            <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
+          </button>
+          <p className="flex-1 text-center font-bold text-base" style={{ color: INK }}>Help Center</p>
+          <div className="w-9" />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex px-4 pb-3 gap-2">
+          {TABS.map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+              style={{
+                background: tab === t ? TC : CARD,
+                color: tab === t ? '#fff' : MUTED,
+                border: `1px solid ${tab === t ? TC : BORDER}`,
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="px-4 py-5 space-y-6 pb-16">
+      <div className="px-4 py-5 space-y-5 pb-16">
 
-        {/* EZ Orbe intro */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${TC} 0%, #D97B66 100%)` }}>
-          <div className="p-5 space-y-3">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-lg font-bold text-white">Meet EZ Orbe</h2>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.9)' }}>
-              EZ Orbe brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.
-            </p>
-            <ul className="space-y-1.5">
-              {[
-                "Tap to open EZ Capture",
-                "Long press + drag to reposition",
-                "Swipe up to open the full menu",
-              ].map(tip => (
-                <li key={tip} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                  <div className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
-                  {tip}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Features overview */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide px-1" style={{ color: MUTED }}>Features</p>
-          <div className="grid grid-cols-2 gap-3">
-            {FEATURES.map(f => (
-              <div key={f.title} className="rounded-2xl p-4 space-y-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: f.bg, color: f.color }}>
-                  {f.icon}
+        {/* ── Features tab ── */}
+        {tab === 'Features' && (
+          <>
+            {/* EZ Orbe intro */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${TC} 0%, #D97B66 100%)` }}>
+              <div className="p-5 space-y-3">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-sm font-semibold" style={{ color: INK }}>{f.title}</p>
-                <p className="text-xs leading-snug" style={{ color: MUTED }}>{f.desc}</p>
+                <h2 className="text-lg font-bold text-white">Meet EZ Orbe</h2>
+                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                  EZ Orbe brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    "Tap to open EZ Capture",
+                    "Long press + drag to reposition",
+                    "Swipe up to open the full menu",
+                  ].map(tip => (
+                    <li key={tip} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
+                      <div className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Morning Digest */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide px-1" style={{ color: MUTED }}>Morning Digest</p>
-          <div className="rounded-2xl p-4 space-y-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-            <div>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: '#FFF7E0' }}>
+            {/* Feature cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {FEATURES.map(f => (
+                <div key={f.title} className="rounded-2xl p-4 space-y-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: f.bg, color: f.color }}>
+                    {f.icon}
+                  </div>
+                  <p className="text-sm font-semibold" style={{ color: INK }}>{f.title}</p>
+                  <p className="text-xs leading-snug" style={{ color: MUTED }}>{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Morning Digest */}
+            <div className="rounded-2xl p-4 space-y-4" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#FFF7E0' }}>
                 <Bell className="w-4 h-4" style={{ color: '#B88A00' }} />
               </div>
-              <p className="text-sm font-semibold mb-1" style={{ color: INK }}>Every morning, one notification.</p>
-              <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
-                Today's schedule, open tasks, and anything that needs your attention. Your family's day, already organised before you've had your coffee.
+              <div>
+                <p className="text-sm font-semibold mb-1" style={{ color: INK }}>Every morning, one notification.</p>
+                <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
+                  Today's schedule, open tasks, and anything that needs your attention. Your family's day, already organised before you've had your coffee.
+                </p>
+              </div>
+              <div className="rounded-xl p-3 space-y-1" style={{ background: SAGE_BG, border: `1px solid ${SAGE_BORDER}` }}>
+                <p className="text-xs font-semibold" style={{ color: SAGE }}>Rituals & Journal</p>
+                <p className="text-xs leading-relaxed" style={{ color: SAGE }}>
+                  Your Morning Digest also gently reflects on your rituals — not as a to-do list, but as a quiet nudge toward the things that make your days feel whole.
+                </p>
+              </div>
+              <p className="text-xs" style={{ color: MUTED }}>
+                Enable in <span className="font-semibold" style={{ color: TC }}>Settings → Notifications → Morning Digest</span>.
               </p>
             </div>
-            <div className="rounded-xl p-3 space-y-2" style={{ background: SAGE_BG, border: `1px solid ${SAGE_BORDER}` }}>
-              <p className="text-xs font-semibold" style={{ color: SAGE }}>Rituals & Journal</p>
-              <p className="text-xs leading-relaxed" style={{ color: SAGE }}>
-                Your Morning Digest also gently reflects on your rituals and journal entries — not as a to-do list, but as a quiet nudge toward the things that make your days feel whole. Think of it as a caring check-in, not a report card.
-              </p>
-            </div>
-            <p className="text-xs" style={{ color: MUTED }}>
-              Enable in <span className="font-semibold" style={{ color: TC }}>Settings → Notifications → Morning Digest</span> and choose push or email delivery.
-            </p>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* FAQ */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide px-1" style={{ color: MUTED }}>Frequently Asked Questions</p>
+        {/* ── FAQs tab ── */}
+        {tab === 'FAQs' && (
           <div className="rounded-2xl overflow-hidden" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
             {FAQS.map((faq, i) => (
               <FAQ key={i} q={faq.q} a={faq.a} />
             ))}
           </div>
-        </div>
+        )}
 
-        {/* Contact */}
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide px-1" style={{ color: MUTED }}>Contact Us</p>
-          <div className="rounded-2xl overflow-hidden" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-            <a href="mailto:hello@eazy.family"
-              className="flex items-center gap-3 px-4 py-4"
-              style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
-                <MessageCircle className="w-4 h-4" style={{ color: SAGE }} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: INK }}>General & Feedback</p>
-                <p className="text-xs mt-0.5" style={{ color: MUTED }}>hello@eazy.family</p>
-              </div>
-              <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
-            </a>
-            <a href="mailto:support@eazy.family"
-              className="flex items-center gap-3 px-4 py-4">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0EE' }}>
-                <Mail className="w-4 h-4" style={{ color: TC }} />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold" style={{ color: INK }}>Technical Support</p>
-                <p className="text-xs mt-0.5" style={{ color: MUTED }}>support@eazy.family</p>
-              </div>
-              <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
-            </a>
+        {/* ── Contact tab ── */}
+        {tab === 'Contact' && (
+          <div className="space-y-4">
+            <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
+              We're a small team and we read every message. Expect a reply within one business day.
+            </p>
+            <div className="rounded-2xl overflow-hidden" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+              <a href="mailto:hello@eazy.family"
+                className="flex items-center gap-3 px-4 py-4"
+                style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
+                  <MessageCircle className="w-4 h-4" style={{ color: SAGE }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: INK }}>General & Feedback</p>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>hello@eazy.family</p>
+                </div>
+                <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
+              </a>
+              <a href="mailto:support@eazy.family"
+                className="flex items-center gap-3 px-4 py-4">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0EE' }}>
+                  <Mail className="w-4 h-4" style={{ color: TC }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: INK }}>Technical Support</p>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>support@eazy.family</p>
+                </div>
+                <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
+              </a>
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
     </div>
