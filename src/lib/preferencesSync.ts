@@ -55,9 +55,11 @@ export async function loadCloudPreferences(userId: string) {
     const cloudKeys = new Set(Object.keys(cloudData));
     const loadedKeys: string[] = [];
 
-    // Cloud → localStorage (cloud wins for keys that exist in cloud)
+    // Cloud → localStorage (cloud wins, unless user explicitly changed the key
+    // this session — in which case the local write is newer than the cloud copy)
     for (const [key, value] of Object.entries(cloudData)) {
       if (value !== null && value !== undefined) {
+        if (sessionStorage.getItem('_local_' + key)) continue;
         const stored = typeof value === 'string' ? value : JSON.stringify(value);
         localStorage.setItem(key, stored);
         loadedKeys.push(key);
@@ -79,6 +81,9 @@ export async function loadCloudPreferences(userId: string) {
 /** Write to localStorage immediately and sync to Supabase in the background. */
 export function cloudSet(key: string, value: string) {
   localStorage.setItem(key, value);
+  // Mark as locally-modified this session so loadCloudPreferences doesn't
+  // overwrite with stale cloud data if the Supabase write hasn't committed yet.
+  try { sessionStorage.setItem('_local_' + key, '1'); } catch {}
   if (!_userId || !SYNC_KEYS.has(key)) return;
 
   let parsed: unknown;
