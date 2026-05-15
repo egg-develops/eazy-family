@@ -22,6 +22,10 @@ img {
   user-select: none;
 }
 
+/* PublicNav responsive show/hide */
+@media (min-width: 1024px) { .pn-mobile { display: none !important; } }
+@media (max-width: 1023px) { .pn-desktop { display: none !important; } }
+
 /* Orbe pulse animation — used on public marketing pages */
 @keyframes orbe-pulse {
   0%, 100% { box-shadow: 0 0 0 16px rgba(150,71,53,0.08), 0 0 0 32px rgba(150,71,53,0.04); }
