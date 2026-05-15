@@ -77,6 +77,8 @@ const Settings = () => {
     return { greeting: "Good morning! ☀️", byline: "Let's make today amazing", showCalendar: true, showWeather: true, showGreeting: true, showRituals: true, showTasks: true, showFamilyChannel: true, topNotifications: [], quickActions: [] };
   });
 
+  const [appTitleDraft, setAppTitleDraft] = useState(() => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle ?? ''; } catch { return ''; } });
+
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string>('free');
@@ -494,14 +496,15 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>Homepage Modules</SectionLabel>
         <Card_>
-          {/* Homepage title */}
+          {/* Home title */}
           <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium" style={{ color: INK }}>Homepage Title</p>
+              <p className="text-sm font-medium" style={{ color: INK }}>Home Title</p>
             </div>
             <input
-              value={homeConfig.appTitle ?? ''}
-              onChange={e => saveHomeConfig({ appTitle: e.target.value })}
+              value={appTitleDraft}
+              onChange={e => setAppTitleDraft(e.target.value)}
+              onBlur={() => saveHomeConfig({ appTitle: appTitleDraft })}
               placeholder="Eazy.Family"
               maxLength={32}
               className="text-sm text-right outline-none bg-transparent"
