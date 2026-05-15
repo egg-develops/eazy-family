@@ -20,8 +20,14 @@ import {
   RefreshCw,
   MessageCircle,
   Trash2,
-  ImagePlus
+  ImagePlus,
+  AlertTriangle,
+  ShoppingBasket,
+  Clock
 } from "lucide-react";
+import { useConflictDetection } from "@/hooks/useConflictDetection";
+import { useShoppingPredictions } from "@/hooks/useShoppingPredictions";
+import { useStaleTaskDetection } from "@/hooks/useStaleTaskDetection";
 import { EZCapture } from "@/components/EZCapture";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -651,6 +657,9 @@ const AppHome = () => {
     }
   };
 
+  const { conflicts } = useConflictDetection();
+  const { predictions: shoppingPredictions } = useShoppingPredictions();
+  const { staleTasks } = useStaleTaskDetection();
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
   const [sharedItems, setSharedItems] = useState<Array<{ id: string; title: string; type: string; initials: string; color: string }>>([]);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
@@ -927,6 +936,67 @@ const AppHome = () => {
           </div>
         )}
       </div>
+
+      {/* AI Intelligence Cards */}
+
+      {/* Conflict Alert */}
+      {conflicts.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFF8F0', border: '1px solid #EDCFB8' }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+            <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#C4621A' }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C4621A' }}>Schedule Conflict{conflicts.length > 1 ? 's' : ''}</p>
+          </div>
+          {conflicts.map((c, i) => {
+            const fmt = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            return (
+              <button key={i} onClick={() => navigate('/app/calendar')} className="w-full px-4 py-3 text-left" style={{ borderBottom: i < conflicts.length - 1 ? '1px solid #F1EDE7' : 'none' }}>
+                <p className="text-sm font-semibold" style={{ color: '#1C1C18' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>overlaps</span> {c.eventB.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>{fmt(c.eventA.start)}</p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Stale Task Escalation */}
+      {staleTasks.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#7A6660' }} />
+            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: '#7A6660' }}>Overdue Tasks</p>
+            <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+          </div>
+          {staleTasks.slice(0, 3).map((task, i) => (
+            <button key={task.id} onClick={() => navigate('/app/todos')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid #F1EDE7' : 'none' }}>
+              <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : '#DAC1BB' }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{task.title}</p>
+                <p className="text-xs" style={{ color: task.isEscalated ? '#C4621A' : '#7A6660' }}>
+                  {task.isEscalated ? 'Stuck for ' : 'No activity for '}{task.daysSinceUpdate}d{task.isEscalated ? ' — delegate or drop?' : ''}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Shopping Predictions */}
+      {shoppingPredictions.length > 0 && (
+        <button onClick={() => navigate('/app/shopping')} className="w-full rounded-2xl overflow-hidden text-left" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #C8DDD0' }}>
+            <ShoppingBasket className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
+            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: '#44664F' }}>Probably Running Low</p>
+            <span className="text-xs font-semibold" style={{ color: '#44664F' }}>Add →</span>
+          </div>
+          <div className="px-4 py-3 flex flex-wrap gap-2">
+            {shoppingPredictions.map(p => (
+              <span key={p.itemName} className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: '#C8DDD0', color: '#2D4F38' }}>
+                {p.itemName}
+              </span>
+            ))}
+          </div>
+        </button>
+      )}
 
       {/* Today's Rituals card */}
       {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>

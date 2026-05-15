@@ -6,6 +6,7 @@ import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useTranslation } from 'react-i18next';
+import { useShoppingPredictions, logPurchase } from "@/hooks/useShoppingPredictions";
 
 interface ShoppingItem {
   id: string;
@@ -53,6 +54,8 @@ const Shopping = () => {
   const baseTextRef = useRef('');
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const { predictions: shoppingPredictions } = useShoppingPredictions();
+
   const load = async () => {
     if (!user) return;
     setLoading(true);
@@ -93,8 +96,13 @@ const Shopping = () => {
     haptic('light');
     const item = items.find(i => i.id === id);
     if (!item) return;
-    setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !i.completed } : i));
-    await supabase.from('tasks').update({ completed: !item.completed }).eq('id', id);
+    const nowCompleted = !item.completed;
+    setItems(prev => prev.map(i => i.id === id ? { ...i, completed: nowCompleted } : i));
+    await supabase.from('tasks').update({ completed: nowCompleted }).eq('id', id);
+    // Log purchase for frequency engine when item is checked off
+    if (nowCompleted && user) {
+      logPurchase(user.id, item.title);
+    }
   };
 
   const updateQty = (id: string, delta: number) => {
@@ -240,15 +248,24 @@ const Shopping = () => {
         </button>
       </div>
 
-      {/* Smart suggestion card */}
-      <div className="rounded-2xl px-4 py-3 flex items-start gap-3" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#44664F' }}>
-          <Sparkles className="w-4 h-4 text-white" />
+      {/* Frequency predictions card */}
+      {shoppingPredictions.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid #C8DDD0' }}>
+            <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>Probably Running Low</p>
+          </div>
+          <div className="px-4 py-3 flex flex-wrap gap-2">
+            {shoppingPredictions.map(p => (
+              <button key={p.itemName} onClick={() => setNewItem(p.itemName)}
+                className="text-xs font-medium px-2.5 py-1 rounded-full transition-colors"
+                style={{ background: '#C8DDD0', color: '#2D4F38' }}>
+                + {p.itemName}
+              </button>
+            ))}
+          </div>
         </div>
-        <p className="flex-1 text-sm leading-snug pt-0.5" style={{ color: '#44664F' }}>
-          {t('shopping.smartSuggestion')}
-        </p>
-      </div>
+      )}
 
       {/* Grouped uncompleted items */}
       {Object.entries(grouped).map(([cat, catItems]) => (
