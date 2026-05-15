@@ -143,16 +143,27 @@ const Rituals = () => {
     const willComplete = !completedRituals.has(id);
     haptic(willComplete ? 'medium' : 'light');
     if (willComplete) {
+      // Play bounce first, then move to Done after animation completes
       setJustCompletedId(id);
-      setTimeout(() => setJustCompletedId(null), 500);
+      setTimeout(() => {
+        setJustCompletedId(null);
+        setCompletedRituals(prev => {
+          const next = new Set(prev);
+          next.add(id);
+          const todayStr = new Date().toDateString();
+          localStorage.setItem('eazy-completed-rituals-today', JSON.stringify({ date: todayStr, ids: [...next] }));
+          return next;
+        });
+      }, 350);
+    } else {
+      setCompletedRituals(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        const todayStr = new Date().toDateString();
+        localStorage.setItem('eazy-completed-rituals-today', JSON.stringify({ date: todayStr, ids: [...next] }));
+        return next;
+      });
     }
-    setCompletedRituals(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      const todayStr = new Date().toDateString();
-      localStorage.setItem('eazy-completed-rituals-today', JSON.stringify({ date: todayStr, ids: [...next] }));
-      return next;
-    });
   };
 
   const addRitual = () => {
