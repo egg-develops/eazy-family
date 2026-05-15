@@ -247,12 +247,12 @@ const Settings = () => {
 
 
   const MODULE_OPTIONS = [
-    { key: 'showWeather', label: 'Weather' },
-    { key: 'showCalendar', label: 'Calendar Today' },
-    { key: 'showRituals', label: "Today's Rituals" },
-    { key: 'showTasks', label: 'Top Tasks' },
-    { key: 'showFamilyChannel', label: 'Family Channel' },
-    { key: 'showGallery', label: 'Photo Gallery' },
+    { key: 'showWeather', labelKey: 'settings.moduleWeather' },
+    { key: 'showCalendar', labelKey: 'settings.moduleCalendar' },
+    { key: 'showRituals', labelKey: 'settings.moduleRituals' },
+    { key: 'showTasks', labelKey: 'settings.moduleTasks' },
+    { key: 'showFamilyChannel', labelKey: 'settings.moduleFamily' },
+    { key: 'showGallery', labelKey: 'settings.moduleGallery' },
   ] as const;
 
   return (
@@ -260,19 +260,19 @@ const Settings = () => {
 
       {/* ── Account ── */}
       <div className="space-y-2">
-        <SectionLabel>Account</SectionLabel>
+        <SectionLabel>{t('settings.account.title')}</SectionLabel>
         <Card_>
           <Row
             icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
             title={displayName || user?.email?.split('@')[0] || 'You'}
-            subtitle="Primary Account"
+            subtitle={t('settings.primaryAccount')}
             right={<Arrow />}
             onClick={() => navigate('/app/family')}
           />
           <Row
             icon={<Mail className="w-4 h-4" style={{ color: MUTED }} />}
             title={userEmail || 'Email'}
-            subtitle="Verified Email"
+            subtitle={t('settings.verifiedEmail')}
             right={<Arrow />}
           />
           {subscriptionTier === 'free' ? (
@@ -281,7 +281,7 @@ const Settings = () => {
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF7E0' }}>
                   <Crown className="w-4 h-4" style={{ color: '#B88A00' }} />
                 </div>
-                <p className="flex-1 text-sm font-semibold" style={{ color: TC }}>Get Premium</p>
+                <p className="flex-1 text-sm font-semibold" style={{ color: TC }}>{t('settings.getPremium')}</p>
                 <Arrow />
               </div>
             </UpgradeDialog>
@@ -289,19 +289,19 @@ const Settings = () => {
             <Row
               icon={<Crown className="w-4 h-4" style={{ color: '#B88A00' }} />}
               title={`${subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)} Plan`}
-              subtitle="Active subscription"
+              subtitle={t('settings.activeSubscription')}
               right={<span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>Active</span>}
             />
           )}
           <Row
             icon={<UserPlus className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Invite Family Members"
+            title={t('settings.inviteFamily')}
             right={<Arrow />}
             onClick={() => navigate('/app/family')}
           />
           <Row
             icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Refer Friends"
+            title={t('settings.referFriends')}
             right={<Arrow />}
             last
             onClick={handleReferFriends}
@@ -311,12 +311,12 @@ const Settings = () => {
 
       {/* ── Calendar Integrations ── */}
       <div className="space-y-2">
-        <SectionLabel>Calendar Integrations</SectionLabel>
+        <SectionLabel>{t('settings.calendarIntegrationsSection')}</SectionLabel>
         <Card_>
           {subscriptionTier === 'family' || subscriptionTier === 'premium' ? (
             <Row
               icon={<svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>}
-              title="Sync Google Calendar"
+              title={t('calendarIntegrations.googleCalendar')}
               right={<Tog checked={googleSynced} onChange={() => navigate('/app/calendar?sync=1')} />}
             />
           ) : (
@@ -325,20 +325,20 @@ const Settings = () => {
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
                   <svg viewBox="0 0 24 24" className="w-4 h-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 </div>
-                <p className="flex-1 text-sm font-medium" style={{ color: INK }}>Sync Google Calendar</p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>Premium</span>
+                <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t('calendarIntegrations.googleCalendar')}</p>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>{t('calendarIntegrations.premium')}</span>
               </div>
             </UpgradeDialog>
           )}
           <Row
             icon={<svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>}
-            title="Sync Apple Calendar"
-            subtitle="Coming soon"
+            title={t('calendarIntegrations.appleCalendar')}
+            subtitle={t('settings.comingSoon')}
             right={<Arrow />}
           />
           <Row
             icon={<div className="w-4 h-4 rounded flex items-center justify-center" style={{ background: '#0078d4' }}><span className="text-white text-xs font-bold" style={{ fontSize: '9px' }}>O</span></div>}
-            title="Sync Outlook Calendar"
+            title={t('calendarIntegrations.outlookCalendar')}
             right={<Tog checked={outlookSynced} onChange={() => navigate('/app/calendar?sync=1')} />}
             last
           />
@@ -347,23 +347,23 @@ const Settings = () => {
 
       {/* ── Notifications ── */}
       <div className="space-y-2">
-        <SectionLabel>Notifications</SectionLabel>
+        <SectionLabel>{t('settings.notificationsSection')}</SectionLabel>
         <Card_>
           <Row
             icon={<Bell className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Quiet Hours"
-            subtitle="Daily: 10 PM – 7 AM"
+            title={t('settings.quietHours')}
+            subtitle={t('settings.quietHoursSub')}
             right={<Tog checked={quietHours} onChange={v => { setQuietHours(v); localStorage.setItem('eazy-quiet-hours', String(v)); }} />}
           />
           <Row
             icon={<Sunrise className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Morning Digest"
-            subtitle="Today's schedule, tasks & what needs attention — 8:00 AM"
+            title={t('settings.morningDigest')}
+            subtitle={t('settings.morningDigestSub')}
             right={<Tog checked={morningDigest} onChange={v => { setMorningDigest(v); cloudSet('eazy-morning-digest', String(v)); }} />}
           />
           {morningDigest && (
             <Row
-              title="Also send by email"
+              title={t('settings.alsoEmail')}
               subtitle={userEmail || 'Your account email'}
               right={<Tog checked={morningDigestEmail} onChange={v => { setMorningDigestEmail(v); cloudSet('eazy-morning-digest-email', String(v)); }} />}
               last
@@ -375,11 +375,11 @@ const Settings = () => {
 
       {/* ── Preferences ── */}
       <div className="space-y-2">
-        <SectionLabel>Preferences</SectionLabel>
+        <SectionLabel>{t('settings.preferences')}</SectionLabel>
         <Card_>
           <Row
             icon={<Moon className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Dark Mode"
+            title={t('settings.appearance.darkMode')}
             right={<Tog checked={isDark} onChange={() => setTheme(isDark ? 'light' : 'dark')} />}
           />
           <div className="relative" style={{ borderBottom: 'none' }}>
@@ -387,7 +387,7 @@ const Settings = () => {
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
                 <Globe className="w-4 h-4" style={{ color: MUTED }} />
               </div>
-              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>Language</p>
+              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t('settings.language.title')}</p>
               <span style={{ fontSize: 20, lineHeight: 1, marginRight: 2 }}>{currentLang.flag}</span>
               <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" style={{ color: '#C4AEA8', transform: langOpen ? 'rotate(90deg)' : 'none' }} />
             </div>
@@ -410,11 +410,11 @@ const Settings = () => {
 
       {/* ── Homepage Modules ── */}
       <div className="space-y-2">
-        <SectionLabel>Homepage Modules</SectionLabel>
+        <SectionLabel>{t('settings.homepageModules')}</SectionLabel>
         <Card_>
           <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium" style={{ color: INK }}>Home Title</p>
+              <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.homeTitle')}</p>
             </div>
             <input
               value={appTitleDraft}
@@ -429,7 +429,7 @@ const Settings = () => {
           {MODULE_OPTIONS.map((m, i) => (
             <Row
               key={m.key}
-              title={m.label}
+              title={t(m.labelKey)}
               right={<Tog checked={!!(homeConfig as any)[m.key] ?? true} onChange={v => saveHomeConfig({ [m.key]: v })} />}
               last={i === MODULE_OPTIONS.length - 1}
             />
@@ -439,7 +439,7 @@ const Settings = () => {
 
       {/* ── Profile & Gallery ── */}
       <div className="space-y-2">
-        <SectionLabel>Profile & Gallery</SectionLabel>
+        <SectionLabel>{t('settings.profileGallery')}</SectionLabel>
         <Card_>
           <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
             {homeConfig.iconImage
@@ -448,9 +448,9 @@ const Settings = () => {
                   {(displayName || userEmail || 'EF').slice(0, 2).toUpperCase()}
                 </div>
             }
-            <p className="flex-1 text-sm font-medium" style={{ color: INK }}>Profile Photo</p>
+            <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t('settings.profilePhoto')}</p>
             <label htmlFor="profile-icon" className="cursor-pointer">
-              <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingProfile ? 'Uploading…' : homeConfig.iconImage ? 'Change' : 'Upload'}</span>
+              <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingProfile ? t('settings.uploading') : homeConfig.iconImage ? t('settings.change') : t('settings.uploadPhoto')}</span>
               <input id="profile-icon" type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'profile'); e.target.value = ''; }}
                 disabled={uploadingProfile} />
@@ -458,7 +458,7 @@ const Settings = () => {
           </div>
           <div className="px-4 py-3.5">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium" style={{ color: INK }}>Background Gallery</p>
+              <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.backgroundGallery')}</p>
               <span className="text-xs" style={{ color: MUTED }}>{(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length}/4</span>
             </div>
             <div className="grid grid-cols-4 gap-2 mb-3">
@@ -482,29 +482,27 @@ const Settings = () => {
             </div>
             {(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length < 4 ? (
               <label htmlFor="header-image" className="cursor-pointer">
-                <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingHeader ? 'Uploading…' : '+ Add background photo'}</span>
+                <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingHeader ? t('settings.uploading') : t('settings.addBgPhoto')}</span>
                 <input id="header-image" type="file" accept="image/*" className="hidden"
                   onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'header'); e.target.value = ''; }}
                   disabled={uploadingHeader} />
               </label>
-            ) : <p className="text-xs" style={{ color: MUTED }}>Gallery full — delete a photo to add a new one.</p>}
+            ) : <p className="text-xs" style={{ color: MUTED }}>{t('settings.galleryFull')}</p>}
           </div>
         </Card_>
       </div>
 
       {/* ── AI & Privacy ── */}
       <div className="space-y-2">
-        <SectionLabel>AI & Privacy</SectionLabel>
+        <SectionLabel>{t('settings.aiPrivacy')}</SectionLabel>
         <Card_>
           <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-            <p className="text-xs leading-relaxed" style={{ color: MUTED }}>
-              Configure how Eazy.Family's AI interacts with your family data. We prioritize your privacy and peace of mind.
-            </p>
+            <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('settings.aiDescription')}</p>
           </div>
           <Row
             icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Intelligent Suggestions"
-            subtitle="Proactive reminders"
+            title={t('settings.intelligentSuggestions')}
+            subtitle={t('settings.proactiveReminders')}
             right={<Tog checked={aiSuggestions} onChange={v => { setAiSuggestions(v); localStorage.setItem('eazy-ai-suggestions', String(v)); }} />}
           />
           <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
@@ -512,15 +510,15 @@ const Settings = () => {
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
                 <Lock className="w-4 h-4" style={{ color: MUTED }} />
               </div>
-              <p className="text-sm font-medium" style={{ color: INK }}>Privacy Level</p>
+              <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.privacyLevel')}</p>
             </div>
             <div className="relative mt-1 mb-4">
               <div className="w-full h-1.5 rounded-full" style={{ background: DIVIDER }}>
                 <div className="h-1.5 rounded-full" style={{ background: TC, width: privacyLevel === 0 ? '0%' : privacyLevel === 1 ? '50%' : '100%', transition: 'width 0.2s' }} />
               </div>
               <div className="flex justify-between mt-1 -mx-1">
-                {(['Private', 'Shared with Family', 'Full AI Assistance'] as const).map((label, i) => (
-                  <button key={label} onClick={() => { setPrivacyLevel(i as 0|1|2); localStorage.setItem('eazy-privacy-level', String(i)); }}
+                {([t('settings.privacyPrivate'), t('settings.privacyFamily'), t('settings.privacyFull')] as const).map((label, i) => (
+                  <button key={i} onClick={() => { setPrivacyLevel(i as 0|1|2); localStorage.setItem('eazy-privacy-level', String(i)); }}
                     className="flex flex-col items-center gap-1">
                     <div className="w-3 h-3 rounded-full border-2 transition-all" style={{ background: privacyLevel >= i ? TC : CARD, borderColor: privacyLevel >= i ? TC : BORDER }} />
                     <span className="text-xs" style={{ color: privacyLevel === i ? TC : MUTED, fontWeight: privacyLevel === i ? 600 : 400 }}>{label}</span>
@@ -531,8 +529,8 @@ const Settings = () => {
           </div>
           <Row
             icon={<Database className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Data Usage"
-            subtitle="Learn from my patterns"
+            title={t('settings.dataUsage')}
+            subtitle={t('settings.learnFromPatterns')}
             right={<Tog checked={dataUsage} onChange={v => { setDataUsage(v); localStorage.setItem('eazy-data-usage', String(v)); }} />}
             last
           />
@@ -541,17 +539,17 @@ const Settings = () => {
 
       {/* ── Support ── */}
       <div className="space-y-2">
-        <SectionLabel>Support</SectionLabel>
+        <SectionLabel>{t('settings.supportSection')}</SectionLabel>
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Help Center & FAQs"
+            title={t('settings.helpCenterFaqs')}
             right={<ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />}
             onClick={() => navigate('/app/help')}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Privacy Policy"
+            title={t('settings.privacy.privacyPolicy')}
             right={<Arrow />}
             last
             onClick={() => navigate('/privacy')}
@@ -565,7 +563,7 @@ const Settings = () => {
         className="w-full py-3.5 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-2"
         style={{ background: TC }}>
         <LogOut className="w-4 h-4" />
-        Sign Out
+        {t('settings.actions.signOut')}
       </button>
 
       <p className="text-center text-xs" style={{ color: MUTED }}>Version 2.4.1 (Hearthside)</p>
@@ -576,7 +574,7 @@ const Settings = () => {
           onClick={() => setShowDeleteConfirm(true)}
           className="w-full py-3 rounded-2xl text-sm font-semibold"
           style={{ color: '#C0392B', background: 'transparent', border: '1.5px solid #C0392B' }}>
-          Delete my account
+          {t('settings.deleteMyAccount')}
         </button>
       ) : (
         <div className="rounded-2xl px-4 py-4 space-y-3" style={{ background: '#FFF5F5', border: '1.5px solid #C0392B' }}>
