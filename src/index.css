@@ -23,7 +23,7 @@ img {
 }
 
 /* PublicNav responsive show/hide */
-@media (min-width: 1024px) { .pn-mobile { display: none !important; } }
+@media (min-width: 1024px) { .pn-desktop { display: flex; } .pn-mobile { display: none !important; } }
 @media (max-width: 1023px) { .pn-desktop { display: none !important; } }
 
 /* Orbe pulse animation — used on public marketing pages */
