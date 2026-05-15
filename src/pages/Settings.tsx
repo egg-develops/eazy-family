@@ -56,6 +56,37 @@ const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
 const SAGE_BORDER = '#C8DDD0';
 
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-xs font-semibold uppercase tracking-wide px-1 mb-1.5" style={{ color: MUTED }}>{children}</p>
+);
+
+const Card_ = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-2xl overflow-hidden ${className ?? ''}`} style={{ background: CARD, border: `1px solid ${BORDER}` }}>{children}</div>
+);
+
+const Row = ({ icon, title, subtitle, right, last, onClick }: {
+  icon?: React.ReactNode; title: string; subtitle?: string;
+  right?: React.ReactNode; last?: boolean; onClick?: () => void;
+}) => (
+  <div
+    className={`flex items-center gap-3 px-4 py-3.5 ${onClick ? 'cursor-pointer active:bg-gray-50' : ''}`}
+    style={{ borderBottom: last ? 'none' : `1px solid ${DIVIDER}` }}
+    onClick={onClick}
+  >
+    {icon && <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>{icon}</div>}
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium" style={{ color: INK }}>{title}</p>
+      {subtitle && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{subtitle}</p>}
+    </div>
+    {right}
+  </div>
+);
+
+const Arrow = () => <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />;
+const Tog = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
+  <Switch checked={checked} onCheckedChange={onChange} />
+);
+
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -210,37 +241,6 @@ const Settings = () => {
     { value: 'it',    label: 'Italiano',     abbr: 'IT',    flag: '🇮🇹' },
   ];
   const currentLang = LANG_OPTIONS.find(l => l.value === language) || LANG_OPTIONS[0];
-
-  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <p className="text-xs font-semibold uppercase tracking-wide px-1 mb-1.5" style={{ color: MUTED }}>{children}</p>
-  );
-
-  const Card_ = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={`rounded-2xl overflow-hidden ${className ?? ''}`} style={{ background: CARD, border: `1px solid ${BORDER}` }}>{children}</div>
-  );
-
-  const Row = ({ icon, title, subtitle, right, last, onClick }: {
-    icon?: React.ReactNode; title: string; subtitle?: string;
-    right?: React.ReactNode; last?: boolean; onClick?: () => void;
-  }) => (
-    <div
-      className={`flex items-center gap-3 px-4 py-3.5 ${onClick ? 'cursor-pointer active:bg-gray-50' : ''}`}
-      style={{ borderBottom: last ? 'none' : `1px solid ${DIVIDER}` }}
-      onClick={onClick}
-    >
-      {icon && <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>{icon}</div>}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium" style={{ color: INK }}>{title}</p>
-        {subtitle && <p className="text-xs mt-0.5" style={{ color: MUTED }}>{subtitle}</p>}
-      </div>
-      {right}
-    </div>
-  );
-
-  const Arrow = () => <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />;
-  const Tog = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
-    <Switch checked={checked} onCheckedChange={onChange} />
-  );
 
   const MEMBER_COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
 
