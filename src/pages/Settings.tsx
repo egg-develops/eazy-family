@@ -266,47 +266,64 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.account.title')}</SectionLabel>
         <Card_>
-          <Row
-            icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
-            title={displayName || user?.email?.split('@')[0] || 'You'}
-            subtitle={t('settings.primaryAccount')}
-          />
-          <Row
-            icon={<Mail className="w-4 h-4" style={{ color: MUTED }} />}
-            title={userEmail || 'Email'}
-            subtitle={t('settings.verifiedEmail')}
-          />
-          {subscriptionTier === 'free' ? (
-            <UpgradeDialog>
-              <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF7E0' }}>
-                  <Crown className="w-4 h-4" style={{ color: '#B88A00' }} />
+          {loadingSubscription ? (
+            /* Skeleton — same height as the 5 rows so there's no layout shift */
+            <div className="px-4 py-3 space-y-3.5 animate-pulse">
+              {[100, 140, 120, 110, 90].map((w, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl flex-shrink-0" style={{ background: DIVIDER }} />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 rounded-full" style={{ background: DIVIDER, width: w }} />
+                    <div className="h-2.5 rounded-full" style={{ background: DIVIDER, width: w * 0.6 }} />
+                  </div>
                 </div>
-                <p className="flex-1 text-sm font-semibold" style={{ color: TC }}>{t('settings.getPremium')}</p>
-                <Arrow />
-              </div>
-            </UpgradeDialog>
+              ))}
+            </div>
           ) : (
-            <Row
-              icon={<Crown className="w-4 h-4" style={{ color: '#B88A00' }} />}
-              title={`${subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)} Plan`}
-              subtitle={t('settings.activeSubscription')}
-              right={<span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>Active</span>}
-            />
+            <>
+              <Row
+                icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
+                title={displayName || user?.email?.split('@')[0] || 'You'}
+                subtitle={t('settings.primaryAccount')}
+              />
+              <Row
+                icon={<Mail className="w-4 h-4" style={{ color: MUTED }} />}
+                title={userEmail || 'Email'}
+                subtitle={t('settings.verifiedEmail')}
+              />
+              {subscriptionTier === 'free' ? (
+                <UpgradeDialog>
+                  <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF7E0' }}>
+                      <Crown className="w-4 h-4" style={{ color: '#B88A00' }} />
+                    </div>
+                    <p className="flex-1 text-sm font-semibold" style={{ color: TC }}>{t('settings.getPremium')}</p>
+                    <Arrow />
+                  </div>
+                </UpgradeDialog>
+              ) : (
+                <Row
+                  icon={<Crown className="w-4 h-4" style={{ color: '#B88A00' }} />}
+                  title={`${subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)} Plan`}
+                  subtitle={t('settings.activeSubscription')}
+                  right={<span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#FFF7E0', color: '#B88A00' }}>Active</span>}
+                />
+              )}
+              <Row
+                icon={<UserPlus className="w-4 h-4" style={{ color: MUTED }} />}
+                title={t('settings.inviteFamily')}
+                right={<Arrow />}
+                onClick={() => navigate('/app/family')}
+              />
+              <Row
+                icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
+                title={t('settings.referFriends')}
+                right={<Arrow />}
+                last
+                onClick={handleReferFriends}
+              />
+            </>
           )}
-          <Row
-            icon={<UserPlus className="w-4 h-4" style={{ color: MUTED }} />}
-            title={t('settings.inviteFamily')}
-            right={<Arrow />}
-            onClick={() => navigate('/app/family')}
-          />
-          <Row
-            icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
-            title={t('settings.referFriends')}
-            right={<Arrow />}
-            last
-            onClick={handleReferFriends}
-          />
         </Card_>
       </div>
 
