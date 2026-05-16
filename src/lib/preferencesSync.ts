@@ -24,23 +24,6 @@ export function setPreferenceUserId(userId: string | null) {
   _userId = userId;
 }
 
-/** Push all local SYNC_KEYS that are missing from the cloud record up to Supabase. */
-async function uploadMissingLocalPrefs(userId: string, cloudKeys: Set<string>) {
-  for (const key of SYNC_KEYS) {
-    if (cloudKeys.has(key)) continue; // cloud already has this key — skip
-    const local = localStorage.getItem(key);
-    if (!local) continue;
-    let parsed: unknown;
-    try { parsed = JSON.parse(local); } catch { parsed = local; }
-    // Fire-and-forget per key
-    supabase.rpc('upsert_preference', {
-      p_user_id: userId,
-      p_key: key,
-      p_value: parsed as never,
-    }).then(() => {/* silent */});
-  }
-}
-
 /** Load all cloud preferences and hydrate localStorage. Call once after login. */
 export async function loadCloudPreferences(userId: string) {
   setPreferenceUserId(userId);
@@ -52,11 +35,10 @@ export async function loadCloudPreferences(userId: string) {
       .maybeSingle();
 
     const cloudData = (data?.data ?? {}) as Record<string, unknown>;
-    const cloudKeys = new Set(Object.keys(cloudData));
     const loadedKeys: string[] = [];
 
-    // Cloud → localStorage (cloud wins, unless user explicitly changed the key
-    // this session — in which case the local write is newer than the cloud copy)
+    // Cloud → localStorage only. Never push local state up — that happens
+    // explicitly via cloudSet() when the user makes a change.
     for (const [key, value] of Object.entries(cloudData)) {
       if (value !== null && value !== undefined) {
         if (sessionStorage.getItem('_local_' + key)) continue;
@@ -66,13 +48,9 @@ export async function loadCloudPreferences(userId: string) {
       }
     }
 
-    // localStorage → cloud (upload any local keys not yet in cloud)
-    uploadMissingLocalPrefs(userId, cloudKeys);
-
     // Notify components so they re-read from localStorage
     if (loadedKeys.length > 0) {
       window.dispatchEvent(new CustomEvent('eazy-prefs-loaded', { detail: { keys: loadedKeys } }));
-      // Also fire the home-config event so AppLayout and HomePage re-read their title/config
       if (loadedKeys.includes('eazy-family-home-config')) {
         window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
       }
