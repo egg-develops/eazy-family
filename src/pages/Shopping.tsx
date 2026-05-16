@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Minus, Trash2, Mic, MicOff, Barcode, Sparkles, Camera, RefreshCw, Users } from "lucide-react";
+import { Plus, Minus, Trash2, Mic, MicOff, Sparkles, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -52,7 +52,6 @@ const Shopping = () => {
   const recognitionRef = useRef<any>(null);
   const capturedRef = useRef('');
   const baseTextRef = useRef('');
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const { predictions: shoppingPredictions } = useShoppingPredictions();
 
@@ -197,11 +196,6 @@ const Shopping = () => {
   return (
     <div className="space-y-3 p-4" style={{ paddingBottom: '2rem' }}>
 
-      {/* Hidden camera input */}
-      <input ref={cameraInputRef} type="file" accept="image/*" className="hidden"
-        onChange={() => toast({ title: t('shopping.cameraCaptureSoon'), description: t('shopping.cameraCaptureSoonDesc') })}
-      />
-
       {/* Sync row */}
       <div className="flex items-center justify-between">
         <button onClick={load} className="flex items-center gap-1.5 text-xs" style={{ color: MUTED }}>
@@ -234,13 +228,6 @@ const Shopping = () => {
           className="flex-1 outline-none text-sm"
           style={{ color: '#1C1C18', background: 'transparent' }}
         />
-        <button onClick={() => cameraInputRef.current?.click()}
-          className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7' }}>
-          <Camera className="w-3.5 h-3.5" style={{ color: MUTED }} />
-        </button>
-        <button className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7' }}>
-          <Barcode className="w-3.5 h-3.5" style={{ color: MUTED }} />
-        </button>
         <button onClick={isListening ? stopListening : startListening}
           className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
           style={{ background: isListening ? '#8FB399' : '#F1EDE7' }}>

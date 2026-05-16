@@ -17,6 +17,7 @@ const SYNC_KEYS = new Set([
   'eazy-morning-digest',
   'eazy-morning-digest-email',
   'eazy-family-channel-messages',
+  'eazy-rituals-list',
 ]);
 
 let _userId: string | null = null;

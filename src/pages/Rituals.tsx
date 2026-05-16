@@ -3,6 +3,7 @@ import { Mic, Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
+import { cloudSet } from "@/lib/preferencesSync";
 
 interface JournalEntry {
   id: string;
@@ -130,7 +131,7 @@ const Rituals = () => {
 
   const saveRituals = (list: Ritual[]) => {
     setRituals(list);
-    localStorage.setItem('eazy-rituals-list', JSON.stringify(list));
+    cloudSet('eazy-rituals-list', JSON.stringify(list));
   };
 
   const updateRitualEmoji = (id: string, emoji: string) => {

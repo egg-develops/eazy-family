@@ -133,12 +133,22 @@ const ToDoList = () => {
   }, [activeTab, isDialogOpen]);
 
   const loadFamilyMembers = async () => {
+    if (!user) return;
     setLoadingMembers(true);
     try {
+      const { data: mine } = await supabase
+        .from('family_members')
+        .select('family_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!mine?.family_id) { setFamilyMembers([]); return; }
+
       const { data, error } = await supabase
         .from('family_members')
         .select('*')
-        .eq('family_id', currentUserId)
+        .eq('family_id', mine.family_id)
         .eq('is_active', true);
 
       if (error) throw error;
