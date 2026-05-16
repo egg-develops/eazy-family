@@ -21,7 +21,7 @@ interface ChannelMessage {
   authorInitials: string;
   authorColor: string;
   isMe: boolean;
-  type: "text" | "voice" | "image" | "location" | "document" | "poll";
+  type: "text" | "voice" | "image" | "location" | "document" | "poll" | "event";
   timestamp: string;
   content?: string;
   transcript?: string;
@@ -32,11 +32,14 @@ interface ChannelMessage {
   lon?: number;
   fileName?: string;
   fileSize?: string;
-  fileData?: string; // base64 for small docs
+  fileData?: string;
   pollQuestion?: string;
   pollOptions?: string[];
   pollVotes?: Record<string, number>;
   myVote?: number;
+  eventTitle?: string;
+  eventDate?: string;
+  eventLocation?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -266,6 +269,31 @@ const PollBubble = ({
   );
 };
 
+const EventCard = ({ msg }: { msg: ChannelMessage }) => {
+  const navigate = useNavigate();
+  return (
+    <div
+      className="flex items-center gap-3 rounded-2xl px-3.5 py-3"
+      style={{ background: "#fff", border: `1px solid ${BORDER}`, maxWidth: "85%" }}
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
+        <span style={{ fontSize: "18px" }}>🗓️</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold truncate" style={{ color: "#1C1C18" }}>{msg.eventTitle}</p>
+        <p className="text-xs mt-0.5" style={{ color: MUTED }}>{msg.eventDate}{msg.eventLocation ? ` · ${msg.eventLocation}` : ""}</p>
+      </div>
+      <button
+        onClick={() => navigate("/app/calendar")}
+        className="text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0"
+        style={{ background: SAGE_BG, color: SAGE }}
+      >
+        View
+      </button>
+    </div>
+  );
+};
+
 // ─────────────────────────────────────────────
 // Message row
 // ─────────────────────────────────────────────
@@ -279,6 +307,14 @@ const MessageRow = ({
   onVote: (msgId: string, optionIndex: number) => void;
 }) => {
   const ts = format(new Date(msg.timestamp), "h:mm a");
+
+  if (msg.type === "event") {
+    return (
+      <div className="flex justify-center my-1">
+        <EventCard msg={msg} />
+      </div>
+    );
+  }
 
   const bubble = (() => {
     switch (msg.type) {
