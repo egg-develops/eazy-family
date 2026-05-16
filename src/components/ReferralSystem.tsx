@@ -66,7 +66,7 @@ export const ReferralSystem = () => {
   };
 
   const shareReferral = () => {
-    const shareText = `Join me on Eazy.Family! Use my code ${referralCode} to get 1 month of Premium free! 🎁`;
+    const shareText = `Join me on Eazy.Family – the smart hub for family life! 🏠 eazy.family`;
     if (navigator.share) {
       navigator.share({
         title: 'Join Eazy.Family',
@@ -88,10 +88,10 @@ export const ReferralSystem = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Gift className="h-5 w-5 text-primary" />
-          Refer Friends, Get Premium
+          Refer Friends
         </CardTitle>
         <CardDescription>
-          Share Eazy.Family and earn 1 free month of Premium for each friend who joins
+          Share Eazy.Family with friends and family
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -111,7 +111,7 @@ export const ReferralSystem = () => {
             <div>
               <p className="font-medium">{referralCount} Friends Referred</p>
               <p className="text-sm text-muted-foreground">
-                {referralCount * 30} days of Premium earned
+                {referralCount} joined via your link
               </p>
             </div>
           </div>

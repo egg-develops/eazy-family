@@ -92,7 +92,7 @@ const Auth = () => {
           referral_code: referralCode.trim(),
           status: 'completed',
         });
-        toast({ title: "🎁 Referral Applied!", description: "You and your friend both get 1 free month of Premium!" });
+        toast({ title: "Referral Applied!", description: "Thanks for joining via a friend's invite!" });
       }
     } catch (error) {
       logError('Referral processing error:', error);

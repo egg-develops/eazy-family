@@ -26,8 +26,6 @@ interface UpgradeDialogProps {
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const { isPremium } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -36,69 +34,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     return <>{children}</>;
   }
 
-  const applyPromo = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in first.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setIsLoading(true);
-
-      const { data: promoResult, error: rpcError } = await supabase
-        .rpc('validate_and_increment_promo_code', {
-          _code: promoCode.trim(),
-          _user_id: session.user.id,
-        });
-
-      if (rpcError || !promoResult?.valid) {
-        toast({
-          title: "Invalid code",
-          description: promoResult?.error || "Please check your promo code and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const tier = promoResult.subscription_tier || 'family';
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ subscription_tier: tier })
-        .eq('user_id', session.user.id);
-
-      if (updateError) throw updateError;
-
-      setPromoApplied(true);
-      toast({
-        title: "Promo applied!",
-        description: "Family Plan activated for free. Enjoy!",
-      });
-      setOpen(false);
-      window.location.reload();
-    } catch (error) {
-      logError('Error applying promo:', error);
-      toast({
-        title: "Error",
-        description: "Failed to apply promo code.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleUpgrade = async () => {
-    if (promoCode.trim()) {
-      await applyPromo();
-      return;
-    }
-    if (promoApplied) return;
-
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();

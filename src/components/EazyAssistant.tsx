@@ -12,10 +12,6 @@ import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTranslation } from "react-i18next";
-import { UpgradeDialog } from "@/components/UpgradeDialog";
-
-const FREE_AI_LIMIT = 10;
-
 const getMonthKey = () => {
   const d = new Date();
   return `eazy-ai-queries-${d.getFullYear()}-${d.getMonth()}`;
@@ -64,14 +60,11 @@ export const EazyAssistant = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [aiQueryCount, setAIQueryCount] = useState(getAIQueryCount);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
-  const { user, isPremium } = useAuth();
+  const { user } = useAuth();
   const { i18n } = useTranslation();
-
-  const remainingQueries = Math.max(0, FREE_AI_LIMIT - aiQueryCount);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -282,16 +275,6 @@ export const EazyAssistant = () => {
 
     const isShoppingAdd = await handleShoppingAdd(userMessage);
 
-    // Check free query limit before hitting the LLM
-    if (!isPremium && getAIQueryCount() >= FREE_AI_LIMIT) {
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: `You've used all ${FREE_AI_LIMIT} free AI messages this month. Upgrade to Family Plan for unlimited access.`,
-      }]);
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -439,11 +422,6 @@ export const EazyAssistant = () => {
           <h3 className="font-bold">Eazy Assistant</h3>
         </div>
         <div className="flex items-center gap-2">
-          {!isPremium && (
-            <span className="text-xs text-primary-foreground/70">
-              {remainingQueries}/{FREE_AI_LIMIT} left
-            </span>
-          )}
           <Button
             variant="ghost"
             size="icon"
@@ -481,13 +459,6 @@ export const EazyAssistant = () => {
             <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                {msg.role === "assistant" && msg.content.includes("free AI messages this month") && (
-                  <UpgradeDialog>
-                    <Button size="sm" className="mt-2 gradient-primary text-white border-0 w-full">
-                      Upgrade to Unlimited
-                    </Button>
-                  </UpgradeDialog>
-                )}
               </div>
             </div>
           ))}

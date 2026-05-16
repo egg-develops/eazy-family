@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import {
-  Mic, MicOff, Camera, X, Plus, MapPin, FileText, BarChart2,
+  Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
   Image, Play, ChevronLeft, Settings2, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -465,7 +465,6 @@ const FamilyAgenda = () => {
   // Refs
   const bottomRef = useRef<HTMLDivElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
   const messagesAreaRef = useRef<HTMLDivElement>(null);
@@ -692,13 +691,6 @@ const FamilyAgenda = () => {
         onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); setTrayOpen(false); } e.target.value = ""; }}
       />
       <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
-      />
-      <input
         ref={docInputRef}
         type="file"
         className="hidden"
@@ -917,13 +909,6 @@ const FamilyAgenda = () => {
             </button>
           ) : (
             <>
-              {/* Camera */}
-              <button
-                onClick={() => cameraInputRef.current?.click()}
-                className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-              >
-                <Camera className="w-5 h-5" style={{ color: MUTED }} />
-              </button>
               {/* Mic */}
               <button
                 onClick={handleMicToggle}
