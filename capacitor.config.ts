@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
     },
     WidgetBridge: {},
   },
+  packageClassList: ['HapticsPlugin', 'WidgetBridgePlugin'],
 };
 
 export default config;

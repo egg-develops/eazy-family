@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(DEV_BYPASS_AUTH ? false : true);
   const navigate = useNavigate();
 
-  const isPremium = subscriptionTier === 'family' || subscriptionTier === 'premium';
+  const isPremium = true; // all features are free — no subscription tiers
 
   const fetchSubscriptionTier = async (userId: string) => {
     const { data } = await supabase

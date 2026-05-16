@@ -1,32 +1,21 @@
-import { registerPlugin } from '@capacitor/core';
+// Writes the Supabase token to localStorage under a well-known key.
+// AppDelegate reads this key from the WKWebView and syncs to App Group UserDefaults.
 
-interface WidgetBridgePlugin {
-  saveToken(options: { accessToken: string; userId: string }): Promise<void>;
-  clearToken(): Promise<void>;
-}
+const TOKEN_KEY = 'eazy_widget_token';
+const USER_KEY  = 'eazy_widget_user';
 
-const WidgetBridge = registerPlugin<WidgetBridgePlugin>('WidgetBridge', {
-  // Web stub — no-op on non-native platforms
-  web: {
-    saveToken: async () => {},
-    clearToken: async () => {},
-  },
-});
-
-/** Call this after a successful Supabase login. */
-export async function syncWidgetToken(accessToken: string, userId: string) {
+export function syncWidgetToken(accessToken: string, userId: string) {
   try {
-    await WidgetBridge.saveToken({ accessToken, userId });
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(USER_KEY, userId);
   } catch {
-    // Non-native environment — silently ignore
+    // Private browsing or storage unavailable
   }
 }
 
-/** Call this on logout. */
-export async function clearWidgetToken() {
+export function clearWidgetToken() {
   try {
-    await WidgetBridge.clearToken();
-  } catch {
-    // Non-native environment — silently ignore
-  }
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  } catch {}
 }

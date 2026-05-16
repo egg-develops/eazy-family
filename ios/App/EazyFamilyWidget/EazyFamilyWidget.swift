@@ -1,12 +1,15 @@
+//
+//  EazyFamilyWidget.swift
+//  EazyFamilyWidget
+//
+
 import WidgetKit
 import SwiftUI
 
 // MARK: - Brand colours
 
-private let TC   = Color(hex: "#964735")
-private let TL   = Color(hex: "#D97B66")
-private let BG   = Color(hex: "#F7F3ED")
-private let CARD = Color(hex: "#FFFFFF")
+private let TC     = Color(hex: "#964735")
+private let BG     = Color(hex: "#F7F3ED")
 private let BORDER = Color(hex: "#DAC1BB")
 private let MUTED  = Color(hex: "#7A6660")
 private let INK    = Color(hex: "#1C1C18")
@@ -14,11 +17,9 @@ private let SAGE   = Color(hex: "#44664F")
 private let BLUE   = Color(hex: "#6E8FE5")
 private let GOLD   = Color(hex: "#B88A00")
 
-// MARK: - Colour helper
-
 extension Color {
     init(hex: String) {
-        let h = hex.trimmingCharacters(in: .init(charactersIn: "#"))
+        let h = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
         var n: UInt64 = 0
         Scanner(string: h).scanHexInt64(&n)
         self.init(
@@ -28,8 +29,6 @@ extension Color {
         )
     }
 }
-
-// MARK: - Accent colour for mode
 
 private func accent(for mode: WidgetDisplayMode) -> Color {
     switch mode {
@@ -61,7 +60,7 @@ struct EazyFamilyWidget: Widget {
     }
 }
 
-// MARK: - Root view (routes by size)
+// MARK: - Root view
 
 struct EazyWidgetView: View {
     let entry: EazyEntry
@@ -91,7 +90,7 @@ struct UnauthenticatedView: View {
                 Image(systemName: "lock.circle.fill")
                     .font(.system(size: 28))
                     .foregroundStyle(TC)
-                Text("Open Eazy.Family\nto continue")
+                Text("Open Eazy.Family\nto sign in")
                     .font(.system(size: 12, weight: .medium))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(MUTED)
@@ -109,7 +108,7 @@ struct EmptyStateView: View {
         VStack(spacing: 6) {
             Image(systemName: modeIcon(mode))
                 .font(.system(size: 22))
-                .foregroundStyle(accent(for: mode).opacity(0.5))
+                .foregroundStyle(accent(for: mode).opacity(0.4))
             Text("Nothing here yet")
                 .font(.system(size: 12))
                 .foregroundStyle(MUTED)
@@ -117,7 +116,7 @@ struct EmptyStateView: View {
     }
 }
 
-// MARK: - Small widget
+// MARK: - Small widget (up to 3 items)
 
 struct SmallWidgetView: View {
     let data: WidgetEntryData
@@ -126,7 +125,6 @@ struct SmallWidgetView: View {
     var body: some View {
         Link(destination: URL(string: data.mode.deepLink)!) {
             VStack(alignment: .leading, spacing: 0) {
-                // Header
                 HStack(spacing: 5) {
                     Circle()
                         .fill(accent(for: data.mode))
@@ -154,7 +152,6 @@ struct SmallWidgetView: View {
 
                 Spacer(minLength: 0)
 
-                // Footer count
                 if data.items.count > 3 {
                     Text("+\(data.items.count - 3) more")
                         .font(.system(size: 9))
@@ -191,7 +188,7 @@ struct SmallItemRow: View {
     }
 }
 
-// MARK: - Medium widget
+// MARK: - Medium widget (up to 5 items)
 
 struct MediumWidgetView: View {
     let data: WidgetEntryData
@@ -199,7 +196,6 @@ struct MediumWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header row
             HStack {
                 HStack(spacing: 6) {
                     Image(systemName: modeIcon(data.mode))
@@ -214,7 +210,7 @@ struct MediumWidgetView: View {
                 Spacer()
                 Text(entry.date, style: .time)
                     .font(.system(size: 10))
-                    .foregroundStyle(MUTED.opacity(0.6))
+                    .foregroundStyle(MUTED.opacity(0.5))
             }
             .padding(.bottom, 10)
 
@@ -262,15 +258,12 @@ struct MediumItemRow: View {
                         .fill(item.completed ? MUTED.opacity(0.3) : accent(for: mode))
                         .frame(width: 3, height: 16)
                 }
-
                 Text(item.title)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(item.completed ? MUTED : INK)
                     .strikethrough(item.completed)
                     .lineLimit(1)
-
                 Spacer()
-
                 if let sub = item.subtitle {
                     Text(sub)
                         .font(.system(size: 11))
@@ -282,7 +275,7 @@ struct MediumItemRow: View {
     }
 }
 
-// MARK: - Large widget
+// MARK: - Large widget (up to 10 items)
 
 struct LargeWidgetView: View {
     let data: WidgetEntryData
@@ -290,7 +283,6 @@ struct LargeWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Eazy.Family")
@@ -305,7 +297,7 @@ struct LargeWidgetView: View {
                 Spacer()
                 Image(systemName: modeIcon(data.mode))
                     .font(.system(size: 20))
-                    .foregroundStyle(accent(for: data.mode).opacity(0.25))
+                    .foregroundStyle(accent(for: data.mode).opacity(0.2))
             }
             .padding(.bottom, 12)
 
@@ -341,7 +333,6 @@ struct LargeWidgetView: View {
 
             Spacer(minLength: 0)
 
-            // Footer
             Divider().background(BORDER).padding(.top, 8)
             HStack {
                 Text("Updated " + entry.date.formatted(date: .omitted, time: .shortened))
@@ -375,21 +366,18 @@ struct LargeItemRow: View {
                         .fill(item.completed ? MUTED.opacity(0.3) : accent(for: mode))
                         .frame(width: 3, height: 20)
                 }
-
                 VStack(alignment: .leading, spacing: 1) {
                     Text(item.title)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(item.completed ? MUTED : INK)
                         .strikethrough(item.completed)
                         .lineLimit(2)
-
                     if let sub = item.subtitle {
                         Text(sub)
                             .font(.system(size: 11))
                             .foregroundStyle(accent(for: mode))
                     }
                 }
-
                 Spacer()
             }
             .padding(.vertical, 7)
@@ -407,4 +395,24 @@ func modeIcon(_ mode: WidgetDisplayMode) -> String {
     case .reminders: return "bell"
     case .rituals:   return "sparkles"
     }
+}
+
+// MARK: - Previews
+
+#Preview("Small – Events", as: .systemSmall) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .events), isAuthenticated: true)
+}
+
+#Preview("Medium – Shopping", as: .systemMedium) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .shopping), isAuthenticated: true)
+}
+
+#Preview("Large – Tasks", as: .systemLarge) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .tasks), isAuthenticated: true)
 }

@@ -659,7 +659,6 @@ const FamilyAgenda = () => {
         ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f); e.target.value = ""; }}
       />

@@ -1,0 +1,19 @@
+Contact Name: Ermias Giovanni
+Contact Email: ermiasgiovanni@gmail.com
+Contact Phone:
+
+Demo Account Email: ermiasgiovanni@gmail.com
+Demo Account Password: (use the Apple Sign In or Google Sign In option on the login screen — no password required)
+
+Notes for Reviewer:
+Eazy Family is a family organizer app. Core features include a shared family calendar, shopping list, task manager, daily reminders, and family rituals.
+
+To test:
+1. Sign in with Apple or Google on the login screen.
+2. You will be taken through a short onboarding flow to set up your family.
+3. The home screen shows today's events, tasks, and a morning digest.
+4. The Shopping tab shows a shared shopping list.
+5. The Calendar tab shows family events.
+6. The iOS widget is available after sign-in — long press home screen → Add Widget → Eazy Family.
+
+The app requires no special hardware beyond an iPhone. Push notifications are used for family reminders and are optional.

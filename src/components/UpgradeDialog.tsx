@@ -9,12 +9,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown } from "lucide-react";
+import { Check, Crown, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
+import { Capacitor } from "@capacitor/core";
+
+const isNative = Capacitor.isNativePlatform();
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
@@ -195,68 +198,91 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             </div>
           </div>
 
-          {/* Billing toggle */}
+          {/* Billing / CTA */}
           <div className="space-y-4 pt-4 border-t">
-            <div className="flex rounded-xl border border-border overflow-hidden">
-              <button
-                onClick={() => setBillingCycle('monthly')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                  billingCycle === 'monthly'
-                    ? 'bg-primary text-white'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('annual')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                  billingCycle === 'annual'
-                    ? 'bg-primary text-white'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Annual
-              </button>
-            </div>
-
-            <div className="text-center">
-              {billingCycle === 'monthly' ? (
-                <div>
-                  <p className="text-3xl font-bold">
-                    CHF {monthlyPrice}<span className="text-lg text-muted-foreground font-normal">/month</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
+            {isNative ? (
+              /* iOS: direct to website — Apple IAP not yet available */
+              <div className="space-y-3 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Subscribe at <span className="font-medium text-foreground">eazy.family</span> to unlock the Family Plan. Your subscription will be available on all your devices instantly.
+                </p>
+                <Button
+                  className="w-full gradient-primary text-white border-0"
+                  size="lg"
+                  onClick={() => window.open('https://eazy.family', '_blank')}
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Subscribe at eazy.family
+                </Button>
+                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
+                  Maybe Later
+                </Button>
+              </div>
+            ) : (
+              /* Web: full Stripe checkout */
+              <>
+                <div className="flex rounded-xl border border-border overflow-hidden">
+                  <button
+                    onClick={() => setBillingCycle('monthly')}
+                    className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                      billingCycle === 'monthly'
+                        ? 'bg-primary text-white'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => setBillingCycle('annual')}
+                    className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                      billingCycle === 'annual'
+                        ? 'bg-primary text-white'
+                        : 'bg-background text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Annual
+                  </button>
                 </div>
-              ) : (
-                <div>
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
-                  </div>
-                  <p className="text-3xl font-bold">
-                    CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    CHF {annualPrice} billed annually · Save CHF {monthlyPrice * 12 - annualPrice}
-                  </p>
-                </div>
-              )}
-            </div>
 
-            <Button
-              className="w-full gradient-primary text-white border-0"
-              size="lg"
-              onClick={handleUpgrade}
-              disabled={isLoading}
-            >
-              <Crown className="h-4 w-4 mr-2" />
-              {isLoading
-                ? "Loading..."
-                : `Upgrade — CHF ${billingCycle === 'annual' ? annualPrice + '/year' : monthlyPrice + '/month'}`}
-            </Button>
-            <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
-              Maybe Later
-            </Button>
+                <div className="text-center">
+                  {billingCycle === 'monthly' ? (
+                    <div>
+                      <p className="text-3xl font-bold">
+                        CHF {monthlyPrice}<span className="text-lg text-muted-foreground font-normal">/month</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
+                      </div>
+                      <p className="text-3xl font-bold">
+                        CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        CHF {annualPrice} billed annually · Save CHF {monthlyPrice * 12 - annualPrice}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <Button
+                  className="w-full gradient-primary text-white border-0"
+                  size="lg"
+                  onClick={handleUpgrade}
+                  disabled={isLoading}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {isLoading
+                    ? "Loading..."
+                    : `Upgrade — CHF ${billingCycle === 'annual' ? annualPrice + '/year' : monthlyPrice + '/month'}`}
+                </Button>
+                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
+                  Maybe Later
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>

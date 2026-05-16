@@ -1,3 +1,8 @@
+//
+//  EazyFamilyWidgetBundle.swift
+//  EazyFamilyWidget
+//
+
 import WidgetKit
 import SwiftUI
 

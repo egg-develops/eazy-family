@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>eazy-family</string>
+	<string>Eazy Family</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,5 +49,17 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Eazy Family uses your camera to add photos to family memories and events.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Eazy Family accesses your photo library to add images to family memories and events.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Eazy Family uses your microphone for voice input when adding notes and reminders.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Eazy Family syncs your family events with your calendar so nothing is missed.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Eazy Family uses your location to suggest relevant family activities and events near you.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Eazy Family sends reminders for family events, tasks, and daily digests.</string>
 </dict>
 </plist>

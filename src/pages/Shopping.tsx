@@ -198,7 +198,7 @@ const Shopping = () => {
     <div className="space-y-3 p-4" style={{ paddingBottom: '2rem' }}>
 
       {/* Hidden camera input */}
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
+      <input ref={cameraInputRef} type="file" accept="image/*" className="hidden"
         onChange={() => toast({ title: t('shopping.cameraCaptureSoon'), description: t('shopping.cameraCaptureSoonDesc') })}
       />
 
