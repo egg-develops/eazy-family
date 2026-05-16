@@ -5,19 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, Send, UserPlus, X, Copy, RefreshCw, Share2, QrCode } from "lucide-react";
+import { Users, Plus, Mail, Trash2, ArrowLeft, UserPlus, Copy, RefreshCw, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { z } from "zod";
-import { log, error as logError } from "@/lib/logger";
-import { Database } from "@/integrations/supabase/types";
-
-type FamilyInvitationInsert =
-  Database["public"]["Tables"]["family_invitations"]["Insert"];
+import { error as logError } from "@/lib/logger";
 
 interface FamilyMember {
   id: string;
@@ -42,16 +36,6 @@ interface FamilyInvitation {
   created_at: string;
 }
 
-const inviteSchema = z.object({
-  email: z.string().trim().email({ message: "Invalid email address" }).max(255).optional(),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^\+?[1-9]\d{1,14}$/u, { message: "Invalid phone number format" })
-    .optional(),
-  role: z.enum(["parent", "child", "grandparent", "caretaker", "other"]).default("parent"),
-}).refine((data) => data.email || data.phone, { message: "Either email or phone is required" });
-
 const FamilyProfile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -60,18 +44,8 @@ const FamilyProfile = () => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [familyInfo, setFamilyInfo] = useState<{ name: string; invite_code: string } | null>(null);
   const [regeneratingCode, setRegeneratingCode] = useState(false);
-
-  // Invite form state
-  const [inviteMethod, setInviteMethod] = useState<"email" | "phone">("email");
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [invitePhone, setInvitePhone] = useState("");
-  const [inviteRole, setInviteRole] = useState<string>("parent");
-  const [sending, setSending] = useState(false);
-
-  // Track the current family this user belongs to
   const [familyId, setFamilyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -156,114 +130,12 @@ const FamilyProfile = () => {
     }
   };
 
-  const handleInviteMember = async () => {
-    if (!user) {
-      toast({
-        title: t('familyProfile.authRequired'),
-        description: t('familyProfile.mustBeLoggedIn'),
-        variant: "destructive",
-      });
+  const handleInviteMember = () => {
+    if (!familyInfo) {
+      toast({ title: t('familyProfile.noFamilyFound'), description: t('familyProfile.noFamilyCreate'), variant: "destructive" });
       return;
     }
-
-    if (!familyId) {
-      toast({
-        title: t('familyProfile.noFamilyFound'),
-        description: t('familyProfile.noFamilyCreate'),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSending(true);
-    try {
-      // Validate inputs
-      const validationData = inviteSchema.parse({
-        email: inviteMethod === "email" ? inviteEmail : undefined,
-        phone: inviteMethod === "phone" ? invitePhone : undefined,
-        role: inviteRole,
-      });
-
-      const token = crypto.randomUUID();
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
-
-      const invitationData: FamilyInvitationInsert = {
-        family_id: familyId, // IMPORTANT: use the actual family id for RLS policy
-        inviter_id: user.id,
-        role: inviteRole as FamilyInvitationInsert["role"],
-        status: "pending",
-        token,
-        expires_at: expiresAt.toISOString(),
-      };
-
-      if (inviteMethod === "email") {
-        invitationData.invitee_email = validationData.email;
-      } else {
-        invitationData.invitee_phone = validationData.phone;
-      }
-
-      const { error } = await supabase
-  .from("family_invitations")
-  .insert(invitationData);
-
-if (error) throw error;
-
-      const inviteLink = `${window.location.origin}/accept-invite?token=${token}`;
-      log("Invitation link:", inviteLink);
-
-      // Send email invite if method is email
-      if (inviteMethod === "email" && validationData.email) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("user_id", user.id)
-          .single();
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData.session?.access_token;
-
-        await supabase.functions.invoke("send-invite-email", {
-          body: {
-            to: validationData.email,
-            inviterName: profileData?.full_name || "Your family",
-            inviteLink,
-            role: inviteRole,
-          },
-          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-        });
-      }
-
-      toast({
-        title: t('familyProfile.invitationSent'),
-        description: inviteMethod === "email"
-          ? `${t('familyProfile.inviteEmailSentTo')} ${validationData.email}`
-          : `${t('familyProfile.shareThisLink')} ${inviteLink}`,
-      });
-
-      setIsInviteDialogOpen(false);
-      setInviteEmail("");
-      setInvitePhone("");
-      setInviteRole("parent");
-      loadFamilyData();
-    } catch (error: unknown) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: t('familyProfile.validationError') || "Validation Error",
-          description: error.issues[0].message,
-          variant: "destructive",
-        });
-      } else {
-        logError("Error sending invitation:", error);
-        toast({
-          title: t('common.error'),
-          description: error instanceof Error ? error.message : t('familyProfile.failedToSendInvitation') || "Failed to send invitation",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setSending(false);
-    }
+    shareInviteLink();
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -478,77 +350,10 @@ if (error) throw error;
             <span>{t('familyProfile.title')}</span>
           </h1>
         </div>
-        <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 gradient-primary text-white border-0 flex-shrink-0 whitespace-nowrap">
-              <Plus className="h-4 w-4" />
-              {t('familyProfile.inviteMember')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('familyProfile.inviteFamilyMember')}</DialogTitle>
-              <DialogDescription>{t('familyProfile.inviteDescription')}</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">{t('familyProfile.inviteMethod')}</Label>
-                <Select value={inviteMethod} onValueChange={(value: "email" | "phone") => setInviteMethod(value)}>
-                  <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        Email
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="phone">
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        Phone
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {inviteMethod === "email" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs sm:text-sm">{t('familyProfile.emailAddress')}</Label>
-                  <Input id="email" type="email" placeholder="family@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-xs sm:text-sm">{t('familyProfile.phoneNumber')}</Label>
-                  <Input id="phone" type="tel" placeholder="+1 234 567 8900" value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} className="w-full min-h-[44px] text-xs sm:text-sm" />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">{t('familyProfile.role')}</Label>
-                <Select value={inviteRole} onValueChange={setInviteRole}>
-                  <SelectTrigger className="w-full min-h-[44px] text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="parent">{t('familyProfile.roles.parent')}</SelectItem>
-                    <SelectItem value="child">{t('familyProfile.roles.child')}</SelectItem>
-                    <SelectItem value="grandparent">{t('familyProfile.roles.grandparent')}</SelectItem>
-                    <SelectItem value="caretaker">{t('familyProfile.roles.caretaker')}</SelectItem>
-                    <SelectItem value="other">{t('familyProfile.roles.other')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button onClick={handleInviteMember} disabled={sending} className="w-full text-xs sm:text-sm min-h-[44px]">
-                <Send className="h-4 w-4 mr-2" />
-                {sending ? t('familyProfile.sending') : t('familyProfile.sendInvitation')}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleInviteMember} className="gap-2 gradient-primary text-white border-0 flex-shrink-0 whitespace-nowrap">
+          <Share2 className="h-4 w-4" />
+          {t('familyProfile.inviteMember')}
+        </Button>
       </div>
 
       {/* Family Invite Code Section */}

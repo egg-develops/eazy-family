@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,32 +13,46 @@ import { error as logError } from "@/lib/logger";
 const JoinFamily = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const autoJoinAttempted = useRef(false);
 
   useEffect(() => {
     document.title = "Join Your Eazy Family";
     const codeFromUrl = searchParams.get('code');
     if (codeFromUrl) {
-      setInviteCode(codeFromUrl.toUpperCase().slice(0, 6));
+      const normalized = codeFromUrl.toUpperCase().slice(0, 6);
+      setInviteCode(normalized);
+      // Stash so Auth page can redirect back after sign-up/in
+      localStorage.setItem('pending-invite-code', normalized);
     }
   }, [searchParams]);
 
-  const handleJoinFamily = async () => {
+  // If user just signed in (or was already signed in) and a code is in the URL, auto-join
+  useEffect(() => {
+    if (authLoading || autoJoinAttempted.current) return;
+    const codeFromUrl = searchParams.get('code');
+    if (user && codeFromUrl) {
+      autoJoinAttempted.current = true;
+      handleJoinFamily(codeFromUrl.toUpperCase().slice(0, 6));
+      return;
+    }
+    // Not logged in and code present — send to auth
+    if (!user && !authLoading && codeFromUrl) {
+      navigate('/auth?signup=true');
+    }
+  }, [user, authLoading]);
+
+  const handleJoinFamily = async (overrideCode?: string) => {
     if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to join a family",
-        variant: "destructive",
-      });
-      navigate("/auth");
+      navigate('/auth?signup=true');
       return;
     }
 
     // Validate invite code format
-    const trimmedCode = inviteCode.trim().toUpperCase();
+    const trimmedCode = (overrideCode ?? inviteCode).trim().toUpperCase();
     if (!trimmedCode) {
       toast({
         title: "Enter invite code",
@@ -86,6 +100,7 @@ const JoinFamily = () => {
         return;
       }
 
+      localStorage.removeItem('pending-invite-code');
       toast({
         title: "Welcome to the family! 🎉",
         description: `You've joined ${result.family_name}`,

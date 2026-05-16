@@ -142,6 +142,12 @@ const Auth = () => {
               localStorage.removeItem('pending-referral-code');
             }
           }
+          // Redirect to join family if an invite link was opened before sign-in
+          const pendingInvite = localStorage.getItem('pending-invite-code');
+          if (pendingInvite) {
+            navigate(`/join-family?code=${pendingInvite}`);
+            return;
+          }
         }
       }
 
