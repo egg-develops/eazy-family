@@ -714,7 +714,7 @@ const AppHome = () => {
           .from('tasks')
           .select('*', { count: 'exact', head: true })
           .eq('completed', false)
-          .eq('type', 'task');
+          .in('type', ['task', 'shared']);
         setPendingTasksCount(count || 0);
       } catch { /* silent */ }
     };
@@ -1196,7 +1196,8 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('type', 'task')
+        .in('type', ['task', 'shared'])
+        .eq('completed', false)
         .order('created_at', { ascending: false })
         .limit(3);
 

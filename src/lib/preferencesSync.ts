@@ -72,6 +72,10 @@ export async function loadCloudPreferences(userId: string) {
     // Notify components so they re-read from localStorage
     if (loadedKeys.length > 0) {
       window.dispatchEvent(new CustomEvent('eazy-prefs-loaded', { detail: { keys: loadedKeys } }));
+      // Also fire the home-config event so AppLayout and HomePage re-read their title/config
+      if (loadedKeys.includes('eazy-family-home-config')) {
+        window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
+      }
     }
   } catch {
     // Non-fatal — app works with local values
