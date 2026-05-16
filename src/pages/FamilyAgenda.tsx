@@ -705,44 +705,42 @@ const FamilyAgenda = () => {
         onChange={e => { const f = e.target.files?.[0]; if (f) { handleDocFile(f); setTrayOpen(false); } e.target.value = ""; }}
       />
 
-      {/* ── Fixed header ─────────────────────────── */}
+      {/* ── Header ───────────────────────────────── */}
       <div
-        className="fixed top-0 left-0 right-0 flex items-center justify-between px-4 z-50"
         style={{
-          height: "56px",
           paddingTop: "env(safe-area-inset-top)",
           background: BG,
           borderBottom: `1px solid ${BORDER}`,
+          flexShrink: 0,
         }}
       >
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-full"
-          style={{ flexShrink: 0 }}
-        >
-          <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
-        </button>
-        <p className="font-bold text-base" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
-        <button
-          className="w-9 h-9 flex items-center justify-center rounded-full"
-          style={{ flexShrink: 0 }}
-          onClick={() => toast({ title: t('familyAgenda.settingsComingSoon') })}
-        >
-          <Settings2 className="w-5 h-5" style={{ color: MUTED }} />
-        </button>
+        <div className="flex items-center justify-between px-4" style={{ height: "56px" }}>
+          <button
+            onClick={() => navigate(-1)}
+            className="w-9 h-9 flex items-center justify-center rounded-full"
+            style={{ flexShrink: 0 }}
+          >
+            <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
+          </button>
+          <p className="font-bold text-base" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
+          <button
+            className="w-9 h-9 flex items-center justify-center rounded-full"
+            style={{ flexShrink: 0 }}
+            onClick={() => toast({ title: t('familyAgenda.settingsComingSoon') })}
+          >
+            <Settings2 className="w-5 h-5" style={{ color: MUTED }} />
+          </button>
+        </div>
       </div>
 
-      {/* ── Quiet hours banner ───────────────────── */}
+      {/* ── Quiet hours banner — in flow, not fixed ── */}
       {isQuietHours && (
-        <div
-          className="fixed left-0 right-0 flex justify-center z-40"
-          style={{ top: "calc(56px + env(safe-area-inset-top))" }}
-        >
+        <div className="flex justify-center py-2" style={{ background: BG, flexShrink: 0 }}>
           <div
-            className="mx-auto px-4 py-1.5 rounded-full text-xs font-medium"
-            style={{ background: SAGE_BG, color: SAGE, marginTop: "6px" }}
+            className="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5"
+            style={{ background: SAGE_BG, color: SAGE }}
           >
-            {t('familyAgenda.quietHours')}
+            🌙 {t('familyAgenda.quietHours')}
           </div>
         </div>
       )}
@@ -751,12 +749,7 @@ const FamilyAgenda = () => {
       <div
         ref={messagesAreaRef}
         className="flex-1 overflow-y-auto"
-        style={{
-          paddingTop: isQuietHours ? "calc(56px + env(safe-area-inset-top) + 44px)" : "calc(56px + env(safe-area-inset-top))",
-          paddingBottom: "140px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
-        }}
+        style={{ padding: "12px 16px 16px" }}
       >
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-full gap-3 text-center py-16">
@@ -807,12 +800,9 @@ const FamilyAgenda = () => {
         <div ref={bottomRef} style={{ height: "1px" }} />
       </div>
 
-      {/* ── Poll creator (above input bar) ──────── */}
+      {/* ── Poll creator ─────────────────────────── */}
       {pollCreatorOpen && (
-        <div
-          className="fixed left-0 right-0 z-50"
-          style={{ bottom: "calc(96px + env(safe-area-inset-bottom) + 64px)" }}
-        >
+        <div style={{ flexShrink: 0 }}>
           <PollCreator
             onCreate={handleCreatePoll}
             onCancel={() => setPollCreatorOpen(false)}
@@ -822,15 +812,9 @@ const FamilyAgenda = () => {
 
       {/* ── Attachment tray ───────────────────── */}
       {trayOpen && !pollCreatorOpen && (
-        <div
-          className="fixed left-0 right-0 z-50"
-          style={{
-            bottom: "calc(96px + env(safe-area-inset-bottom) + 64px)",
-            animation: "slideUp 0.2s ease",
-          }}
-        >
+        <div style={{ flexShrink: 0, animation: "slideUp 0.2s ease" }}>
           <div
-            className="mx-4 rounded-2xl p-4 shadow-xl"
+            className="mx-4 mb-2 rounded-2xl p-4 shadow-xl"
             style={{ background: "#fff", border: `1px solid ${BORDER}` }}
           >
             <div className="grid grid-cols-4 gap-3">
@@ -882,14 +866,16 @@ const FamilyAgenda = () => {
         </div>
       )}
 
-      {/* ── Fixed input bar ────────────────────── */}
+      {/* ── Input bar ─────────────────────────── */}
       <div
-        className="fixed left-0 right-0 z-50"
         style={{
-          bottom: "calc(96px + env(safe-area-inset-bottom))",
+          flexShrink: 0,
           paddingLeft: "16px",
           paddingRight: "16px",
-          paddingBottom: "8px",
+          paddingTop: "8px",
+          paddingBottom: "calc(env(safe-area-inset-bottom) + 100px)",
+          background: BG,
+          borderTop: `1px solid ${BORDER}`,
         }}
       >
         <div
