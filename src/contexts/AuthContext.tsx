@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
-import { loadCloudPreferences, setPreferenceUserId } from "@/lib/preferencesSync";
+import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from "@/lib/preferencesSync";
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 
 
@@ -186,6 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    clearLocalPreferences();
     await supabase.auth.signOut();
     setSubscriptionTier(null);
     navigate('/');

@@ -282,18 +282,11 @@ const Shopping = () => {
                 </button>
                 {/* Title */}
                 <span className="flex-1 text-sm" style={{ color: item.completed ? MUTED : '#1C1C18', textDecoration: item.completed ? 'line-through' : 'none' }}>{item.title}</span>
-                {/* Assignee */}
-                <div className="w-5 h-5 rounded-full flex items-center justify-center text-white flex-shrink-0" style={{ background: TL, fontSize: '8px', fontWeight: 700 }}>
-                  {(user?.email?.[0] || 'U').toUpperCase()}
-                </div>
-                <button className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F1EDE7', border: `1px dashed ${BORDER}` }}>
-                  <Users className="w-2.5 h-2.5" style={{ color: MUTED }} />
-                </button>
                 {/* Quantity pill */}
-                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '2px 6px', gap: '4px' }}>
-                  <button onClick={() => updateQty(item.id, -1)} className="text-xs font-medium leading-none" style={{ color: MUTED, width: '14px', textAlign: 'center' }}>−</button>
-                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
-                  <button onClick={() => updateQty(item.id, 1)} className="text-xs font-medium leading-none" style={{ color: MUTED, width: '14px', textAlign: 'center' }}>+</button>
+                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '1px 8px', gap: '6px' }}>
+                  <button onClick={() => updateQty(item.id, -1)} style={{ color: MUTED, fontSize: '16px', lineHeight: 1, width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '16px', textAlign: 'center' }}>{item.quantity}</span>
+                  <button onClick={() => updateQty(item.id, 1)} style={{ color: MUTED, fontSize: '16px', lineHeight: 1, width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
             ))}

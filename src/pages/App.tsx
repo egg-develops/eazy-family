@@ -567,6 +567,7 @@ const AppHome = () => {
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
   const [snippetDay, setSnippetDay] = useState<Date | null>(null);
   const [calendarTasks, setCalendarTasks] = useState<HomeCalendarEvent[]>([]);
+  const [supabaseEvents, setSupabaseEvents] = useState<HomeCalendarEvent[]>([]);
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [showGalleryDialog, setShowGalleryDialog] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(() => {
@@ -762,7 +763,28 @@ const AppHome = () => {
     fetchTasksForCalendar();
   }, [user]);
 
-  const calendarEvents = [...getCalendarItems(), ...calendarTasks];
+  // Pull events from Supabase events table into home calendar
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('events')
+      .select('id, title, start_date, end_date, all_day, location')
+      .order('start_date', { ascending: true })
+      .then(({ data }) => {
+        if (!data) return;
+        setSupabaseEvents(data.map(e => ({
+          id: `supabase-${e.id}`,
+          title: e.title,
+          startDate: new Date(e.start_date),
+          endDate: e.end_date ? new Date(e.end_date) : undefined,
+          allDay: e.all_day ?? false,
+          location: e.location ?? undefined,
+          itemType: 'event' as const,
+        })));
+      });
+  }, [user]);
+
+  const calendarEvents = [...getCalendarItems(), ...calendarTasks, ...supabaseEvents];
 
   const todayEvents = calendarEvents.filter((event) => {
     const today = new Date();

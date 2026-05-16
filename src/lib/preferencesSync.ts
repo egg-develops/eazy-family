@@ -78,6 +78,14 @@ export async function loadCloudPreferences(userId: string) {
   }
 }
 
+/** Clear all synced keys from localStorage. Call on sign-out to prevent cross-account contamination. */
+export function clearLocalPreferences() {
+  for (const key of SYNC_KEYS) {
+    localStorage.removeItem(key);
+    try { sessionStorage.removeItem('_local_' + key); } catch {}
+  }
+}
+
 /** Write to localStorage immediately and sync to Supabase in the background. */
 export function cloudSet(key: string, value: string) {
   localStorage.setItem(key, value);
