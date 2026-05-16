@@ -546,14 +546,25 @@ const Rituals = () => {
                   {/* Entry content — slides left on swipe */}
                   <div
                     ref={el => { if (el) innerRefs.current.set(entry.id, el); else innerRefs.current.delete(entry.id); }}
-                    className="relative p-4 space-y-1.5"
+                    className="relative p-4"
                     style={{ background: '#FFFFFF', willChange: 'transform' }}
                     onTouchStart={e => onTouchStart(e, entry.id)}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
                   >
-                    <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
-                    <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1 space-y-1.5">
+                        <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
+                        <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
+                        className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full mt-0.5"
+                        style={{ background: '#FBF0EE' }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" style={{ color: '#C0392B' }} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

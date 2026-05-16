@@ -1298,7 +1298,13 @@ const Calendar = () => {
             <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
             <button className="text-xs font-semibold" style={{ color: '#964735' }}>VIEW ALL</button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+          <div
+            className="flex gap-3 overflow-x-auto pb-2"
+            style={{ scrollbarWidth: 'none', touchAction: 'pan-x' }}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
+            onTouchEnd={e => e.stopPropagation()}
+          >
             {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
               const ev = item as Event;
               const initials = ev.title.slice(0, 1).toUpperCase();

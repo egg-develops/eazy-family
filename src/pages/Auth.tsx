@@ -30,6 +30,8 @@ const Auth = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -95,6 +97,21 @@ const Auth = () => {
     } catch (error) {
       logError('Referral processing error:', error);
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) { toast({ title: "Enter your email address first", variant: "destructive" }); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) throw error;
+      setResetSent(true);
+    } catch (err: any) {
+      toast({ title: "Could not send reset email", description: err?.message || "Please try again.", variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -186,6 +203,49 @@ const Auth = () => {
         {/* Card */}
         <div className="rounded-2xl p-6 space-y-4"
           style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+
+          {/* Forgot password mode */}
+          {isForgotPassword && (
+            resetSent ? (
+              <div className="text-center space-y-3 py-2">
+                <p className="text-2xl">📬</p>
+                <p className="font-semibold text-sm" style={{ color: INK }}>Check your inbox</p>
+                <p className="text-sm" style={{ color: MUTED }}>We sent a password reset link to <strong>{email}</strong></p>
+                <button type="button" onClick={() => { setIsForgotPassword(false); setResetSent(false); }}
+                  className="w-full h-11 rounded-xl font-semibold text-sm mt-2"
+                  style={{ background: `linear-gradient(135deg, ${TC}, ${TL})`, color: '#fff' }}>
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <p className="text-sm" style={{ color: MUTED }}>Enter your email and we'll send you a reset link.</p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="reset-email" className="text-sm font-medium" style={{ color: INK }}>Email</Label>
+                  <Input id="reset-email" type="email" placeholder="you@example.com"
+                    value={email} onChange={(e) => setEmail(e.target.value)}
+                    required maxLength={255}
+                    className="h-11 rounded-xl text-sm"
+                    style={inputStyle} />
+                </div>
+                <button type="submit" disabled={loading}
+                  className="w-full h-12 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}>
+                  {loading ? 'Sending…' : 'Send Reset Link'}
+                </button>
+                <div className="pt-1" style={{ borderTop: `1px solid ${DIVIDER}` }}>
+                  <button type="button" onClick={() => setIsForgotPassword(false)}
+                    className="w-full text-center text-sm pt-3 hover:opacity-80 transition-opacity"
+                    style={{ color: MUTED }}>
+                    Back to <span className="font-semibold" style={{ color: TC }}>Sign In</span>
+                  </button>
+                </div>
+              </form>
+            )
+          )}
+
+          {!isForgotPassword && (
+          <>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div className="space-y-1.5">
@@ -241,7 +301,7 @@ const Auth = () => {
             </button>
           </form>
 
-          <div className="pt-1" style={{ borderTop: `1px solid ${DIVIDER}` }}>
+          <div className="pt-1 space-y-2" style={{ borderTop: `1px solid ${DIVIDER}` }}>
             <button type="button" onClick={() => setIsSignUp(!isSignUp)}
               className="w-full text-center text-sm pt-3 hover:opacity-80 transition-opacity"
               style={{ color: MUTED }}>
@@ -249,7 +309,16 @@ const Auth = () => {
                 ? <>Already have an account? <span className="font-semibold" style={{ color: TC }}>Sign in</span></>
                 : <>Don't have an account? <span className="font-semibold" style={{ color: TC }}>Sign up free</span></>}
             </button>
+            {!isSignUp && (
+              <button type="button" onClick={() => setIsForgotPassword(true)}
+                className="w-full text-center text-sm hover:opacity-80 transition-opacity pb-1"
+                style={{ color: MUTED }}>
+                <span className="font-semibold" style={{ color: TC }}>Forgot password?</span>
+              </button>
+            )}
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

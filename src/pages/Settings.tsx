@@ -222,7 +222,9 @@ const Settings = () => {
         saveHomeConfig({ iconImage: url });
         if (old) deleteStorageFile('user-uploads', old).catch(() => {});
       } else {
-        const imgs = [...(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])), url];
+        const existing = (homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []))
+          .filter(i => i !== '/hero-default.png');
+        const imgs = [...existing, url];
         saveHomeConfig({ headerImages: imgs, headerImage: imgs[0] });
       }
     } catch (e) { logError('Upload error:', e); toast({ title: 'Upload failed', variant: 'destructive' }); }
@@ -407,8 +409,8 @@ const Settings = () => {
               onBlur={() => saveHomeConfig({ appTitle: appTitleDraft })}
               placeholder="Eazy.Family"
               maxLength={32}
-              className="text-sm text-right outline-none bg-transparent"
-              style={{ color: TC, width: 140, fontWeight: 500 }}
+              className="text-sm text-right outline-none bg-transparent min-w-0"
+              style={{ color: TC, width: 'auto', maxWidth: 130, fontWeight: 500 }}
             />
           </div>
           {MODULE_OPTIONS.map((m, i) => (
