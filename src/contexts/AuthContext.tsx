@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
 import { loadCloudPreferences, setPreferenceUserId } from "@/lib/preferencesSync";
+import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 
 
 // Dev bypass - set to true to skip authentication
@@ -79,6 +80,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         fetchSubscriptionTier(session.user.id);
         loadCloudPreferences(session.user.id);
+        // Refresh widget token on cold launch (token may have rotated)
+        if (session.access_token) {
+          syncWidgetToken(session.access_token, session.user.id);
+        }
       }
       setLoading(false);
     });
@@ -112,10 +117,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (session?.user) {
           fetchSubscriptionTier(session.user.id);
-          if (event === 'SIGNED_IN') loadCloudPreferences(session.user.id);
+          if (event === 'SIGNED_IN') {
+            loadCloudPreferences(session.user.id);
+            // Push JWT to native widget via App Group UserDefaults
+            if (session.access_token) {
+              syncWidgetToken(session.access_token, session.user.id);
+            }
+          }
         } else {
           setSubscriptionTier(null);
           setPreferenceUserId(null);
+          if (event === 'SIGNED_OUT') clearWidgetToken();
         }
 
         // Create profile if it doesn't exist (atomic upsert to prevent race condition)
