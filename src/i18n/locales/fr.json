@@ -1065,5 +1065,99 @@
       "copyLink": "Copier votre lien →",
       "shareLink": "Partager votre lien →"
     }
+  },
+  "helpCenter": {
+    "title": "Centre d'aide",
+    "tabs": {
+      "features": "Fonctionnalités",
+      "faqs": "FAQ",
+      "contact": "Contact"
+    },
+    "orbeIntro": {
+      "title": "Rencontre EZ Orbe",
+      "body": "EZ Orbe regroupe toutes les fonctionnalités du quotidien familial — calendrier, événements et tâches — dans un seul bouton, commandé par ta voix.",
+      "tip1": "Appuie pour ouvrir EZ Capture",
+      "tip2": "Appui long + glisser pour repositionner",
+      "tip3": "Glisser vers le haut pour le menu complet"
+    },
+    "morningDigest": {
+      "title": "Chaque matin, une notification.",
+      "body": "Ton programme du jour, les tâches ouvertes et tout ce qui nécessite ton attention. La journée de ta famille déjà organisée avant ton premier café.",
+      "ritualsNote": "Ton Digest Matinal te rappelle aussi doucement tes rituels — non comme une liste de tâches, mais comme un rappel silencieux des choses qui rendent tes journées épanouissantes.",
+      "enableHint": "Activer dans Paramètres → Notifications → Digest Matinal"
+    },
+    "features": {
+      "calendar": {
+        "title": "Calendrier",
+        "desc": "Calendrier familial avec événements partagés, rappels récurrents et synchronisation Google/Outlook."
+      },
+      "tasks": {
+        "title": "Tâches",
+        "desc": "Listes de tâches personnelles et partagées, organisées par catégorie avec des dates d'échéance."
+      },
+      "shopping": {
+        "title": "Courses",
+        "desc": "Listes de courses partagées et personnelles avec catégories intelligentes, saisie vocale et contrôles de quantité."
+      },
+      "channel": {
+        "title": "Canal Famille",
+        "desc": "Chat familial partagé avec textes, notes vocales, photos, partage de localisation et sondages."
+      },
+      "rituals": {
+        "title": "Rituels",
+        "desc": "Suivre les habitudes quotidiennes et les routines familiales avec un système de check-in simple."
+      },
+      "capture": {
+        "title": "EZ Capture",
+        "desc": "Ajouter tout à ta vie de famille par voix ou texte — EZ Orbe le dirige au bon endroit."
+      }
+    },
+    "contact": {
+      "intro": "Nous sommes une petite équipe et nous lisons chaque message. Attends une réponse dans un jour ouvré.",
+      "general": "Questions générales & Retours",
+      "support": "Support technique"
+    },
+    "faqs": [
+      {
+        "q": "Comment ajouter un événement au calendrier ?",
+        "a": "Appuie sur le bouton EZ Orbe en bas de l'écran et dis ou tape ton événement — par ex. \"Dentiste mardi prochain à 15h\". EZ Orbe analysera les détails et l'ajoutera automatiquement à ton calendrier."
+      },
+      {
+        "q": "Plusieurs membres de la famille peuvent-ils utiliser le même compte ?",
+        "a": "Oui. Va dans Paramètres → Compte et invite des membres par e-mail. Chaque personne obtient sa propre connexion et tout le contenu partagé se synchronise en temps réel."
+      },
+      {
+        "q": "Qu'est-ce que le Canal Famille ?",
+        "a": "Le Canal Famille est un espace partagé où ta famille peut envoyer des messages, des notes vocales, des photos, des localisations, des documents et des sondages — tout en un seul endroit."
+      },
+      {
+        "q": "Comment fonctionne la saisie vocale ?",
+        "a": "Appuie sur le bouton EZ Orbe et parle naturellement. EZ Orbe comprend les dates relatives (\"demain\", \"vendredi prochain\"), les heures et les lieux en anglais, allemand, français et italien."
+      },
+      {
+        "q": "Pourquoi la saisie vocale ne fonctionne-t-elle pas ?",
+        "a": "Assure-toi que ton navigateur a la permission d'utiliser le microphone. Sur iOS, utilise Safari. Sur Android, utilise Chrome. Si tu vois \"Accès au microphone refusé\", va dans les paramètres du site du navigateur et autorise l'accès au microphone pour eazy.family."
+      },
+      {
+        "q": "Comment configurer le Digest Matinal ?",
+        "a": "Va dans Paramètres → Notifications et active le Digest Matinal. Tu recevras chaque jour à 8h00 un résumé avec ton programme, les tâches ouvertes et tout ce qui nécessite ton attention."
+      },
+      {
+        "q": "Puis-je utiliser Eazy.Family hors ligne ?",
+        "a": "L'application est une PWA et peut être installée sur ton écran d'accueil. Les fonctionnalités de base fonctionnent hors ligne ; la synchronisation nécessite une connexion Internet."
+      },
+      {
+        "q": "Comment personnaliser la page d'accueil ?",
+        "a": "Va dans Paramètres → Modules de la page d'accueil pour afficher ou masquer Météo, Calendrier du jour, Tâches principales, Canal Famille et Galerie photos."
+      },
+      {
+        "q": "Mes données sont-elles privées ?",
+        "a": "Oui. Toutes les données sont chiffrées en transit et au repos. Les données de ta famille ne sont jamais utilisées pour entraîner des modèles d'IA. Configure ton niveau de confidentialité dans Paramètres → IA & Confidentialité."
+      },
+      {
+        "q": "Comment supprimer mon compte ?",
+        "a": "Va dans Paramètres → défile jusqu'en bas → Supprimer mon compte. Cela supprime définitivement toutes tes données et ne peut pas être annulé."
+      }
+    ]
   }
 }

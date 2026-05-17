@@ -1065,5 +1065,99 @@
       "copyLink": "Copy your link →",
       "shareLink": "Share your link →"
     }
+  },
+  "helpCenter": {
+    "title": "Help Center",
+    "tabs": {
+      "features": "Features",
+      "faqs": "FAQs",
+      "contact": "Contact"
+    },
+    "orbeIntro": {
+      "title": "Meet EZ Orbe",
+      "body": "EZ Orbe brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.",
+      "tip1": "Tap to open EZ Capture",
+      "tip2": "Long press + drag to reposition",
+      "tip3": "Swipe up to open the full menu"
+    },
+    "morningDigest": {
+      "title": "Every morning, one notification.",
+      "body": "Today's schedule, open tasks, and anything that needs your attention. Your family's day, already organised before you've had your coffee.",
+      "ritualsNote": "Your Morning Digest also gently reflects on your rituals — not as a to-do list, but as a quiet nudge toward the things that make your days feel whole.",
+      "enableHint": "Enable in Settings → Notifications → Morning Digest"
+    },
+    "features": {
+      "calendar": {
+        "title": "Calendar",
+        "desc": "Family calendar with shared events, recurring reminders, and Google/Outlook sync."
+      },
+      "tasks": {
+        "title": "Tasks",
+        "desc": "Personal and shared to-do lists, organised by category with due dates."
+      },
+      "shopping": {
+        "title": "Shopping",
+        "desc": "Shared and personal shopping lists with smart categories, voice input, and quantity controls."
+      },
+      "channel": {
+        "title": "Family Channel",
+        "desc": "Shared family chat with text, voice notes, photos, location sharing, and polls."
+      },
+      "rituals": {
+        "title": "Rituals",
+        "desc": "Track daily habits and family routines with a simple check-in system."
+      },
+      "capture": {
+        "title": "EZ Capture",
+        "desc": "Add anything to your family life with voice or text — EZ Orbe routes it to the right place."
+      }
+    },
+    "contact": {
+      "intro": "We're a small team and we read every message. Expect a reply within one business day.",
+      "general": "General & Feedback",
+      "support": "Technical Support"
+    },
+    "faqs": [
+      {
+        "q": "How do I add an event to the calendar?",
+        "a": "Tap the EZ Orbe button at the bottom of the screen and say or type your event — e.g. \"Dentist appointment next Tuesday at 3pm\". EZ Orbe will parse the details and add it to your calendar automatically."
+      },
+      {
+        "q": "Can multiple family members use the same account?",
+        "a": "Yes. Go to Settings → Account and invite members by email. Each person gets their own login and all shared content syncs in real time."
+      },
+      {
+        "q": "What is the Family Channel?",
+        "a": "The Family Channel is a shared space where your family can send text messages, voice notes, photos, locations, documents, and polls — all in one place."
+      },
+      {
+        "q": "How does voice input work?",
+        "a": "Tap the EZ Orbe button and speak naturally. EZ Orbe understands relative dates (\"tomorrow\", \"next Friday\"), times, and locations in English, German, French, and Italian."
+      },
+      {
+        "q": "Why isn't voice input working?",
+        "a": "Make sure your browser has microphone permission. On iOS, use Safari. On Android, use Chrome. If you see a \"Microphone access denied\" message, go to your browser's site settings and allow microphone access for eazy.family."
+      },
+      {
+        "q": "How do I set up the Morning Digest?",
+        "a": "Go to Settings → Notifications and toggle on Morning Digest. You'll receive a daily summary at 8:00 AM with your schedule, open tasks, and anything that needs your attention."
+      },
+      {
+        "q": "Can I use Eazy.Family offline?",
+        "a": "The app is a Progressive Web App (PWA) and can be installed on your home screen. Core features work offline; calendar and task sync requires an internet connection."
+      },
+      {
+        "q": "How do I customise the homepage?",
+        "a": "Go to Settings → Homepage Modules to show or hide sections like Weather, Calendar Today, Top Tasks, Family Channel, and the Photo Gallery."
+      },
+      {
+        "q": "Is my data private?",
+        "a": "Yes. All data is encrypted in transit and at rest. Your family data is never used to train AI models. You can configure your privacy level in Settings → AI & Privacy."
+      },
+      {
+        "q": "How do I delete my account?",
+        "a": "Go to Settings → scroll to the bottom → Delete my account. This permanently removes all your data and cannot be undone."
+      }
+    ]
   }
 }

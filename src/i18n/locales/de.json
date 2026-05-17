@@ -1065,5 +1065,99 @@
       "copyLink": "Deinen Link kopieren →",
       "shareLink": "Deinen Link teilen →"
     }
+  },
+  "helpCenter": {
+    "title": "Hilfe-Center",
+    "tabs": {
+      "features": "Funktionen",
+      "faqs": "FAQs",
+      "contact": "Kontakt"
+    },
+    "orbeIntro": {
+      "title": "Triff EZ Orbe",
+      "body": "EZ Orbe bündelt alle Funktionen für den Familienalltag — Kalender, Termine und To-dos — in einem einzigen Button, und deine Stimme steuert alles.",
+      "tip1": "Tippen zum Öffnen von EZ Capture",
+      "tip2": "Lang drücken + ziehen zum Verschieben",
+      "tip3": "Nach oben wischen für das vollständige Menü"
+    },
+    "morningDigest": {
+      "title": "Jeden Morgen eine Benachrichtigung.",
+      "body": "Dein Tagesplan, offene Aufgaben und alles, was deine Aufmerksamkeit erfordert. Der Familientag bereits organisiert, bevor du deinen Kaffee getrunken hast.",
+      "ritualsNote": "Dein Morgen-Digest erinnert dich auch sanft an deine Rituale — nicht als To-do-Liste, sondern als stille Erinnerung an die Dinge, die deinen Alltag bereichern.",
+      "enableHint": "Aktivieren in Einstellungen → Benachrichtigungen → Morgen-Digest"
+    },
+    "features": {
+      "calendar": {
+        "title": "Kalender",
+        "desc": "Familienkalender mit geteilten Terminen, wiederkehrenden Erinnerungen und Google/Outlook-Synchronisierung."
+      },
+      "tasks": {
+        "title": "Aufgaben",
+        "desc": "Persönliche und gemeinsame To-Do-Listen, nach Kategorien mit Fälligkeitsdaten organisiert."
+      },
+      "shopping": {
+        "title": "Einkaufen",
+        "desc": "Gemeinsame und persönliche Einkaufslisten mit intelligenten Kategorien, Spracheingabe und Mengensteuerung."
+      },
+      "channel": {
+        "title": "Familienkanal",
+        "desc": "Gemeinsamer Familien-Chat mit Text, Sprachnachrichten, Fotos, Standortfreigabe und Umfragen."
+      },
+      "rituals": {
+        "title": "Rituale",
+        "desc": "Tägliche Gewohnheiten und Familienroutinen mit einem einfachen Check-in-System verfolgen."
+      },
+      "capture": {
+        "title": "EZ Capture",
+        "desc": "Alles mit Stimme oder Text zum Familienleben hinzufügen — EZ Orbe leitet es an die richtige Stelle."
+      }
+    },
+    "contact": {
+      "intro": "Wir sind ein kleines Team und lesen jede Nachricht. Du kannst mit einer Antwort innerhalb eines Werktages rechnen.",
+      "general": "Allgemeines & Feedback",
+      "support": "Technischer Support"
+    },
+    "faqs": [
+      {
+        "q": "Wie füge ich einen Termin in den Kalender ein?",
+        "a": "Tippe unten auf den EZ Orbe-Button und sage oder schreibe deinen Termin – z.B. \"Zahnarzttermin nächsten Dienstag um 15 Uhr\". EZ Orbe analysiert die Details und fügt sie automatisch in deinen Kalender ein."
+      },
+      {
+        "q": "Können mehrere Familienmitglieder das gleiche Konto nutzen?",
+        "a": "Ja. Gehe zu Einstellungen → Konto und lade Mitglieder per E-Mail ein. Jede Person erhält einen eigenen Login und alle geteilten Inhalte werden in Echtzeit synchronisiert."
+      },
+      {
+        "q": "Was ist der Familienkanal?",
+        "a": "Der Familienkanal ist ein gemeinsamer Bereich, in dem deine Familie Textnachrichten, Sprachnachrichten, Fotos, Standorte, Dokumente und Umfragen teilen kann — alles an einem Ort."
+      },
+      {
+        "q": "Wie funktioniert die Spracheingabe?",
+        "a": "Tippe auf den EZ Orbe-Button und sprich ganz natürlich. EZ Orbe versteht relative Daten (\"morgen\", \"nächsten Freitag\"), Uhrzeiten und Orte auf Englisch, Deutsch, Französisch und Italienisch."
+      },
+      {
+        "q": "Warum funktioniert die Spracheingabe nicht?",
+        "a": "Stelle sicher, dass dein Browser die Mikrofon-Berechtigung hat. Unter iOS nutze Safari, unter Android Chrome. Wenn du eine Meldung \"Mikrofon-Zugriff verweigert\" siehst, gehe zu den Browser-Seiteneinstellungen und erlaube den Mikrofon-Zugriff für eazy.family."
+      },
+      {
+        "q": "Wie richte ich den Morgen-Digest ein?",
+        "a": "Gehe zu Einstellungen → Benachrichtigungen und aktiviere den Morgen-Digest. Du erhältst täglich um 8:00 Uhr eine Zusammenfassung mit deinem Tagesplan, offenen Aufgaben und allem, was deine Aufmerksamkeit erfordert."
+      },
+      {
+        "q": "Kann ich Eazy.Family offline nutzen?",
+        "a": "Die App ist eine Progressive Web App (PWA) und kann auf deinem Startbildschirm installiert werden. Grundfunktionen funktionieren offline; für Kalender- und Aufgaben-Synchronisierung ist eine Internetverbindung erforderlich."
+      },
+      {
+        "q": "Wie passe ich die Startseite an?",
+        "a": "Gehe zu Einstellungen → Startseiten-Module, um Bereiche wie Wetter, Kalender heute, Top-Aufgaben, Familienkanal und Fotogalerie ein- oder auszublenden."
+      },
+      {
+        "q": "Sind meine Daten sicher?",
+        "a": "Ja. Alle Daten werden beim Übertragen und bei der Speicherung verschlüsselt. Deine Familiendaten werden nie zum Training von KI-Modellen verwendet. Du kannst deine Datenschutzeinstellungen in Einstellungen → KI & Datenschutz anpassen."
+      },
+      {
+        "q": "Wie lösche ich mein Konto?",
+        "a": "Gehe zu Einstellungen → nach unten scrollen → Konto löschen. Damit werden alle deine Daten dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden."
+      }
+    ]
   }
 }

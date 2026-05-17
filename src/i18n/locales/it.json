@@ -1065,5 +1065,99 @@
       "copyLink": "Copia il tuo link →",
       "shareLink": "Condividi il tuo link →"
     }
+  },
+  "helpCenter": {
+    "title": "Centro assistenza",
+    "tabs": {
+      "features": "Funzionalità",
+      "faqs": "FAQ",
+      "contact": "Contatto"
+    },
+    "orbeIntro": {
+      "title": "Scopri EZ Orbe",
+      "body": "EZ Orbe riunisce tutte le funzionalità della vita familiare quotidiana — calendario, eventi e attività — in un unico pulsante, gestito dalla tua voce.",
+      "tip1": "Tocca per aprire EZ Capture",
+      "tip2": "Tieni premuto + trascina per riposizionare",
+      "tip3": "Scorri verso l'alto per il menu completo"
+    },
+    "morningDigest": {
+      "title": "Ogni mattina, una notifica.",
+      "body": "Il programma della giornata, le attività aperte e tutto ciò che richiede la tua attenzione. La giornata della tua famiglia già organizzata prima del caffè.",
+      "ritualsNote": "Il tuo Riepilogo Mattutino ti ricorda anche delicatamente i tuoi rituali — non come una lista di cose da fare, ma come un gentile promemoria delle cose che rendono le tue giornate piene di significato.",
+      "enableHint": "Attiva in Impostazioni → Notifiche → Riepilogo Mattutino"
+    },
+    "features": {
+      "calendar": {
+        "title": "Calendario",
+        "desc": "Calendario familiare con eventi condivisi, promemoria ricorrenti e sincronizzazione Google/Outlook."
+      },
+      "tasks": {
+        "title": "Attività",
+        "desc": "Liste di attività personali e condivise, organizzate per categoria con scadenze."
+      },
+      "shopping": {
+        "title": "Spesa",
+        "desc": "Liste della spesa condivise e personali con categorie intelligenti, input vocale e controlli delle quantità."
+      },
+      "channel": {
+        "title": "Canale Famiglia",
+        "desc": "Chat familiare condivisa con testi, note vocali, foto, condivisione della posizione e sondaggi."
+      },
+      "rituals": {
+        "title": "Rituali",
+        "desc": "Tieni traccia delle abitudini quotidiane e delle routine familiari con un semplice sistema di check-in."
+      },
+      "capture": {
+        "title": "EZ Capture",
+        "desc": "Aggiungi qualsiasi cosa alla vita familiare con voce o testo — EZ Orbe lo indirizza al posto giusto."
+      }
+    },
+    "contact": {
+      "intro": "Siamo un piccolo team e leggiamo ogni messaggio. Aspettati una risposta entro un giorno lavorativo.",
+      "general": "Generale e feedback",
+      "support": "Supporto tecnico"
+    },
+    "faqs": [
+      {
+        "q": "Come aggiungo un evento al calendario?",
+        "a": "Tocca il pulsante EZ Orbe in basso e dì o digita il tuo evento — es. \"Dentista martedì prossimo alle 15:00\". EZ Orbe analizzerà i dettagli e lo aggiungerà automaticamente al tuo calendario."
+      },
+      {
+        "q": "Più familiari possono usare lo stesso account?",
+        "a": "Sì. Vai in Impostazioni → Account e invita i membri tramite e-mail. Ogni persona ottiene il proprio accesso e tutti i contenuti condivisi si sincronizzano in tempo reale."
+      },
+      {
+        "q": "Cos'è il Canale Famiglia?",
+        "a": "Il Canale Famiglia è uno spazio condiviso dove la tua famiglia può inviare messaggi di testo, note vocali, foto, posizioni, documenti e sondaggi — tutto in un unico posto."
+      },
+      {
+        "q": "Come funziona l'input vocale?",
+        "a": "Tocca il pulsante EZ Orbe e parla naturalmente. EZ Orbe capisce le date relative (\"domani\", \"venerdì prossimo\"), gli orari e i luoghi in inglese, tedesco, francese e italiano."
+      },
+      {
+        "q": "Perché l'input vocale non funziona?",
+        "a": "Assicurati che il browser abbia il permesso per il microfono. Su iOS usa Safari, su Android usa Chrome. Se vedi \"Accesso al microfono negato\", vai nelle impostazioni del sito del browser e consenti l'accesso al microfono per eazy.family."
+      },
+      {
+        "q": "Come imposto il Riepilogo Mattutino?",
+        "a": "Vai in Impostazioni → Notifiche e attiva il Riepilogo Mattutino. Riceverai ogni giorno alle 8:00 un riepilogo con il tuo programma, le attività aperte e tutto ciò che richiede la tua attenzione."
+      },
+      {
+        "q": "Posso usare Eazy.Family offline?",
+        "a": "L'app è una PWA e può essere installata nella schermata iniziale. Le funzionalità di base funzionano offline; la sincronizzazione richiede una connessione Internet."
+      },
+      {
+        "q": "Come personalizzo la pagina principale?",
+        "a": "Vai in Impostazioni → Moduli della pagina principale per mostrare o nascondere Meteo, Calendario di oggi, Attività principali, Canale Famiglia e Galleria foto."
+      },
+      {
+        "q": "I miei dati sono privati?",
+        "a": "Sì. Tutti i dati sono cifrati in transito e a riposo. I dati della tua famiglia non vengono mai utilizzati per addestrare modelli di IA. Configura il tuo livello di privacy in Impostazioni → IA e Privacy."
+      },
+      {
+        "q": "Come elimino il mio account?",
+        "a": "Vai in Impostazioni → scorri fino in fondo → Elimina il mio account. Questo elimina definitivamente tutti i tuoi dati e non può essere annullato."
+      }
+    ]
   }
 }

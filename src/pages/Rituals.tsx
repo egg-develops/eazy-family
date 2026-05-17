@@ -293,7 +293,14 @@ const Rituals = () => {
     const delta = e.changedTouches[0].clientX - startX;
     el.style.transition = 'transform 0.2s ease';
 
-    if (delta < -40) {
+    if (delta > 60) {
+      // Right swipe → start a new journal entry
+      el.style.transform = 'translateX(0)';
+      setOpenSwipeId(null);
+      touchData.current = null;
+      startListening();
+      return;
+    } else if (delta < -40) {
       el.style.transform = `translateX(-${DELETE_W}px)`;
       setOpenSwipeId(id);
     } else if (delta > 10 || openSwipeId !== id) {
@@ -500,7 +507,7 @@ const Rituals = () => {
         <div onClick={() => closeSwipe()}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.journal')}</h2>
-            {!showAllJournal && entries.length > 0 && (
+            {!showAllJournal && entries.length > baseCount && (
               <button
                 onClick={e => { e.stopPropagation(); setShowAllJournal(true); }}
                 className="text-xs font-semibold"
@@ -509,7 +516,7 @@ const Rituals = () => {
                 {t('rituals.viewJournal')}
               </button>
             )}
-            {showAllJournal && entries.length > baseCount && (
+            {showAllJournal && (
               <button
                 onClick={e => { e.stopPropagation(); setShowAllJournal(false); }}
                 className="text-xs font-semibold"
@@ -556,13 +563,6 @@ const Rituals = () => {
                         <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
                         <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
                       </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteEntry(entry.id); }}
-                        className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full mt-0.5"
-                        style={{ background: '#FBF0EE' }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" style={{ color: '#C0392B' }} />
-                      </button>
                     </div>
                   </div>
                 </div>

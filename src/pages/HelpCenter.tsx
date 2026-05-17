@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronDown, ChevronUp, Mail, MessageCircle, Sparkles, Calendar, CheckSquare, ShoppingCart, Users, Bell, Mic } from "lucide-react";
 
 const TC = '#964735';
@@ -12,58 +13,6 @@ const INK = '#1C1C18';
 const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
 const SAGE_BORDER = '#C8DDD0';
-
-const FAQS = [
-  {
-    q: "How do I add an event to the calendar?",
-    a: "Tap the EZ Orbe button at the bottom of the screen and say or type your event — e.g. \"Dentist appointment next Tuesday at 3pm\". EZ Orbe will parse the details and add it to your calendar automatically.",
-  },
-  {
-    q: "Can multiple family members use the same account?",
-    a: "Yes. Go to Settings → Account and invite members by email. Each person gets their own login and all shared content syncs in real time.",
-  },
-  {
-    q: "What is the Family Channel?",
-    a: "The Family Channel is a shared space where your family can send text messages, voice notes, photos, locations, documents, and polls — all in one place.",
-  },
-  {
-    q: "How does voice input work?",
-    a: "Tap the EZ Orbe button and speak naturally. EZ Orbe understands relative dates (\"tomorrow\", \"next Friday\"), times, and locations in English, German, French, and Italian.",
-  },
-  {
-    q: "Why isn't voice input working?",
-    a: "Make sure your browser has microphone permission. On iOS, use Safari. On Android, use Chrome. If you see a 'Microphone access denied' message, go to your browser's site settings and allow microphone access for eazy.family.",
-  },
-  {
-    q: "How do I set up the Morning Digest?",
-    a: "Go to Settings → Notifications and toggle on Morning Digest. You'll receive a daily summary at 8:00 AM with your schedule, open tasks, and anything that needs your attention. Enable email digest to receive it in your inbox as well.",
-  },
-  {
-    q: "Can I use Eazy.Family offline?",
-    a: "The app is a Progressive Web App (PWA) and can be installed on your home screen. Core features work offline; calendar and task sync requires an internet connection.",
-  },
-  {
-    q: "How do I customise the homepage?",
-    a: "Go to Settings → Homepage Modules to show or hide sections like Weather, Calendar Today, Top Tasks, Family Channel, and the Photo Gallery.",
-  },
-  {
-    q: "Is my data private?",
-    a: "Yes. All data is encrypted in transit and at rest. Your family data is never used to train AI models. You can configure your privacy level in Settings → AI & Privacy.",
-  },
-  {
-    q: "How do I delete my account?",
-    a: "Go to Settings → scroll to the bottom → Delete my account. This permanently removes all your data and cannot be undone.",
-  },
-];
-
-const FEATURES = [
-  { icon: <Calendar className="w-5 h-5" />, color: '#964735', bg: '#FEF3F0', title: "Calendar", desc: "Family calendar with shared events, recurring reminders, and Google/Outlook sync." },
-  { icon: <CheckSquare className="w-5 h-5" />, color: '#6E8FE5', bg: '#EEF1FD', title: "Tasks", desc: "Personal and shared to-do lists, organised by category with due dates." },
-  { icon: <ShoppingCart className="w-5 h-5" />, color: SAGE, bg: SAGE_BG, title: "Shopping", desc: "Shared and personal shopping lists with smart categories, voice input, and quantity controls." },
-  { icon: <Users className="w-5 h-5" />, color: '#EE7BB0', bg: '#FEF0F7', title: "Family Channel", desc: "Shared family chat with text, voice notes, photos, location sharing, and polls." },
-  { icon: <Bell className="w-5 h-5" />, color: '#B88A00', bg: '#FFF7E0', title: "Rituals", desc: "Track daily habits and family routines with a simple check-in system." },
-  { icon: <Mic className="w-5 h-5" />, color: TC, bg: '#FEF3F0', title: "EZ Capture", desc: "Add anything to your family life with voice or text — EZ Orbe routes it to the right place." },
-];
 
 const FAQ = ({ q, a }: { q: string; a: string }) => {
   const [open, setOpen] = useState(false);
@@ -87,12 +36,27 @@ const FAQ = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
-const TABS = ['Features', 'FAQs', 'Contact'] as const;
-type Tab = typeof TABS[number];
-
 const HelpCenter = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<Tab>('Features');
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<'features' | 'faqs' | 'contact'>('features');
+
+  const TABS = [
+    { id: 'features' as const, label: t('helpCenter.tabs.features') },
+    { id: 'faqs' as const, label: t('helpCenter.tabs.faqs') },
+    { id: 'contact' as const, label: t('helpCenter.tabs.contact') },
+  ];
+
+  const FEATURES = [
+    { icon: <Calendar className="w-5 h-5" />, color: TC, bg: '#FEF3F0', key: 'calendar' },
+    { icon: <CheckSquare className="w-5 h-5" />, color: '#6E8FE5', bg: '#EEF1FD', key: 'tasks' },
+    { icon: <ShoppingCart className="w-5 h-5" />, color: SAGE, bg: SAGE_BG, key: 'shopping' },
+    { icon: <Users className="w-5 h-5" />, color: '#EE7BB0', bg: '#FEF0F7', key: 'channel' },
+    { icon: <Bell className="w-5 h-5" />, color: '#B88A00', bg: '#FFF7E0', key: 'rituals' },
+    { icon: <Mic className="w-5 h-5" />, color: TC, bg: '#FEF3F0', key: 'capture' },
+  ];
+
+  const faqs: { q: string; a: string }[] = t('helpCenter.faqs', { returnObjects: true }) as any;
 
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{ background: BG, paddingTop: 'env(safe-area-inset-top)' }}>
@@ -103,24 +67,24 @@ const HelpCenter = () => {
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center -ml-1">
             <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
           </button>
-          <p className="flex-1 text-center font-bold text-base" style={{ color: INK }}>Help Center</p>
+          <p className="flex-1 text-center font-bold text-base" style={{ color: INK }}>{t('helpCenter.title')}</p>
           <div className="w-9" />
         </div>
 
         {/* Tabs */}
         <div className="flex px-4 pb-3 gap-2">
-          {TABS.map(t => (
+          {TABS.map(tb => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tb.id}
+              onClick={() => setTab(tb.id)}
               className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
               style={{
-                background: tab === t ? TC : CARD,
-                color: tab === t ? '#fff' : MUTED,
-                border: `1px solid ${tab === t ? TC : BORDER}`,
+                background: tab === tb.id ? TC : CARD,
+                color: tab === tb.id ? '#fff' : MUTED,
+                border: `1px solid ${tab === tb.id ? TC : BORDER}`,
               }}
             >
-              {t}
+              {tb.label}
             </button>
           ))}
         </div>
@@ -129,7 +93,7 @@ const HelpCenter = () => {
       <div className="px-4 py-5 space-y-5 pb-16">
 
         {/* ── Features tab ── */}
-        {tab === 'Features' && (
+        {tab === 'features' && (
           <>
             {/* EZ Orbe intro */}
             <div className="rounded-2xl overflow-hidden" style={{ background: `linear-gradient(135deg, ${TC} 0%, #D97B66 100%)` }}>
@@ -137,19 +101,15 @@ const HelpCenter = () => {
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-lg font-bold text-white">Meet EZ Orbe</h2>
+                <h2 className="text-lg font-bold text-white">{t('helpCenter.orbeIntro.title')}</h2>
                 <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                  EZ Orbe brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.
+                  {t('helpCenter.orbeIntro.body')}
                 </p>
                 <ul className="space-y-1.5">
-                  {[
-                    "Tap to open EZ Capture",
-                    "Long press + drag to reposition",
-                    "Swipe up to open the full menu",
-                  ].map(tip => (
+                  {(['tip1', 'tip2', 'tip3'] as const).map(tip => (
                     <li key={tip} className="flex items-center gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>
                       <div className="w-1.5 h-1.5 rounded-full bg-white flex-shrink-0" />
-                      {tip}
+                      {t(`helpCenter.orbeIntro.${tip}`)}
                     </li>
                   ))}
                 </ul>
@@ -159,12 +119,12 @@ const HelpCenter = () => {
             {/* Feature cards */}
             <div className="grid grid-cols-2 gap-3">
               {FEATURES.map(f => (
-                <div key={f.title} className="rounded-2xl p-4 space-y-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
+                <div key={f.key} className="rounded-2xl p-4 space-y-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: f.bg, color: f.color }}>
                     {f.icon}
                   </div>
-                  <p className="text-sm font-semibold" style={{ color: INK }}>{f.title}</p>
-                  <p className="text-xs leading-snug" style={{ color: MUTED }}>{f.desc}</p>
+                  <p className="text-sm font-semibold" style={{ color: INK }}>{t(`helpCenter.features.${f.key}.title`)}</p>
+                  <p className="text-xs leading-snug" style={{ color: MUTED }}>{t(`helpCenter.features.${f.key}.desc`)}</p>
                 </div>
               ))}
             </div>
@@ -175,38 +135,38 @@ const HelpCenter = () => {
                 <Bell className="w-4 h-4" style={{ color: '#B88A00' }} />
               </div>
               <div>
-                <p className="text-sm font-semibold mb-1" style={{ color: INK }}>Every morning, one notification.</p>
+                <p className="text-sm font-semibold mb-1" style={{ color: INK }}>{t('helpCenter.morningDigest.title')}</p>
                 <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
-                  Today's schedule, open tasks, and anything that needs your attention. Your family's day, already organised before you've had your coffee.
+                  {t('helpCenter.morningDigest.body')}
                 </p>
               </div>
               <div className="rounded-xl p-3 space-y-1" style={{ background: SAGE_BG, border: `1px solid ${SAGE_BORDER}` }}>
-                <p className="text-xs font-semibold" style={{ color: SAGE }}>Rituals & Journal</p>
+                <p className="text-xs font-semibold" style={{ color: SAGE }}>{t('rituals.title')}</p>
                 <p className="text-xs leading-relaxed" style={{ color: SAGE }}>
-                  Your Morning Digest also gently reflects on your rituals — not as a to-do list, but as a quiet nudge toward the things that make your days feel whole.
+                  {t('helpCenter.morningDigest.ritualsNote')}
                 </p>
               </div>
               <p className="text-xs" style={{ color: MUTED }}>
-                Enable in <span className="font-semibold" style={{ color: TC }}>Settings → Notifications → Morning Digest</span>.
+                {t('helpCenter.morningDigest.enableHint')}
               </p>
             </div>
           </>
         )}
 
         {/* ── FAQs tab ── */}
-        {tab === 'FAQs' && (
+        {tab === 'faqs' && (
           <div className="rounded-2xl overflow-hidden" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-            {FAQS.map((faq, i) => (
+            {Array.isArray(faqs) && faqs.map((faq, i) => (
               <FAQ key={i} q={faq.q} a={faq.a} />
             ))}
           </div>
         )}
 
         {/* ── Contact tab ── */}
-        {tab === 'Contact' && (
+        {tab === 'contact' && (
           <div className="space-y-4">
             <p className="text-sm leading-relaxed" style={{ color: MUTED }}>
-              We're a small team and we read every message. Expect a reply within one business day.
+              {t('helpCenter.contact.intro')}
             </p>
             <div className="rounded-2xl overflow-hidden" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
               <a href="mailto:hello@eazy.family"
@@ -216,7 +176,7 @@ const HelpCenter = () => {
                   <MessageCircle className="w-4 h-4" style={{ color: SAGE }} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: INK }}>General & Feedback</p>
+                  <p className="text-sm font-semibold" style={{ color: INK }}>{t('helpCenter.contact.general')}</p>
                   <p className="text-xs mt-0.5" style={{ color: MUTED }}>hello@eazy.family</p>
                 </div>
                 <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
@@ -227,7 +187,7 @@ const HelpCenter = () => {
                   <Mail className="w-4 h-4" style={{ color: TC }} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: INK }}>Technical Support</p>
+                  <p className="text-sm font-semibold" style={{ color: INK }}>{t('helpCenter.contact.support')}</p>
                   <p className="text-xs mt-0.5" style={{ color: MUTED }}>support@eazy.family</p>
                 </div>
                 <span className="text-xs font-semibold" style={{ color: TC }}>Email →</span>
