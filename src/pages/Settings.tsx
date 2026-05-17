@@ -524,6 +524,26 @@ const Settings = () => {
         </Card_>
       </div>
 
+      {/* ── App Tour ── */}
+      <div className="space-y-2">
+        <SectionLabel>App Tour</SectionLabel>
+        <Card_>
+          <Row
+            icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>✨</span>}
+            title="Feature slides"
+            subtitle="Watch the intro slides again"
+            onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
+          />
+          <Row
+            icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>🔍</span>}
+            title="Interactive tour"
+            subtitle="Spotlight tour of the home screen"
+            last
+            onClick={() => window.dispatchEvent(new Event('tutorial-start'))}
+          />
+        </Card_>
+      </div>
+
       {/* ── Support ── */}
       <div className="space-y-2">
         <SectionLabel>{t('settings.supportSection')}</SectionLabel>

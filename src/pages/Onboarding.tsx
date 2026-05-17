@@ -29,6 +29,7 @@ const steps = [
   { id: 2, title: "Language" },
   { id: 3, title: "Your Name" },
   { id: 4, title: "Location" },
+  { id: 5, title: "What's Inside" },
 ];
 
 const locations = [
@@ -77,6 +78,13 @@ const Onboarding = () => {
     }
   };
 
+  const PILLARS = [
+    { emoji: '📅', label: 'Shared Calendar', sub: 'Google & Outlook sync' },
+    { emoji: '💬', label: 'Family Channel', sub: 'Private group chat' },
+    { emoji: '🛒', label: 'Lists & Tasks', sub: 'Shopping & to-dos' },
+    { emoji: '✨', label: 'Eazy AI', sub: 'Ask anything, add by voice' },
+  ];
+
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
@@ -87,6 +95,7 @@ const Onboarding = () => {
       case 2: return data.language.length > 0;
       case 3: return data.userName.trim().length > 0;
       case 4: return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
+      case 5: return true;
       default: return false;
     }
   };
@@ -213,6 +222,29 @@ const Onboarding = () => {
                 autoFocus
               />
             )}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-5">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold" style={{ color: INK }}>Everything your family needs</h2>
+              <p className="text-sm" style={{ color: MUTED }}>Here's what's waiting for you inside.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {PILLARS.map(p => (
+                <div
+                  key={p.label}
+                  className="rounded-2xl p-3.5 flex flex-col gap-1.5"
+                  style={{ background: '#FDF3EE', border: `1px solid ${BORDER}` }}
+                >
+                  <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{p.emoji}</span>
+                  <p className="text-sm font-bold leading-tight" style={{ color: INK }}>{p.label}</p>
+                  <p className="text-xs leading-tight" style={{ color: MUTED }}>{p.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
         );
 

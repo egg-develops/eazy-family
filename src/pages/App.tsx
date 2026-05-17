@@ -391,6 +391,7 @@ const AppLayout = () => {
 
           <button
             ref={ezButtonRef}
+            data-tutorial="orb"
             onPointerDown={handleEZPointerDown}
             onPointerMove={handleEZPointerMove}
             onPointerUp={handleEZPointerUp}
@@ -926,7 +927,7 @@ const AppHome = () => {
       </Dialog>
 
       {/* Morning greeting + weather */}
-      <div className="space-y-2">
+      <div className="space-y-2" data-tutorial="home-greeting">
         <div className="flex items-center justify-between">
           <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
             {new Date().getHours() < 12 ? t('home.goodMorning') : new Date().getHours() < 17 ? t('home.goodAfternoon') : t('home.goodEvening')}
@@ -1105,7 +1106,7 @@ const AppHome = () => {
 
       {/* Top Tasks */}
       {homeConfig.showTasks !== false && (
-      <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
+      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
           <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{t('home.topTasks')}</p>
           <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
