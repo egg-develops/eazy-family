@@ -170,10 +170,10 @@ const Settings = () => {
   };
 
   const handleLanguageChange = (lang: string) => {
-    localStorage.setItem('eazy-family-language', lang);
     cloudSet('eazy-family-language', lang);
+    setLanguage(lang);
     setLangOpen(false);
-    i18n.changeLanguage(lang).finally(() => window.location.reload());
+    i18n.changeLanguage(lang);
   };
 
   const handleReferFriends = async () => {

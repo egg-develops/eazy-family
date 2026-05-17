@@ -263,17 +263,17 @@ const Shopping = () => {
               <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? `1px solid #F1EDE7` : 'none' }}>
                 {/* Checkbox — rounded square, text height */}
                 <button onClick={() => toggleItem(item.id)}
-                  className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
+                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors"
                   style={{ border: `1.5px solid ${item.completed ? TC : '#C4AEA8'}`, background: item.completed ? TC : 'transparent' }}>
-                  {item.completed && <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>}
+                  {item.completed && <span className="text-white" style={{ fontSize: '8px', lineHeight: 1 }}>✓</span>}
                 </button>
                 {/* Title */}
                 <span className="flex-1 text-sm" style={{ color: item.completed ? MUTED : '#1C1C18', textDecoration: item.completed ? 'line-through' : 'none' }}>{item.title}</span>
                 {/* Quantity pill */}
-                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '1px 8px', gap: '6px' }}>
-                  <button onClick={() => updateQty(item.id, -1)} style={{ color: MUTED, fontSize: '16px', lineHeight: 1, width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '16px', textAlign: 'center' }}>{item.quantity}</span>
-                  <button onClick={() => updateQty(item.id, 1)} style={{ color: MUTED, fontSize: '16px', lineHeight: 1, width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '1px 6px', gap: '4px' }}>
+                  <button onClick={() => updateQty(item.id, -1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
+                  <button onClick={() => updateQty(item.id, 1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
             ))}

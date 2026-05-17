@@ -422,7 +422,6 @@ const Rituals = () => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
-                    <p className="text-[10px]" style={{ color: '#B5A09A' }}>{r.time}</p>
                   </div>
                 </button>
                 {editMode && (
@@ -501,7 +500,7 @@ const Rituals = () => {
         <div onClick={() => closeSwipe()}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.journal')}</h2>
-            {hasMore && (
+            {!showAllJournal && entries.length > 0 && (
               <button
                 onClick={e => { e.stopPropagation(); setShowAllJournal(true); }}
                 className="text-xs font-semibold"

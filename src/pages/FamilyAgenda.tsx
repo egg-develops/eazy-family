@@ -865,7 +865,7 @@ const FamilyAgenda = () => {
           paddingLeft: "16px",
           paddingRight: "16px",
           paddingTop: "8px",
-          paddingBottom: "calc(env(safe-area-inset-bottom) + 100px)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
           background: BG,
           borderTop: `1px solid ${BORDER}`,
         }}

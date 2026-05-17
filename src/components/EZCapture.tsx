@@ -460,7 +460,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-full text-sm font-semibold"
+                  className="flex-1 py-2 rounded-full text-sm font-semibold"
                   style={{ background: '#F1EDE7', color: '#7A6660', border: '1px solid #DAC1BB' }}
                 >
                   Cancel
@@ -468,7 +468,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
                 <button
                   onClick={handleParseAndPreview}
                   disabled={!text.trim()}
-                  className="flex-1 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 py-2 rounded-full text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                   style={{
                     background: text.trim() ? '#964735' : '#DAC1BB',
                     color: '#FFFFFF',

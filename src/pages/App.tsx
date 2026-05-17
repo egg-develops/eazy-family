@@ -855,22 +855,24 @@ const AppHome = () => {
 
   // Header carousel rotation
   const headerImages = homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : []);
+  // Only real uploads shown in carousel/gallery display
+  const galleryImages = headerImages.filter((img: string) => img && img !== '/hero-default.png');
 
   // Clamp visit-based index to actual image count
   useEffect(() => {
-    if (headerImages.length > 0) {
-      setCarouselIndex(prev => prev % headerImages.length);
+    if (galleryImages.length > 0) {
+      setCarouselIndex(prev => prev % galleryImages.length);
     }
-  }, [headerImages.length]);
+  }, [galleryImages.length]);
 
   // Auto-rotate every 5 seconds when multiple images
   useEffect(() => {
-    if (headerImages.length <= 1) return;
+    if (galleryImages.length <= 1) return;
     const interval = setInterval(() => {
-      setCarouselIndex((prev) => (prev + 1) % headerImages.length);
+      setCarouselIndex((prev) => (prev + 1) % galleryImages.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [headerImages.length]);
+  }, [galleryImages.length]);
 
   return (
     <div className="space-y-4 pb-4">
@@ -1161,9 +1163,9 @@ const AppHome = () => {
       })()}
 
       {/* Gallery */}
-      {homeConfig.showGallery !== false && headerImages.length > 0 && headerImages[0] !== '/hero-default.png' && (
+      {homeConfig.showGallery !== false && galleryImages.length > 0 && (
         <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
-          <img src={headerImages[carouselIndex % headerImages.length]} alt="Family" className="w-full h-full object-cover" />
+          <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
           <button
             onClick={() => setShowGalleryDialog(true)}
             className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
@@ -1281,10 +1283,10 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
           <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: '#F7F3ED' }}>
             <button
               onClick={() => toggleTask(task.id)}
-              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all"
+              className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all"
               style={{ borderColor: task.completed ? '#964735' : '#C4AEA8', background: task.completed ? '#964735' : 'transparent' }}
             >
-              {task.completed && <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>}
+              {task.completed && <span className="text-white" style={{ fontSize: '7px', lineHeight: 1 }}>✓</span>}
             </button>
             <span
               className={`text-sm flex-1 ${task.completed ? 'line-through' : ''}`}
