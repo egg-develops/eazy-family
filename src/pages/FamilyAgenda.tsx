@@ -714,7 +714,7 @@ const FamilyAgenda = () => {
           >
             <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
           </button>
-          <p className="font-bold text-base" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
+          <p className="font-bold text-xl" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
           <button
             className="w-9 h-9 flex items-center justify-center rounded-full"
             style={{ flexShrink: 0 }}
