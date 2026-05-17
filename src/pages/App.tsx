@@ -9,7 +9,6 @@ import {
   Settings,
   Calendar,
   MapPin,
-  Camera,
   ShoppingCart,
   Home,
   Search,
@@ -1170,13 +1169,6 @@ const AppHome = () => {
       {homeConfig.showGallery !== false && galleryImages.length > 0 && (
         <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
           <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
-          <button
-            onClick={() => setShowGalleryDialog(true)}
-            className="absolute bottom-3 right-3 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(253,249,243,0.9)' }}
-          >
-            <Camera className="w-4 h-4" style={{ color: '#964735' }} />
-          </button>
         </div>
       )}
     </div>
