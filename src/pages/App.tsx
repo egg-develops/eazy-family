@@ -427,6 +427,9 @@ const AppLayout = () => {
         currentPath.includes('/calendar') ? 'event' :
         'event'
       } />}
+
+      {/* Global tutorial — must live at AppLayout level so it hears events from any page */}
+      <GlobalTutorial />
     </div>
   );
 };
@@ -1339,9 +1342,6 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
           </button>
         )}
       </div>
-      <ErrorBoundary>
-        <GlobalTutorial />
-      </ErrorBoundary>
     </div>
   );
 };
