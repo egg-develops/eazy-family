@@ -1037,11 +1037,13 @@
         "Premium-Support",
         "Ein kostenloser Monat für jede Familie, die du empfiehlst"
       ],
-      "feature1": "Unbegrenzte Kalender, Listen & Familienmitglieder",
-      "feature2": "Vollständige Intelligenzschicht — Konflikterkennung, Einkaufshäufigkeit, Aufgaben-Eskalation",
-      "feature3": "Morgen-Digest — täglich & per E-Mail",
-      "feature4": "Vollständige Sprach-KI — Orbe & Assistent",
-      "feature5": "Ein kostenloser Monat für jede Familie, die du empfiehlst",
+      "feature1": "Unbegrenzte Familienmitglieder",
+      "feature2": "Unbegrenzte Kalender — synchronisiere Google, Apple und Outlook",
+      "feature3": "Unbegrenzte private und gemeinsame Listen für Einkauf und Aufgaben",
+      "feature4": "Vollständige Sprach-KI — EZ-Button, der Assistent deiner Familie",
+      "feature5": "Vollständige Intelligenzschicht — Konflikterkennung, Einkaufshäufigkeit, Aufgaben-Eskalation",
+      "feature6": "Rituale & Tagebuch — dein privater Raum zur Reflexion",
+      "feature7": "Morgen-Digest — täglich & per E-Mail",
       "startTrial": "Kostenlose Testphase starten →",
       "cancelNote": "Kündige vor Tag 14 und du wirst nicht belastet."
     },

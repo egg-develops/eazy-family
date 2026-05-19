@@ -1037,11 +1037,13 @@
         "Support premium",
         "Un mois gratuit pour chaque famille que vous parrainez"
       ],
-      "feature1": "Agendas, listes et membres de la famille illimités",
-      "feature2": "Couche d'intelligence complète — détection de conflits, fréquence des courses, escalade des tâches",
-      "feature3": "Digest du matin — quotidien et par e-mail",
-      "feature4": "IA vocale complète — Orbe et assistant",
-      "feature5": "Un mois gratuit pour chaque famille que vous parrainez",
+      "feature1": "Membres de la famille illimités",
+      "feature2": "Agendas illimités — synchronisez Google, Apple et Outlook",
+      "feature3": "Listes privées et partagées illimitées pour les courses et les tâches",
+      "feature4": "IA vocale complète — le bouton EZ, l'assistant de votre famille",
+      "feature5": "Couche d'intelligence complète — détection de conflits, fréquence des courses, escalade des tâches",
+      "feature6": "Rituels & Journal — votre espace privé de réflexion",
+      "feature7": "Digest du matin — quotidien et par e-mail",
       "startTrial": "Commencer votre essai gratuit →",
       "cancelNote": "Annulez avant le 14e jour et vous ne serez pas débité."
     },

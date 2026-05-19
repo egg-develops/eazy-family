@@ -384,7 +384,7 @@ export default function Index() {
               <div style={{ fontSize: 13, fontWeight: 300, color: T.inkV, lineHeight: 1.6 }}>{t('website.pricing.billingNote')}<br />{t('website.pricing.billingNote2')}</div>
               <div style={{ height: "0.5px", background: T.outline }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {([t('website.pricing.feature1'), t('website.pricing.feature2'), t('website.pricing.feature3'), t('website.pricing.feature4'), t('website.pricing.feature5')] as string[]).map(f => (
+                {([t('website.pricing.feature1'), t('website.pricing.feature2'), t('website.pricing.feature3'), t('website.pricing.feature4'), t('website.pricing.feature5'), t('website.pricing.feature6'), t('website.pricing.feature7')] as string[]).map(f => (
                   <div key={f} style={{ fontSize: 13, fontWeight: 300, color: T.inkV, display: "flex", alignItems: "flex-start", gap: 8, lineHeight: 1.5 }}>
                     <PfCheck />{f}
                   </div>

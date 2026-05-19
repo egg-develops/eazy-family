@@ -1037,11 +1037,13 @@
         "Supporto premium",
         "Un mese gratuito per ogni famiglia che ci segnali"
       ],
-      "feature1": "Calendari, liste e membri della famiglia illimitati",
-      "feature2": "Livello di intelligenza completo — rilevamento conflitti, frequenza spesa, escalation attività",
-      "feature3": "Digest mattutino — quotidiano e via e-mail",
-      "feature4": "IA vocale completa — Orbe e assistente",
-      "feature5": "Un mese gratuito per ogni famiglia che riferisci",
+      "feature1": "Membri della famiglia illimitati",
+      "feature2": "Calendari illimitati — sincronizza Google, Apple e Outlook",
+      "feature3": "Liste private e condivise illimitate per spese e attività",
+      "feature4": "IA vocale completa — il pulsante EZ, l'assistente della tua famiglia",
+      "feature5": "Livello di intelligenza completo — rilevamento conflitti, frequenza spesa, escalation attività",
+      "feature6": "Rituali & Diario — il tuo spazio privato per la riflessione",
+      "feature7": "Digest mattutino — quotidiano e via e-mail",
       "startTrial": "Inizia la prova gratuita →",
       "cancelNote": "Cancella entro il giorno 14 e non ti verrà addebitato nulla."
     },

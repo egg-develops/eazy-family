@@ -1037,11 +1037,13 @@
         "Premium support",
         "One free month for every family you refer"
       ],
-      "feature1": "Unlimited calendars, lists & family members",
-      "feature2": "Full intelligence layer — conflict detection, shopping frequency, task escalation",
-      "feature3": "Morning Digest — daily & email",
-      "feature4": "Full voice AI — Orbe & assistant",
-      "feature5": "One free month for every family you refer",
+      "feature1": "Unlimited family members",
+      "feature2": "Unlimited calendars — sync your Google, Apple, and Outlook",
+      "feature3": "Unlimited private and shared lists for Shopping and Tasks",
+      "feature4": "Full voice AI — EZ Button, your family's own assistant",
+      "feature5": "Full intelligence layer — conflict detection, shopping frequency, task escalation",
+      "feature6": "Rituals & Journal — your private space for reflection",
+      "feature7": "Morning Digest — daily & email",
       "startTrial": "Start your free trial →",
       "cancelNote": "Cancel before day 14 and you won't be charged."
     },
