@@ -50,7 +50,10 @@
     "events": "Événements",
     "memories": "Souvenirs",
     "community": "Communauté",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "todos": "Tâches",
+    "shopping": "Courses",
+    "rituals": "Rituels"
   },
   "calendar": {
     "title": "Calendrier",
@@ -153,7 +156,10 @@
     "15minBefore": "15 min avant",
     "30minBefore": "30 min avant",
     "1hourBefore": "1 heure avant",
-    "1dayBefore": "1 jour avant"
+    "1dayBefore": "1 jour avant",
+    "twoWaySync": "Synchronisation bidirectionnelle",
+    "eventsSynced": "événements synchronisés",
+    "microsoft365": "Microsoft 365 & Outlook.com"
   },
   "calendarIntegrations": {
     "title": "Intégrations de calendrier",
@@ -590,7 +596,38 @@
     "password": "Mot de passe",
     "invalidCredentials": "Identifiants invalides",
     "invalidCredentialsDesc": "L'e-mail ou le mot de passe saisi est incorrect.",
-    "error": "Erreur"
+    "error": "Erreur",
+    "welcomeBack": "Bon retour",
+    "createAccount": "Créer votre compte",
+    "signInSubtitle": "Connectez-vous à Eazy.Family",
+    "joinFree": "Rejoignez Eazy.Family gratuitement",
+    "alreadyHaveAccount": "Déjà un compte ? Se connecter",
+    "dontHaveAccount": "Pas encore de compte ? S’inscrire gratuitement",
+    "forgotPassword": "Mot de passe oublié ?",
+    "referralCode": "Code de parrainage",
+    "referralOptional": "optionnel",
+    "referralPlaceholder": "Entrer le code de parrainage",
+    "referralChecking": "Vérification…",
+    "referralValid": "✓ Code de parrainage valide",
+    "referralNotFound": "Code introuvable",
+    "resetInboxTitle": "Vérifiez votre boîte de réception",
+    "resetInboxDesc": "Nous avons envoyé un lien de réinitialisation à",
+    "backToSignIn": "Retour à la connexion",
+    "resetPrompt": "Entrez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+    "sending": "Envoi en cours…",
+    "sendResetLink": "Envoyer le lien de réinitialisation",
+    "referralApplied": "Parrainage appliqué !",
+    "referralAppliedDesc": "Merci d’avoir rejoint via l’invitation d’un ami !",
+    "accountExists": "Ce compte existe déjà",
+    "accountExistsDesc": "Un compte avec cet e-mail existe déjà. Essayez de vous connecter.",
+    "incorrectCredentials": "E-mail ou mot de passe incorrect",
+    "incorrectCredentialsDesc": "Veuillez vérifier vos identifiants et réessayer.",
+    "checkEmail": "Vérifiez votre e-mail",
+    "checkEmailDesc": "Veuillez cliquer sur le lien de confirmation que nous vous avons envoyé avant de vous connecter.",
+    "somethingWrong": "Quelque chose s’est mal passé. Veuillez réessayer.",
+    "emailFirst": "Entrez d’abord votre adresse e-mail",
+    "resetFailed": "Impossible d’envoyer l’e-mail de réinitialisation",
+    "signUpSuccess": "Vérifiez votre e-mail pour confirmer votre compte."
   },
   "privacy": {
     "title": "Politique de confidentialité",

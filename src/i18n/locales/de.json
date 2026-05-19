@@ -50,7 +50,10 @@
     "events": "Veranstaltungen",
     "memories": "Erinnerungen",
     "community": "Gemeinschaft",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "todos": "Aufgaben",
+    "shopping": "Einkaufen",
+    "rituals": "Rituale"
   },
   "calendar": {
     "title": "Kalender",
@@ -153,7 +156,10 @@
     "15minBefore": "15 Min. vorher",
     "30minBefore": "30 Min. vorher",
     "1hourBefore": "1 Std. vorher",
-    "1dayBefore": "1 Tag vorher"
+    "1dayBefore": "1 Tag vorher",
+    "twoWaySync": "Bidirektionale Synchronisierung",
+    "eventsSynced": "Ereignisse synchronisiert",
+    "microsoft365": "Microsoft 365 & Outlook.com"
   },
   "calendarIntegrations": {
     "title": "Kalenderintegrationen",
@@ -590,7 +596,38 @@
     "password": "Passwort",
     "invalidCredentials": "Ungültige Anmeldedaten",
     "invalidCredentialsDesc": "Die eingegebene E-Mail oder das Passwort ist falsch.",
-    "error": "Fehler"
+    "error": "Fehler",
+    "welcomeBack": "Willkommen zurück",
+    "createAccount": "Konto erstellen",
+    "signInSubtitle": "Bei Eazy.Family anmelden",
+    "joinFree": "Eazy.Family kostenlos beitreten",
+    "alreadyHaveAccount": "Bereits ein Konto? Anmelden",
+    "dontHaveAccount": "Noch kein Konto? Kostenlos registrieren",
+    "forgotPassword": "Passwort vergessen?",
+    "referralCode": "Empfehlungscode",
+    "referralOptional": "optional",
+    "referralPlaceholder": "Empfehlungscode eingeben",
+    "referralChecking": "Wird geprüft…",
+    "referralValid": "✓ Gültiger Empfehlungscode",
+    "referralNotFound": "Code nicht gefunden",
+    "resetInboxTitle": "Posteingang prüfen",
+    "resetInboxDesc": "Wir haben einen Link zum Zurücksetzen des Passworts gesendet an",
+    "backToSignIn": "Zurück zur Anmeldung",
+    "resetPrompt": "Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen.",
+    "sending": "Wird gesendet…",
+    "sendResetLink": "Reset-Link senden",
+    "referralApplied": "Empfehlung angewendet!",
+    "referralAppliedDesc": "Danke, dass du über die Einladung eines Freundes beigetreten bist!",
+    "accountExists": "Konto existiert bereits",
+    "accountExistsDesc": "Ein Konto mit dieser E-Mail existiert bereits. Versuche dich stattdessen anzumelden.",
+    "incorrectCredentials": "E-Mail oder Passwort falsch",
+    "incorrectCredentialsDesc": "Bitte überprüfe deine Anmeldedaten und versuche es erneut.",
+    "checkEmail": "E-Mail prüfen",
+    "checkEmailDesc": "Bitte klicke auf den Bestätigungslink, den wir dir vor der Anmeldung gesendet haben.",
+    "somethingWrong": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "emailFirst": "Gib zuerst deine E-Mail-Adresse ein",
+    "resetFailed": "Reset-E-Mail konnte nicht gesendet werden",
+    "signUpSuccess": "Überprüfe deine E-Mail, um dein Konto zu bestätigen."
   },
   "privacy": {
     "title": "Datenschutzrichtlinie",

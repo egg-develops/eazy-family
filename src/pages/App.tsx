@@ -261,9 +261,9 @@ const AppLayout = () => {
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
-    { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/todos" },
-    { id: "shopping", label: "Shopping", icon: ShoppingCart, path: "/app/shopping" },
-    { id: "rituals", label: "Rituals", icon: Home, path: "/app/rituals" },
+    { id: "todos", label: t('nav.todos'), icon: CheckSquare, path: "/app/todos" },
+    { id: "shopping", label: t('nav.shopping'), icon: ShoppingCart, path: "/app/shopping" },
+    { id: "rituals", label: t('nav.rituals'), icon: Home, path: "/app/rituals" },
     { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ];
 

@@ -1475,7 +1475,7 @@ const Calendar = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Google Calendar</p>
                   <p className="text-xs text-muted-foreground">
-                    {googleSynced ? `${googleEvents.length} events synced` : "Two-way sync"}
+                    {googleSynced ? `${googleEvents.length} ${t('calendar.eventsSynced')}` : t('calendar.twoWaySync')}
                   </p>
                 </div>
                 {googleSynced && (
@@ -1507,7 +1507,7 @@ const Calendar = () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Outlook Calendar</p>
                   <p className="text-xs text-muted-foreground">
-                    {outlookSynced ? `${outlookEvents.length} events synced` : "Microsoft 365 & Outlook.com"}
+                    {outlookSynced ? `${outlookEvents.length} ${t('calendar.eventsSynced')}` : t('calendar.microsoft365')}
                   </p>
                 </div>
                 {outlookSynced && (

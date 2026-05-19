@@ -92,7 +92,7 @@ const Auth = () => {
           referral_code: referralCode.trim(),
           status: 'completed',
         });
-        toast({ title: "Referral Applied!", description: "Thanks for joining via a friend's invite!" });
+        toast({ title: t('auth.referralApplied'), description: t('auth.referralAppliedDesc') });
       }
     } catch (error) {
       logError('Referral processing error:', error);
@@ -101,7 +101,7 @@ const Auth = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) { toast({ title: "Enter your email address first", variant: "destructive" }); return; }
+    if (!email.trim()) { toast({ title: t('auth.emailFirst'), variant: "destructive" }); return; }
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -110,7 +110,7 @@ const Auth = () => {
       if (error) throw error;
       setResetSent(true);
     } catch (err: any) {
-      toast({ title: "Could not send reset email", description: err?.message || "Please try again.", variant: "destructive" });
+      toast({ title: t('auth.resetFailed'), description: err?.message || t('auth.somethingWrong'), variant: "destructive" });
     } finally { setLoading(false); }
   };
 
@@ -154,17 +154,17 @@ const Auth = () => {
       if (error) {
         const msg = (error as any)?.message || '';
         if (msg.includes('already registered') || msg.includes('User already registered')) {
-          toast({ title: "Account already exists", description: "An account with this email already exists. Try signing in instead.", variant: "destructive" });
+          toast({ title: t('auth.accountExists'), description: t('auth.accountExistsDesc'), variant: "destructive" });
           setIsSignUp(false);
         } else if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
-          toast({ title: "Incorrect email or password", description: "Please check your credentials and try again.", variant: "destructive" });
+          toast({ title: t('auth.incorrectCredentials'), description: t('auth.incorrectCredentialsDesc'), variant: "destructive" });
         } else if (msg.includes('Email not confirmed')) {
-          toast({ title: "Check your email", description: "Please click the confirmation link we sent you before signing in.", variant: "destructive" });
+          toast({ title: t('auth.checkEmail'), description: t('auth.checkEmailDesc'), variant: "destructive" });
         } else {
-          toast({ title: t('auth.error'), description: msg || "Something went wrong. Please try again.", variant: "destructive" });
+          toast({ title: t('auth.error'), description: msg || t('auth.somethingWrong'), variant: "destructive" });
         }
       } else if (isSignUp) {
-        toast({ title: t('common.success'), description: "Check your email to confirm your account." });
+        toast({ title: t('common.success'), description: t('auth.signUpSuccess') });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -199,10 +199,10 @@ const Auth = () => {
           <img src="/logo.png" alt="Eazy.Family" className="w-20 h-20 mx-auto mb-4"
             style={{ filter: "drop-shadow(0 4px 16px rgb(150 71 53 / 0.2))" }} />
           <h1 className="text-2xl font-bold" style={{ color: INK }}>
-            {isSignUp ? "Create your account" : "Welcome back"}
+            {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
           </h1>
           <p className="text-sm mt-1" style={{ color: MUTED }}>
-            {isSignUp ? "Join Eazy.Family for free" : "Sign in to Eazy.Family"}
+            {isSignUp ? t('auth.joinFree') : t('auth.signInSubtitle')}
           </p>
         </div>
 
@@ -215,19 +215,19 @@ const Auth = () => {
             resetSent ? (
               <div className="text-center space-y-3 py-2">
                 <p className="text-2xl">📬</p>
-                <p className="font-semibold text-sm" style={{ color: INK }}>Check your inbox</p>
-                <p className="text-sm" style={{ color: MUTED }}>We sent a password reset link to <strong>{email}</strong></p>
+                <p className="font-semibold text-sm" style={{ color: INK }}>{t('auth.resetInboxTitle')}</p>
+                <p className="text-sm" style={{ color: MUTED }}>{t('auth.resetInboxDesc')} <strong>{email}</strong></p>
                 <button type="button" onClick={() => { setIsForgotPassword(false); setResetSent(false); }}
                   className="w-full h-11 rounded-xl font-semibold text-sm mt-2"
                   style={{ background: `linear-gradient(135deg, ${TC}, ${TL})`, color: '#fff' }}>
-                  Back to Sign In
+                  {t('auth.backToSignIn')}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleForgotPassword} className="space-y-4">
-                <p className="text-sm" style={{ color: MUTED }}>Enter your email and we'll send you a reset link.</p>
+                <p className="text-sm" style={{ color: MUTED }}>{t('auth.resetPrompt')}</p>
                 <div className="space-y-1.5">
-                  <Label htmlFor="reset-email" className="text-sm font-medium" style={{ color: INK }}>Email</Label>
+                  <Label htmlFor="reset-email" className="text-sm font-medium" style={{ color: INK }}>{t('auth.email')}</Label>
                   <Input id="reset-email" type="email" placeholder="you@example.com"
                     value={email} onChange={(e) => setEmail(e.target.value)}
                     required maxLength={255}
@@ -237,13 +237,13 @@ const Auth = () => {
                 <button type="submit" disabled={loading}
                   className="w-full h-12 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
                   style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}>
-                  {loading ? 'Sending…' : 'Send Reset Link'}
+                  {loading ? t('auth.sending') : t('auth.sendResetLink')}
                 </button>
                 <div className="pt-1" style={{ borderTop: `1px solid ${DIVIDER}` }}>
                   <button type="button" onClick={() => setIsForgotPassword(false)}
                     className="w-full text-center text-sm pt-3 hover:opacity-80 transition-opacity"
                     style={{ color: MUTED }}>
-                    Back to <span className="font-semibold" style={{ color: TC }}>Sign In</span>
+                    {t('auth.backToSignIn')}
                   </button>
                 </div>
               </form>
@@ -283,10 +283,10 @@ const Auth = () => {
             {isSignUp && (
               <div className="space-y-1.5">
                 <Label htmlFor="referral" className="flex items-center gap-1.5 text-sm font-medium" style={{ color: INK }}>
-                  <Gift className="w-3.5 h-3.5" style={{ color: TC }} /> Referral Code
-                  <span style={{ color: MUTED }} className="font-normal">(optional)</span>
+                  <Gift className="w-3.5 h-3.5" style={{ color: TC }} /> {t('auth.referralCode')}
+                  <span style={{ color: MUTED }} className="font-normal">({t('auth.referralOptional')})</span>
                 </Label>
-                <Input id="referral" type="text" placeholder="Enter referral code"
+                <Input id="referral" type="text" placeholder={t('auth.referralPlaceholder')}
                   value={referralCode}
                   onChange={(e) => { setReferralCode(e.target.value); validateReferralCode(e.target.value); }}
                   maxLength={20}
@@ -294,7 +294,7 @@ const Auth = () => {
                   style={inputStyle} />
                 {referralCode && (
                   <p className="text-xs" style={{ color: referralValid ? '#44664F' : MUTED }}>
-                    {validatingReferral ? 'Checking…' : referralValid ? '✓ Valid referral code' : 'Code not found'}
+                    {validatingReferral ? t('auth.referralChecking') : referralValid ? t('auth.referralValid') : t('auth.referralNotFound')}
                   </p>
                 )}
               </div>
@@ -311,15 +311,13 @@ const Auth = () => {
             <button type="button" onClick={() => setIsSignUp(!isSignUp)}
               className="w-full text-center text-sm pt-3 hover:opacity-80 transition-opacity"
               style={{ color: MUTED }}>
-              {isSignUp
-                ? <>Already have an account? <span className="font-semibold" style={{ color: TC }}>Sign in</span></>
-                : <>Don't have an account? <span className="font-semibold" style={{ color: TC }}>Sign up free</span></>}
+              {isSignUp ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}
             </button>
             {!isSignUp && (
               <button type="button" onClick={() => setIsForgotPassword(true)}
                 className="w-full text-center text-sm hover:opacity-80 transition-opacity pb-1"
                 style={{ color: MUTED }}>
-                <span className="font-semibold" style={{ color: TC }}>Forgot password?</span>
+                {t('auth.forgotPassword')}
               </button>
             )}
           </div>

@@ -50,7 +50,10 @@
     "events": "Eventi",
     "memories": "Ricordi",
     "community": "Comunità",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "todos": "Attività",
+    "shopping": "Spesa",
+    "rituals": "Rituali"
   },
   "calendar": {
     "title": "Calendario",
@@ -153,7 +156,10 @@
     "15minBefore": "15 min prima",
     "30minBefore": "30 min prima",
     "1hourBefore": "1 ora prima",
-    "1dayBefore": "1 giorno prima"
+    "1dayBefore": "1 giorno prima",
+    "twoWaySync": "Sincronizzazione bidirezionale",
+    "eventsSynced": "eventi sincronizzati",
+    "microsoft365": "Microsoft 365 & Outlook.com"
   },
   "calendarIntegrations": {
     "title": "Integrazioni calendario",
@@ -590,7 +596,38 @@
     "password": "Password",
     "invalidCredentials": "Credenziali non valide",
     "invalidCredentialsDesc": "L'email o la password inserita non è corretta.",
-    "error": "Errore"
+    "error": "Errore",
+    "welcomeBack": "Bentornato",
+    "createAccount": "Crea il tuo account",
+    "signInSubtitle": "Accedi a Eazy.Family",
+    "joinFree": "Unisciti a Eazy.Family gratuitamente",
+    "alreadyHaveAccount": "Hai già un account? Accedi",
+    "dontHaveAccount": "Non hai un account? Registrati gratis",
+    "forgotPassword": "Password dimenticata?",
+    "referralCode": "Codice referral",
+    "referralOptional": "opzionale",
+    "referralPlaceholder": "Inserisci il codice referral",
+    "referralChecking": "Verifica in corso…",
+    "referralValid": "✓ Codice referral valido",
+    "referralNotFound": "Codice non trovato",
+    "resetInboxTitle": "Controlla la tua posta",
+    "resetInboxDesc": "Abbiamo inviato un link per reimpostare la password a",
+    "backToSignIn": "Torna all’accesso",
+    "resetPrompt": "Inserisci la tua email e ti invieremo un link per reimpostare la password.",
+    "sending": "Invio in corso…",
+    "sendResetLink": "Invia link di reimpostazione",
+    "referralApplied": "Referral applicato!",
+    "referralAppliedDesc": "Grazie per esserti unito tramite l’invito di un amico!",
+    "accountExists": "Account già esistente",
+    "accountExistsDesc": "Esiste già un account con questa email. Prova ad accedere.",
+    "incorrectCredentials": "Email o password errati",
+    "incorrectCredentialsDesc": "Controlla le tue credenziali e riprova.",
+    "checkEmail": "Controlla la tua email",
+    "checkEmailDesc": "Fai clic sul link di conferma che ti abbiamo inviato prima di accedere.",
+    "somethingWrong": "Qualcosa è andato storto. Riprova.",
+    "emailFirst": "Inserisci prima il tuo indirizzo email",
+    "resetFailed": "Impossibile inviare l’email di reimpostazione",
+    "signUpSuccess": "Controlla la tua email per confermare il tuo account."
   },
   "privacy": {
     "title": "Informativa sulla privacy",

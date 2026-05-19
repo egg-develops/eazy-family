@@ -50,7 +50,10 @@
     "events": "Events",
     "memories": "Memories",
     "community": "Community",
-    "settings": "Settings"
+    "settings": "Settings",
+    "todos": "To-Do's",
+    "shopping": "Shopping",
+    "rituals": "Rituals"
   },
   "calendar": {
     "title": "Calendar",
@@ -153,7 +156,10 @@
     "15minBefore": "15 min before",
     "30minBefore": "30 min before",
     "1hourBefore": "1 hour before",
-    "1dayBefore": "1 day before"
+    "1dayBefore": "1 day before",
+    "twoWaySync": "Two-way sync",
+    "eventsSynced": "events synced",
+    "microsoft365": "Microsoft 365 & Outlook.com"
   },
   "calendarIntegrations": {
     "title": "Calendar Integrations",
@@ -590,7 +596,38 @@
     "password": "Password",
     "invalidCredentials": "Invalid credentials",
     "invalidCredentialsDesc": "The email or password you entered is incorrect.",
-    "error": "Error"
+    "error": "Error",
+    "welcomeBack": "Welcome back",
+    "createAccount": "Create your account",
+    "signInSubtitle": "Sign in to Eazy.Family",
+    "joinFree": "Join Eazy.Family for free",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "dontHaveAccount": "Don't have an account? Sign up free",
+    "forgotPassword": "Forgot password?",
+    "referralCode": "Referral Code",
+    "referralOptional": "optional",
+    "referralPlaceholder": "Enter referral code",
+    "referralChecking": "Checking…",
+    "referralValid": "✓ Valid referral code",
+    "referralNotFound": "Code not found",
+    "resetInboxTitle": "Check your inbox",
+    "resetInboxDesc": "We sent a password reset link to",
+    "backToSignIn": "Back to Sign In",
+    "resetPrompt": "Enter your email and we'll send you a reset link.",
+    "sending": "Sending…",
+    "sendResetLink": "Send Reset Link",
+    "referralApplied": "Referral Applied!",
+    "referralAppliedDesc": "Thanks for joining via a friend's invite!",
+    "accountExists": "Account already exists",
+    "accountExistsDesc": "An account with this email already exists. Try signing in instead.",
+    "incorrectCredentials": "Incorrect email or password",
+    "incorrectCredentialsDesc": "Please check your credentials and try again.",
+    "checkEmail": "Check your email",
+    "checkEmailDesc": "Please click the confirmation link we sent you before signing in.",
+    "somethingWrong": "Something went wrong. Please try again.",
+    "emailFirst": "Enter your email address first",
+    "resetFailed": "Could not send reset email",
+    "signUpSuccess": "Check your email to confirm your account."
   },
   "privacy": {
     "title": "Privacy Policy",
