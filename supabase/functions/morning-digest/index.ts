@@ -13,12 +13,10 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
-  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
   const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-
-  if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "No Resend key" }), { status: 500 });
-  }
+  const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
+  const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID");
 
   // Date range for today in Europe/Zurich
   const now = new Date();
@@ -41,8 +39,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: prefErr.message }), { status: 500 });
   }
 
+  const isTruthy = (v: unknown) => v === true || v === "true";
+
   const digestUsers = (prefRows ?? []).filter(
-    (row) => row.data?.["eazy-morning-digest"] === "true"
+    (row) => isTruthy(row.data?.["eazy-morning-digest"])
   );
 
   if (digestUsers.length === 0) {
@@ -55,16 +55,13 @@ serve(async (req) => {
   const errors: string[] = [];
 
   for (const { user_id, data } of digestUsers) {
-    const emailEnabled = data?.["eazy-morning-digest-email"] === "true";
-    if (!emailEnabled) continue;
-
     const { data: profile } = await supabase
       .from("profiles")
       .select("email, full_name")
       .eq("user_id", user_id)
       .maybeSingle();
 
-    if (!profile?.email) continue;
+    if (!profile) continue;
 
     const [eventsRes, tasksRes, staleTasksRes, upcomingEventsRes] = await Promise.all([
       supabase
@@ -107,7 +104,6 @@ serve(async (req) => {
     const staleTasks = staleTasksRes.data ?? [];
     const upcomingEvents = upcomingEventsRes.data ?? [];
 
-    // Detect conflicts in upcoming events
     type EvtRow = { title: string; start_date: string; end_date?: string | null };
     const conflicts = detectConflicts(upcomingEvents as EvtRow[]);
 
@@ -129,37 +125,52 @@ serve(async (req) => {
       });
     }
 
-    const html = buildDigestEmail({
-      firstName,
-      dayLabel,
-      events: todayEvents,
-      tasks: openTasks.slice(0, 6),
-      staleTasks,
-      conflicts,
-      aiNarrative,
-    });
+    let userSent = false;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Eazy.Family <digest@eazy.family>",
-        to: [profile.email],
-        subject: `Good morning, ${firstName} ☀️ — Your family's day`,
-        html,
-      }),
-    });
-
-    if (res.ok) {
-      sent++;
-    } else {
-      const err = await res.text();
-      console.error(`Resend error for ${profile.email}:`, err);
-      errors.push(err);
+    // ── Telegram ──────────────────────────────────────────────────────────
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
+      const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: "HTML", disable_web_page_preview: true }),
+      });
+      if (tgRes.ok) {
+        userSent = true;
+      } else {
+        const err = await tgRes.text();
+        console.error("Telegram error:", err);
+        errors.push(`telegram: ${err}`);
+      }
     }
+
+    // ── Brevo email (when key is present) ────────────────────────────────
+    const emailEnabled = isTruthy(data?.["eazy-morning-digest-email"]);
+    if (emailEnabled && BREVO_API_KEY && profile.email) {
+      const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
+      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: "Eazy.Family", email: "digest@eazy.family" },
+          to: [{ email: profile.email, name: firstName }],
+          subject: `Good morning, ${firstName} ☀️ — Your family's day`,
+          htmlContent: html,
+        }),
+      });
+      if (brevoRes.ok) {
+        userSent = true;
+      } else {
+        const err = await brevoRes.text();
+        console.error(`Brevo error for ${profile.email}:`, err);
+        errors.push(`brevo: ${err}`);
+      }
+    }
+
+    if (userSent) sent++;
   }
 
   return new Response(JSON.stringify({ sent, errors: errors.length ? errors : undefined }), {
@@ -249,6 +260,71 @@ async function generateAINarrative(ctx: {
   }
 }
 
+function buildTelegramMessage(ctx: {
+  firstName: string;
+  dayLabel: string;
+  todayEvents: Array<{ title: string; start_date: string; all_day: boolean; location?: string | null }>;
+  tasks: Array<{ title: string; due_date?: string | null }>;
+  staleTasks: Array<{ title: string; updated_at: string }>;
+  conflicts: ConflictPair[];
+  aiNarrative: string;
+}): string {
+  const { firstName, dayLabel, todayEvents, tasks, staleTasks, conflicts, aiNarrative } = ctx;
+  const lines: string[] = [];
+
+  lines.push(`☀️ <b>Good morning, ${firstName}!</b>`);
+  lines.push(`<i>${dayLabel}</i>`);
+
+  if (aiNarrative) {
+    lines.push('');
+    lines.push(`<i>${aiNarrative}</i>`);
+  }
+
+  if (conflicts.length > 0) {
+    lines.push('');
+    lines.push(`⚠️ <b>Schedule Conflict${conflicts.length > 1 ? 's' : ''}</b>`);
+    for (const c of conflicts) {
+      lines.push(`  · <b>${c.titleA}</b> overlaps <b>${c.titleB}</b>`);
+    }
+  }
+
+  lines.push('');
+  lines.push('📅 <b>Today\'s Schedule</b>');
+  if (todayEvents.length === 0) {
+    lines.push('  Nothing scheduled — enjoy the breathing room.');
+  } else {
+    for (const e of todayEvents) {
+      const time = formatEventTime(e.start_date, e.all_day);
+      const loc = e.location ? ` · 📍 ${e.location}` : '';
+      lines.push(`  ${time}  <b>${e.title}</b>${loc}`);
+    }
+  }
+
+  lines.push('');
+  lines.push('✅ <b>Open Tasks</b>');
+  if (tasks.length === 0) {
+    lines.push("  Nothing open — you're ahead of it.");
+  } else {
+    for (const t of tasks) {
+      lines.push(`  · ${t.title}`);
+    }
+  }
+
+  if (staleTasks.length > 0) {
+    lines.push('');
+    lines.push('⏳ <b>Stuck Tasks</b> <i>(untouched 7+ days)</i>');
+    for (const t of staleTasks) {
+      lines.push(`  · ${t.title}`);
+    }
+    lines.push('  <i>Worth a delegate or drop?</i>');
+  }
+
+  lines.push('');
+  lines.push('<a href="https://eazy.family/app">Open Eazy.Family →</a>');
+
+  return lines.join('\n');
+}
+
 function buildDigestEmail(ctx: {
   firstName: string;
   dayLabel: string;
@@ -290,7 +366,7 @@ function buildDigestEmail(ctx: {
         <span style="color:#C4621A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Schedule Conflict${conflicts.length > 1 ? 's' : ''}</span>
       </div>
       ${conflicts.map(c => `
-        <div style="margin-bottom:6px;last-child:margin-bottom:0">
+        <div style="margin-bottom:6px">
           <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleA}</span>
           <span style="color:#C4621A;font-size:13px"> overlaps </span>
           <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleB}</span>
