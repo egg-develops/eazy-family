@@ -71,6 +71,8 @@ const cleanCaptureTitle = (raw: string): string =>
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
+    // Strip orphaned trailing prepositions left after date/time text is removed
+    .replace(/\s+(for|at|on|by|the)\s*$/i, '')
     .trim();
 
 const getUserFirstName = (): string => {
@@ -208,9 +210,9 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
 JSON fields:
 - type: "event"|"task"|"shopping"|"reminder"|"ritual"|"journal"
-- title: ONLY the subject/topic — never include date, time, location, or command words. "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short.
-- date: "YYYY-MM-DD" or null. Resolve relative dates from today.
-- time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30".
+- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals. Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short.
+- date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
+- time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null
 - location: string or null
 - assignees: array of first names or null
@@ -271,7 +273,26 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
     if (result && result.title) {
       if (result.type) setType(result.type);
-      setParsed({ ...result, title: cleanCaptureTitle(result.title) });
+
+      // Post-process: if a date phrase is still present in the AI's title (e.g. "the 29th"),
+      // extract it via chrono and use it as the date (overriding a wrong AI date).
+      let cleanedTitle = cleanCaptureTitle(result.title);
+      let resolvedDate = result.date;
+      const now = new Date();
+      const residualDate = chrono.parse(cleanedTitle, now)[0];
+      if (residualDate) {
+        resolvedDate = format(residualDate.start.date(), 'yyyy-MM-dd');
+        cleanedTitle = (
+          cleanedTitle.slice(0, residualDate.index) +
+          cleanedTitle.slice(residualDate.index + residualDate.text.length)
+        )
+          .replace(/\s+(for|at|on|by|the)\s*$/i, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        if (!cleanedTitle) cleanedTitle = cleanCaptureTitle(result.title);
+      }
+
+      setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
     } else {
       // Fallback: chrono-node extracts date/time; strip the matched date text from the title
       const raw = text.trim();
@@ -554,15 +575,15 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 </div>
 
                 <div className="space-y-2">
-                  {/* Editable title */}
+                  {/* Editable title — textarea so long names wrap rather than overflow */}
                   <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
                     <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#B5A09A' }}>Title</p>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={2}
                       value={parsed.title}
-                      onChange={e => setParsed(p => p ? { ...p, title: e.target.value } : p)}
-                      className="w-full bg-transparent outline-none font-semibold text-sm"
-                      style={{ color: '#1C1C18' }}
+                      onChange={e => setParsed(p => p ? { ...p, title: e.target.value.replace(/\n/g, ' ') } : p)}
+                      className="w-full bg-transparent outline-none font-semibold text-sm resize-none"
+                      style={{ color: '#1C1C18', lineHeight: '1.5' }}
                     />
                   </div>
 
