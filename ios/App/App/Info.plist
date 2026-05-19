@@ -59,6 +59,10 @@
 	<string>Eazy Family uses speech recognition to convert your voice into tasks, shopping items, and calendar events.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Eazy Family syncs your family events with your calendar so nothing is missed.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Eazy Family syncs your family events with Apple Calendar so nothing is missed.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Eazy Family adds your family events to Apple Calendar.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Eazy Family uses your location to suggest relevant family activities and events near you.</string>
 	<key>NSUserNotificationsUsageDescription</key>

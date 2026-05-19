@@ -19,6 +19,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import * as chrono from "chrono-node";
+import {
+  requestCalendarAccess,
+  fetchAppleEvents as fetchAppleCalendarEvents,
+  createAppleEvent,
+  updateAppleEvent,
+  deleteAppleEvent,
+} from "@/lib/appleCalendar";
 
 const TAGS = {
   school:   { label: "School",   bg: "#F1EDE7", border: "#964735", dot: "#964735" },
@@ -40,6 +47,7 @@ interface Event {
   type: "event";
   color: string;
   tag?: EventTag;
+  appleCalendarId?: string;
 }
 
 interface Reminder {
@@ -251,6 +259,60 @@ const Calendar = () => {
     }
     return [];
   });
+
+  const [appleCalendarEnabled, setAppleCalendarEnabled] = useState(() =>
+    localStorage.getItem('eazy-apple-calendar-enabled') === 'true'
+  );
+  const [appleEvents, setAppleEvents] = useState<Event[]>([]);
+  const [isSyncingApple, setIsSyncingApple] = useState(false);
+
+  useEffect(() => {
+    if (!appleCalendarEnabled) { setAppleEvents([]); return; }
+    const monthStart = startOfMonth(selectedDate);
+    const monthEnd = endOfMonth(selectedDate);
+    const trackedIds = new Set(
+      items
+        .filter((i): i is Event => i.type === 'event' && !!(i as Event).appleCalendarId)
+        .map(i => i.appleCalendarId!)
+    );
+    fetchAppleCalendarEvents(monthStart, monthEnd).then(evs => {
+      setAppleEvents(
+        evs
+          .filter(e => !trackedIds.has(e.id))
+          .map(e => ({
+            id: `apple-device-${e.id}`,
+            title: e.title,
+            startDate: e.startDate,
+            endDate: e.endDate,
+            allDay: e.isAllDay,
+            location: e.location,
+            type: 'event' as const,
+            color: '#555555',
+          }))
+      );
+    });
+  }, [appleCalendarEnabled, selectedDate.getFullYear(), selectedDate.getMonth()]);
+
+  const handleAppleCalendarConnect = async () => {
+    setIsSyncingApple(true);
+    const granted = await requestCalendarAccess();
+    if (granted) {
+      setAppleCalendarEnabled(true);
+      localStorage.setItem('eazy-apple-calendar-enabled', 'true');
+      setShowCalendarSyncDialog(false);
+      toast({ title: 'Apple Calendar connected!' });
+    } else {
+      toast({ title: 'Permission denied', description: 'Allow calendar access in iOS Settings → Eazy Family.', variant: 'destructive' });
+    }
+    setIsSyncingApple(false);
+  };
+
+  const handleDisconnectApple = () => {
+    setAppleCalendarEnabled(false);
+    setAppleEvents([]);
+    localStorage.removeItem('eazy-apple-calendar-enabled');
+    toast({ title: 'Apple Calendar disconnected' });
+  };
 
   useEffect(() => {
     cloudSet('eazy-family-calendar-items', JSON.stringify(items));
@@ -564,7 +626,7 @@ const Calendar = () => {
     setShowSyncBanner(false);
   };
 
-  const allItems = [...items, ...googleEvents, ...outlookEvents];
+  const allItems = [...items, ...googleEvents, ...outlookEvents, ...appleEvents];
 
   const getItemsForDate = (date: Date) => {
     return allItems.filter(item => {
@@ -751,7 +813,12 @@ const Calendar = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
+    const target = items.find(i => i.id === id);
+    if (target?.type === 'event') {
+      const appleId = (target as Event).appleCalendarId;
+      if (appleId) deleteAppleEvent(appleId);
+    }
     setItems(items.filter(item => item.id !== id));
     toast({
       title: t('calendar.deleted'),
@@ -759,7 +826,7 @@ const Calendar = () => {
     });
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!eventTitle.trim()) return;
 
     const [startHours, startMinutes] = eventStartTime.split(':').map(Number);
@@ -780,6 +847,16 @@ const Calendar = () => {
       : eventRepeat !== "never" ? eventRepeat : undefined;
 
     if (editingItemId) {
+      const existing = items.find(i => i.id === editingItemId) as Event | undefined;
+      if (appleCalendarEnabled && existing?.appleCalendarId) {
+        updateAppleEvent(existing.appleCalendarId, {
+          title: eventTitle,
+          startDate: startDateTime,
+          endDate: endDateTime,
+          allDay: eventAllDay,
+          location: eventLocation || undefined,
+        });
+      }
       setItems(items.map(item =>
         item.id === editingItemId && item.type === "event"
           ? {
@@ -801,6 +878,17 @@ const Calendar = () => {
         description: `${eventTitle} ${t('calendar.hasBeenUpdated')}`,
       });
     } else {
+      let appleCalendarId: string | undefined;
+      if (appleCalendarEnabled) {
+        const aid = await createAppleEvent({
+          title: eventTitle,
+          startDate: startDateTime,
+          endDate: endDateTime,
+          allDay: eventAllDay,
+          location: eventLocation || undefined,
+        });
+        appleCalendarId = aid ?? undefined;
+      }
       const newEvent: Event = {
         id: Date.now().toString(),
         title: eventTitle,
@@ -813,6 +901,7 @@ const Calendar = () => {
         type: "event",
         color: eventTag ? TAGS[eventTag].border : "#964735",
         tag: eventTag || undefined,
+        appleCalendarId,
       };
 
       setItems([...items, newEvent]);
@@ -1412,9 +1501,9 @@ const Calendar = () => {
                 const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66', label: 'Event' };
                 return (
                   <div key={ev.id}
-                    className="flex gap-3 rounded-2xl p-4 cursor-pointer"
-                    style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}
-                    onClick={() => handleEditItem(ev)}
+                    className="flex gap-3 rounded-2xl p-4"
+                    style={{ background: '#FFFFFF', border: '1px solid #EBE8E2', cursor: ev.id.startsWith('apple-device-') ? 'default' : 'pointer' }}
+                    onClick={() => !ev.id.startsWith('apple-device-') && handleEditItem(ev)}
                   >
                     <div className="text-right flex-shrink-0 w-12">
                       <span className="text-xs font-semibold whitespace-pre-line" style={{ color: ev.color || '#964735' }}>{timeStr}</span>
@@ -1423,13 +1512,16 @@ const Calendar = () => {
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{ev.title}</p>
                       {ev.location && <p className="text-xs mt-0.5" style={{ color: '#B5A09A' }}>{ev.location}</p>}
+                      {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: '#B5A09A' }}>Apple Calendar</p>}
                     </div>
-                    <button
-                      onClick={e => { e.stopPropagation(); handleDeleteItem(ev.id); }}
-                      className="opacity-30 hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4" style={{ color: '#7A6660' }} />
-                    </button>
+                    {!ev.id.startsWith('apple-device-') && (
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDeleteItem(ev.id); }}
+                        className="opacity-30 hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" style={{ color: '#7A6660' }} />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -1589,17 +1681,31 @@ const Calendar = () => {
               )}
             </div>
 
-            {/* Apple Calendar — Coming Soon */}
-            <div className="p-3 rounded-xl border border-border/50 bg-muted/20 opacity-60">
-              <div className="flex items-center gap-3">
+            {/* Apple Calendar */}
+            <div className={`p-3 rounded-xl border ${appleCalendarEnabled ? 'border-gray-400/40 bg-gray-50 dark:bg-gray-900/20' : 'border-border'}`}>
+              <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shadow-sm flex-shrink-0">
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{t('calendarIntegrations.appleCalendar')}</p>
-                  <p className="text-xs text-muted-foreground/70">{t('calendar.appleComingSoon')}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Apple Calendar</p>
+                  <p className="text-xs text-muted-foreground">
+                    {appleCalendarEnabled ? `${appleEvents.length} events from device` : 'Two-way sync with EventKit'}
+                  </p>
                 </div>
+                {appleCalendarEnabled && (
+                  <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full flex-shrink-0">✓ On</span>
+                )}
               </div>
+              {appleCalendarEnabled ? (
+                <Button size="sm" variant="outline" className="w-full h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectApple}>
+                  {t('calendar.disconnect')}
+                </Button>
+              ) : (
+                <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#555555" }} onClick={handleAppleCalendarConnect} disabled={isSyncingApple}>
+                  {isSyncingApple ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Apple Calendar'}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
