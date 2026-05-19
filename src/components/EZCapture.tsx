@@ -97,7 +97,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   useEffect(() => {
     if (!text.trim()) return;
     const lower = text.toLowerCase();
-    if (/\b(buy|get|pick up|need|grab)\b/.test(lower)) { setType('shopping'); return; }
+    if (/\b(buy|get|pick up|need|grab)\b/.test(lower) || /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b/.test(lower)) { setType('shopping'); return; }
     if (/\b(remind|don't forget|remember)\b/.test(lower)) { setType('reminder'); return; }
     if (/\b(feel|journal|today i|grateful|reflection|dear diary)\b/.test(lower)) { setType('journal'); return; }
     if (/\b(ritual|morning|evening|routine|meditat|exercise|habit)\b/.test(lower)) { setType('ritual'); return; }

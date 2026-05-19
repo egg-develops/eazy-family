@@ -1186,9 +1186,20 @@ const Calendar = () => {
             <LayoutGrid className="w-4 h-4" style={{ color: '#964735' }} />
           </button>
         </div>
-        <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
-          <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
-        </button>
+        <div className="flex items-center gap-2">
+          {!isToday(selectedDate) && (
+            <button
+              onClick={() => setSelectedDate(new Date())}
+              className="px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={{ background: '#964735', color: '#FFFFFF' }}
+            >
+              Today
+            </button>
+          )}
+          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
+            <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
+          </button>
+        </div>
       </div>
 
       {/* View picker dropdown */}

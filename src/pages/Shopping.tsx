@@ -19,6 +19,13 @@ interface ShoppingItem {
 
 const CATEGORIES = ['Produce', 'Dairy', 'Meat', 'Bakery', 'Household', 'Baby', 'Drinks', 'Other'];
 
+const cleanShoppingText = (text: string): string =>
+  text
+    .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
+    .replace(/\s+to\s+(my|our|the)\s+shopping\s+list\s*$/i, '')
+    .replace(/\s+to\s+(my|our|the)\s+list\s*$/i, '')
+    .trim();
+
 const guessCategory = (title: string): string => {
   const t = title.toLowerCase();
   if (/apple|banana|orange|lettuce|tomato|carrot|spinach|fruit|vegetable|avocado/.test(t)) return 'Produce';
@@ -75,11 +82,12 @@ const Shopping = () => {
   useEffect(() => { load(); }, [user]);
 
   const addItem = async () => {
-    if (!newItem.trim() || !user) return;
+    const cleaned = cleanShoppingText(newItem.trim());
+    if (!cleaned || !user) return;
     haptic('light');
     try {
       const { data } = await supabase.from('tasks').insert({
-        title: newItem.trim(), type: listType === 'personal' ? 'shopping_personal' : 'shopping', user_id: user.id, completed: false
+        title: cleaned, type: listType === 'personal' ? 'shopping_personal' : 'shopping', user_id: user.id, completed: false
       }).select().single();
       if (data) {
         setItems(prev => [...prev, {
