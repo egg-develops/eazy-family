@@ -41,6 +41,8 @@ export function useShoppingPredictions() {
 
         for (const [name, dates] of Object.entries(byItem)) {
           if (dates.length < 2) continue;
+          // Skip multi-word phrases that are clearly unprocessed voice commands
+          if (name.split(' ').length > 4) continue;
 
           // dates already desc; compute intervals
           const intervals: number[] = [];
@@ -78,10 +80,16 @@ export function useShoppingPredictions() {
 }
 
 export async function logPurchase(userId: string, itemName: string) {
+  const cleaned = itemName
+    .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
+    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '')
+    .toLowerCase().trim();
+  // Don't log full sentences or concatenated phrases
+  if (!cleaned || cleaned.split(' ').length > 4) return;
   try {
     await supabase
       .from('shopping_purchase_history')
-      .insert({ user_id: userId, item_name: itemName.toLowerCase().trim() });
+      .insert({ user_id: userId, item_name: cleaned });
   } catch {
     // silent — logging failure shouldn't affect UX
   }

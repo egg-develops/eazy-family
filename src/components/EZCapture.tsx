@@ -107,24 +107,48 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
+  const shouldRestartRef = useRef(false);
+
   const stopListening = () => {
+    shouldRestartRef.current = false;
     speech.stop();
   };
 
   const startListening = () => {
-    speech.start({
-      lang: getUserLocale(),
-      continuous: true,
-      onResult: (transcript) => setText(transcript),
-      onError: (error) => {
-        if (error === 'not-allowed') {
-          toast({ title: 'Microphone access denied', description: 'Allow microphone access in Settings.' });
-        } else if (error === 'not-supported') {
-          toast({ title: 'Voice input not supported in this browser' });
-        }
-      },
-    });
+    shouldRestartRef.current = true;
     haptic('light');
+
+    const run = () => {
+      if (!shouldRestartRef.current) return;
+      speech.start({
+        lang: getUserLocale(),
+        continuous: false,           // single-shot — far more reliable on iOS WebView
+        onResult: (transcript) => {
+          setText(prev => {
+            const base = prev.trim();
+            return base ? `${base} ${transcript}` : transcript;
+          });
+        },
+        onError: (error) => {
+          if (error === 'not-allowed') {
+            shouldRestartRef.current = false;
+            toast({ title: 'Microphone access denied', description: 'Allow microphone access in Settings.' });
+          } else if (error === 'not-supported') {
+            shouldRestartRef.current = false;
+            toast({ title: 'Voice input not supported in this browser' });
+          }
+          // other transient errors: just let onEnd restart
+        },
+        onEnd: () => {
+          if (shouldRestartRef.current) {
+            // brief gap lets iOS release the audio session before next capture
+            setTimeout(run, 300);
+          }
+        },
+      });
+    };
+
+    run();
   };
 
   const parseWithAI = async (): Promise<ParsedEntry | null> => {

@@ -143,60 +143,59 @@ const Shopping = () => {
   const stopListening = () => {
     isListeningRef.current = false;
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
   };
 
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) { toast({ title: t('shopping.voiceNotSupported') }); return; }
-    capturedRef.current = '';
-    baseTextRef.current = '';
     isListeningRef.current = true;
+    setIsListening(true);
+    haptic('light');
 
-    const spawnSession = (): any => {
+    const run = () => {
+      if (!isListeningRef.current) return;
       const r = new SR();
       r.lang = navigator.language || 'en-US';
-      r.interimResults = true;
-      r.continuous = true;
+      r.interimResults = false;   // single-shot: no interim spam
+      r.continuous = false;
       r.maxAlternatives = 1;
 
       r.onresult = (e: any) => {
-        let sessionText = '';
-        for (let i = 0; i < e.results.length; i++) sessionText += e.results[i][0].transcript;
-        const combined = baseTextRef.current ? `${baseTextRef.current} ${sessionText}` : sessionText;
-        capturedRef.current = combined;
-        setNewItem(combined);
+        const transcript = e.results[0]?.[0]?.transcript || '';
+        if (transcript) {
+          capturedRef.current = capturedRef.current
+            ? `${capturedRef.current} ${transcript}`
+            : transcript;
+          setNewItem(capturedRef.current);
+        }
       };
 
       r.onend = () => {
-        if (!isListeningRef.current) {
-          setIsListening(false);
-          if (capturedRef.current.trim()) setNewItem(capturedRef.current);
-          return;
-        }
-        baseTextRef.current = capturedRef.current;
-        try {
-          const next = spawnSession();
-          recognitionRef.current = next;
-        } catch {
+        if (isListeningRef.current) setTimeout(run, 300);
+      };
+
+      r.onerror = (e: any) => {
+        if (e.error === 'aborted' || e.error === 'no-speech') return;
+        if (e.error === 'not-allowed') {
+          toast({ title: t('shopping.micDenied'), description: t('shopping.micDeniedDesc') });
           isListeningRef.current = false;
           setIsListening(false);
         }
       };
 
-      r.onerror = (e: any) => {
-        if (e.error === 'aborted' || e.error === 'no-speech') return;
-        if (e.error === 'not-allowed') toast({ title: t('shopping.micDenied'), description: t('shopping.micDeniedDesc') });
+      try {
+        r.start();
+        recognitionRef.current = r;
+      } catch {
         isListeningRef.current = false;
         setIsListening(false);
-      };
-
-      try { r.start(); } catch { isListeningRef.current = false; setIsListening(false); }
-      return r;
+      }
     };
 
-    recognitionRef.current = spawnSession();
-    setIsListening(true);
-    haptic('light');
+    capturedRef.current = '';
+    run();
   };
 
   const filtered = items.filter(i => i.listType === listType);
