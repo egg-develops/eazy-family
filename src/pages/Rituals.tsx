@@ -444,25 +444,28 @@ const Rituals = () => {
             ))}
 
             {editMode && (
-              <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
+              <form
+                onSubmit={e => { e.preventDefault(); addRitual(); }}
+                className="flex items-center gap-2 p-3 rounded-xl"
+                style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}
+              >
                 <span className="text-lg flex-shrink-0">{pickRitualEmoji(newRitualTitle)}</span>
                 <input
                   value={newRitualTitle}
                   onChange={e => setNewRitualTitle(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && addRitual()}
                   placeholder={t('rituals.newRitualPlaceholder')}
                   className="flex-1 bg-transparent text-xs outline-none min-w-0"
                   style={{ color: '#1C1C18' }}
                   autoFocus
                 />
                 <button
-                  onClick={addRitual}
+                  type="submit"
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: TC }}
                 >
                   <Plus className="w-3 h-3 text-white" />
                 </button>
-              </div>
+              </form>
             )}
           </div>
 

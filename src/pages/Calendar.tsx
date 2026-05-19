@@ -183,6 +183,8 @@ const Calendar = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleSwipeStart = (e: React.TouchEvent) => {
@@ -1196,11 +1198,57 @@ const Calendar = () => {
               Today
             </button>
           )}
-          <button className="w-9 h-9 flex items-center justify-center rounded-full" style={{ background: '#F1EDE7' }}>
-            <Search className="w-4 h-4" style={{ color: '#7A6660' }} />
+          <button
+            onClick={() => { setShowSearch(s => !s); setSearchQuery(''); }}
+            className="w-9 h-9 flex items-center justify-center rounded-full"
+            style={{ background: showSearch ? '#964735' : '#F1EDE7' }}
+          >
+            <Search className="w-4 h-4" style={{ color: showSearch ? '#fff' : '#7A6660' }} />
           </button>
         </div>
       </div>
+
+      {/* Search bar */}
+      {showSearch && (
+        <div className="px-4 pb-2">
+          <input
+            autoFocus
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search events…"
+            className="w-full px-4 py-2.5 rounded-2xl text-sm outline-none"
+            style={{ background: '#F7F3ED', border: '1.5px solid #DAC1BB', color: '#1C1C18' }}
+          />
+          {searchQuery.trim() && (
+            <div className="mt-2 rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB' }}>
+              {allItems
+                .filter(i => i.title?.toLowerCase().includes(searchQuery.toLowerCase()))
+                .slice(0, 8)
+                .map((item, idx, arr) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 px-4 py-3"
+                    style={{ background: '#fff', borderBottom: idx < arr.length - 1 ? '1px solid #F1EDE7' : 'none' }}
+                  >
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color || '#964735' }} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{item.title}</p>
+                      {item.startDate && (
+                        <p className="text-xs" style={{ color: '#7A6660' }}>
+                          {new Date(item.startDate).toLocaleDateString('en-CH', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              {allItems.filter(i => i.title?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                <div className="px-4 py-3 text-sm" style={{ color: '#7A6660' }}>No events found</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* View picker dropdown */}
       {showViewPicker && (
@@ -1307,7 +1355,7 @@ const Calendar = () => {
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
-            <button className="text-xs font-semibold" style={{ color: '#964735' }}>VIEW ALL</button>
+            <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>VIEW ALL</button>
           </div>
           <div
             className="flex gap-3 overflow-x-auto pb-2"

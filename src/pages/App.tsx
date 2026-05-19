@@ -1209,17 +1209,25 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
   const toggleTask = async (id: string) => {
     const task = quickTasks.find(t => t.id === id);
     if (!task) return;
-    
+    const nowCompleted = !task.completed;
+
+    // Optimistic update — show tick immediately
+    setQuickTasks(prev => prev.map(t => t.id === id ? { ...t, completed: nowCompleted } : t));
+
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ completed: !task.completed })
+        .update({ completed: nowCompleted })
         .eq('id', id);
 
       if (error) throw error;
-      loadQuickTasks();
+      // Reload after a short delay so user sees the completed state before item disappears
+      if (nowCompleted) setTimeout(loadQuickTasks, 800);
+      else loadQuickTasks();
     } catch (error) {
       logError('Error toggling task:', error);
+      // Roll back optimistic update on failure
+      setQuickTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !nowCompleted } : t));
     }
   };
 

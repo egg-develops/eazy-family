@@ -43,7 +43,7 @@ export async function loadCloudPreferences(userId: string) {
     // explicitly via cloudSet() when the user makes a change.
     for (const [key, value] of Object.entries(cloudData)) {
       if (value !== null && value !== undefined) {
-        if (sessionStorage.getItem('_local_' + key)) continue;
+        if (localStorage.getItem('_local_' + key)) continue;
         const stored = typeof value === 'string' ? value : JSON.stringify(value);
         localStorage.setItem(key, stored);
         loadedKeys.push(key);
@@ -66,7 +66,7 @@ export async function loadCloudPreferences(userId: string) {
 export function clearLocalPreferences() {
   for (const key of SYNC_KEYS) {
     localStorage.removeItem(key);
-    try { sessionStorage.removeItem('_local_' + key); } catch {}
+    localStorage.removeItem('_local_' + key);
   }
 }
 
@@ -75,7 +75,7 @@ export function cloudSet(key: string, value: string) {
   localStorage.setItem(key, value);
   // Mark as locally-modified this session so loadCloudPreferences doesn't
   // overwrite with stale cloud data if the Supabase write hasn't committed yet.
-  try { sessionStorage.setItem('_local_' + key, '1'); } catch {}
+  try { localStorage.setItem('_local_' + key, '1'); } catch {}
   if (!_userId || !SYNC_KEYS.has(key)) return;
 
   let parsed: unknown;

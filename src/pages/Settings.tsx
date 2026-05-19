@@ -546,15 +546,21 @@ const Settings = () => {
         </Card_>
       </div>
 
-      {/* ── Support ── */}
+      {/* ── Help Center ── */}
       <div className="space-y-2">
-        <SectionLabel>{t('settings.supportSection')}</SectionLabel>
+        <SectionLabel>Help Center</SectionLabel>
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title={t('settings.helpCenter', 'Help Center')}
-            right={<ExternalLink className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />}
+            title="Features & FAQs"
+            right={<Arrow />}
             onClick={() => navigate('/app/help')}
+          />
+          <Row
+            icon={<ExternalLink className="w-4 h-4" style={{ color: MUTED }} />}
+            title="Contact"
+            right={<Arrow />}
+            onClick={() => { window.open('mailto:hello@eazy.family', '_blank'); }}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}

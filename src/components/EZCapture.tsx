@@ -421,9 +421,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
-      {/* Center card */}
-      <div onClick={e => e.stopPropagation()} className="flex-1 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-sm">
+      {/* Center card — stopPropagation only on the card itself, not the whole flex area */}
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div onClick={e => e.stopPropagation()} className="w-full max-w-sm">
 
           {/* ── CAPTURE STEP ── */}
           {step === 'capture' && (
