@@ -22,19 +22,24 @@ const CATEGORIES = ['Produce', 'Dairy', 'Meat', 'Bakery', 'Household', 'Baby', '
 const cleanShoppingText = (text: string): string =>
   text
     .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
-    .replace(/\s+to\s+(my|our|the)\s+shopping\s+list\s*$/i, '')
-    .replace(/\s+to\s+(my|our|the)\s+list\s*$/i, '')
+    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '')
     .trim();
+
+const parseShoppingItems = (text: string): string[] =>
+  text
+    .split(/,|;|\band\b|\balso\b/i)
+    .map(s => cleanShoppingText(s).trim())
+    .filter(s => s.length > 1);
 
 const guessCategory = (title: string): string => {
   const t = title.toLowerCase();
-  if (/apple|banana|orange|lettuce|tomato|carrot|spinach|fruit|vegetable|avocado/.test(t)) return 'Produce';
-  if (/milk|cheese|yogurt|butter|cream|egg/.test(t)) return 'Dairy';
-  if (/chicken|beef|pork|fish|salmon|meat|turkey/.test(t)) return 'Meat';
-  if (/bread|bagel|muffin|cake|pastry/.test(t)) return 'Bakery';
-  if (/paper|soap|detergent|cleaning|towel|toilet/.test(t)) return 'Household';
+  if (/apple|banana|orange|lemon|lime|lettuce|tomato|carrot|spinach|kale|fruit|vegetable|avocado|onion|garlic|potato|pepper|celery|cucumber/.test(t)) return 'Produce';
+  if (/\bmilk\b|cheese|yogurt|butter|cream|egg|dairy|oat milk|almond milk|soy milk/.test(t)) return 'Dairy';
+  if (/chicken|beef|pork|lamb|fish|salmon|tuna|shrimp|meat|turkey|ham|bacon|sausage/.test(t)) return 'Meat';
+  if (/bread|bagel|muffin|cake|pastry|croissant|oatmeal|oat|cereal|granola|flour|rice|pasta|noodle/.test(t)) return 'Bakery';
+  if (/paper|soap|detergent|cleaning|towel|toilet|sponge|trash|bag|foil|wrap|wipe/.test(t)) return 'Household';
   if (/diaper|formula|baby|puree/.test(t)) return 'Baby';
-  if (/water|juice|coffee|tea|beer|wine|soda/.test(t)) return 'Drinks';
+  if (/water|juice|coffee|tea|beer|wine|soda|drink|beverage|smoothie/.test(t)) return 'Drinks';
   return 'Other';
 };
 
@@ -82,19 +87,22 @@ const Shopping = () => {
   useEffect(() => { load(); }, [user]);
 
   const addItem = async () => {
-    const cleaned = cleanShoppingText(newItem.trim());
-    if (!cleaned || !user) return;
+    if (!newItem.trim() || !user) return;
+    const itemTitles = parseShoppingItems(newItem.trim());
+    if (!itemTitles.length) return;
     haptic('light');
     try {
-      const { data } = await supabase.from('tasks').insert({
-        title: cleaned, type: listType === 'personal' ? 'shopping_personal' : 'shopping', user_id: user.id, completed: false
-      }).select().single();
-      if (data) {
-        setItems(prev => [...prev, {
-          id: data.id, title: data.title, completed: false,
-          quantity: 1, category: guessCategory(data.title), listType,
-        }]);
-      }
+      const dbType = listType === 'personal' ? 'shopping_personal' : 'shopping';
+      const results = await Promise.all(
+        itemTitles.map(title =>
+          supabase.from('tasks').insert({ title, type: dbType, user_id: user.id, completed: false }).select().single()
+        )
+      );
+      const newRows = results
+        .map(r => r.data)
+        .filter(Boolean)
+        .map(d => ({ id: d!.id, title: d!.title, completed: false, quantity: 1, category: guessCategory(d!.title), listType }));
+      setItems(prev => [...prev, ...newRows]);
       setNewItem('');
     } catch { toast({ title: t('shopping.couldNotAdd'), variant: 'destructive' }); }
   };
