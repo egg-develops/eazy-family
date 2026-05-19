@@ -27,15 +27,19 @@ import Download from "./pages/Download";
 import Waitlist from "./pages/Waitlist";
 import NotFound from "./pages/NotFound";
 
-// Lazy load heavy pages
-const Calendar = lazy(() => import("./pages/Calendar"));
-const ToDoList = lazy(() => import("./pages/ToDoList"));
-const Shopping = lazy(() => import("./pages/Shopping"));
-const Rituals = lazy(() => import("./pages/Rituals"));
-const Settings = lazy(() => import("./pages/Settings"));
-const FamilyProfile = lazy(() => import("./pages/FamilyProfile"));
-const FamilyAgenda = lazy(() => import("./pages/FamilyAgenda"));
-const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+// Lazy load heavy pages — with one automatic retry on chunk-load failure
+// (Capacitor iOS can return a stale MIME type on first load after an update)
+const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>) =>
+  lazy(() => fn().catch(() => fn()));
+
+const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
+const ToDoList = lazyWithRetry(() => import("./pages/ToDoList"));
+const Shopping = lazyWithRetry(() => import("./pages/Shopping"));
+const Rituals = lazyWithRetry(() => import("./pages/Rituals"));
+const Settings = lazyWithRetry(() => import("./pages/Settings"));
+const FamilyProfile = lazyWithRetry(() => import("./pages/FamilyProfile"));
+const FamilyAgenda = lazyWithRetry(() => import("./pages/FamilyAgenda"));
+const HelpCenter = lazyWithRetry(() => import("./pages/HelpCenter"));
 
 // Loading fallback component
 const PageLoader = () => (

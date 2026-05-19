@@ -280,6 +280,16 @@ const AppLayout = () => {
     return () => window.removeEventListener('eazy-home-config-updated', onConfigUpdate);
   }, []);
 
+  // Eagerly request mic permission once at app launch so individual voice features
+  // don't each trigger a separate OS permission dialog.
+  useEffect(() => {
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => stream.getTracks().forEach(t => t.stop()))
+        .catch(() => {});
+    }
+  }, []);
+
   useEffect(() => {
     const blockImageContextMenu = (e: MouseEvent) => {
       if ((e.target as HTMLElement).tagName === 'IMG') e.preventDefault();

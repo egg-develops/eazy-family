@@ -82,7 +82,11 @@ const Row = ({ icon, title, subtitle, right, last, onClick }: {
 
 const Arrow = () => <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#C4AEA8' }} />;
 const Tog = ({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) => (
-  <Switch checked={checked} onCheckedChange={onChange} />
+  <Switch
+    checked={checked}
+    onCheckedChange={onChange}
+    className="data-[state=checked]:bg-[#964735] data-[state=unchecked]:bg-[#DAC1BB]"
+  />
 );
 
 const Settings = () => {
@@ -464,19 +468,21 @@ const Settings = () => {
                           <X className="w-2.5 h-2.5 text-white" />
                         </button>
                       </>
-                    ) : <Plus className="w-3.5 h-3.5" style={{ color: MUTED }} />}
+                    ) : (
+                      <label htmlFor="header-image" className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                        <Plus className="w-3.5 h-3.5" style={{ color: MUTED }} />
+                      </label>
+                    )}
                   </div>
                 );
               })}
             </div>
-            {(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length < 4 ? (
-              <label htmlFor="header-image" className="cursor-pointer">
-                <span className="text-sm font-semibold" style={{ color: TC }}>{uploadingHeader ? t('settings.uploading') : t('settings.addBgPhoto')}</span>
-                <input id="header-image" type="file" accept="image/*" className="hidden"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'header'); e.target.value = ''; }}
-                  disabled={uploadingHeader} />
-              </label>
-            ) : <p className="text-xs" style={{ color: MUTED }}>{t('settings.galleryFull')}</p>}
+            <input id="header-image" type="file" accept="image/*" className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'header'); e.target.value = ''; }}
+              disabled={uploadingHeader} />
+            {(homeConfig.headerImages || (homeConfig.headerImage ? [homeConfig.headerImage] : [])).length >= 4 && (
+              <p className="text-xs" style={{ color: MUTED }}>{t('settings.galleryFull')}</p>
+            )}
           </div>
         </Card_>
       </div>

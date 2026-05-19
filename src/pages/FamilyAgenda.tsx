@@ -718,7 +718,7 @@ const FamilyAgenda = () => {
           <button
             className="w-9 h-9 flex items-center justify-center rounded-full"
             style={{ flexShrink: 0 }}
-            onClick={() => toast({ title: t('familyAgenda.settingsComingSoon') })}
+            onClick={() => navigate('/app/settings')}
           >
             <Settings2 className="w-5 h-5" style={{ color: MUTED }} />
           </button>

@@ -90,6 +90,7 @@ const Rituals = () => {
   // Swipe gesture state (DOM-level, no re-renders during drag)
   const touchData = useRef<{ startX: number; id: string; el: HTMLDivElement } | null>(null);
   const innerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingRef = useRef<Set<string>>(new Set());
 
   const recognitionRef = useRef<any>(null);
   // Use refs for transcript capture — avoids closure/race-condition issues on iOS
@@ -141,13 +142,16 @@ const Rituals = () => {
   };
 
   const toggleRitual = (id: string) => {
+    if (pendingRef.current.has(id)) return; // prevent double-tap during bounce animation
     const willComplete = !completedRituals.has(id);
     haptic(willComplete ? 'medium' : 'light');
     if (willComplete) {
+      pendingRef.current.add(id);
       // Play bounce first, then move to Done after animation completes
       setJustCompletedId(id);
       setTimeout(() => {
         setJustCompletedId(null);
+        pendingRef.current.delete(id);
         setCompletedRituals(prev => {
           const next = new Set(prev);
           next.add(id);
