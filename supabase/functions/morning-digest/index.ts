@@ -377,8 +377,8 @@ function buildDigestEmail(ctx: {
     tasks.length === 0
       ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">Nothing open — you're ahead of it.</p>`
       : tasks.map(t => `
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-          <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DAC1BB;flex-shrink:0;background:#FAF7F3"></div>
+        <div style="display:flex;align-items:center;margin-bottom:10px">
+          <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DAC1BB;flex-shrink:0;background:#FAF7F3;margin-right:12px"></div>
           <span style="color:#1C1C18;font-size:14px">${t.title}</span>
         </div>`).join("");
 
@@ -435,16 +435,16 @@ function buildDigestEmail(ctx: {
     ${staleHtml}
 
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#964735;flex-shrink:0"></div>
+      <div style="display:flex;align-items:center;margin-bottom:16px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#964735;flex-shrink:0;margin-right:10px"></div>
         <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Today's Schedule</span>
       </div>
       ${eventsHtml}
     </div>
 
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#44664F;flex-shrink:0"></div>
+      <div style="display:flex;align-items:center;margin-bottom:16px">
+        <div style="width:8px;height:8px;border-radius:50%;background:#44664F;flex-shrink:0;margin-right:10px"></div>
         <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Open Tasks</span>
       </div>
       ${tasksHtml}
