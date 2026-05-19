@@ -55,6 +55,8 @@
 	<string>Eazy Family accesses your photo library to add images to family memories and events.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Eazy Family uses your microphone for voice input when adding notes and reminders.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Eazy Family uses speech recognition to convert your voice into tasks, shopping items, and calendar events.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Eazy Family syncs your family events with your calendar so nothing is missed.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

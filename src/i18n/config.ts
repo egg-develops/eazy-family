@@ -5,6 +5,8 @@ import enGB from './locales/en-GB.json';
 import de from './locales/de.json';
 import fr from './locales/fr.json';
 import it from './locales/it.json';
+import es from './locales/es.json';
+import pt from './locales/pt.json';
 
 i18n
   .use(initReactI18next)
@@ -15,6 +17,8 @@ i18n
       de: { translation: de },
       fr: { translation: fr },
       it: { translation: it },
+      es: { translation: es },
+      pt: { translation: pt },
     },
     lng: localStorage.getItem('eazy-family-language') || 'en',
     fallbackLng: 'en',

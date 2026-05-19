@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import * as chrono from "chrono-node";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 type CaptureType = 'event' | 'task' | 'shopping' | 'reminder' | 'ritual' | 'journal';
 type Step = 'capture' | 'processing' | 'preview';
@@ -78,17 +79,14 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
-  const [isListening, setIsListening] = useState(false);
   const [rawDebug, setRawDebug] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const capturedRef = useRef('');
-  const baseTextRef = useRef('');   // accumulated text across iOS restarts
-  const isListeningRef = useRef(false); // true = user wants mic on
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const userName = getUserFirstName();
+  const speech = useSpeechRecognition();
+  const isListening = speech.isListening;
 
   useEffect(() => {
     haptic('medium');
@@ -107,87 +105,23 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
-  const cleanup = () => {
-    isListeningRef.current = false;
-    setIsListening(false);
-    if (capturedRef.current.trim()) setText(capturedRef.current);
-    capturedRef.current = '';
-    baseTextRef.current = '';
-  };
-
   const stopListening = () => {
-    isListeningRef.current = false;
-    recognitionRef.current?.stop();
-    // onend fires and calls cleanup path
+    speech.stop();
   };
 
   const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: 'Voice input not supported in this browser' }); return; }
-
-    capturedRef.current = '';
-    baseTextRef.current = '';
-    isListeningRef.current = true;
-
-    const spawnSession = (): any => {
-      const r = new SR();
-      r.lang = getUserLocale();
-      r.interimResults = true;
-      r.continuous = true;
-      r.maxAlternatives = 1;
-
-      r.onresult = (e: any) => {
-        let sessionText = '';
-        for (let i = 0; i < e.results.length; i++) {
-          sessionText += e.results[i][0].transcript;
+    speech.start({
+      lang: getUserLocale(),
+      continuous: true,
+      onResult: (transcript) => setText(transcript),
+      onError: (error) => {
+        if (error === 'not-allowed') {
+          toast({ title: 'Microphone access denied', description: 'Allow microphone access in Settings.' });
+        } else if (error === 'not-supported') {
+          toast({ title: 'Voice input not supported in this browser' });
         }
-        const combined = baseTextRef.current
-          ? `${baseTextRef.current} ${sessionText}`
-          : sessionText;
-        capturedRef.current = combined;
-        setText(combined);
-      };
-
-      r.onend = () => {
-        if (!isListeningRef.current) {
-          // User tapped stop
-          cleanup();
-          return;
-        }
-        // Browser/iOS ended session — try synchronous restart (no setTimeout:
-        // iOS blocks recognition started from setTimeout as not a user gesture)
-        baseTextRef.current = capturedRef.current;
-        try {
-          const next = spawnSession();
-          recognitionRef.current = next;
-        } catch {
-          // Restart blocked (iOS strict mode) — surface what was captured
-          cleanup();
-        }
-      };
-
-      r.onerror = (e: any) => {
-        if (e.error === 'aborted') return; // intentional stop
-        if (e.error === 'no-speech') return; // silence — onend will handle restart
-        if (e.error === 'not-allowed') {
-          toast({ title: 'Microphone access denied', description: 'Allow microphone in your browser settings.' });
-        }
-        isListeningRef.current = false;
-        cleanup();
-      };
-
-      try {
-        r.start();
-      } catch {
-        // start() can throw if called too quickly after a previous stop
-        isListeningRef.current = false;
-        setIsListening(false);
-      }
-      return r;
-    };
-
-    recognitionRef.current = spawnSession();
-    setIsListening(true);
+      },
+    });
     haptic('light');
   };
 
@@ -210,7 +144,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         },
         body: JSON.stringify({
           messages: [{ role: 'user', content: text.trim() }],
-          context: systemContext,
+          systemPrompt: systemContext,
         }),
       });
 

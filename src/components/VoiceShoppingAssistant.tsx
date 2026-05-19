@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
 import { useTranslation } from "react-i18next";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface VoiceShoppingAssistantProps {
   onItemsAdded: (items: string[]) => void;
@@ -12,12 +13,11 @@ interface VoiceShoppingAssistantProps {
   mode?: 'shopping' | 'task' | 'shared';
 }
 
-export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your shopping items", mode = 'shopping' }: VoiceShoppingAssistantProps) => {
+export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your items", mode = 'shopping' }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
   const { i18n } = useTranslation();
-  const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const speech = useSpeechRecognition();
 
   const speechLang = i18n.language === "de" ? "de-CH"
     : i18n.language === "fr" ? "fr-CH"
@@ -25,96 +25,12 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
     : i18n.language === "en-GB" ? "en-GB"
     : "en-US";
 
-  const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({
-        title: "Not supported",
-        description: "Voice input is not supported in this browser.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = speechLang;
-
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setIsListening(false);
-      await processTranscript(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      logError('Speech recognition error:', event.error);
-      setIsListening(false);
-      if (event.error === 'no-speech') {
-        // Silently ignore — user just didn't say anything
-        return;
-      }
-      if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-        toast({
-          title: "Microphone access denied",
-          description: "Please allow microphone access in your browser settings and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (event.error === 'audio-capture') {
-        toast({
-          title: "No microphone found",
-          description: "Make sure a microphone is connected and try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (event.error === 'service-not-allowed' || event.error === 'network') {
-        toast({
-          title: "Voice not available",
-          description: "Speech recognition is not supported on this browser. Try typing instead.",
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: "Voice error",
-        description: "Could not capture speech. Please try again.",
-        variant: "destructive",
-      });
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-
-    toast({
-      title: "Listening...",
-      description: listenerDescription,
-    });
-  };
-
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsListening(false);
-  };
-
-  // Client-side fallback: split transcript on commas, "and", "also", semicolons
-  const parseItemsLocally = (transcript: string): string[] => {
-    return transcript
+  const parseItemsLocally = (transcript: string): string[] =>
+    transcript
       .replace(/\b(please|add|buy|get|need|pick up|some|a few|a|an|the)\b/gi, ' ')
       .split(/,|;|\band\b|\balso\b/i)
       .map(s => s.trim())
       .filter(s => s.length > 1);
-  };
 
   const processTranscript = async (transcript: string) => {
     setIsProcessing(true);
@@ -125,68 +41,77 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
 
       if (!error && data?.items && data.items.length > 0) {
         onItemsAdded(data.items);
-        toast({
-          title: "Items added!",
-          description: `Added ${data.items.length} item(s): ${data.items.join(', ')}`,
-        });
+        toast({ title: "Items added!", description: `Added ${data.items.length} item(s): ${data.items.join(', ')}` });
         return;
       }
 
-      // Fallback: parse locally
       const items = parseItemsLocally(transcript);
       if (items.length > 0) {
         onItemsAdded(items);
-        toast({
-          title: "Items added!",
-          description: `Added ${items.length} item(s): ${items.join(', ')}`,
-        });
+        toast({ title: "Items added!", description: `Added ${items.length} item(s): ${items.join(', ')}` });
       } else {
-        toast({
-          title: "No items detected",
-          description: `I heard: "${transcript}". Try saying items separated by "and".`,
-          variant: "destructive",
-        });
+        toast({ title: "No items detected", description: `I heard: "${transcript}". Try saying items separated by "and".`, variant: "destructive" });
       }
     } catch (error: unknown) {
       logError('Error processing transcript:', error);
-      // Still try local parse on error
       const items = parseItemsLocally(transcript);
       if (items.length > 0) {
         onItemsAdded(items);
         toast({ title: "Items added!", description: items.join(', ') });
       } else {
-        toast({
-          title: "Error processing voice",
-          description: "Please try again.",
-          variant: "destructive",
-        });
+        toast({ title: "Error processing voice", description: "Please try again.", variant: "destructive" });
       }
     } finally {
       setIsProcessing(false);
     }
   };
 
+  const handleMicPress = () => {
+    if (speech.isListening) {
+      speech.stop();
+      return;
+    }
+    speech.start({
+      lang: speechLang,
+      continuous: false,
+      onResult: (transcript, isFinal) => {
+        if (isFinal && transcript.trim()) processTranscript(transcript.trim());
+      },
+      onError: (error) => {
+        if (error === 'not-allowed' || error === 'permission-denied') {
+          toast({ title: "Microphone access denied", description: "Allow microphone access in Settings.", variant: "destructive" });
+        } else if (error === 'not-supported') {
+          toast({ title: "Voice not available", description: "Speech recognition isn't supported here. Try typing.", variant: "destructive" });
+        } else if (error !== 'no-speech') {
+          toast({ title: "Voice error", description: "Could not capture speech. Please try again.", variant: "destructive" });
+        }
+      },
+      onEnd: () => {},
+    });
+    toast({ title: "Listening...", description: listenerDescription });
+  };
+
   return (
     <div className="flex gap-2 items-center">
       <Button
-        variant={isListening ? "destructive" : "outline"}
+        variant={speech.isListening ? "destructive" : "outline"}
         size="icon"
-        onClick={isListening ? stopListening : startListening}
+        onClick={handleMicPress}
         disabled={isProcessing}
         className="h-10 w-10 relative"
       >
         {isProcessing ? (
           <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isListening ? (
+        ) : speech.isListening ? (
           <MicOff className="h-4 w-4" />
         ) : (
           <Mic className="h-4 w-4" />
         )}
-        {!isListening && !isProcessing && (
+        {!speech.isListening && !isProcessing && (
           <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
         )}
       </Button>
-      {isListening && (
+      {speech.isListening && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
           Listening...
         </div>

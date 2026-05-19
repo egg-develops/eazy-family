@@ -245,6 +245,8 @@ const Settings = () => {
     { value: 'de',    label: 'Deutsch',      abbr: 'DE',    flag: '🇩🇪' },
     { value: 'fr',    label: 'Français',     abbr: 'FR',    flag: '🇫🇷' },
     { value: 'it',    label: 'Italiano',     abbr: 'IT',    flag: '🇮🇹' },
+    { value: 'es',    label: 'Español',      abbr: 'ES',    flag: '🇪🇸' },
+    { value: 'pt',    label: 'Português',    abbr: 'PT',    flag: '🇵🇹' },
   ];
   const currentLang = LANG_OPTIONS.find(l => l.value === language) || LANG_OPTIONS[0];
 

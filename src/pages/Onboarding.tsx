@@ -1,343 +1,871 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "@/contexts/AuthContext";
-import { cloudSet } from "@/lib/preferencesSync";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { cloudSet } from '@/lib/preferencesSync';
+import { supabase } from '@/integrations/supabase/client';
+import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
+import { DigestMock } from '@/components/onboarding/DigestMock';
+import i18n from '@/i18n/config';
 
-const TC = '#964735';
-const TL = '#D97B66';
-const BG = '#F7F3ED';
-const CARD = '#FFFFFF';
-const BORDER = '#DAC1BB';
-const INPUT_BG = '#FAF7F3';
-const INK = '#1C1C18';
-const MUTED = '#7A6660';
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const T = {
+  bg: '#FDF9F3',
+  card: '#FFFFFF',
+  ink: '#1C1C18',
+  inkV: '#55433F',
+  faint: '#87726E',
+  outline: '#DAC1BB',
+  primary: '#964735',
+  primaryL: '#D97B66',
+  primaryS: '#FFDAD3',
+  secondary: '#44664F',
+  secondaryS: '#C6ECCF',
+};
+const LORA = "'Lora', 'Georgia', serif";
+const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
-interface OnboardingData {
-  userName: string;
-  location: string;
-  customLocation: string;
+// ── Screen constants ──────────────────────────────────────────────────────────
+// 0:language 1:splash 2:pain-setup 3:family 4:pain-point 5:voice 6:digest 7:summary 8:paywall 9:account 10:location
+const TOTAL_PROGRESS_SCREENS = 8; // screens 2-9
+const progressFor = (screen: number) =>
+  screen >= 2 && screen <= 9 ? (screen - 1) / TOTAL_PROGRESS_SCREENS : null;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+interface OBState {
   language: string;
+  currentApproach: string;
+  familySize: string;
+  mainPainPoint: string;
+  voiceFrequency: string;
+  location: string;
 }
 
-const steps = [
-  { id: 1, title: "Welcome!" },
-  { id: 2, title: "Language" },
-  { id: 3, title: "Your Name" },
-  { id: 4, title: "Location" },
-  { id: 5, title: "What's Inside" },
-];
+const EMPTY: OBState = { language: '', currentApproach: '', familySize: '', mainPainPoint: '', voiceFrequency: '', location: '' };
 
-const locations = [
-  { value: "zurich", label: "Zurich" },
-  { value: "geneva", label: "Geneva" },
-  { value: "basel", label: "Basel" },
-  { value: "bern", label: "Bern" },
-  { value: "lausanne", label: "Lausanne" },
-  { value: "other", label: "Other" },
-];
+const STORAGE_KEY = 'eazy-onboarding-v2';
 
-const languages = [
-  { value: "en", label: "English" },
-  { value: "de", label: "German" },
-  { value: "fr", label: "French" },
-  { value: "it", label: "Italian" },
-];
+const load = (): { screen: number; state: OBState } => {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) return JSON.parse(s);
+  } catch {}
+  return { screen: 0, state: EMPTY };
+};
 
+const save = (screen: number, state: OBState) =>
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, state }));
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const OptionCard = ({
+  label, sub, emoji, selected, onClick, multiSelect,
+}: {
+  label: string; sub?: string; emoji?: string; selected: boolean; onClick: () => void; multiSelect?: boolean;
+}) => (
+  <button
+    onClick={onClick}
+    style={{
+      width: '100%', textAlign: 'left',
+      padding: '14px 16px',
+      borderRadius: 16,
+      border: `1.5px solid ${selected ? T.primary : T.outline}`,
+      background: selected ? T.primaryS : T.card,
+      display: 'flex', alignItems: 'center', gap: 12,
+      cursor: 'pointer',
+      transition: 'border-color 0.15s ease, background 0.15s ease',
+      WebkitTapHighlightColor: 'transparent',
+    }}
+  >
+    {emoji && <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{emoji}</span>}
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <span style={{ fontSize: 14, fontWeight: 500, color: T.ink, display: 'block', lineHeight: 1.3 }}>{label}</span>
+      {sub && <span style={{ fontSize: 12, color: T.faint, display: 'block', marginTop: 2 }}>{sub}</span>}
+    </div>
+    {multiSelect ? (
+      <div style={{
+        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+        border: `1.5px solid ${selected ? T.primary : T.outline}`,
+        background: selected ? T.primary : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {selected && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
+    ) : (
+      <div style={{
+        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+        border: `1.5px solid ${selected ? T.primary : T.outline}`,
+        background: selected ? T.primary : 'transparent',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {selected && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
+      </div>
+    )}
+  </button>
+);
+
+const PrimaryBtn = ({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    style={{
+      width: '100%', padding: '15px 24px',
+      borderRadius: 9999, border: 'none',
+      background: disabled ? T.outline : T.primary,
+      color: '#fff', fontFamily: SANS, fontSize: 15, fontWeight: 500,
+      cursor: disabled ? 'default' : 'pointer',
+      transition: 'background 0.2s ease, transform 0.1s ease',
+      WebkitTapHighlightColor: 'transparent',
+    }}
+    onTouchStart={e => { if (!disabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.98)'; }}
+    onTouchEnd={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+  >
+    {label}
+  </button>
+);
+
+const OrbeMorphic = ({ size = 120 }: { size?: number }) => (
+  <div style={{ position: 'relative', width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="orbe-halo-outer" style={{ position: 'absolute', width: '90%', height: '90%', borderRadius: '50%', border: '0.5px solid rgba(218,193,187,0.35)', boxShadow: '0 0 40px rgba(218,193,187,0.2)' }} />
+    <div className="orbe-halo-mid"   style={{ position: 'absolute', width: '72%', height: '72%', borderRadius: '50%', border: '1px solid rgba(150,71,53,0.22)', boxShadow: '0 0 20px rgba(150,71,53,0.1)', backdropFilter: 'blur(1px)' }} />
+    <div className="orbe-halo-inner" style={{ position: 'absolute', width: '56%', height: '56%', borderRadius: '50%', border: '1.5px solid rgba(150,71,53,0.3)', boxShadow: '0 0 28px rgba(150,71,53,0.12)' }} />
+    <div className="orbe-circle-left"  style={{ position: 'absolute', width: '40%', height: '40%', borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #E8956A, #964735)', opacity: 0.84, boxShadow: '0 8px 32px rgba(150,71,53,0.3)' }} />
+    <div className="orbe-circle-right" style={{ position: 'absolute', width: '40%', height: '40%', borderRadius: '50%', background: 'radial-gradient(circle at 60% 40%, #6B9A79, #44664f)', opacity: 0.80, boxShadow: '0 8px 32px rgba(68,102,79,0.24)' }} />
+  </div>
+);
+
+// ── Main component ────────────────────────────────────────────────────────────
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [data, setData] = useState<OnboardingData>({
-    userName: "",
-    location: "",
-    customLocation: "",
-    language: "",
-  });
+
+  const saved = load();
+  const [screen, setScreen] = useState(saved.screen);
+  const [dir, setDir] = useState<'fwd' | 'back'>('fwd');
+  const [state, setState] = useState<OBState>(saved.state);
+  const [animKey, setAnimKey] = useState(0);
+
+  // Auth screen state
+  const [authName, setAuthName] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authLoading2, setAuthLoading2] = useState(false);
+  const [authError, setAuthError] = useState('');
+
+  // Location
+  const [locationInput, setLocationInput] = useState('');
+
+  // Splash entrance
+  const [splashPhase, setSplashPhase] = useState(0);
+
+  useEffect(() => { save(screen, state); }, [screen, state]);
+
+  const go = useCallback((n: number, direction: 'fwd' | 'back' = 'fwd') => {
+    setDir(direction);
+    setAnimKey(k => k + 1);
+    setScreen(n);
+  }, []);
+
+  const next = useCallback(() => go(screen + 1, 'fwd'), [screen, go]);
+  const back = useCallback(() => go(screen - 1, 'back'), [screen, go]);
+
+  const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
+    setState(prev => ({ ...prev, [k]: v }));
+
+  // Splash animation sequence
+  useEffect(() => {
+    if (screen !== 1) return;
+    setSplashPhase(0);
+    const t1 = setTimeout(() => setSplashPhase(1), 100);  // Orbe scales in
+    const t2 = setTimeout(() => setSplashPhase(2), 900);  // wordmark fades
+    const t3 = setTimeout(() => setSplashPhase(3), 1600); // copy fades
+    const t4 = setTimeout(() => setSplashPhase(4), 2400); // CTA fades
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
+  }, [screen]);
 
   if (!authLoading && user) return <Navigate to="/app" replace />;
 
-  const nextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+  const progress = progressFor(screen);
+  const showBack = screen >= 2;
+
+  // ── Slide animation style ──────────────────────────────────────────────────
+  const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9
+    ? 'ob-fade'
+    : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
+
+  // ── Personalised summary cards ─────────────────────────────────────────────
+  const summaryCards = (() => {
+    const cards: { emoji: string; headline: string; body: string }[] = [];
+
+    if (state.mainPainPoint === 'scheduling') {
+      cards.push({ emoji: '🗓', headline: 'One calendar for your whole family', body: 'Google, Apple, and Outlook — synced into a single view. Conflicts flagged before they happen.' });
+    } else if (state.mainPainPoint === 'shopping') {
+      cards.push({ emoji: '🛒', headline: 'One list, everywhere', body: 'Updated by voice, organised by category, visible to every family member in real time.' });
+    } else if (state.mainPainPoint === 'tasks') {
+      cards.push({ emoji: '✅', headline: 'Tasks that actually get done', body: 'Assign, track, and close tasks as a family. Nothing stays stuck in someone\'s head.' });
+    } else if (state.mainPainPoint === 'overview') {
+      cards.push({ emoji: '🌅', headline: 'Your week, clear before coffee', body: 'A Morning Digest every day — schedule, one priority, shopping, and a family win.' });
     } else {
-      const userInitials = data.userName
-        .split(' ')
-        .map(n => n.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2) || 'EF';
-      const finalData = { ...data, userInitials, children: [], features: [] };
+      cards.push({ emoji: '✨', headline: 'Your family, organised', body: 'Calendar, tasks, shopping, and a daily briefing — all in one place, built for your family.' });
+    }
+
+    if (state.familySize !== 'just-me') {
+      cards.push({ emoji: '👨‍👩‍👧', headline: 'Everyone in sync', body: 'Invite your partner or family in one tap. Everyone sees the same plan, in real time.' });
+    }
+
+    if (state.voiceFrequency !== 'rarely') {
+      cards.push({ emoji: '🎤', headline: 'Just say it', body: '"Add milk to the shopping list" · "Dentist Thursday at 10" · Done. No typing needed.' });
+    } else {
+      cards.push({ emoji: '⚡', headline: 'Fast when you need it', body: 'Add anything in seconds — by voice or by text. Your family stays updated either way.' });
+    }
+
+    return cards.slice(0, 3);
+  })();
+
+  // ── Account creation ───────────────────────────────────────────────────────
+  const handleSignUp = async () => {
+    if (!authName.trim() || !authEmail.trim() || !authPassword.trim()) return;
+    setAuthLoading2(true);
+    setAuthError('');
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: authEmail.trim(),
+        password: authPassword,
+        options: { data: { full_name: authName.trim() } },
+      });
+      if (error) { setAuthError(error.message); return; }
+      const finalData = {
+        userName: authName.trim(),
+        location: locationInput || state.location,
+        language: state.language,
+        userInitials: authName.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
+      };
       localStorage.setItem('eazy-family-onboarding', JSON.stringify(finalData));
-      navigate('/auth?signup=true');
+      localStorage.removeItem(STORAGE_KEY);
+      go(10, 'fwd');
+    } catch {
+      setAuthError('Something went wrong. Please try again.');
+    } finally {
+      setAuthLoading2(false);
     }
   };
 
-  const PILLARS = [
-    { emoji: '📅', label: 'Shared Calendar', sub: 'Google & Outlook sync' },
-    { emoji: '💬', label: 'Family Channel', sub: 'Private group chat' },
-    { emoji: '🛒', label: 'Lists & Tasks', sub: 'Shopping & to-dos' },
-    { emoji: '✨', label: 'Eazy AI', sub: 'Ask anything, add by voice' },
-  ];
-
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1: return true;
-      case 2: return data.language.length > 0;
-      case 3: return data.userName.trim().length > 0;
-      case 4: return data.location.length > 0 && (data.location !== "other" || data.customLocation.trim().length > 0);
-      case 5: return true;
-      default: return false;
+  // ── Finish ─────────────────────────────────────────────────────────────────
+  const finish = () => {
+    if (locationInput || state.location) {
+      cloudSet('eazy-family-location', locationInput || state.location);
     }
+    localStorage.removeItem(STORAGE_KEY);
+    navigate('/app');
   };
 
-  const inputStyle = {
-    background: INPUT_BG,
-    border: `1px solid ${BORDER}`,
-    color: INK,
-  };
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-6 text-center py-4">
-            <img
-              src="/logo.png"
-              alt="Eazy.Family"
-              className="w-24 h-24 mx-auto object-contain"
-              style={{ filter: "drop-shadow(0 4px 20px rgb(150 71 53 / 0.2))" }}
-            />
-            <div>
-              <h2 className="text-2xl font-bold" style={{ color: INK }}>
-                {t('onboarding.welcome.title')}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: MUTED }}>
-                {t('onboarding.welcome.description')}
-              </p>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: INK }}>
-                {t('onboarding.language.title')}
-              </h2>
-              <p className="text-sm" style={{ color: MUTED }}>
-                {t('onboarding.language.description')}
-              </p>
-            </div>
-            <Select
-              value={data.language}
-              onValueChange={(value) => {
-                setData(prev => ({ ...prev, language: value }));
-                i18n.changeLanguage(value);
-                cloudSet('eazy-family-language', value);
-              }}
-            >
-              <SelectTrigger className="h-12 rounded-xl text-base" style={inputStyle}>
-                <SelectValue placeholder="Select your language" />
-              </SelectTrigger>
-              <SelectContent>
-                {languages.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: INK }}>
-                {t('onboarding.name.title')}
-              </h2>
-              <p className="text-sm" style={{ color: MUTED }}>
-                {t('onboarding.name.description')}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium" style={{ color: INK }}>
-                {t('onboarding.name.label')}
-              </Label>
-              <Input
-                id="name"
-                placeholder={t('onboarding.name.placeholder')}
-                value={data.userName}
-                onChange={(e) => setData(prev => ({ ...prev, userName: e.target.value }))}
-                onKeyDown={(e) => e.key === 'Enter' && canProceed() && nextStep()}
-                className="h-12 rounded-xl text-base"
-                style={inputStyle}
-                autoFocus
-              />
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: INK }}>
-                {t('onboarding.location.title')}
-              </h2>
-              <p className="text-sm" style={{ color: MUTED }}>
-                {t('onboarding.location.description')}
-              </p>
-            </div>
-            <Select
-              value={data.location}
-              onValueChange={(value) => setData(prev => ({ ...prev, location: value }))}
-            >
-              <SelectTrigger className="h-12 rounded-xl text-base" style={inputStyle}>
-                <SelectValue placeholder={t('onboarding.location.placeholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {locations.map((loc) => (
-                  <SelectItem key={loc.value} value={loc.value}>{loc.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {data.location === "other" && (
-              <Input
-                value={data.customLocation}
-                onChange={(e) => setData(prev => ({ ...prev, customLocation: e.target.value }))}
-                placeholder="Enter your city"
-                className="h-12 rounded-xl text-base"
-                style={inputStyle}
-                autoFocus
-              />
-            )}
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-5">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold" style={{ color: INK }}>Everything your family needs</h2>
-              <p className="text-sm" style={{ color: MUTED }}>Here's what's waiting for you inside.</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {PILLARS.map(p => (
-                <div
-                  key={p.label}
-                  className="rounded-2xl p-3.5 flex flex-col gap-1.5"
-                  style={{ background: '#FDF3EE', border: `1px solid ${BORDER}` }}
-                >
-                  <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{p.emoji}</span>
-                  <p className="text-sm font-bold leading-tight" style={{ color: INK }}>{p.label}</p>
-                  <p className="text-xs leading-tight" style={{ color: MUTED }}>{p.sub}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div
-      className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{ background: BG }}
-    >
-      {/* Soft ambient blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
-        <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-10"
-          style={{ background: "radial-gradient(circle, #D97B66, transparent 70%)" }} />
-      </div>
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: T.bg,
+      display: 'flex', flexDirection: 'column',
+      fontFamily: SANS,
+      overflow: 'hidden',
+    }}>
+      {/* Injected keyframes */}
+      <style>{`
+        @keyframes ob-slide-in-right { from { transform: translateX(100%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes ob-slide-in-left  { from { transform: translateX(-100%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes ob-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ob-card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ob-scale-in { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      `}</style>
 
-      <div className="relative max-w-md mx-auto w-full px-4 pt-10 pb-8 flex flex-col flex-1">
-
-        {/* Logo + step counter */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Eazy.Family" className="w-8 h-8 object-contain" />
-            <span className="font-serif text-sm font-medium" style={{ color: INK }}>
-              eazy<span style={{ color: TC }}>.</span>family
-            </span>
-          </div>
-          <span
-            className="text-xs font-medium px-3 py-1 rounded-full"
-            style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}
-          >
-            {currentStep} / {steps.length}
-          </span>
+      {/* Progress bar */}
+      {progress !== null && (
+        <div style={{ height: 3, background: `${T.outline}60`, position: 'relative', flexShrink: 0 }}>
+          <div style={{
+            position: 'absolute', left: 0, top: 0, height: '100%',
+            background: T.primary,
+            width: `${progress * 100}%`,
+            transition: 'width 0.4s ease',
+            borderRadius: '0 9999px 9999px 0',
+          }} />
         </div>
+      )}
 
-        {/* Progress bar */}
-        <div className="mb-8">
-          <div className="w-full rounded-full h-1.5" style={{ background: '#EBE8E2' }}>
-            <div
-              className="h-1.5 rounded-full transition-all duration-500"
-              style={{ width: `${(currentStep / steps.length) * 100}%`, background: TC }}
-            />
-          </div>
+      {/* Nav row */}
+      {(showBack || (screen >= 2 && screen <= 8)) && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 0', flexShrink: 0 }}>
+          {showBack ? (
+            <button
+              onClick={back}
+              style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', color: T.inkV, display: 'flex', alignItems: 'center', gap: 4, fontSize: 14 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+          ) : <div />}
+          {/* Mini Orbe top right from screen 2 */}
+          {screen >= 2 && screen <= 8 && (
+            <div className="orbe-pulse" style={{ width: 28, height: 28, borderRadius: '50%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #E8956A, #964735)', opacity: 0.5 }} />
+              <div style={{ position: 'absolute', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(circle at 60% 40%, #6B9A79, #44664f)', opacity: 0.55, right: '10%' }} />
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Step content card */}
-        <div
-          className="rounded-2xl p-6 flex-1 animate-fade-in"
-          style={{ background: CARD, border: `1px solid ${BORDER}` }}
-        >
-          {renderStepContent()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between mt-6 gap-3">
-          <button
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="flex items-center justify-center gap-2 rounded-xl h-12 flex-1 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-30"
-            style={{ background: '#F1EDE7', color: MUTED, border: `1px solid ${BORDER}` }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('onboarding.back')}
-          </button>
-          <button
-            onClick={nextStep}
-            disabled={!canProceed()}
-            className="flex items-center justify-center gap-2 rounded-xl h-12 flex-1 text-white text-sm font-semibold transition-opacity hover:opacity-90 disabled:opacity-40"
-            style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}
-          >
-            {currentStep === steps.length ? t('onboarding.getStarted') : t('onboarding.next')}
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="text-center mt-4">
-          <button
-            type="button"
-            onClick={() => navigate("/auth")}
-            className="text-sm hover:opacity-80 transition-opacity"
-            style={{ color: MUTED }}
-          >
-            Already have an account?{" "}
-            <span style={{ color: TC }} className="font-semibold">Sign in</span>
-          </button>
-        </div>
+      {/* Screen content */}
+      <div
+        key={animKey}
+        style={{
+          flex: 1, overflowY: 'auto', overflowX: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          animation: `${slideAnim} 0.32s ease-out both`,
+        }}
+      >
+        {screen === 0 && <LanguageScreen state={state} set={set} next={next} />}
+        {screen === 1 && <SplashScreen splashPhase={splashPhase} next={next} />}
+        {screen === 2 && <PainSetupScreen state={state} set={set} next={next} />}
+        {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
+        {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
+        {screen === 5 && <VoiceDemoScreen state={state} set={set} next={next} />}
+        {screen === 6 && <DigestScreen state={state} next={next} />}
+        {screen === 7 && <SummaryScreen summaryCards={summaryCards} next={next} />}
+        {screen === 8 && <PaywallScreen next={next} back={back} />}
+        {screen === 9 && (
+          <AccountScreen
+            name={authName} setName={setAuthName}
+            email={authEmail} setEmail={setAuthEmail}
+            password={authPassword} setPassword={setAuthPassword}
+            loading={authLoading2} error={authError}
+            onSubmit={handleSignUp}
+          />
+        )}
+        {screen === 10 && (
+          <LocationInviteScreen
+            location={locationInput} setLocation={setLocationInput}
+            onFinish={finish}
+          />
+        )}
       </div>
     </div>
   );
 };
+
+// ── SCREEN 0 — Language ───────────────────────────────────────────────────────
+const LANGUAGES = [
+  { code: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
+  { code: 'de', label: 'German', native: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', label: 'French', native: 'Français', flag: '🇫🇷' },
+  { code: 'it', label: 'Italian', native: 'Italiano', flag: '🇮🇹' },
+  { code: 'es', label: 'Spanish', native: 'Español', flag: '🇪🇸' },
+  { code: 'pt', label: 'Portuguese', native: 'Português', flag: '🇵🇹' },
+];
+
+const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const select = (code: string) => {
+    set('language', code);
+    i18n.changeLanguage(code);
+    cloudSet('eazy-family-language', code);
+    localStorage.setItem('eazy-family-language', code);
+    setTimeout(next, 280);
+  };
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px' }}>
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <OrbeMorphic size={80} />
+        <h1 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, fontStyle: 'italic', color: T.ink, marginTop: 20, marginBottom: 6 }}>
+          eazy.family
+        </h1>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Choose your language</p>
+      </div>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {LANGUAGES.map(lang => (
+          <button
+            key={lang.code}
+            onClick={() => select(lang.code)}
+            style={{
+              width: '100%', padding: '14px 18px',
+              borderRadius: 16,
+              border: `1.5px solid ${state.language === lang.code ? T.primary : T.outline}`,
+              background: state.language === lang.code ? T.primaryS : T.card,
+              display: 'flex', alignItems: 'center', gap: 14,
+              cursor: 'pointer', textAlign: 'left',
+              transition: 'border-color 0.15s, background 0.15s',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <span style={{ fontSize: 24 }}>{lang.flag}</span>
+            <span style={{ fontSize: 16, fontWeight: 500, color: T.ink }}>{lang.native}</span>
+            <span style={{ fontSize: 13, color: T.faint, marginLeft: 'auto' }}>{lang.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 1 — Splash ─────────────────────────────────────────────────────────
+const SplashScreen = ({ splashPhase, next }: { splashPhase: number; next: () => void }) => (
+  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '80px 32px 52px' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, width: '100%' }}>
+      <div style={{
+        transform: splashPhase >= 1 ? 'scale(1)' : 'scale(0.5)',
+        opacity: splashPhase >= 1 ? 1 : 0,
+        transition: 'transform 0.7s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s ease',
+      }}>
+        <OrbeMorphic size={160} />
+      </div>
+
+      <div style={{
+        opacity: splashPhase >= 2 ? 1 : 0,
+        transform: splashPhase >= 2 ? 'translateY(0)' : 'translateY(12px)',
+        transition: 'opacity 0.6s ease, transform 0.6s ease',
+        textAlign: 'center',
+      }}>
+        <p style={{ fontFamily: LORA, fontStyle: 'italic', fontSize: 15, color: T.primary, margin: '0 0 4px' }}>eazy.family</p>
+      </div>
+
+      <div style={{
+        opacity: splashPhase >= 3 ? 1 : 0,
+        transform: splashPhase >= 3 ? 'translateY(0)' : 'translateY(12px)',
+        transition: 'opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s',
+        textAlign: 'center',
+        maxWidth: 320,
+      }}>
+        <h1 style={{ fontFamily: LORA, fontSize: 28, fontWeight: 400, color: T.ink, lineHeight: 1.25, margin: '0 0 12px', letterSpacing: '-0.01em' }}>
+          "The family group chat<br />is not a plan."
+        </h1>
+        <p style={{ fontSize: 15, color: T.faint, margin: 0, lineHeight: 1.5, fontWeight: 300 }}>
+          And synced calendars won't solve it.
+        </p>
+      </div>
+    </div>
+
+    <div style={{
+      width: '100%',
+      opacity: splashPhase >= 4 ? 1 : 0,
+      transform: splashPhase >= 4 ? 'translateY(0)' : 'translateY(16px)',
+      transition: 'opacity 0.5s ease, transform 0.5s ease',
+    }}>
+      <PrimaryBtn label="Let's fix that →" onClick={next} />
+    </div>
+  </div>
+);
+
+// ── SCREEN 2 — Pain Setup ─────────────────────────────────────────────────────
+const APPROACHES = [
+  { value: 'chat', label: 'Group chat and good intentions', emoji: '📱' },
+  { value: 'calendars', label: 'A mix of different calendars', emoji: '📅' },
+  { value: 'notes', label: 'Notes apps and sticky notes', emoji: '📝' },
+  { value: 'wing', label: 'Honestly? We wing it', emoji: '🤷' },
+];
+
+const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const select = (v: string) => { set('currentApproach', v); setTimeout(next, 320); };
+  return (
+    <div style={{ padding: '28px 24px 40px' }}>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        How does your family currently manage its week?
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Be honest. We've heard it all.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {APPROACHES.map(a => (
+          <OptionCard key={a.value} emoji={a.emoji} label={a.label} selected={state.currentApproach === a.value} onClick={() => select(a.value)} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 3 — Family Size ─────────────────────────────────────────────────────
+const FAMILY_SIZES = [
+  { value: 'just-me', label: 'Just me for now', emoji: '🙋' },
+  { value: 'partner', label: 'Me and my partner', emoji: '👫' },
+  { value: 'kids', label: 'Me, my partner, and our kids', emoji: '👨‍👩‍👧‍👦' },
+  { value: 'extended', label: 'Extended family too', emoji: '👨‍👩‍👧‍👦' },
+  { value: 'caretakers', label: 'We have caretakers', emoji: '🤝' },
+];
+
+const FamilySizeScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const select = (v: string) => { set('familySize', v); setTimeout(next, 320); };
+  return (
+    <div style={{ padding: '28px 24px 40px' }}>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        Who else needs to be in sync?
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Eazy works best as a family.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {FAMILY_SIZES.map(f => (
+          <OptionCard key={f.value} emoji={f.emoji} label={f.label} selected={state.familySize === f.value} onClick={() => select(f.value)} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 4 — Pain Point ─────────────────────────────────────────────────────
+const PAIN_POINTS = [
+  { value: 'scheduling', label: 'Scheduling clashes', sub: 'Someone always misses something', emoji: '🗓' },
+  { value: 'shopping', label: 'Shopping chaos', sub: 'The list lives in three places', emoji: '🛒' },
+  { value: 'tasks', label: 'Tasks that don\'t get done', sub: 'Stuck in everyone\'s head', emoji: '✅' },
+  { value: 'overview', label: 'No overview of the week', sub: 'Sunday planning takes too long', emoji: '🌅' },
+  { value: 'unsure', label: 'Not fully sure', sub: 'Just knowing we could be more organised', emoji: '🤔' },
+];
+
+const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const select = (v: string) => { set('mainPainPoint', v); setTimeout(next, 320); };
+  return (
+    <div style={{ padding: '28px 24px 40px' }}>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        What causes the most friction in your family's week?
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Pick your biggest one.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {PAIN_POINTS.map(p => (
+          <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={state.mainPainPoint === p.value} onClick={() => select(p.value)} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── SCREEN 5 — Voice Demo ─────────────────────────────────────────────────────
+const VOICE_FREQ = [
+  { value: 'always', label: 'All the time — hands are always full' },
+  { value: 'sometimes', label: 'Sometimes — when it\'s faster' },
+  { value: 'rarely', label: 'Rarely — I prefer typing' },
+  { value: 'try', label: 'I\'d need to try it first' },
+];
+
+const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => (
+  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        How often would you use voice to manage your day?
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Be honest — Eazy works either way.</p>
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {VOICE_FREQ.map(f => (
+        <OptionCard key={f.value} label={f.label} selected={state.voiceFrequency === f.value} onClick={() => set('voiceFrequency', f.value)} />
+      ))}
+    </div>
+
+    <div>
+      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, marginBottom: 12 }}>
+        See it in action
+      </p>
+      <VoiceDemo language={state.language || 'en'} />
+    </div>
+
+    <PrimaryBtn label="Continue →" onClick={next} disabled={!state.voiceFrequency} />
+  </div>
+);
+
+// ── SCREEN 6 — Morning Digest ─────────────────────────────────────────────────
+const DigestScreen = ({ state, next }: { state: OBState; next: () => void }) => (
+  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        What if it was always this easy?
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>
+        A quiet briefing, daily or weekly. Just for your family.
+      </p>
+    </div>
+    <DigestMock language={state.language || 'en'} />
+    <PrimaryBtn label="I want that →" onClick={next} />
+  </div>
+);
+
+// ── SCREEN 7 — Summary ────────────────────────────────────────────────────────
+const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () => void }) => (
+  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+        Here's what Eazy.Family will do for you.
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Based on what you've told us.</p>
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {summaryCards.map((card, i) => (
+        <div
+          key={card.headline}
+          style={{
+            background: T.card, borderRadius: 18, padding: '18px 20px',
+            border: `1px solid ${T.outline}`,
+            boxShadow: '0 2px 12px rgba(28,20,18,0.06)',
+            animation: `ob-card-in 0.4s ease both`,
+            animationDelay: `${i * 0.15}s`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
+            <div>
+              <p style={{ margin: '0 0 5px', fontSize: 15, fontWeight: 600, color: T.ink }}>{card.headline}</p>
+              <p style={{ margin: 0, fontSize: 13, color: T.faint, lineHeight: 1.5 }}>{card.body}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <PrimaryBtn label="This is exactly what I need →" onClick={next} />
+  </div>
+);
+
+// ── SCREEN 8 — Paywall ────────────────────────────────────────────────────────
+const FEATURES = [
+  'Every calendar synced — Google, Apple, Outlook',
+  'Shared tasks, shopping lists, and voice input',
+  'Morning Digest — daily briefing for your family',
+  'Smart conflict detection and suggestions',
+  'One free month for every family you refer',
+];
+
+const PaywallScreen = ({ next, back }: { next: () => void; back: () => void }) => (
+  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ textAlign: 'center' }}>
+      <OrbeMorphic size={80} />
+      <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginTop: 16, marginBottom: 8, lineHeight: 1.2 }}>
+        Try Eazy free for 14 days.
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, margin: 0, lineHeight: 1.5 }}>
+        Everything included. Cancel before day 15<br />and you won't be charged.
+      </p>
+    </div>
+
+    {/* Pricing card */}
+    <div style={{
+      border: `2px solid ${T.primary}`,
+      borderRadius: 20, padding: '20px 24px',
+      background: T.card,
+      boxShadow: `0 4px 24px ${T.primaryS}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 15, fontWeight: 600, color: T.ink }}>Family Plan</span>
+        <span style={{ fontSize: 12, color: T.faint, background: T.primaryS, padding: '3px 8px', borderRadius: 99, fontWeight: 500 }}>14 days free</span>
+      </div>
+      <p style={{ margin: '0 0 2px', fontSize: 28, fontWeight: 700, color: T.primary }}>
+        $3.75<span style={{ fontSize: 14, fontWeight: 400, color: T.faint }}>/month</span>
+      </p>
+      <p style={{ margin: 0, fontSize: 12, color: T.faint }}>Billed annually at $44.99 · or $4.99 month-to-month</p>
+    </div>
+
+    {/* Feature list */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {FEATURES.map(f => (
+        <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{
+            width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+            background: T.secondaryS,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4L3.5 6.5L9 1" stroke={T.secondary} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: 13, color: T.inkV, lineHeight: 1.45 }}>{f}</span>
+        </div>
+      ))}
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <PrimaryBtn label="Start my free trial →" onClick={next} />
+      <button
+        onClick={() => {/* TODO: RevenueCat restorePurchases() */}}
+        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
+      >
+        Restore purchase
+      </button>
+    </div>
+
+    {/* Trust signals */}
+    <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
+      {['🔒 Cancel anytime', '✓ No charge for 14 days', '🍎 Secure via Apple'].map(t => (
+        <span key={t} style={{ fontSize: 11, color: T.faint }}>{t}</span>
+      ))}
+    </div>
+
+    {/* Legal */}
+    <p style={{ fontSize: 10, color: T.faint, textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
+      Subscription renews automatically. Cancel anytime in App Store Settings → Subscriptions. Payment charged to your Apple ID account upon confirmation of purchase.
+    </p>
+  </div>
+);
+
+// ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
+const AccountScreen = ({
+  name, setName, email, setEmail, password, setPassword,
+  loading, error, onSubmit,
+}: {
+  name: string; setName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  password: string; setPassword: (v: string) => void;
+  loading: boolean; error: string; onSubmit: () => void;
+}) => {
+  const inputStyle: React.CSSProperties = {
+    width: '100%', height: 52, padding: '0 16px',
+    borderRadius: 14, border: `1.5px solid ${T.outline}`,
+    background: '#FAFAF8', color: T.ink,
+    fontSize: 15, fontFamily: SANS, outline: 'none',
+    boxSizing: 'border-box',
+  };
+
+  return (
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.2 }}>
+          Create your family space.
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>You're 60 seconds from being organised.</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <input style={inputStyle} placeholder="Your first name" value={name} onChange={e => setName(e.target.value)} autoComplete="given-name" />
+        <input style={inputStyle} placeholder="Email address" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+        <input style={inputStyle} placeholder="Password (min. 8 characters)" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" />
+      </div>
+
+      {error && <p style={{ fontSize: 13, color: '#BA1A1A', margin: 0 }}>{error}</p>}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <PrimaryBtn
+          label={loading ? 'Creating your space…' : 'Continue →'}
+          onClick={onSubmit}
+          disabled={loading || !name.trim() || !email.trim() || password.length < 8}
+        />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, height: 1, background: T.outline }} />
+          <span style={{ fontSize: 12, color: T.faint }}>or</span>
+          <div style={{ flex: 1, height: 1, background: T.outline }} />
+        </div>
+
+        {/* Apple sign in */}
+        <button
+          onClick={async () => { await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } }); }}
+          style={{
+            width: '100%', padding: '14px 24px', borderRadius: 9999,
+            background: '#000', border: 'none', color: '#fff',
+            fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: SANS,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49.1 191.4-49.1zM553.5 54.4c-21.2 23.7-58.6 42.8-91.3 42.8-3.9 0-7.7-.4-11.6-1-1.3-3.5-1.9-7.1-1.9-10.6 0-24.4 10.7-50.5 30.4-68.7 26.4-24.4 68-42.8 105-44.1 1.3 4.2 1.9 8.4 1.9 13.5 0 24.4-9.7 49.1-32.5 68.1z"/></svg>
+          Continue with Apple
+        </button>
+
+        {/* Google sign in */}
+        <button
+          onClick={async () => { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } }); }}
+          style={{
+            width: '100%', padding: '14px 24px', borderRadius: 9999,
+            background: T.card, border: `1.5px solid ${T.outline}`, color: T.ink,
+            fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: SANS,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 488 512"><path fill="#4285F4" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <p style={{ fontSize: 13, color: T.faint, textAlign: 'center', margin: 0 }}>
+        Already have an account?{' '}
+        <a href="/auth" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>Sign in</a>
+      </p>
+    </div>
+  );
+};
+
+// ── SCREEN 10 — Location + Invite ─────────────────────────────────────────────
+const LOCATIONS = ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne', 'London', 'New York', 'Sydney'];
+
+const LocationInviteScreen = ({
+  location, setLocation, onFinish,
+}: {
+  location: string; setLocation: (v: string) => void; onFinish: () => void;
+}) => (
+  <div style={{ padding: '28px 24px 52px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+    {/* Two Orbe circles = invite visual */}
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: -16, paddingTop: 8 }}>
+      <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg, #E8956A, ${T.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 4px 16px rgba(150,71,53,0.25)' }}>
+        <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: SANS }}>You</span>
+      </div>
+      <div style={{ width: 56, height: 56, borderRadius: '50%', background: T.outline, border: `2px dashed ${T.faint}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: -10 }}>
+        <span style={{ fontSize: 24, color: T.faint }}>+</span>
+      </div>
+    </div>
+
+    <div>
+      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25, textAlign: 'center' }}>
+        Invite your family.
+      </h2>
+      <p style={{ fontSize: 14, color: T.faint, margin: 0, textAlign: 'center' }}>
+        Eazy works best when everyone's connected.
+      </p>
+    </div>
+
+    {/* Location */}
+    <div>
+      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Your city (optional)</p>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {LOCATIONS.map(loc => (
+          <button
+            key={loc}
+            onClick={() => setLocation(loc === location ? '' : loc)}
+            style={{
+              padding: '8px 16px', borderRadius: 9999, fontSize: 13, cursor: 'pointer', fontFamily: SANS,
+              border: `1.5px solid ${location === loc ? T.primary : T.outline}`,
+              background: location === loc ? T.primaryS : T.card,
+              color: location === loc ? T.primary : T.inkV,
+              fontWeight: location === loc ? 500 : 400,
+              transition: 'all 0.15s ease',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {loc}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Invite */}
+    <div>
+      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Invite by email or phone</p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <input
+          placeholder="Email or phone number"
+          style={{
+            flex: 1, height: 48, padding: '0 14px', borderRadius: 12,
+            border: `1.5px solid ${T.outline}`, background: '#FAFAF8',
+            fontSize: 14, fontFamily: SANS, color: T.ink, outline: 'none',
+          }}
+        />
+        <button
+          style={{
+            height: 48, padding: '0 18px', borderRadius: 12, border: 'none',
+            background: T.primary, color: '#fff', fontSize: 14, fontWeight: 500,
+            cursor: 'pointer', fontFamily: SANS, whiteSpace: 'nowrap',
+          }}
+        >
+          Send →
+        </button>
+      </div>
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+      <PrimaryBtn label="Go to my family space →" onClick={onFinish} />
+      <button
+        onClick={onFinish}
+        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
+      >
+        I'll do this later
+      </button>
+    </div>
+  </div>
+);
 
 export default Onboarding;

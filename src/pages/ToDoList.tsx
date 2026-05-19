@@ -497,15 +497,24 @@ const ToDoList = () => {
         />
       </div>
 
-      {/* Shared lists toggle */}
-      <button
-        onClick={() => setActiveTab(activeTab === 'shared' ? 'task' : 'shared')}
-        className="flex items-center gap-2 text-sm font-medium"
-        style={{ color: activeTab === 'shared' ? '#964735' : '#7A6660' }}
-      >
-        <Users className="w-4 h-4" />
-        {activeTab === 'shared' ? t('todos.backToMyTasks') : t('todos.viewSharedLists')}
-      </button>
+      {/* Voice mic + shared lists toggle row */}
+      <div className="flex items-center justify-between">
+        {activeTab !== 'shared' && (
+          <VoiceShoppingAssistant
+            onItemsAdded={handleVoiceItemsAdded}
+            mode={activeTab === 'shopping' ? 'shopping' : 'task'}
+            listenerDescription={activeTab === 'shopping' ? t('todos.speakShoppingItems', 'Speak your shopping items') : t('todos.speakTasks', 'Speak your tasks')}
+          />
+        )}
+        <button
+          onClick={() => setActiveTab(activeTab === 'shared' ? 'task' : 'shared')}
+          className="flex items-center gap-2 text-sm font-medium ml-auto"
+          style={{ color: activeTab === 'shared' ? '#964735' : '#7A6660' }}
+        >
+          <Users className="w-4 h-4" />
+          {activeTab === 'shared' ? t('todos.backToMyTasks') : t('todos.viewSharedLists')}
+        </button>
+      </div>
 
       {/* Shared Lists */}
           {activeTab === "shared" ? (
@@ -660,7 +669,7 @@ const ToDoList = () => {
                                 >
                                   <button
                                     onClick={() => toggleTask(task.id)}
-                                    className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all"
+                                    className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all appearance-none p-0"
                                     style={{
                                       border: task.completed ? 'none' : '1.5px solid #DAC1BB',
                                       background: task.completed ? '#964735' : 'transparent',

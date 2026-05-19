@@ -1279,7 +1279,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
           <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: '#F7F3ED' }}>
             <button
               onClick={() => toggleTask(task.id)}
-              className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all"
+              className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all appearance-none p-0"
               style={{ borderColor: task.completed ? '#964735' : '#C4AEA8', background: task.completed ? '#964735' : 'transparent' }}
             >
               {task.completed && <span className="text-white" style={{ fontSize: '7px', lineHeight: 1 }}>✓</span>}

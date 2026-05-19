@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    const { messages, context } = await req.json();
+    const { messages, context, systemPrompt: systemPromptOverride } = await req.json();
 
     if (!Array.isArray(messages)) {
       return new Response(
@@ -70,7 +70,9 @@ serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not configured');
 
-    const systemPrompt = context
+    const systemPrompt = systemPromptOverride
+      ? systemPromptOverride
+      : context
       ? `You are Eazy Assistant, a helpful family assistant for the Eazy.Family app. Help families organize their schedules, plan activities, manage tasks, and provide parenting tips. Be friendly, supportive, and concise. Note: ${context}`
       : 'You are Eazy Assistant, a helpful family assistant for the Eazy.Family app. Help families organize their schedules, plan activities, manage tasks, and provide parenting tips. Be friendly, supportive, and concise in your responses.';
 

@@ -263,7 +263,7 @@ const Shopping = () => {
               <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? `1px solid #F1EDE7` : 'none' }}>
                 {/* Checkbox — rounded square, text height */}
                 <button onClick={() => toggleItem(item.id)}
-                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors"
+                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors appearance-none p-0"
                   style={{ border: `1.5px solid ${item.completed ? TC : '#C4AEA8'}`, background: item.completed ? TC : 'transparent' }}>
                   {item.completed && <span className="text-white" style={{ fontSize: '8px', lineHeight: 1 }}>✓</span>}
                 </button>
@@ -295,7 +295,7 @@ const Shopping = () => {
             {completed.map((item, idx) => (
               <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5" style={{ background: CARD, borderBottom: idx < completed.length - 1 ? `1px solid #F1EDE7` : 'none' }}>
                 <button onClick={() => toggleItem(item.id)}
-                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                  className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 appearance-none p-0"
                   style={{ background: TC, border: `2px solid ${TC}` }}>
                   <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>
                 </button>
