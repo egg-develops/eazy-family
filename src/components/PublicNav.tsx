@@ -36,6 +36,8 @@ const LANGUAGES = [
   { code: "de",    flag: "🇩🇪", label: "Deutsch" },
   { code: "fr",    flag: "🇫🇷", label: "Français" },
   { code: "it",    flag: "🇮🇹", label: "Italiano" },
+  { code: "es",    flag: "🇪🇸", label: "Español" },
+  { code: "pt",    flag: "🇵🇹", label: "Português" },
 ];
 
 export function PublicNav() {
