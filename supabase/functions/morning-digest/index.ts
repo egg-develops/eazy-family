@@ -13,6 +13,7 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
+  const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
   const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
   const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
   const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
@@ -144,29 +145,51 @@ serve(async (req) => {
       }
     }
 
-    // ── Brevo email (when key is present) ────────────────────────────────
+    // ── Email (SendGrid preferred, Brevo fallback) ────────────────────────
     const emailEnabled = isTruthy(data?.["eazy-morning-digest-email"]);
-    if (emailEnabled && BREVO_API_KEY && profile.email) {
+    if (emailEnabled && profile.email) {
       const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
-      const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "api-key": BREVO_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sender: { name: "Eazy.Family", email: "digest@eazy.family" },
-          to: [{ email: profile.email, name: firstName }],
-          subject: `Good morning, ${firstName} ☀️ — Your family's day`,
-          htmlContent: html,
-        }),
-      });
-      if (brevoRes.ok) {
-        userSent = true;
-      } else {
-        const err = await brevoRes.text();
-        console.error(`Brevo error for ${profile.email}:`, err);
-        errors.push(`brevo: ${err}`);
+      const subject = `Good morning, ${firstName} ☀️ — Your family's day`;
+
+      if (SENDGRID_API_KEY) {
+        const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SENDGRID_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            personalizations: [{ to: [{ email: profile.email, name: firstName }] }],
+            from: { email: "hello@eazy.family", name: "Eazy.Family" },
+            subject,
+            content: [{ type: "text/html", value: html }],
+          }),
+        });
+        if (sgRes.ok || sgRes.status === 202) {
+          userSent = true;
+        } else {
+          const err = await sgRes.text();
+          console.error(`SendGrid error for ${profile.email}:`, err);
+          errors.push(`sendgrid: ${err}`);
+        }
+      } else if (BREVO_API_KEY) {
+        const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sender: { name: "Eazy.Family", email: "digest@eazy.family" },
+            to: [{ email: profile.email, name: firstName }],
+            subject,
+            htmlContent: html,
+          }),
+        });
+        if (brevoRes.ok) {
+          userSent = true;
+        } else {
+          const err = await brevoRes.text();
+          console.error(`Brevo error for ${profile.email}:`, err);
+          errors.push(`brevo: ${err}`);
+        }
       }
     }
 
