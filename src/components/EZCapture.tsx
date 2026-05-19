@@ -81,7 +81,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
-  const [rawDebug, setRawDebug] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -108,14 +107,31 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   }, [text]);
 
   const shouldRestartRef = useRef(false);
+  const consecutiveFailsRef = useRef(0);
+  // Track "intending to listen" separately from the hook's per-session state
+  // so the mic button stays visually active during the 300ms restart gap
+  const [intendingToListen, setIntendingToListen] = useState(false);
+
+  // Stop voice and clean up on unmount — prevents orphaned sessions from
+  // corrupting iOS audio state after the modal closes
+  useEffect(() => {
+    return () => {
+      shouldRestartRef.current = false;
+      speech.stop();
+    };
+  }, []);
 
   const stopListening = () => {
     shouldRestartRef.current = false;
+    consecutiveFailsRef.current = 0;
+    setIntendingToListen(false);
     speech.stop();
   };
 
   const startListening = () => {
     shouldRestartRef.current = true;
+    consecutiveFailsRef.current = 0;
+    setIntendingToListen(true);
     haptic('light');
 
     const run = () => {
@@ -124,6 +140,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         lang: getUserLocale(),
         continuous: false,           // single-shot — far more reliable on iOS WebView
         onResult: (transcript) => {
+          consecutiveFailsRef.current = 0;
           setText(prev => {
             const base = prev.trim();
             return base ? `${base} ${transcript}` : transcript;
@@ -132,17 +149,31 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         onError: (error) => {
           if (error === 'not-allowed') {
             shouldRestartRef.current = false;
+            setIntendingToListen(false);
             toast({ title: 'Microphone access denied', description: 'Allow microphone access in Settings.' });
-          } else if (error === 'not-supported') {
-            shouldRestartRef.current = false;
-            toast({ title: 'Voice input not supported in this browser' });
+            return;
           }
-          // other transient errors: just let onEnd restart
+          if (error === 'not-supported') {
+            shouldRestartRef.current = false;
+            setIntendingToListen(false);
+            toast({ title: 'Voice input not supported in this browser' });
+            return;
+          }
+          // Transient error — count failures; stop after 3 in a row
+          consecutiveFailsRef.current++;
+          if (consecutiveFailsRef.current >= 3) {
+            shouldRestartRef.current = false;
+            setIntendingToListen(false);
+            toast({ title: 'Voice unavailable', description: 'Tap the mic to try again.' });
+          }
         },
         onEnd: () => {
           if (shouldRestartRef.current) {
-            // brief gap lets iOS release the audio session before next capture
+            // Brief gap lets iOS release the audio session before next capture
+            // Keep intendingToListen=true so button stays visually active
             setTimeout(run, 300);
+          } else {
+            setIntendingToListen(false);
           }
         },
       });
@@ -152,9 +183,14 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   };
 
   const parseWithAI = async (): Promise<ParsedEntry | null> => {
+    const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 15000));
+    return Promise.race([parseWithAIInner(), timeout]);
+  };
+
+  const parseWithAIInner = async (): Promise<ParsedEntry | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setRawDebug('ERROR: no auth session'); return null; }
+      if (!session) return null;
 
       // Bug fix: use local date, not UTC
       const today = format(new Date(), 'yyyy-MM-dd');
@@ -174,10 +210,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         }),
       });
 
-      if (!response.ok || !response.body) {
-        setRawDebug(`ERROR: HTTP ${response.status}`);
-        return null;
-      }
+      if (!response.ok || !response.body) return null;
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -198,11 +231,9 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         }
       }
 
-      setRawDebug(fullContent || '(empty response)');
       const cleaned = fullContent.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
       return JSON.parse(cleaned) as ParsedEntry;
-    } catch (e) {
-      setRawDebug(`ERROR: ${e}`);
+    } catch {
       return null;
     }
   };
@@ -293,7 +324,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
       } else if (entryType === 'shopping') {
         if (!user || !session) return;
-        const items = parsed.title.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+        const items = parsed.title.split(/[,;]|\band\b/i).map(s => s.trim()).filter(Boolean);
         await Promise.all(items.map(item =>
           supabase.from('tasks').insert({ title: item, type: 'shopping', user_id: user.id, completed: false })
         ));
@@ -382,13 +413,13 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
                 />
                 {/* Mic button with pulse ring when active */}
                 <div className="absolute bottom-3 right-3 w-7 h-7">
-                  {isListening && (
+                  {(intendingToListen || isListening) && (
                     <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
                   )}
                   <button
-                    onClick={isListening ? stopListening : startListening}
+                    onClick={(intendingToListen || isListening) ? stopListening : startListening}
                     className="relative w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                    style={{ background: isListening ? '#D97B66' : '#964735' }}
+                    style={{ background: (intendingToListen || isListening) ? '#D97B66' : '#964735' }}
                   >
                     <Mic className="w-3.5 h-3.5 text-white" />
                   </button>
@@ -528,20 +559,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
                   )}
                 </div>
               </div>
-
-              {/* Debug panel — shows raw AI response to surface parsing failures */}
-              {rawDebug && (
-                <div className="mx-6 mb-4">
-                  <details>
-                    <summary className="text-xs cursor-pointer select-none" style={{ color: '#B5A09A' }}>
-                      🔍 Debug: AI response
-                    </summary>
-                    <pre className="mt-1 p-2 rounded-xl text-xs overflow-auto" style={{ maxHeight: '100px', background: '#F7F3ED', color: '#55433F', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                      {rawDebug}
-                    </pre>
-                  </details>
-                </div>
-              )}
 
               <div className="px-6 pb-6">
                 <button
