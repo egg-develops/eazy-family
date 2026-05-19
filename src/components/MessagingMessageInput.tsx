@@ -31,6 +31,13 @@ const MessagingMessageInput: React.FC<MessagingMessageInputProps> = ({
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+      if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+    };
+  }, []);
+
   const emojis = [
     '😀', '😂', '❤️', '👍', '🎉', '😍', '🔥', '💯',
     '😢', '😡', '😲', '😎', '🤔', '👏', '🙌', '🚀',

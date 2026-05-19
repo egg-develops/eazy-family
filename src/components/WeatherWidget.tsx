@@ -115,6 +115,10 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       (err) => {
         logError("Geolocation error:", err);
         setIsDetecting(false);
+        // err.code 1 = permission denied — show city search instead of silent fail
+        if (err.code === 1) {
+          toast.error("Location access denied. Search for your city below.");
+        }
       },
       { timeout: 10000, maximumAge: 300000 }
     );

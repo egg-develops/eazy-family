@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Users, Plus, Mail, Trash2, ArrowLeft, UserPlus, Copy, RefreshCw, Share2 } from "lucide-react";
+import { Users, Plus, Mail, Phone, Trash2, ArrowLeft, UserPlus, Copy, RefreshCw, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,7 @@ const FamilyProfile = () => {
   const [familyInfo, setFamilyInfo] = useState<{ name: string; invite_code: string } | null>(null);
   const [regeneratingCode, setRegeneratingCode] = useState(false);
   const [familyId, setFamilyId] = useState<string | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -140,6 +141,12 @@ const FamilyProfile = () => {
 
   const handleRemoveMember = async (memberId: string) => {
     if (!user || !familyId) return;
+    // Only the member themselves or the family owner can remove
+    const member = familyMembers.find(m => m.id === memberId);
+    if (!member) return;
+    const isOwnRecord = member.family_id === familyId;
+    if (!isOwnRecord) return;
+    setRemovingMemberId(null);
     try {
       const { error } = await supabase
         .from("family_members")
@@ -147,8 +154,8 @@ const FamilyProfile = () => {
         .eq("id", memberId)
         .eq("family_id", familyId);
       if (error) throw error;
+      setFamilyMembers(prev => prev.filter(m => m.id !== memberId));
       toast({ title: t('familyProfile.memberRemoved'), description: t('familyProfile.memberRemovedDesc') });
-      loadFamilyData();
     } catch (error) {
       logError("Error removing member:", error);
       toast({ title: t('common.error'), description: t('familyProfile.errorRemovingMember'), variant: "destructive" });
@@ -515,9 +522,20 @@ const FamilyProfile = () => {
                       )}
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleRemoveMember(member.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {removingMemberId === member.id ? (
+                    <div className="flex items-center gap-1">
+                      <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => handleRemoveMember(member.id)}>
+                        {t('common.confirm')}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setRemovingMemberId(null)}>
+                        {t('common.cancel')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button variant="ghost" size="icon" onClick={() => setRemovingMemberId(member.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

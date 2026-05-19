@@ -63,8 +63,9 @@ export const EazyAssistant = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const { i18n } = useTranslation();
+  const [aiQueryCount, setAIQueryCount] = useState(getAIQueryCount());
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;

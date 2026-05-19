@@ -183,14 +183,26 @@ const Messaging = () => {
     setSending(true);
     const text = content.trim() || null;
     setNewMessage("");
+    // Optimistic insert so message appears instantly without waiting for realtime
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimistic: FamilyMessage = {
+      id: optimisticId, family_id: familyId, sender_id: user!.id,
+      content: text, media_url: mediaUrl ?? null,
+      created_at: new Date().toISOString(),
+    };
+    setFamilyMessages(prev => [...prev, optimistic]);
     try {
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from("family_messages")
-        .insert({ family_id: familyId, sender_id: user!.id, content: text, media_url: mediaUrl ?? null });
+        .insert({ family_id: familyId, sender_id: user!.id, content: text, media_url: mediaUrl ?? null })
+        .select().single();
       if (error) throw error;
+      // Replace optimistic row with real row from DB
+      if (data) setFamilyMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
       haptic("success");
     } catch (err) {
       logError("sendFamilyMessage:", err);
+      setFamilyMessages(prev => prev.filter(m => m.id !== optimisticId));
       toast({ title: "Error", description: "Could not send message.", variant: "destructive" });
       if (!mediaUrl) setNewMessage(content);
     } finally { setSending(false); }

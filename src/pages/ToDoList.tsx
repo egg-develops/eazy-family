@@ -407,23 +407,21 @@ const ToDoList = () => {
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
   const tasksByTime = (view: string) => tasks.filter(t => {
-    if (t.type !== 'task' || !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-      if (t.type !== 'task') return false;
-      if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (view === 'today') {
-        if (t.completed) return false;
-        if (!t.due_date) return true; // no due date = treat as today
-        const d = new Date(t.due_date); d.setHours(0,0,0,0);
-        return d <= tomorrow;
-      }
-      if (view === 'upcoming') {
-        if (t.completed) return false;
-        if (!t.due_date) return false;
-        const d = new Date(t.due_date); d.setHours(0,0,0,0);
-        return d >= tomorrow;
-      }
-      if (view === 'complete') return t.completed;
+    if (t.type !== 'task') return false;
+    if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (view === 'today') {
+      if (t.completed) return false;
+      if (!t.due_date) return true;
+      const d = new Date(t.due_date); d.setHours(0,0,0,0);
+      return d <= tomorrow;
     }
+    if (view === 'upcoming') {
+      if (t.completed) return false;
+      if (!t.due_date) return false;
+      const d = new Date(t.due_date); d.setHours(0,0,0,0);
+      return d >= tomorrow;
+    }
+    if (view === 'complete') return t.completed;
     return false;
   });
 
