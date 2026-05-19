@@ -189,7 +189,7 @@ export const VoiceDemo = ({ language }: VoiceDemoProps) => {
         )}
         {isIdle && (
           <p style={{ fontSize: 12, color: T.faint, margin: 0, textAlign: 'center' }}>
-            Tap mic and speak naturally
+            EZ listens, parses, and routes it
           </p>
         )}
       </div>

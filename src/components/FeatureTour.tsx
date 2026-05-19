@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, ArrowRight, Sparkles, Calendar, ShoppingCart, MessageCircle, Mic } from "lucide-react";
+import { X, ArrowRight, ShoppingCart, MessageCircle, Sparkles } from "lucide-react";
 
 const TC = '#964735';
 const TL = '#D97B66';
@@ -8,6 +8,31 @@ const CARD = '#FFFFFF';
 const BORDER = '#DAC1BB';
 const INK = '#1C1C18';
 const MUTED = '#7A6660';
+
+const EZButtonIcon = () => (
+  <div style={{ position: 'relative', width: 80, height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    {/* Pulse rings */}
+    <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', border: `2px solid ${TC}`, opacity: 0, animation: 'ft-ring 2s ease-out infinite' }} />
+    <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', border: `2px solid ${TC}`, opacity: 0, animation: 'ft-ring 2s ease-out infinite 0.65s' }} />
+    <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', border: `2px solid ${TC}`, opacity: 0, animation: 'ft-ring 2s ease-out infinite 1.3s' }} />
+    {/* Button */}
+    <div style={{
+      width: 56, height: 56, borderRadius: '50%',
+      background: `radial-gradient(circle at 40% 35%, #E8956A, ${TC})`,
+      boxShadow: `0 6px 24px rgba(150,71,53,0.45)`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      position: 'relative', zIndex: 1,
+    }}>
+      <span style={{ color: '#fff', fontWeight: 800, fontSize: 18, letterSpacing: '-0.03em' }}>EZ</span>
+    </div>
+    <style>{`
+      @keyframes ft-ring {
+        0%   { transform: scale(1);   opacity: 0.7; }
+        100% { transform: scale(1.9); opacity: 0;   }
+      }
+    `}</style>
+  </div>
+);
 
 interface Slide {
   emoji?: string;
@@ -24,42 +49,35 @@ const SLIDES: Slide[] = [
     accentBg: '#FDF3EE',
     title: "Welcome to Eazy.Family",
     body: "Your family's private space — organized, connected, and always in sync.",
-    hint: "A quick 60-second look at the key features.",
+    hint: "A quick 60-second look at your key features.",
   },
   {
-    emoji: "✨",
+    icon: <EZButtonIcon />,
     accentBg: '#FDF3EE',
-    title: "The Orb — Your Command Center",
-    body: "The glowing button at the bottom is your Orb. Tap it to add anything by voice or text — events, tasks, shopping, reminders, journal entries.",
-    hint: "Try it: tap the Orb and say \"dentist on Monday at 3pm\".",
-  },
-  {
-    icon: <Calendar className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: '#FDF3EE',
-    title: "Shared Family Calendar",
-    body: "One calendar for the whole family. Add events yourself or sync Google Calendar and Outlook — events appear instantly on every family member's home screen.",
-    hint: "Connect your calendar in Settings → Calendar Sync.",
+    title: "EZ — Your Smart Assistant",
+    body: "EZ is the smart button that controls your app. Tap it once to add anything by voice or text — events, tasks, shopping, journal entries. Press and swipe up to access your menu. Long-press to move it anywhere on your screen.",
+    hint: "Try it: tap EZ and say \"Dentist on Monday at 3pm\" or \"add milk and eggs to our shopping list\".",
   },
   {
     icon: <ShoppingCart className="w-8 h-8" style={{ color: TC }} />,
     accentBg: '#FDF3EE',
     title: "Lists & Tasks",
     body: "Shared shopping lists, to-dos, and reminders — visible to everyone the moment you add them. Tick them off together in real time.",
-    hint: "Use the Orb mic to add whole shopping lists at once.",
+    hint: "Use EZ to add tasks and assign them.",
   },
   {
     icon: <MessageCircle className="w-8 h-8" style={{ color: TC }} />,
     accentBg: '#FDF3EE',
     title: "Family Channel",
     body: "A private group chat just for your family. Send text, voice notes, photos, and locations. Only your family can see it.",
-    hint: "Find it under the Family tab.",
+    hint: "Find it on your home screen.",
   },
   {
     icon: <Sparkles className="w-8 h-8" style={{ color: TC }} />,
     accentBg: '#FDF3EE',
-    title: "Eazy AI",
-    body: "Your home screen shows a smart daily digest — schedule conflicts, overdue tasks, shopping predictions. Ask Eazy anything in natural language.",
-    hint: "Works in English, German, French, and Italian.",
+    title: "Morning Digest",
+    body: "Get a daily or weekly summary of your family's schedule, tasks, and reminders — delivered in-app and by email. Eazy thinks ahead so you don't have to.",
+    hint: "Set your digest frequency in Settings.",
   },
 ];
 

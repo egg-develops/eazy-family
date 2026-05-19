@@ -775,7 +775,7 @@
     "cameraCaptureSoon": "Camera capture coming soon",
     "cameraCaptureSoonDesc": "AI will extract items from your photo.",
     "itemsRemoved": "item(s) removed",
-    "smartSuggestion": "Add items above, take a picture of your recipe list or Tap EZ Orbe to use voice — I'll add all the items.",
+    "smartSuggestion": "Add items above, take a picture of your recipe list or Tap EZ to use voice — I'll add all the items.",
     "categories": {
       "Produce": "Produce",
       "Dairy": "Dairy",
@@ -920,13 +920,13 @@
       "eyebrow": "Available on Web · iOS & Android coming soon",
       "headline": "Imagine all your family's calendars, tasks, and lists — running on your voice.",
       "sub": "Eazy.Family syncs every detail of your day-to-day into one elegant App — powered by one surprisingly smart button.",
-      "meetOrbe": "Meet the Orbe →",
+      "meetOrbe": "Meet EZ →",
       "downloadApp": "Download the app",
       "check1": "Secure & Private",
       "check2": "Your data is never sold",
       "check3": "Works across all devices",
       "availableIn": "Available in",
-      "orbeLabel": "The Orbe"
+      "orbeLabel": "EZ Button"
     },
     "pain": {
       "eyebrow": "Sound familiar?",
@@ -946,7 +946,7 @@
       "eyebrow": "One button. Everything.",
       "headline": "You're done navigating menus and screens!",
       "headlineSub": "It's one button from now on.",
-      "sub": "Press the Orbe. Your whole family's day opens up — schedules, tasks, shopping. Add anything by voice. Let Eazy handle the rest.",
+      "sub": "Press EZ. Your whole family's day opens up — schedules, tasks, shopping. Add anything by voice. Let Eazy handle the rest.",
       "calendarTitle": "Calendar",
       "calendarDesc": "Every family member. Every platform. Always in sync.",
       "tasksTitle": "Tasks",
@@ -955,13 +955,13 @@
       "shoppingDesc": "One list for everyone. Updated by voice. Organised by category, smarter every week.",
       "ritualsTitle": "Rituals",
       "ritualsDesc": "Daily habits and family routines, tracked with a simple check-in.",
-      "quote": "\"The Orbe doesn't just organise your family. It thinks ahead.\""
+      "quote": "\"EZ Button doesn't just organise your family. It thinks ahead.\""
     },
     "intelligence": {
       "eyebrow": "Family Intelligence",
       "headline": "Most apps wait for you to tell them what to do.",
       "headlineSub": "Eazy doesn't.",
-      "sub": "Behind every press of the Orbe, Eazy is quietly working — learning your family's patterns, solving problems before they happen, and thinking ahead so you don't have to.",
+      "sub": "Behind every press of EZ Button, Eazy is quietly working — learning your family's patterns, solving problems before they happen, and thinking ahead so you don't have to.",
       "card1Title": "Conflict Detection",
       "card1Problem": "Child pickup at 3pm. Dentist at 3pm. Different calendars, nobody noticed.",
       "card1Solution": "Eazy catches it before it's too late. Lets you know and saves your week.",
@@ -1006,7 +1006,7 @@
       "step2Title": "Connect your calendars",
       "step2Desc": "Google, Outlook, Apple — connect whatever each person uses. Eazy pulls every calendar into one shared family view. No switching. No double entry.",
       "step3Number": "03",
-      "step3Title": "Press the Orbe",
+      "step3Title": "Press EZ",
       "step3Desc": "Add anything by voice or text — events, tasks, shopping items, journal. Eazy routes it to the right place. Your family sees it instantly.",
       "downloadTitle": "Download Eazy.",
       "platformSub": "Available on Web · iOS & Android coming soon · English, German, French, Italian",
@@ -1029,7 +1029,7 @@
         "Unlimited family members",
         "Unlimited calendars across Google, Apple, and Outlook",
         "Unlimited private and shared lists for Shopping and Tasks",
-        "Full voice AI — Orbe, your family's own assistant",
+        "Full voice AI — EZ Button, your family's own assistant",
         "Full intelligence layer — conflict detection, shopping frequency, task escalation",
         "Rituals & Journal — your private space for reflection and pattern recognition",
         "Morning Digest — daily agenda planning: in app & email",
@@ -1075,7 +1075,7 @@
       "longP1Strong": "too many apps, too many channels, too much noise.",
       "longP1Rest": "The family group chat gets buried. Calendars don't sync. Someone misses the school pickup. The shopping list lives in three different places.",
       "longP2": "We wanted one place — private, secure, genuinely simple — that brings it all together. And we wanted it to be smart enough to think ahead, so the people using it could think about something else for a change.",
-      "longP3Strong": "Eazy.Family is built around one smart button: the Orbe.",
+      "longP3Strong": "Eazy.Family is built around one smart button: EZ Button.",
       "longP3Rest": "Everything your family needs, managed by your voice. There when you need it, with one tap, out of your way when you don't.",
       "longP4": "Eazy is shaped by the families who use it every day. If that sounds like something you'd want to be part of, join us — you'll help make it better for your family and many others.",
       "ctaEyebrow": "Join Eazy.Family",
@@ -1089,7 +1089,7 @@
       "headline": "The family group chat is not a plan. And",
       "headlineEm": "synced calendars",
       "headlineSub": "won't solve it.",
-      "sub": "Eazy.Family is a voice-first family hub built around one button — the Orbe. Every calendar synced. Every task shared. Every list updated by voice. And every morning, a digest that thinks ahead so you don't have to.",
+      "sub": "Eazy.Family is a voice-first family hub built around one button — EZ Button. Every calendar synced. Every task shared. Every list updated by voice. And every morning, a digest that thinks ahead so you don't have to.",
       "emailPlaceholder": "Your email address",
       "joinBtn": "Join the waitlist →",
       "joiningBtn": "Joining…",
@@ -1113,8 +1113,8 @@
       "contact": "Contact"
     },
     "orbeIntro": {
-      "title": "Meet EZ Orbe",
-      "body": "EZ Orbe brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.",
+      "title": "Meet EZ",
+      "body": "EZ Button brings every feature that manages the day-to-day of your family life — calendar, events, and every to-do — into one button, and your voice manages it all.",
       "tip1": "Tap to open EZ Capture",
       "tip2": "Long press + drag to reposition",
       "tip3": "Swipe up to open the full menu"
@@ -1148,7 +1148,7 @@
       },
       "capture": {
         "title": "EZ Capture",
-        "desc": "Add anything to your family life with voice or text — EZ Orbe routes it to the right place."
+        "desc": "Add anything to your family life with voice or text — EZ Button routes it to the right place."
       }
     },
     "contact": {
@@ -1159,7 +1159,7 @@
     "faqs": [
       {
         "q": "How do I add an event to the calendar?",
-        "a": "Tap the EZ Orbe button at the bottom of the screen and say or type your event — e.g. \"Dentist appointment next Tuesday at 3pm\". EZ Orbe will parse the details and add it to your calendar automatically."
+        "a": "Tap the EZ Button button at the bottom of the screen and say or type your event — e.g. \"Dentist appointment next Tuesday at 3pm\". EZ Button will parse the details and add it to your calendar automatically."
       },
       {
         "q": "Can multiple family members use the same account?",
@@ -1171,7 +1171,7 @@
       },
       {
         "q": "How does voice input work?",
-        "a": "Tap the EZ Orbe button and speak naturally. EZ Orbe understands relative dates (\"tomorrow\", \"next Friday\"), times, and locations in English, German, French, and Italian."
+        "a": "Tap the EZ Button button and speak naturally. EZ Button understands relative dates (\"tomorrow\", \"next Friday\"), times, and locations in English, German, French, and Italian."
       },
       {
         "q": "Why isn't voice input working?",

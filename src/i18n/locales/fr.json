@@ -775,7 +775,7 @@
     "cameraCaptureSoon": "Capture photo bientôt disponible",
     "cameraCaptureSoonDesc": "L'IA extraira les articles de votre photo.",
     "itemsRemoved": "article(s) supprimé(s)",
-    "smartSuggestion": "Ajoutez des articles ci-dessus, photographiez votre liste de recettes ou appuyez sur EZ Orbe pour utiliser la voix — j'ajouterai tous les articles.",
+    "smartSuggestion": "Ajoutez des articles ci-dessus, photographiez votre liste de recettes ou appuyez sur EZ Button pour utiliser la voix — j'ajouterai tous les articles.",
     "categories": {
       "Produce": "Fruits & Légumes",
       "Dairy": "Produits laitiers",
@@ -920,13 +920,13 @@
       "eyebrow": "Disponible sur le web · iOS & Android bientôt",
       "headline": "Imaginez tous les calendriers, tâches et listes de votre famille — tous pilotés par votre voix.",
       "sub": "Eazy.Family synchronise chaque détail de votre quotidien dans une App élégante — portée par un bouton étonnamment intelligent.",
-      "meetOrbe": "Découvrir l'Orbe →",
+      "meetOrbe": "Découvrir EZ Button →",
       "downloadApp": "Télécharger l'app",
       "check1": "Sécurisé & Privé",
       "check2": "Vos données ne sont jamais vendues",
       "check3": "Fonctionne sur tous les appareils",
       "availableIn": "Disponible en",
-      "orbeLabel": "L'Orbe"
+      "orbeLabel": "EZ Button"
     },
     "pain": {
       "eyebrow": "Ça vous parle ?",
@@ -946,7 +946,7 @@
       "eyebrow": "Un bouton. Tout.",
       "headline": "Fini de naviguer dans les menus et les écrans !",
       "headlineSub": "Désormais, c'est un seul bouton.",
-      "sub": "Appuyez sur l'Orbe. Toute la journée de votre famille s'ouvre — plannings, tâches, courses. Ajoutez n'importe quoi par la voix. Laissez Eazy s'occuper du reste.",
+      "sub": "Appuyez sur EZ Button. Toute la journée de votre famille s'ouvre — plannings, tâches, courses. Ajoutez n'importe quoi par la voix. Laissez Eazy s'occuper du reste.",
       "calendarTitle": "Agenda",
       "calendarDesc": "Chaque membre de la famille. Chaque plateforme. Toujours synchronisé.",
       "tasksTitle": "Tâches",
@@ -955,13 +955,13 @@
       "shoppingDesc": "Une liste pour tout le monde. Mise à jour par la voix. Organisée par catégorie, plus intelligente chaque semaine.",
       "ritualsTitle": "Rituels",
       "ritualsDesc": "Habitudes quotidiennes et routines familiales, suivies avec un simple pointage.",
-      "quote": "\"L'Orbe n'organise pas seulement votre famille. Il anticipe.\""
+      "quote": "\"EZ Button n'organise pas seulement votre famille. Il anticipe.\""
     },
     "intelligence": {
       "eyebrow": "Intelligence familiale",
       "headline": "La plupart des apps attendent que vous leur disiez quoi faire.",
       "headlineSub": "Pas Eazy.",
-      "sub": "Derrière chaque pression sur l'Orbe, Eazy travaille en silence — apprend les habitudes de votre famille, résout les problèmes avant qu'ils surviennent et anticipe pour vous.",
+      "sub": "Derrière chaque pression sur EZ Button, Eazy travaille en silence — apprend les habitudes de votre famille, résout les problèmes avant qu'ils surviennent et anticipe pour vous.",
       "card1Title": "Détection de conflits",
       "card1Problem": "Récupération enfant à 15h. Dentiste à 15h. Des agendas différents, personne n'a remarqué.",
       "card1Solution": "Eazy le détecte avant qu'il soit trop tard. Vous prévient et sauve votre semaine.",
@@ -1006,7 +1006,7 @@
       "step2Title": "Connectez vos agendas",
       "step2Desc": "Google, Outlook, Apple — connectez ce que chaque personne utilise. Eazy regroupe chaque agenda dans une vue familiale partagée. Sans changement. Sans double saisie.",
       "step3Number": "03",
-      "step3Title": "Appuyez sur l'Orbe",
+      "step3Title": "Appuyez sur EZ Button",
       "step3Desc": "Ajoutez n'importe quoi par la voix ou le texte — événements, tâches, articles de courses, journal. Eazy l'achemine au bon endroit. Votre famille le voit instantanément.",
       "downloadTitle": "Téléchargez Eazy.",
       "platformSub": "Disponible sur le web · iOS & Android bientôt · Anglais, Allemand, Français, Italien",
@@ -1029,7 +1029,7 @@
         "Membres de la famille illimités",
         "Agendas illimités avec Google, Apple et Outlook",
         "Listes privées et partagées illimitées pour les courses et les tâches",
-        "IA vocale complète — Orbe, l'assistant de votre famille",
+        "IA vocale complète — EZ Button, l'assistant de votre famille",
         "Couche d'intelligence complète — détection de conflits, fréquence des courses, escalade des tâches",
         "Rituels & Journal — votre espace privé pour la réflexion et la reconnaissance de schémas",
         "Digest du matin — planification quotidienne : dans l'app & par e-mail",
@@ -1075,7 +1075,7 @@
       "longP1Strong": "trop d'applications, trop de canaux, trop de bruit.",
       "longP1Rest": "Le groupe familial se noie. Les agendas ne se synchronisent pas. Quelqu'un rate la récupération scolaire. La liste de courses existe en trois endroits différents.",
       "longP2": "Nous voulions un seul endroit — privé, sécurisé, vraiment simple — qui regroupe tout. Et suffisamment intelligent pour anticiper, pour que les utilisateurs puissent penser à autre chose.",
-      "longP3Strong": "Eazy.Family est construit autour d'un bouton intelligent : l'Orbe.",
+      "longP3Strong": "Eazy.Family est construit autour d'un bouton intelligent : EZ Button.",
       "longP3Rest": "Tout ce dont votre famille a besoin, piloté par la voix. Là quand vous en avez besoin, d'un simple tap, discret quand vous n'en avez pas besoin.",
       "longP4": "Eazy est façonné par les familles qui l'utilisent chaque jour. Si cela vous parle, rejoignez-nous — vous contribuerez à l'améliorer pour votre famille et pour beaucoup d'autres.",
       "ctaEyebrow": "Rejoindre Eazy.Family",
@@ -1089,7 +1089,7 @@
       "headline": "Le groupe WhatsApp familial n'est pas un plan. Et",
       "headlineEm": "les agendas synchronisés",
       "headlineSub": "ne règlent pas le problème.",
-      "sub": "Eazy.Family est un hub familial à commande vocale construit autour d'un bouton — l'Orbe. Chaque agenda synchronisé. Chaque tâche partagée. Chaque liste mise à jour par la voix. Et chaque matin, un digest qui anticipe pour vous.",
+      "sub": "Eazy.Family est un hub familial à commande vocale construit autour d'un bouton — EZ Button. Chaque agenda synchronisé. Chaque tâche partagée. Chaque liste mise à jour par la voix. Et chaque matin, un digest qui anticipe pour vous.",
       "emailPlaceholder": "Votre adresse e-mail",
       "joinBtn": "Rejoindre la liste d'attente →",
       "joiningBtn": "Inscription…",
@@ -1113,8 +1113,8 @@
       "contact": "Contact"
     },
     "orbeIntro": {
-      "title": "Rencontre EZ Orbe",
-      "body": "EZ Orbe regroupe toutes les fonctionnalités du quotidien familial — calendrier, événements et tâches — dans un seul bouton, commandé par ta voix.",
+      "title": "Rencontre EZ Button",
+      "body": "EZ Button regroupe toutes les fonctionnalités du quotidien familial — calendrier, événements et tâches — dans un seul bouton, commandé par ta voix.",
       "tip1": "Appuie pour ouvrir EZ Capture",
       "tip2": "Appui long + glisser pour repositionner",
       "tip3": "Glisser vers le haut pour le menu complet"
@@ -1148,7 +1148,7 @@
       },
       "capture": {
         "title": "EZ Capture",
-        "desc": "Ajouter tout à ta vie de famille par voix ou texte — EZ Orbe le dirige au bon endroit."
+        "desc": "Ajouter tout à ta vie de famille par voix ou texte — EZ Button le dirige au bon endroit."
       }
     },
     "contact": {
@@ -1159,7 +1159,7 @@
     "faqs": [
       {
         "q": "Comment ajouter un événement au calendrier ?",
-        "a": "Appuie sur le bouton EZ Orbe en bas de l'écran et dis ou tape ton événement — par ex. \"Dentiste mardi prochain à 15h\". EZ Orbe analysera les détails et l'ajoutera automatiquement à ton calendrier."
+        "a": "Appuie sur le bouton EZ Button en bas de l'écran et dis ou tape ton événement — par ex. \"Dentiste mardi prochain à 15h\". EZ Button analysera les détails et l'ajoutera automatiquement à ton calendrier."
       },
       {
         "q": "Plusieurs membres de la famille peuvent-ils utiliser le même compte ?",
@@ -1171,7 +1171,7 @@
       },
       {
         "q": "Comment fonctionne la saisie vocale ?",
-        "a": "Appuie sur le bouton EZ Orbe et parle naturellement. EZ Orbe comprend les dates relatives (\"demain\", \"vendredi prochain\"), les heures et les lieux en anglais, allemand, français et italien."
+        "a": "Appuie sur le bouton EZ Button et parle naturellement. EZ Button comprend les dates relatives (\"demain\", \"vendredi prochain\"), les heures et les lieux en anglais, allemand, français et italien."
       },
       {
         "q": "Pourquoi la saisie vocale ne fonctionne-t-elle pas ?",

@@ -28,14 +28,14 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
     },
 
     {
-      target: '[data-tutorial="orb"]',
-      placement: 'top',
+      target: 'body',
+      placement: 'center',
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontWeight: 700, marginBottom: 8 }}>The Orb ✨</p>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>EZ Button ✨</p>
           <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
-            This is your family command center. <strong>Tap to add anything</strong> by voice or text:
+            The glowing button on your screen is EZ — your family command center. <strong>Tap to add anything</strong> by voice or text:
           </p>
           <ul style={{ paddingLeft: 16, lineHeight: 1.8, fontSize: '0.9rem', opacity: 0.85 }}>
             <li>Events &amp; reminders</li>
@@ -44,15 +44,15 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
             <li>Journal entries</li>
           </ul>
           <p style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
-            Long-press the Orb to open the navigation menu.
+            Press EZ and swipe up to open the menu. Long-press to move it anywhere on your screen.
           </p>
         </div>
       ),
     },
 
     {
-      target: '[data-tutorial="home-greeting"]',
-      placement: 'bottom',
+      target: 'body',
+      placement: 'center',
       disableBeacon: true,
       content: (
         <div>
@@ -64,21 +64,21 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
             <li>Today's events and upcoming schedule</li>
             <li>Top tasks and overdue reminders</li>
             <li>Smart AI suggestions from Eazy</li>
-            <li>Family channel messages</li>
+            <li>Family Channel messages</li>
           </ul>
         </div>
       ),
     },
 
     {
-      target: '[data-tutorial="home-tasks"]',
-      placement: 'top',
+      target: 'body',
+      placement: 'center',
       disableBeacon: true,
       content: (
         <div>
           <p style={{ fontWeight: 700, marginBottom: 8 }}>Tasks &amp; Shopping 🛒</p>
           <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
-            Your top tasks are here on the home screen. Use the Orb or go to the <strong>To-Do's</strong> or <strong>Shopping</strong> tabs for full lists.
+            Your top tasks are here on the home screen. Use EZ or go to the <strong>To-Do's</strong> or <strong>Shopping</strong> tabs for full lists.
           </p>
           <p style={{ fontSize: '0.9rem', opacity: 0.75 }}>
             Shared lists update in real time across your whole family.

@@ -775,7 +775,7 @@
     "cameraCaptureSoon": "Kamera-Aufnahme demnächst verfügbar",
     "cameraCaptureSoonDesc": "KI wird Artikel aus Ihrem Foto extrahieren.",
     "itemsRemoved": "Eintrag/Einträge entfernt",
-    "smartSuggestion": "Fügen Sie oben Einträge hinzu, fotografieren Sie Ihre Rezeptliste oder tippen Sie auf EZ Orbe für die Spracheingabe — ich füge alle Einträge hinzu.",
+    "smartSuggestion": "Fügen Sie oben Einträge hinzu, fotografieren Sie Ihre Rezeptliste oder tippen Sie auf EZ Button für die Spracheingabe — ich füge alle Einträge hinzu.",
     "categories": {
       "Produce": "Obst & Gemüse",
       "Dairy": "Milchprodukte",
@@ -920,13 +920,13 @@
       "eyebrow": "Im Web verfügbar · iOS & Android demnächst",
       "headline": "Stell dir vor: alle Kalender, Aufgaben und Listen deiner Familie — alles gesteuert von deiner Stimme.",
       "sub": "Eazy.Family vereint jeden Detail deines Alltags in einer eleganten App — angetrieben von einem überraschend smarten Button.",
-      "meetOrbe": "Lern den Orbe kennen →",
+      "meetOrbe": "Lern EZ Button kennen →",
       "downloadApp": "App herunterladen",
       "check1": "Sicher & Privat",
       "check2": "Deine Daten werden nie verkauft",
       "check3": "Funktioniert auf allen Geräten",
       "availableIn": "Verfügbar in",
-      "orbeLabel": "Der Orbe"
+      "orbeLabel": "Der EZ Button"
     },
     "pain": {
       "eyebrow": "Kommt dir das bekannt vor?",
@@ -946,7 +946,7 @@
       "eyebrow": "Ein Button. Alles.",
       "headline": "Schluss mit dem Navigieren durch Menüs und Bildschirme!",
       "headlineSub": "Ab jetzt ist es nur noch ein Button.",
-      "sub": "Drück den Orbe. Der ganze Tag deiner Familie öffnet sich — Termine, Aufgaben, Einkäufe. Füge alles per Sprache hinzu. Lass Eazy den Rest erledigen.",
+      "sub": "Drück EZ Button. Der ganze Tag deiner Familie öffnet sich — Termine, Aufgaben, Einkäufe. Füge alles per Sprache hinzu. Lass Eazy den Rest erledigen.",
       "calendarTitle": "Kalender",
       "calendarDesc": "Jedes Familienmitglied. Jede Plattform. Immer synchron.",
       "tasksTitle": "Aufgaben",
@@ -955,13 +955,13 @@
       "shoppingDesc": "Eine Liste für alle. Per Sprache aktualisiert. Nach Kategorie geordnet, jede Woche intelligenter.",
       "ritualsTitle": "Rituale",
       "ritualsDesc": "Tägliche Gewohnheiten und Familienroutinen, mit einem einfachen Check-in verfolgt.",
-      "quote": "\"Der Orbe organisiert deine Familie nicht nur. Er denkt voraus.\""
+      "quote": "\"Der EZ Button organisiert deine Familie nicht nur. Er denkt voraus.\""
     },
     "intelligence": {
       "eyebrow": "Familien-Intelligenz",
       "headline": "Die meisten Apps warten darauf, dass du ihnen sagst, was zu tun ist.",
       "headlineSub": "Eazy nicht.",
-      "sub": "Hinter jedem Druck auf den Orbe arbeitet Eazy leise — lernt die Muster deiner Familie, löst Probleme bevor sie entstehen, und denkt voraus, damit du es nicht musst.",
+      "sub": "Hinter jedem Druck auf EZ Button arbeitet Eazy leise — lernt die Muster deiner Familie, löst Probleme bevor sie entstehen, und denkt voraus, damit du es nicht musst.",
       "card1Title": "Konfliktvorbeugung",
       "card1Problem": "Kinderabholung um 15 Uhr. Zahnarzt um 15 Uhr. Verschiedene Kalender, niemand hat es bemerkt.",
       "card1Solution": "Eazy erkennt es, bevor es zu spät ist. Gibt dir Bescheid und rettet deine Woche.",
@@ -1006,7 +1006,7 @@
       "step2Title": "Verbinde deine Kalender",
       "step2Desc": "Google, Outlook, Apple — verbinde, was jede Person nutzt. Eazy zieht jeden Kalender in eine gemeinsame Familienansicht. Kein Wechseln. Keine Doppeleingabe.",
       "step3Number": "03",
-      "step3Title": "Drück den Orbe",
+      "step3Title": "Drück EZ Button",
       "step3Desc": "Füge alles per Sprache oder Text hinzu — Ereignisse, Aufgaben, Einkaufsartikel, Tagebuch. Eazy leitet es an die richtige Stelle weiter. Deine Familie sieht es sofort.",
       "downloadTitle": "Eazy herunterladen.",
       "platformSub": "Im Web verfügbar · iOS & Android demnächst · Englisch, Deutsch, Französisch, Italienisch",
@@ -1029,7 +1029,7 @@
         "Unbegrenzte Familienmitglieder",
         "Unbegrenzte Kalender mit Google, Apple und Outlook",
         "Unbegrenzte private und gemeinsame Listen für Einkauf und Aufgaben",
-        "Vollständige Sprach-KI — Orbe, der eigene Assistent deiner Familie",
+        "Vollständige Sprach-KI — EZ Button, der eigene Assistent deiner Familie",
         "Vollständige Intelligenzschicht — Konflikterkennung, Einkaufshäufigkeit, Aufgaben-Eskalation",
         "Rituale & Tagebuch — dein privater Raum für Reflexion und Mustererkennung",
         "Morgen-Digest — tägliche Tagesplanung: in der App & per E-Mail",
@@ -1075,7 +1075,7 @@
       "longP1Strong": "zu viele Apps, zu viele Kanäle, zu viel Lärm.",
       "longP1Rest": "Der Familien-Gruppenchat geht unter. Kalender synchronisieren nicht. Jemand verpasst die Schulabholung. Die Einkaufsliste lebt an drei verschiedenen Orten.",
       "longP2": "Wir wollten einen Ort — privat, sicher, wirklich einfach — der alles zusammenbringt. Und wir wollten, dass er smart genug ist, voraus zu denken, damit die Menschen, die ihn benutzen, mal an etwas anderes denken können.",
-      "longP3Strong": "Eazy.Family ist um einen smarten Button aufgebaut: den Orbe.",
+      "longP3Strong": "Eazy.Family ist um einen smarten Button aufgebaut: EZ Button.",
       "longP3Rest": "Alles, was deine Familie braucht, per Stimme gesteuert. Immer da, wenn du es brauchst — mit einem Tippen — und aus dem Weg, wenn nicht.",
       "longP4": "Eazy wird von den Familien geprägt, die es täglich nutzen. Wenn das nach etwas klingt, woran du teilhaben möchtest, schliess dich uns an — du wirst dazu beitragen, es für deine Familie und viele andere besser zu machen.",
       "ctaEyebrow": "Eazy.Family beitreten",
@@ -1089,7 +1089,7 @@
       "headline": "Der Familien-Gruppenchat ist kein Plan. Und",
       "headlineEm": "synchronisierte Kalender",
       "headlineSub": "lösen das Problem nicht.",
-      "sub": "Eazy.Family ist ein sprachgesteuerter Familien-Hub rund um einen Button — den Orbe. Jeder Kalender synchronisiert. Jede Aufgabe geteilt. Jede Liste per Sprache aktualisiert. Und jeden Morgen ein Digest, der vorausdenkt, damit du es nicht musst.",
+      "sub": "Eazy.Family ist ein sprachgesteuerter Familien-Hub rund um einen Button — EZ Button. Jeder Kalender synchronisiert. Jede Aufgabe geteilt. Jede Liste per Sprache aktualisiert. Und jeden Morgen ein Digest, der vorausdenkt, damit du es nicht musst.",
       "emailPlaceholder": "Deine E-Mail-Adresse",
       "joinBtn": "Zur Warteliste →",
       "joiningBtn": "Wird eingetragen…",
@@ -1113,8 +1113,8 @@
       "contact": "Kontakt"
     },
     "orbeIntro": {
-      "title": "Triff EZ Orbe",
-      "body": "EZ Orbe bündelt alle Funktionen für den Familienalltag — Kalender, Termine und To-dos — in einem einzigen Button, und deine Stimme steuert alles.",
+      "title": "Triff EZ Button",
+      "body": "EZ Button bündelt alle Funktionen für den Familienalltag — Kalender, Termine und To-dos — in einem einzigen Button, und deine Stimme steuert alles.",
       "tip1": "Tippen zum Öffnen von EZ Capture",
       "tip2": "Lang drücken + ziehen zum Verschieben",
       "tip3": "Nach oben wischen für das vollständige Menü"
@@ -1148,7 +1148,7 @@
       },
       "capture": {
         "title": "EZ Capture",
-        "desc": "Alles mit Stimme oder Text zum Familienleben hinzufügen — EZ Orbe leitet es an die richtige Stelle."
+        "desc": "Alles mit Stimme oder Text zum Familienleben hinzufügen — EZ Button leitet es an die richtige Stelle."
       }
     },
     "contact": {
@@ -1159,7 +1159,7 @@
     "faqs": [
       {
         "q": "Wie füge ich einen Termin in den Kalender ein?",
-        "a": "Tippe unten auf den EZ Orbe-Button und sage oder schreibe deinen Termin – z.B. \"Zahnarzttermin nächsten Dienstag um 15 Uhr\". EZ Orbe analysiert die Details und fügt sie automatisch in deinen Kalender ein."
+        "a": "Tippe unten auf den EZ Button-Button und sage oder schreibe deinen Termin – z.B. \"Zahnarzttermin nächsten Dienstag um 15 Uhr\". EZ Button analysiert die Details und fügt sie automatisch in deinen Kalender ein."
       },
       {
         "q": "Können mehrere Familienmitglieder das gleiche Konto nutzen?",
@@ -1171,7 +1171,7 @@
       },
       {
         "q": "Wie funktioniert die Spracheingabe?",
-        "a": "Tippe auf den EZ Orbe-Button und sprich ganz natürlich. EZ Orbe versteht relative Daten (\"morgen\", \"nächsten Freitag\"), Uhrzeiten und Orte auf Englisch, Deutsch, Französisch und Italienisch."
+        "a": "Tippe auf den EZ Button-Button und sprich ganz natürlich. EZ Button versteht relative Daten (\"morgen\", \"nächsten Freitag\"), Uhrzeiten und Orte auf Englisch, Deutsch, Französisch und Italienisch."
       },
       {
         "q": "Warum funktioniert die Spracheingabe nicht?",
