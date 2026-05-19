@@ -524,18 +524,38 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
                 </div>
 
                 <div className="space-y-2">
+                  {/* Editable title */}
                   <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Title</p>
-                    <p className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{parsed.title}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#B5A09A' }}>Title</p>
+                    <input
+                      type="text"
+                      value={parsed.title}
+                      onChange={e => setParsed(p => p ? { ...p, title: e.target.value } : p)}
+                      className="w-full bg-transparent outline-none font-semibold text-sm"
+                      style={{ color: '#1C1C18' }}
+                    />
                   </div>
 
-                  {(parsed.date || parsed.time) && (
+                  {/* Editable date + time — always shown for event/reminder, shown when parsed for others */}
+                  {(activeType === 'event' || activeType === 'reminder' || parsed.date || parsed.time) && (
                     <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>When</p>
-                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>
-                        {formatPreviewDate(parsed.date, parsed.time)}
-                        {parsed.endTime && ` → ${formatPreviewDate(parsed.date, parsed.endTime)?.split('·')[1]?.trim() ?? parsed.endTime}`}
-                      </p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>When</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={parsed.date ?? ''}
+                          onChange={e => setParsed(p => p ? { ...p, date: e.target.value || null } : p)}
+                          className="flex-1 bg-white rounded-xl px-3 py-2 text-sm outline-none border"
+                          style={{ color: '#1C1C18', borderColor: '#DAC1BB' }}
+                        />
+                        <input
+                          type="time"
+                          value={parsed.time ?? ''}
+                          onChange={e => setParsed(p => p ? { ...p, time: e.target.value || null } : p)}
+                          className="flex-1 bg-white rounded-xl px-3 py-2 text-sm outline-none border"
+                          style={{ color: '#1C1C18', borderColor: '#DAC1BB' }}
+                        />
+                      </div>
                     </div>
                   )}
 
