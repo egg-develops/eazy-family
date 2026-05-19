@@ -558,15 +558,21 @@ const Settings = () => {
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Features & FAQs"
+            title="FAQs"
             right={<Arrow />}
-            onClick={() => navigate('/app/help')}
+            onClick={() => window.open('https://www.eazy.family/app/help#faqs', '_blank')}
+          />
+          <Row
+            icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
+            title="Features"
+            right={<Arrow />}
+            onClick={() => window.open('https://www.eazy.family/app/help#features', '_blank')}
           />
           <Row
             icon={<ExternalLink className="w-4 h-4" style={{ color: MUTED }} />}
             title="Contact"
             right={<Arrow />}
-            onClick={() => { window.open('mailto:hello@eazy.family', '_blank'); }}
+            onClick={() => window.open('https://www.eazy.family/app/help#contact', '_blank')}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}

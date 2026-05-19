@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import {
   Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
-  Image, Play, ChevronLeft, Settings2, Send,
+  Image, Play, ChevronLeft, Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -715,13 +715,7 @@ const FamilyAgenda = () => {
             <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
           </button>
           <p className="font-bold text-xl" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
-          <button
-            className="w-9 h-9 flex items-center justify-center rounded-full"
-            style={{ flexShrink: 0 }}
-            onClick={() => navigate('/app/settings')}
-          >
-            <Settings2 className="w-5 h-5" style={{ color: MUTED }} />
-          </button>
+          <div className="w-9 h-9 flex-shrink-0" />
         </div>
       </div>
 
