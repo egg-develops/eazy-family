@@ -204,7 +204,21 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       // Bug fix: use local date, not UTC
       const today = format(new Date(), 'yyyy-MM-dd');
       const dayOfWeek = format(new Date(), 'EEEE');
-      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation. JSON fields: type ("event"|"task"|"shopping"|"reminder"|"ritual"|"journal"), title (string, clean and concise), date ("YYYY-MM-DD" or null), time ("HH:MM" 24h or null), endTime ("HH:MM" 24h or null), location (string or null), assignees (array of first names or null), reminder (human-readable string like "1 week before" or null), notes (string or null), mood (string or null, only for journal). Today is ${today} (${dayOfWeek}). Resolve relative dates like "tomorrow", "next Monday", "in 2 weeks" from this date. Return ONLY the raw JSON object.`;
+      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
+
+JSON fields:
+- type: "event"|"task"|"shopping"|"reminder"|"ritual"|"journal"
+- title: ONLY the subject/topic — never include date, time, location, or command words. "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short.
+- date: "YYYY-MM-DD" or null. Resolve relative dates from today.
+- time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30".
+- endTime: "HH:MM" 24h or null
+- location: string or null
+- assignees: array of first names or null
+- reminder: human-readable string like "1 week before" or null
+- notes: string or null
+- mood: string or null (journal only)
+
+Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
@@ -259,17 +273,22 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       if (result.type) setType(result.type);
       setParsed({ ...result, title: cleanCaptureTitle(result.title) });
     } else {
-      // Fallback: chrono-node extracts date/time from raw text
-      const chronoParsed = chrono.parse(text.trim(), new Date())[0];
+      // Fallback: chrono-node extracts date/time; strip the matched date text from the title
+      const raw = text.trim();
+      const chronoParsed = chrono.parse(raw, new Date())[0];
       const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
       const fallbackHour = chronoParsed?.start.get('hour');
       const fallbackMin = chronoParsed?.start.get('minute') ?? 0;
       const fallbackTime = fallbackHour != null
         ? `${String(fallbackHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
+      // Remove the date/time substring chrono matched so it doesn't end up in the title
+      const withoutDate = chronoParsed
+        ? (raw.slice(0, chronoParsed.index) + raw.slice(chronoParsed.index + chronoParsed.text.length)).trim()
+        : raw;
       setParsed({
         type,
-        title: cleanCaptureTitle(text.trim()),
+        title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
         date: fallbackDate, time: fallbackTime, endTime: null,
         location: null, assignees: null, reminder: null,
         notes: null, mood: null,
