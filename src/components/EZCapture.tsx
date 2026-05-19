@@ -40,11 +40,13 @@ const TYPES: { id: CaptureType; label: string; icon: string }[] = [
 ];
 
 const LOCALE_TO_LANG: Record<string, string> = {
-  en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT',
+  en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT',
   'en-US': 'en-US', 'en-GB': 'en-GB',
   'de-DE': 'de-DE', 'de-CH': 'de-DE', 'de-AT': 'de-DE',
   'fr-FR': 'fr-FR', 'fr-CH': 'fr-FR', 'fr-BE': 'fr-FR',
   'it-IT': 'it-IT', 'it-CH': 'it-IT',
+  'es-ES': 'es-ES', 'es-MX': 'es-MX', 'es-US': 'es-US',
+  'pt-PT': 'pt-PT', 'pt-BR': 'pt-BR',
 };
 
 const AI_MESSAGES: Record<CaptureType, (name: string) => string> = {

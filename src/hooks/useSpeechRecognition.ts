@@ -12,11 +12,13 @@ export const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isListeningRef = useRef(false);
+  const sessionIdRef = useRef(0);
   const baseTextRef = useRef('');
   const capturedRef = useRef('');
 
   const stop = () => {
     isListeningRef.current = false;
+    sessionIdRef.current++;        // invalidate any in-flight onend/onerror
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     baseTextRef.current = '';
@@ -31,10 +33,18 @@ export const useSpeechRecognition = () => {
       return;
     }
 
+    // Tear down any existing session before starting a new one
+    isListeningRef.current = false;
+    sessionIdRef.current++;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+
     isListeningRef.current = true;
     baseTextRef.current = '';
     capturedRef.current = '';
     setIsListening(true);
+
+    const sessionId = sessionIdRef.current;
 
     const spawnSession = (): any => {
       const r = new SR();
@@ -44,6 +54,7 @@ export const useSpeechRecognition = () => {
       r.maxAlternatives = 1;
 
       r.onresult = (e: any) => {
+        if (sessionIdRef.current !== sessionId) return;
         let sessionText = '';
         for (let i = 0; i < e.results.length; i++) {
           sessionText += e.results[i][0].transcript;
@@ -57,6 +68,7 @@ export const useSpeechRecognition = () => {
       };
 
       r.onerror = (e: any) => {
+        if (sessionIdRef.current !== sessionId) return;
         if (e.error === 'aborted' || e.error === 'no-speech') return;
         isListeningRef.current = false;
         setIsListening(false);
@@ -64,6 +76,7 @@ export const useSpeechRecognition = () => {
       };
 
       r.onend = () => {
+        if (sessionIdRef.current !== sessionId) return; // stale session — bail
         if (!isListeningRef.current) {
           setIsListening(false);
           opts.onEnd?.();

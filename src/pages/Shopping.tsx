@@ -27,7 +27,7 @@ const cleanShoppingText = (text: string): string =>
 
 const parseShoppingItems = (text: string): string[] =>
   text
-    .split(/,|;|\band\b|\balso\b/i)
+    .split(/,|;|&|\band\b|\balso\b|\bund\b|\bet\b|\be\b/i)
     .map(s => cleanShoppingText(s).trim())
     .filter(s => s.length > 1);
 
