@@ -64,6 +64,15 @@ const getUserLocale = (): string => {
   return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
 };
 
+const cleanCaptureTitle = (raw: string): string =>
+  raw
+    .replace(/^(please\s+)?(add|create|schedule|set\s+up|put|book|make|remind\s+me\s+to?)\s+/i, '')
+    .replace(/\s+(on|to|in)\s+(the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
+    .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
+    .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
+    .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
+    .trim();
+
 const getUserFirstName = (): string => {
   try {
     const s = localStorage.getItem('eazy-family-onboarding');
@@ -248,7 +257,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
     if (result && result.title) {
       if (result.type) setType(result.type);
-      setParsed(result);
+      setParsed({ ...result, title: cleanCaptureTitle(result.title) });
     } else {
       // Fallback: chrono-node extracts date/time from raw text
       const chronoParsed = chrono.parse(text.trim(), new Date())[0];
@@ -260,7 +269,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         : null;
       setParsed({
         type,
-        title: text.trim(),
+        title: cleanCaptureTitle(text.trim()),
         date: fallbackDate, time: fallbackTime, endTime: null,
         location: null, assignees: null, reminder: null,
         notes: null, mood: null,
