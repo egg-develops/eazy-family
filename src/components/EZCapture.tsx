@@ -282,14 +282,25 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       const fallbackTime = fallbackHour != null
         ? `${String(fallbackHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
-      // Remove the date/time substring chrono matched so it doesn't end up in the title
+      // Remove the date/time substring chrono matched so it doesn't end up in the title.
+      // Also strip orphaned time words (e.g. "pm" left after chrono pulls "at 4 o'clock").
       const withoutDate = chronoParsed
-        ? (raw.slice(0, chronoParsed.index) + raw.slice(chronoParsed.index + chronoParsed.text.length)).trim()
+        ? (raw.slice(0, chronoParsed.index) + raw.slice(chronoParsed.index + chronoParsed.text.length))
+            .replace(/\b(am|pm|a\.m\.|p\.m\.|o'?clock)\b/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim()
         : raw;
+
+      // chrono misreads "X o'clock pm" as AM — fix up if original text had pm/p.m.
+      const hasPM = /\b(pm|p\.m\.)\b/i.test(raw);
+      const correctedHour = fallbackHour != null && hasPM && fallbackHour < 12 ? fallbackHour + 12 : fallbackHour;
+      const correctedTime = correctedHour != null
+        ? `${String(correctedHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
+        : null;
       setParsed({
         type,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
-        date: fallbackDate, time: fallbackTime, endTime: null,
+        date: fallbackDate, time: correctedTime, endTime: null,
         location: null, assignees: null, reminder: null,
         notes: null, mood: null,
       });
