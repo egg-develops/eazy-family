@@ -174,6 +174,7 @@ export default function Index() {
               {[
                 { flag: "🇺🇸", label: "EN" }, { flag: "🇬🇧", label: "EN-GB" },
                 { flag: "🇩🇪", label: "DE" }, { flag: "🇫🇷", label: "FR" }, { flag: "🇮🇹", label: "IT" },
+                { flag: "🇪🇸", label: "ES" }, { flag: "🇵🇹", label: "PT" },
               ].map(({ flag, label }) => (
                 <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: T.inkV, background: T.sMid, border: `0.5px solid ${T.outline}`, borderRadius: "9999px", padding: "3px 8px" }}>
                   <span style={{ fontSize: 13, lineHeight: 1 }}>{flag}</span>
