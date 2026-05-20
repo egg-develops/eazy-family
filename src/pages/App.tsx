@@ -643,7 +643,7 @@ const AppHome = () => {
             const raw = record.startDate;
             startDate = raw instanceof Date ? raw : typeof raw === "string" ? new Date(raw) : null;
           } else if (record.type === "reminder") {
-            const raw = record.dueDate;
+            const raw = record.dueDate ?? record.startDate;
             startDate = raw instanceof Date ? raw : typeof raw === "string" ? new Date(raw) : null;
           }
 

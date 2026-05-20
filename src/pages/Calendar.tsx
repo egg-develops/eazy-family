@@ -193,6 +193,7 @@ const Calendar = () => {
   const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showAllAgenda, setShowAllAgenda] = useState(false);
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleSwipeStart = (e: React.TouchEvent) => {
@@ -1444,38 +1445,63 @@ const Calendar = () => {
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
-            <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>VIEW ALL</button>
+            {allItems.filter(i => i.type === 'event').length > 5 && (
+              <button onClick={() => setShowAllAgenda(p => !p)} className="text-xs font-semibold" style={{ color: '#964735' }}>
+                {showAllAgenda ? 'SHOW LESS' : 'VIEW ALL'}
+              </button>
+            )}
           </div>
-          <div
-            className="flex gap-3 overflow-x-auto pb-2"
-            style={{ scrollbarWidth: 'none', touchAction: 'pan-x' }}
-            onTouchStart={e => e.stopPropagation()}
-            onTouchMove={e => e.stopPropagation()}
-            onTouchEnd={e => e.stopPropagation()}
-          >
-            {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
-              const ev = item as Event;
-              const initials = ev.title.slice(0, 1).toUpperCase();
-              return (
-                <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+          {showAllAgenda ? (
+            <div className="space-y-2">
+              {allItems.filter(i => i.type === 'event').map((item) => {
+                const ev = item as Event;
+                const initials = ev.title.slice(0, 1).toUpperCase();
+                return (
+                  <div key={ev.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
                       style={{ background: ev.color || '#964735' }}>
                       {initials}
                     </div>
-                    <span className="text-xs font-medium truncate" style={{ color: '#7A6660' }}>{ev.title.split(' ')[0]}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: '#1C1C18' }}>{ev.title}</p>
+                      <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'EEE MMM d · hh:mm aa')}</p>
+                    </div>
                   </div>
-                  <p className="text-sm font-semibold leading-tight" style={{ color: '#1C1C18' }}>{ev.title}</p>
-                  <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
+                );
+              })}
+            </div>
+          ) : (
+            <div
+              className="flex gap-3 overflow-x-auto pb-2"
+              style={{ scrollbarWidth: 'none', touchAction: 'pan-x' }}
+              onTouchStart={e => e.stopPropagation()}
+              onTouchMove={e => e.stopPropagation()}
+              onTouchEnd={e => e.stopPropagation()}
+            >
+              {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
+                const ev = item as Event;
+                const initials = ev.title.slice(0, 1).toUpperCase();
+                return (
+                  <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                        style={{ background: ev.color || '#964735' }}>
+                        {initials}
+                      </div>
+                      <span className="text-xs font-medium truncate" style={{ color: '#7A6660' }}>{ev.title.split(' ')[0]}</span>
+                    </div>
+                    <p className="text-sm font-semibold leading-tight" style={{ color: '#1C1C18' }}>{ev.title}</p>
+                    <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
+                  </div>
+                );
+              })}
+              {allItems.filter(i => i.type === 'event').length === 0 && (
+                <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: '#F7F3ED', border: '1px dashed #DAC1BB' }}>
+                  <p className="text-xs text-center" style={{ color: '#B5A09A' }}>No events yet</p>
                 </div>
-              );
-            })}
-            {allItems.filter(i => i.type === 'event').length === 0 && (
-              <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: '#F7F3ED', border: '1px dashed #DAC1BB' }}>
-                <p className="text-xs text-center" style={{ color: '#B5A09A' }}>No events yet</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

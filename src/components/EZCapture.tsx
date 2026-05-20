@@ -35,7 +35,6 @@ const TYPES: { id: CaptureType; label: string; icon: string }[] = [
   { id: 'task',     label: 'Task',     icon: '✓'  },
   { id: 'shopping', label: 'Shopping', icon: '🛒' },
   { id: 'reminder', label: 'Reminder', icon: '🔔' },
-  { id: 'ritual',   label: 'Ritual',   icon: '✨' },
   { id: 'journal',  label: 'Journal',  icon: '📝' },
 ];
 
@@ -119,7 +118,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (/\b(buy|get|pick up|need|grab)\b/.test(lower) || /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b/.test(lower)) { setType('shopping'); return; }
     if (/\b(remind|don't forget|remember)\b/.test(lower)) { setType('reminder'); return; }
     if (/\b(feel|journal|today i|grateful|reflection|dear diary)\b/.test(lower)) { setType('journal'); return; }
-    if (/\b(ritual|morning|evening|routine|meditat|exercise|habit)\b/.test(lower)) { setType('ritual'); return; }
     if (/\b(task|todo|to-do|finish|complete)\b/.test(lower)) { setType('task'); return; }
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
@@ -215,7 +213,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
 JSON fields:
 - type: "event"|"task"|"shopping"|"reminder"|"ritual"|"journal"
-- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals. Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short.
+- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals. Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short. For type "shopping", ALWAYS separate each item with a comma — even if the input has no commas. Example: "oatmeal bananas raisins" → "oatmeal, bananas, raisins".
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
 - time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null
@@ -362,9 +360,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           title: parsed.title,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
+          ...(entryType === 'reminder' ? { dueDate: startDate.toISOString() } : {}),
           allDay: !parsed.time,
-          type: 'event',
-          color: '#D97B66',
+          type: entryType,
+          color: entryType === 'reminder' ? '#6E8FE5' : '#D97B66',
           location: parsed.location || undefined,
           notes: parsed.notes || undefined,
         };
@@ -389,7 +388,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
       } else if (entryType === 'shopping') {
         if (!user || !session) return;
-        const items = parsed.title.split(/[,;]|\band\b/i).map(s => s.trim()).filter(Boolean);
+        const items = parsed.title.split(/[,;\n]|\band\b/i).map(s => s.trim()).filter(Boolean);
         await Promise.all(items.map(item =>
           supabase.from('tasks').insert({ title: item, type: 'shopping', user_id: user.id, completed: false })
         ));

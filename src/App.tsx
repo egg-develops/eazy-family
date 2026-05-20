@@ -20,6 +20,7 @@ import Onboarding from "./pages/Onboarding";
 import Splash from "./pages/Splash";
 import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
+import ToDoList from "./pages/ToDoList";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
@@ -33,7 +34,6 @@ const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>)
   lazy(() => fn().catch(() => fn()));
 
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
-const ToDoList = lazyWithRetry(() => import("./pages/ToDoList"));
 const Shopping = lazyWithRetry(() => import("./pages/Shopping"));
 const Rituals = lazyWithRetry(() => import("./pages/Rituals"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
@@ -83,7 +83,7 @@ const App = () => (
               <Route path="/app" element={<ProtectedRoute><ErrorBoundary><AppLayout /></ErrorBoundary></ProtectedRoute>}>
                 <Route path="calendar" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Calendar /></Suspense></ErrorBoundary>} />
                 <Route path="calendar/outlook-callback" element={<ProtectedRoute><OutlookCallback /></ProtectedRoute>} />
-                <Route path="todos" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><ToDoList /></Suspense></ErrorBoundary>} />
+                <Route path="todos" element={<ErrorBoundary><ToDoList /></ErrorBoundary>} />
                 <Route path="settings" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></ErrorBoundary>} />
                 <Route path="family" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense></ErrorBoundary>} />
                 <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
