@@ -2,6 +2,9 @@ import { useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 
+// Module-level cache — permission granted status persists for the app session
+let nativePermissionGranted = false;
+
 export type SpeechRecognitionOptions = {
   lang?: string;
   onResult: (transcript: string, isFinal: boolean) => void;
@@ -40,20 +43,28 @@ export const useSpeechRecognition = () => {
   };
 
   const startNative = async (opts: SpeechRecognitionOptions) => {
-    try {
-      const { speechRecognition } = await SpeechRecognition.requestPermissions();
-      if (speechRecognition !== 'granted') {
-        opts.onError?.('not-allowed');
-        return;
-      }
-      const { available } = await SpeechRecognition.available();
-      if (!available) {
+    if (!nativePermissionGranted) {
+      try {
+        const { speechRecognition: current } = await SpeechRecognition.checkPermissions();
+        if (current === 'granted') {
+          nativePermissionGranted = true;
+        } else {
+          const { speechRecognition } = await SpeechRecognition.requestPermissions();
+          if (speechRecognition !== 'granted') {
+            opts.onError?.('not-allowed');
+            return;
+          }
+          nativePermissionGranted = true;
+        }
+        const { available } = await SpeechRecognition.available();
+        if (!available) {
+          opts.onError?.('not-supported');
+          return;
+        }
+      } catch {
         opts.onError?.('not-supported');
         return;
       }
-    } catch {
-      opts.onError?.('not-supported');
-      return;
     }
 
     if (!nativeActiveRef.current) return; // stopped before permissions resolved
