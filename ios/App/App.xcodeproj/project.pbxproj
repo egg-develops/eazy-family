@@ -11,6 +11,7 @@
 		05D8C5562FB85BD1009DE013 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 05D8C5552FB85BD1009DE013 /* SwiftUI.framework */; };
 		05D8C5632FB85BD4009DE013 /* EazyFamilyWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 05D8C5512FB85BD1009DE013 /* EazyFamilyWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		05D8C5762FB8A0EB009DE013 /* WidgetBridgePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05D8C5752FB8A0EA009DE013 /* WidgetBridgePlugin.swift */; };
+		A689ABA8210646819237F113 /* SpeechRecognitionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -52,6 +53,7 @@
 		05D8C5722FB89ECE009DE013 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		05D8C5732FB89F9B009DE013 /* EazyFamilyWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EazyFamilyWidgetExtension.entitlements; sourceTree = "<group>"; };
 		05D8C5752FB8A0EA009DE013 /* WidgetBridgePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetBridgePlugin.swift; sourceTree = "<group>"; };
+		C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionPlugin.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -133,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				05D8C5752FB8A0EA009DE013 /* WidgetBridgePlugin.swift */,
+				C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */,
 				05D8C5722FB89ECE009DE013 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -271,6 +274,7 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				05D8C5762FB8A0EB009DE013 /* WidgetBridgePlugin.swift in Sources */,
+				A689ABA8210646819237F113 /* SpeechRecognitionPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

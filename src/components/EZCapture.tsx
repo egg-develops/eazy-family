@@ -89,6 +89,13 @@ const getUserFirstName = (): string => {
 
 export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [text, setText] = useState('');
+  const setTextTracked = (val: string | ((prev: string) => string)) => {
+    setText(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      latestTextRef.current = next;
+      return next;
+    });
+  };
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
@@ -119,9 +126,11 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
   const shouldRestartRef = useRef(false);
   const consecutiveFailsRef = useRef(0);
-  // Track "intending to listen" separately from the hook's per-session state
-  // so the mic button stays visually active during the 300ms restart gap
   const [intendingToListen, setIntendingToListen] = useState(false);
+  // Tracks text present at the start of a speech session so partial results
+  // can be displayed with replace semantics (each partial is the full session transcript)
+  const sessionBaseRef = useRef('');
+  const latestTextRef = useRef('');
 
   // Stop voice and clean up on unmount — prevents orphaned sessions from
   // corrupting iOS audio state after the modal closes
@@ -147,15 +156,14 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
     const run = () => {
       if (!shouldRestartRef.current) return;
+      // Snapshot current text so replace-semantics can layer the session transcript on top
+      sessionBaseRef.current = latestTextRef.current.trim();
       speech.start({
         lang: getUserLocale(),
-        continuous: false,           // single-shot — far more reliable on iOS WebView
         onResult: (transcript) => {
           consecutiveFailsRef.current = 0;
-          setText(prev => {
-            const base = prev.trim();
-            return base ? `${base} ${transcript}` : transcript;
-          });
+          const base = sessionBaseRef.current;
+          setTextTracked(base ? `${base} ${transcript}` : transcript);
         },
         onError: (error) => {
           if (error === 'not-allowed') {
@@ -170,7 +178,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
             toast({ title: 'Voice input not supported in this browser' });
             return;
           }
-          // Transient error — count failures; stop after 3 in a row
           consecutiveFailsRef.current++;
           if (consecutiveFailsRef.current >= 3) {
             shouldRestartRef.current = false;
@@ -180,8 +187,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         },
         onEnd: () => {
           if (shouldRestartRef.current) {
-            // Brief gap lets iOS release the audio session before next capture
-            // Keep intendingToListen=true so button stays visually active
             setTimeout(run, 300);
           } else {
             setIntendingToListen(false);
@@ -458,7 +463,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 <textarea
                   ref={textareaRef}
                   value={text}
-                  onChange={e => setText(e.target.value)}
+                  onChange={e => setTextTracked(e.target.value)}
                   placeholder="Speak or type anything — event, task, note, reminder…"
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
