@@ -77,22 +77,16 @@ export default function About() {
       {/* ── Story ── */}
       <section style={sec}>
         <div style={max}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint, marginBottom: 32 }}>
-            {t('website.about.longerVersionLabel')}
-          </div>
-          <div style={{ maxWidth: 640, display: "flex", flexDirection: "column", gap: 20 }}>
-            <p style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8, margin: 0 }}>
-              {t('website.about.longP1')} <strong style={{ fontWeight: 700 }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}
-            </p>
-            <p style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8, margin: 0 }}>
-              {t('website.about.longP2')}
-            </p>
-            <p style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8, margin: 0 }}>
-              <strong style={{ fontWeight: 700 }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}
-            </p>
-            <p style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8, margin: 0 }}>
-              {t('website.about.longP4')}
-            </p>
+          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 48, alignItems: "start" }} className="story-2col">
+            <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint, position: "sticky", top: 80 }}>
+              {t('website.about.longerVersionLabel')}
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8 }}>
+              <p>{t('website.about.longP1')} <strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}</p>
+              <p style={{ marginTop: 16 }}>{t('website.about.longP2')}</p>
+              <p style={{ marginTop: 16 }}><strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}</p>
+              <p style={{ marginTop: 16 }}>{t('website.about.longP4')}</p>
+            </div>
           </div>
         </div>
       </section>
@@ -115,6 +109,7 @@ export default function About() {
       <style>{`
         @media (max-width: 768px) {
           .about-2col { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .story-2col { grid-template-columns: 1fr !important; gap: 32px !important; }
         }
       `}</style>
     </div>
