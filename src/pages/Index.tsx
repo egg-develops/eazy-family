@@ -117,6 +117,90 @@ const CtaDark = ({ onStart, eyebrow, headline, headlineEm, sub, button }: { onSt
   </div>
 );
 
+const FAQS = [
+  {
+    q: "Does Eazy.Family offer a free trial?",
+    a: "Yes — you get a 14-day free trial with full access to all features.",
+  },
+  {
+    q: "What devices does it work on?",
+    a: "iOS (iPhone & iPad), Android, and any web browser. Download from the App Store, Google Play, or use it at eazy.family.",
+  },
+  {
+    q: "Does it sync with Google, Apple, or Outlook calendars?",
+    a: "Yes. Connect your existing calendars and see everything in one view without switching apps.",
+  },
+  {
+    q: "How do I invite my family?",
+    a: "After signing up, go to the Family section and share an invite link. Family members get their own login and see the shared space instantly.",
+  },
+  {
+    q: "Can I use it without creating an account?",
+    a: "Yes — you can explore the app as a guest and create an account when you're ready to sync across devices or invite your family.",
+  },
+  {
+    q: "Is our family data private?",
+    a: "Your data is stored securely and never shared or sold. Only your invited family members can see your shared content.",
+  },
+  {
+    q: "What languages is it available in?",
+    a: "English, German, French, Italian, Spanish, and Portuguese.",
+  },
+  {
+    q: "Can I use voice input?",
+    a: 'Yes. Say things like "Add milk to the shopping list" or "Dentist Thursday at 3pm" — Eazy handles the rest.',
+  },
+];
+
+const FaqSection = () => {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <section style={{ padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` }} id="faq">
+      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+        <Eyebrow>FAQ</Eyebrow>
+        <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 40, color: T.ink }}>
+          Common questions
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {FAQS.map((faq, i) => (
+            <div
+              key={i}
+              style={{ borderTop: `0.5px solid ${T.outline}`, ...(i === FAQS.length - 1 ? { borderBottom: `0.5px solid ${T.outline}` } : {}) }}
+            >
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                style={{
+                  width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "20px 0", background: "none", border: "none", cursor: "pointer",
+                  fontFamily: dm, fontSize: 15, fontWeight: 500, color: T.ink, textAlign: "left", gap: 16,
+                  WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                <span>{faq.q}</span>
+                <span style={{
+                  width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+                  background: open === i ? T.primary : T.sMid,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.2s ease",
+                }}>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: open === i ? "rotate(45deg)" : "none", transition: "transform 0.2s ease" }}>
+                    <path d="M5 1v8M1 5h8" stroke={open === i ? "#fff" : T.inkV} strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </span>
+              </button>
+              {open === i && (
+                <p style={{ fontSize: 14, fontWeight: 300, color: T.inkV, lineHeight: 1.7, margin: "0 0 20px", paddingRight: 40 }}>
+                  {faq.a}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export default function Index() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -400,6 +484,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* ── FAQ ── */}
+      <FaqSection />
 
       {/* ── Footer CTA ── */}
       <CtaDark

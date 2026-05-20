@@ -90,17 +90,22 @@ export function PublicNav() {
   ];
 
   return (
+    <>
+    <div style={{ height: 64, flexShrink: 0 }} />
     <nav style={{
       background: BG,
       backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
       borderBottom: `0.5px solid ${OUTLINE}`,
       padding: "0 40px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
       height: "64px",
-      position: "sticky",
+      position: "fixed",
       top: 0,
+      left: 0,
+      right: 0,
       zIndex: 200,
     }}>
       {/* Logo */}
@@ -318,5 +323,6 @@ export function PublicNav() {
         }
       `}</style>
     </nav>
+    </>
   );
 }

@@ -78,13 +78,13 @@ export default function About() {
       <section style={sec}>
         <div style={max}>
           <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 48, alignItems: "start" }} className="story-2col">
-            <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint, position: "sticky", top: 80 }}>
+            <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>
               {t('website.about.longerVersionLabel')}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 300, color: T.inkV, lineHeight: 1.8 }}>
-              <p>{t('website.about.longP1')} <strong style={{ fontWeight: 500, color: T.ink }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}</p>
+            <div style={{ fontSize: 16, fontWeight: 400, color: T.ink, lineHeight: 1.8 }}>
+              <p>{t('website.about.longP1')} <strong style={{ fontWeight: 600, color: T.ink }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}</p>
               <p style={{ marginTop: 16 }}>{t('website.about.longP2')}</p>
-              <p style={{ marginTop: 16 }}><strong style={{ fontWeight: 500, color: T.ink }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}</p>
+              <p style={{ marginTop: 16 }}><strong style={{ fontWeight: 600, color: T.ink }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}</p>
               <p style={{ marginTop: 16 }}>{t('website.about.longP4')}</p>
             </div>
           </div>
@@ -93,11 +93,11 @@ export default function About() {
 
       {/* ── CTA ── */}
       <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>{t('website.about.ctaEyebrow')}</div>
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(253,249,243,0.5)" }}>{t('website.about.ctaEyebrow')}</div>
         <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
           {t('website.about.ctaHeadline')} <em style={{ fontStyle: "italic", color: T.primaryL }}>{t('website.about.ctaHeadlineEm')}</em>
         </h2>
-        <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>{t('website.about.ctaSub')}</p>
+        <p style={{ fontSize: 14, color: "rgba(253,249,243,0.6)", fontWeight: 300, margin: 0 }}>{t('website.about.ctaSub')}</p>
         <button
           onClick={() => navigate("/onboarding")}
           style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}

@@ -653,13 +653,13 @@ const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () =
   </div>
 );
 
-// ── SCREEN 8 — Paywall ────────────────────────────────────────────────────────
+// ── SCREEN 8 — Features overview ──────────────────────────────────────────────
 const FEATURES = [
-  'Every calendar synced — Google, Apple, Outlook',
-  'Shared tasks, shopping lists, and voice input',
-  'Morning Digest — daily briefing for your family',
-  'Smart conflict detection and suggestions',
-  'One free month for every family you refer',
+  { emoji: '🗓', text: 'Every calendar synced — Google, Apple, Outlook' },
+  { emoji: '🛒', text: 'Shared tasks, shopping lists, and voice input' },
+  { emoji: '🌅', text: 'Morning Digest — daily briefing for your family' },
+  { emoji: '⚡', text: 'Instant conflict detection and smart suggestions' },
+  { emoji: '👨‍👩‍👧', text: 'Invite your whole family — always in sync' },
 ];
 
 const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => (
@@ -667,69 +667,36 @@ const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () =
     <div style={{ textAlign: 'center' }}>
       <OrbeMorphic size={80} />
       <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginTop: 16, marginBottom: 8, lineHeight: 1.2 }}>
-        Try Eazy free for 14 days.
+        Everything your family needs.
       </h2>
       <p style={{ fontSize: 14, color: T.faint, margin: 0, lineHeight: 1.5 }}>
-        Everything included. Cancel before day 15<br />and you won't be charged.
+        14-day free trial · Full access · Cancel anytime
       </p>
-    </div>
-
-    {/* Pricing card */}
-    <div style={{
-      border: `2px solid ${T.primary}`,
-      borderRadius: 20, padding: '20px 24px',
-      background: T.card,
-      boxShadow: `0 4px 24px ${T.primaryS}`,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: T.ink }}>Family Plan</span>
-        <span style={{ fontSize: 12, color: T.faint, background: T.primaryS, padding: '3px 8px', borderRadius: 99, fontWeight: 500 }}>14 days free</span>
-      </div>
-      <p style={{ margin: '0 0 2px', fontSize: 28, fontWeight: 700, color: T.primary }}>
-        $3.75<span style={{ fontSize: 14, fontWeight: 400, color: T.faint }}>/month</span>
-      </p>
-      <p style={{ margin: 0, fontSize: 12, color: T.faint }}>Billed annually at $44.99 · or $4.99 month-to-month</p>
     </div>
 
     {/* Feature list */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {FEATURES.map(f => (
-        <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <div style={{
-            width: 20, height: 20, borderRadius: '50%', flexShrink: 0, marginTop: 1,
-            background: T.secondaryS,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-              <path d="M1 4L3.5 6.5L9 1" stroke={T.secondary} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span style={{ fontSize: 13, color: T.inkV, lineHeight: 1.45 }}>{f}</span>
+        <div key={f.text} style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          background: T.card, borderRadius: 16, padding: '14px 16px',
+          border: `1px solid ${T.outline}`,
+        }}>
+          <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{f.emoji}</span>
+          <span style={{ fontSize: 14, color: T.inkV, lineHeight: 1.4 }}>{f.text}</span>
         </div>
       ))}
     </div>
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <PrimaryBtn label="Start my free trial →" onClick={next} />
-      <button
-        onClick={onRestore}
-        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
+      <PrimaryBtn label="Get started →" onClick={next} />
+      <a
+        href="/auth"
+        style={{ textAlign: 'center', fontSize: 13, color: T.faint, padding: '4px 0', textDecoration: 'none', fontFamily: SANS }}
       >
-        Restore purchase
-      </button>
+        Already have an account? <span style={{ color: T.primary, fontWeight: 500 }}>Sign in</span>
+      </a>
     </div>
-
-    {/* Trust signals */}
-    <div style={{ display: 'flex', justifyContent: 'center', gap: 20, flexWrap: 'wrap' }}>
-      {['🔒 Cancel anytime', '✓ No charge for 14 days', '🍎 Secure via Apple'].map(t => (
-        <span key={t} style={{ fontSize: 11, color: T.faint }}>{t}</span>
-      ))}
-    </div>
-
-    {/* Legal */}
-    <p style={{ fontSize: 10, color: T.faint, textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
-      Subscription renews automatically. Cancel anytime in App Store Settings → Subscriptions. Payment charged to your Apple ID account upon confirmation of purchase.
-    </p>
   </div>
 );
 
