@@ -674,7 +674,7 @@ const PaywallScreen = ({ next, back }: { next: () => void; back: () => void }) =
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <PrimaryBtn label="Start my free trial →" onClick={next} />
       <button
-        onClick={() => {/* TODO: RevenueCat restorePurchases() */}}
+        onClick={next}
         style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
       >
         Restore purchase
@@ -745,7 +745,10 @@ const AccountScreen = ({
 
         {/* Apple sign in */}
         <button
-          onClick={async () => { await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } }); }}
+          onClick={async () => {
+            const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
+            if (error) setAuthError('Apple sign-in is not available yet. Please use email/password.');
+          }}
           style={{
             width: '100%', padding: '14px 24px', borderRadius: 9999,
             background: '#000', border: 'none', color: '#fff',
@@ -759,7 +762,10 @@ const AccountScreen = ({
 
         {/* Google sign in */}
         <button
-          onClick={async () => { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } }); }}
+          onClick={async () => {
+            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+            if (error) setAuthError('Google sign-in is not available yet. Please use email/password.');
+          }}
           style={{
             width: '100%', padding: '14px 24px', borderRadius: 9999,
             background: T.card, border: `1.5px solid ${T.outline}`, color: T.ink,
@@ -781,13 +787,32 @@ const AccountScreen = ({
 };
 
 // ── SCREEN 10 — Location + Invite ─────────────────────────────────────────────
-const LOCATIONS = ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne', 'London', 'New York', 'Sydney'];
+const LOCATIONS = ['Switzerland', 'United States', 'Germany', 'Italy', 'France', 'Brazil', 'Portugal', 'Spain', 'Other'];
 
 const LocationInviteScreen = ({
   location, setLocation, onFinish,
 }: {
   location: string; setLocation: (v: string) => void; onFinish: () => void;
-}) => (
+}) => {
+  const [inviteInput, setInviteInput] = useState('');
+  const [inviteSent, setInviteSent] = useState(false);
+  const [showOther, setShowOther] = useState(false);
+
+  const handleSend = () => {
+    if (!inviteInput.trim()) return;
+    const inviteUrl = 'https://eazy.family/onboarding';
+    const message = `Hey! I'm using Eazy Family to keep our family organised. Join me here: ${inviteUrl}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Join me on Eazy Family', text: message, url: inviteUrl }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(message).catch(() => {});
+    }
+    setInviteSent(true);
+    setInviteInput('');
+    setTimeout(() => setInviteSent(false), 3000);
+  };
+
+  return (
   <div style={{ padding: '28px 24px 52px', display: 'flex', flexDirection: 'column', gap: 28 }}>
     {/* Two Orbe circles = invite visual */}
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: -16, paddingTop: 8 }}>
@@ -810,26 +835,52 @@ const LocationInviteScreen = ({
 
     {/* Location */}
     <div>
-      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Your city (optional)</p>
+      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Your country (optional)</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {LOCATIONS.map(loc => (
-          <button
-            key={loc}
-            onClick={() => setLocation(loc === location ? '' : loc)}
-            style={{
-              padding: '8px 16px', borderRadius: 9999, fontSize: 13, cursor: 'pointer', fontFamily: SANS,
-              border: `1.5px solid ${location === loc ? T.primary : T.outline}`,
-              background: location === loc ? T.primaryS : T.card,
-              color: location === loc ? T.primary : T.inkV,
-              fontWeight: location === loc ? 500 : 400,
-              transition: 'all 0.15s ease',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {loc}
-          </button>
-        ))}
+        {LOCATIONS.map(loc => {
+          const isOther = loc === 'Other';
+          const isActive = isOther ? showOther : location === loc;
+          return (
+            <button
+              key={loc}
+              onClick={() => {
+                if (isOther) {
+                  const next = !showOther;
+                  setShowOther(next);
+                  if (!next) setLocation('');
+                } else {
+                  setShowOther(false);
+                  setLocation(loc === location ? '' : loc);
+                }
+              }}
+              style={{
+                padding: '8px 16px', borderRadius: 9999, fontSize: 13, cursor: 'pointer', fontFamily: SANS,
+                border: `1.5px solid ${isActive ? T.primary : T.outline}`,
+                background: isActive ? T.primaryS : T.card,
+                color: isActive ? T.primary : T.inkV,
+                fontWeight: isActive ? 500 : 400,
+                transition: 'all 0.15s ease',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {loc}
+            </button>
+          );
+        })}
       </div>
+      {showOther && (
+        <input
+          autoFocus
+          placeholder="Enter your country"
+          value={location}
+          onChange={e => setLocation(e.target.value)}
+          style={{
+            marginTop: 10, width: '100%', height: 44, padding: '0 14px', borderRadius: 12,
+            border: `1.5px solid ${T.primary}`, background: '#FAFAF8',
+            fontSize: 14, fontFamily: SANS, color: T.ink, outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+      )}
     </div>
 
     {/* Invite */}
@@ -837,7 +888,10 @@ const LocationInviteScreen = ({
       <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Invite by email or phone</p>
       <div style={{ display: 'flex', gap: 10 }}>
         <input
+          value={inviteInput}
+          onChange={e => setInviteInput(e.target.value)}
           placeholder="Email or phone number"
+          onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
           style={{
             flex: 1, height: 48, padding: '0 14px', borderRadius: 12,
             border: `1.5px solid ${T.outline}`, background: '#FAFAF8',
@@ -845,13 +899,17 @@ const LocationInviteScreen = ({
           }}
         />
         <button
+          onClick={handleSend}
+          disabled={!inviteInput.trim()}
           style={{
             height: 48, padding: '0 18px', borderRadius: 12, border: 'none',
-            background: T.primary, color: '#fff', fontSize: 14, fontWeight: 500,
-            cursor: 'pointer', fontFamily: SANS, whiteSpace: 'nowrap',
+            background: inviteInput.trim() ? T.primary : T.outline,
+            color: '#fff', fontSize: 14, fontWeight: 500,
+            cursor: inviteInput.trim() ? 'pointer' : 'default', fontFamily: SANS, whiteSpace: 'nowrap',
+            transition: 'background 0.15s',
           }}
         >
-          Send →
+          {inviteSent ? 'Sent ✓' : 'Send →'}
         </button>
       </div>
     </div>
@@ -866,6 +924,7 @@ const LocationInviteScreen = ({
       </button>
     </div>
   </div>
-);
+  );
+};
 
 export default Onboarding;
