@@ -81,11 +81,11 @@ export default function About() {
             <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint, position: "sticky", top: 80 }}>
               {t('website.about.longerVersionLabel')}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 400, color: "#1c1c18", lineHeight: 1.8 }}>
-              <p>{t('website.about.longP1')} <strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}</p>
-              <p style={{ marginTop: 16 }}>{t('website.about.longP2')}</p>
-              <p style={{ marginTop: 16 }}><strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}</p>
-              <p style={{ marginTop: 16 }}>{t('website.about.longP4')}</p>
+            <div style={{ fontSize: 16, fontWeight: 400, lineHeight: 1.8 }}>
+              <p style={{ color: "#1c1c18", margin: 0 }}>{t('website.about.longP1')} <strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP1Strong')}</strong> {t('website.about.longP1Rest')}</p>
+              <p style={{ color: "#1c1c18", marginTop: 16 }}>{t('website.about.longP2')}</p>
+              <p style={{ color: "#1c1c18", marginTop: 16 }}><strong style={{ fontWeight: 600, color: "#1c1c18" }}>{t('website.about.longP3Strong')}</strong> {t('website.about.longP3Rest')}</p>
+              <p style={{ color: "#1c1c18", marginTop: 16 }}>{t('website.about.longP4')}</p>
             </div>
           </div>
         </div>
