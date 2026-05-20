@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { cloudSet } from '@/lib/preferencesSync';
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
 import { DigestMock } from '@/components/onboarding/DigestMock';
 import i18n from '@/i18n/config';
@@ -249,6 +251,40 @@ const Onboarding = () => {
     }
   };
 
+  // ── Guest / skip-account flows (Apple Guideline 5.1.1v) ───────────────────
+  const handleSkipAccount = async () => {
+    const guestData = {
+      userName: authName.trim() || 'Guest',
+      location: state.location,
+      language: state.language,
+      userInitials: authName.trim()
+        ? authName.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+        : 'GU',
+    };
+    localStorage.setItem('eazy-family-onboarding', JSON.stringify(guestData));
+    localStorage.removeItem(STORAGE_KEY);
+    try {
+      await supabase.auth.signInAnonymously();
+      // onAuthStateChange fires SIGNED_IN → user becomes truthy → redirect to /app
+    } catch {
+      navigate('/app');
+    }
+  };
+
+  const handleRestorePurchase = async () => {
+    localStorage.setItem('eazy-family-onboarding', JSON.stringify({
+      userName: 'Guest',
+      language: state.language,
+      userInitials: 'GU',
+    }));
+    localStorage.removeItem(STORAGE_KEY);
+    try {
+      await supabase.auth.signInAnonymously();
+    } catch {
+      navigate('/app');
+    }
+  };
+
   // ── Finish ─────────────────────────────────────────────────────────────────
   const finish = () => {
     if (locationInput || state.location) {
@@ -329,7 +365,7 @@ const Onboarding = () => {
         {screen === 5 && <VoiceDemoScreen state={state} set={set} next={next} />}
         {screen === 6 && <DigestScreen state={state} next={next} />}
         {screen === 7 && <SummaryScreen summaryCards={summaryCards} next={next} />}
-        {screen === 8 && <PaywallScreen next={next} back={back} />}
+        {screen === 8 && <PaywallScreen next={next} back={back} onRestore={handleRestorePurchase} />}
         {screen === 9 && (
           <AccountScreen
             name={authName} setName={setAuthName}
@@ -337,6 +373,7 @@ const Onboarding = () => {
             password={authPassword} setPassword={setAuthPassword}
             loading={authLoading2} error={authError}
             onSubmit={handleSignUp}
+            onSkip={handleSkipAccount}
           />
         )}
         {screen === 10 && (
@@ -625,7 +662,7 @@ const FEATURES = [
   'One free month for every family you refer',
 ];
 
-const PaywallScreen = ({ next, back }: { next: () => void; back: () => void }) => (
+const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => (
   <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
     <div style={{ textAlign: 'center' }}>
       <OrbeMorphic size={80} />
@@ -675,7 +712,7 @@ const PaywallScreen = ({ next, back }: { next: () => void; back: () => void }) =
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <PrimaryBtn label="Start my free trial →" onClick={next} />
       <button
-        onClick={next}
+        onClick={onRestore}
         style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
       >
         Restore purchase
@@ -699,13 +736,26 @@ const PaywallScreen = ({ next, back }: { next: () => void; back: () => void }) =
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
-  loading, error, onSubmit,
+  loading, error, onSubmit, onSkip,
 }: {
   name: string; setName: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   password: string; setPassword: (v: string) => void;
-  loading: boolean; error: string; onSubmit: () => void;
+  loading: boolean; error: string; onSubmit: () => void; onSkip: () => void;
 }) => {
+  const oauthBrowserOpen = useRef(false);
+
+  // Close SFSafariViewController when OAuth completes on native
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' && oauthBrowserOpen.current) {
+        oauthBrowserOpen.current = false;
+        Browser.close().catch(() => {});
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   const inputStyle: React.CSSProperties = {
     width: '100%', height: 52, padding: '0 16px',
     borderRadius: 14, border: `1.5px solid ${T.outline}`,
@@ -747,8 +797,14 @@ const AccountScreen = ({
         {/* Apple sign in */}
         <button
           onClick={async () => {
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
-            if (error) setAuthError('Apple sign-in is not available yet. Please use email/password.');
+            if (Capacitor.isNativePlatform()) {
+              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app`, skipBrowserRedirect: true } });
+              if (error) { setAuthError('Apple sign-in unavailable. Please use email/password.'); return; }
+              if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
+            } else {
+              const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
+              if (error) setAuthError('Apple sign-in unavailable. Please use email/password.');
+            }
           }}
           style={{
             width: '100%', padding: '14px 24px', borderRadius: 9999,
@@ -764,8 +820,14 @@ const AccountScreen = ({
         {/* Google sign in */}
         <button
           onClick={async () => {
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
-            if (error) setAuthError('Google sign-in is not available yet. Please use email/password.');
+            if (Capacitor.isNativePlatform()) {
+              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app`, skipBrowserRedirect: true } });
+              if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
+              if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
+            } else {
+              const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+              if (error) setAuthError('Google sign-in unavailable. Please use email/password.');
+            }
           }}
           style={{
             width: '100%', padding: '14px 24px', borderRadius: 9999,
@@ -783,6 +845,13 @@ const AccountScreen = ({
         Already have an account?{' '}
         <a href="/auth" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>Sign in</a>
       </p>
+
+      <button
+        onClick={onSkip}
+        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', textDecoration: 'underline', fontFamily: SANS }}
+      >
+        Continue without account →
+      </button>
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
 import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from "@/lib/preferencesSync";
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 
 
 // Dev bypass - set to true to skip authentication
@@ -152,9 +154,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // Handle OAuth deep-link callback on native (capacitor://localhost/app#access_token=...)
+    let urlListener: { remove: () => void } | null = null;
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('appUrlOpen', async ({ url }) => {
+        if (url.includes('access_token') || url.includes('code=')) {
+          await supabase.auth.getSessionFromUrl({ url, storeSession: true });
+        }
+      }).then(h => { urlListener = h; });
+    }
+
     return () => {
       subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      urlListener?.remove();
     };
   }, []);
 
