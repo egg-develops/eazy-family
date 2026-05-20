@@ -152,7 +152,7 @@ export default function Index() {
                 {t('website.hero.meetOrbe')}
               </button>
               <button
-                onClick={() => navigate("/onboarding")}
+                onClick={() => navigate("/onboarding?fresh=true")}
                 style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
               >
                 {t('website.hero.downloadApp')}
@@ -362,7 +362,7 @@ export default function Index() {
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.appStore')}</button>
               <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.googlePlay')}</button>
-              <button onClick={() => navigate("/onboarding")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.howItWorks.getStartedWeb')}</button>
+              <button onClick={() => navigate("/onboarding?fresh=true")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.howItWorks.getStartedWeb')}</button>
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function Index() {
                 ))}
               </div>
               <div style={{ marginTop: "auto", paddingTop: 4 }}>
-                <button onClick={() => navigate("/onboarding")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
+                <button onClick={() => navigate("/onboarding?fresh=true")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
                   {t('website.pricing.startTrial')}
                 </button>
               </div>
@@ -403,7 +403,7 @@ export default function Index() {
 
       {/* ── Footer CTA ── */}
       <CtaDark
-        onStart={() => navigate("/onboarding")}
+        onStart={() => navigate("/onboarding?fresh=true")}
         eyebrow={t('website.cta.eyebrow')}
         headline={t('website.cta.headline')}
         headlineEm={t('website.cta.headlineEm')}

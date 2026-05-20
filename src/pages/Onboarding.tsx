@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { cloudSet } from '@/lib/preferencesSync';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,8 +136,9 @@ const OrbeMorphic = ({ size = 120 }: { size?: number }) => (
 const Onboarding = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const [searchParams] = useSearchParams();
 
-  const saved = load();
+  const saved = searchParams.get('fresh') ? { screen: 0, state: EMPTY } : load();
   const [screen, setScreen] = useState(saved.screen);
   const [dir, setDir] = useState<'fwd' | 'back'>('fwd');
   const [state, setState] = useState<OBState>(saved.state);
