@@ -93,11 +93,11 @@ export default function About() {
 
       {/* ── CTA ── */}
       <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(253,249,243,0.5)" }}>{t('website.about.ctaEyebrow')}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#dac1bb" }}>{t('website.about.ctaEyebrow')}</div>
         <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
           {t('website.about.ctaHeadline')} <em style={{ fontStyle: "italic", color: T.primaryL }}>{t('website.about.ctaHeadlineEm')}</em>
         </h2>
-        <p style={{ fontSize: 14, color: "rgba(253,249,243,0.6)", fontWeight: 300, margin: 0 }}>{t('website.about.ctaSub')}</p>
+        <p style={{ fontSize: 14, color: "#c8b4af", fontWeight: 400, margin: 0 }}>{t('website.about.ctaSub')}</p>
         <button
           onClick={() => navigate("/onboarding")}
           style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}

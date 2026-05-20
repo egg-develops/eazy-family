@@ -156,41 +156,43 @@ const FAQS = [
 const FaqSection = () => {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <section style={{ padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` }} id="faq">
+    <section style={{ padding: "72px 40px", borderBottom: `1px solid ${T.outline}`, background: T.bg }} id="faq">
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
         <Eyebrow>FAQ</Eyebrow>
-        <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 40, color: T.ink }}>
+        <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 40, color: "#1c1c18" }}>
           Common questions
         </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {FAQS.map((faq, i) => (
             <div
               key={i}
-              style={{ borderTop: `0.5px solid ${T.outline}`, ...(i === FAQS.length - 1 ? { borderBottom: `0.5px solid ${T.outline}` } : {}) }}
+              onClick={() => setOpen(open === i ? null : i)}
+              style={{
+                background: "#ffffff",
+                border: `1px solid ${T.outline}`,
+                borderRadius: 14,
+                padding: "0 20px",
+                cursor: "pointer",
+              }}
             >
-              <button
-                onClick={() => setOpen(open === i ? null : i)}
-                style={{
-                  width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "20px 0", background: "none", border: "none", cursor: "pointer",
-                  fontFamily: dm, fontSize: 15, fontWeight: 500, color: T.ink, textAlign: "left", gap: 16,
-                  WebkitTapHighlightColor: "transparent",
-                }}
-              >
-                <span>{faq.q}</span>
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "18px 0", gap: 16,
+              }}>
+                <span style={{ fontFamily: dm, fontSize: 15, fontWeight: 600, color: "#1c1c18", lineHeight: 1.4 }}>{faq.q}</span>
                 <span style={{
-                  width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+                  width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                   background: open === i ? T.primary : T.sMid,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "background 0.2s ease",
                 }}>
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: open === i ? "rotate(45deg)" : "none", transition: "transform 0.2s ease" }}>
-                    <path d="M5 1v8M1 5h8" stroke={open === i ? "#fff" : T.inkV} strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M5 1v8M1 5h8" stroke={open === i ? "#fff" : T.primary} strokeWidth="2" strokeLinecap="round"/>
                   </svg>
                 </span>
-              </button>
+              </div>
               {open === i && (
-                <p style={{ fontSize: 14, fontWeight: 300, color: T.inkV, lineHeight: 1.7, margin: "0 0 20px", paddingRight: 40 }}>
+                <p style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: "#55433f", lineHeight: 1.7, margin: "0 0 18px", paddingRight: 44 }}>
                   {faq.a}
                 </p>
               )}
