@@ -32,3 +32,4 @@ fastlane/README.md
 android/app/keystore.jks
 fastlane/google-play-key.json
 .vercel
+android/app/keystore.jks
