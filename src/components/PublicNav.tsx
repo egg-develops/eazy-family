@@ -136,8 +136,8 @@ export function PublicNav() {
               style={{
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: "13px",
-                fontWeight: 400,
-                color: INK_V,
+                fontWeight: 500,
+                color: INK,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -145,8 +145,8 @@ export function PublicNav() {
                 borderRadius: "9999px",
                 transition: "all 0.15s",
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; (e.currentTarget as HTMLElement).style.color = INK; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = INK_V; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}
             >
               {l.label}
             </button>
@@ -161,16 +161,16 @@ export function PublicNav() {
           <button
             onClick={() => setLangOpen(v => !v)}
             style={{
-              fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 400,
-              color: INK_V, background: "none", border: "none",
+              fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500,
+              color: INK, background: "none", border: "none",
               cursor: "pointer", padding: "6px 12px", borderRadius: "9999px",
               display: "flex", alignItems: "center", gap: "6px", transition: "all 0.15s",
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; (e.currentTarget as HTMLElement).style.color = INK; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = INK_V; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f1ede7"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; }}
           >
-            <span style={{ fontSize: "15px", lineHeight: 1 }}>{currentLang.flag}</span>
-            <span>{currentLang.code === "en-GB" ? "EN-GB" : currentLang.code.toUpperCase()}</span>
+            <span style={{ fontSize: "15px", lineHeight: 1, color: INK }}>{currentLang.flag}</span>
+            <span style={{ color: INK }}>{currentLang.code === "en-GB" ? "EN-GB" : currentLang.code.toUpperCase()}</span>
           </button>
           {langOpen && (
             <div style={{
@@ -202,7 +202,7 @@ export function PublicNav() {
         </div>
         <button
           onClick={() => navigate("/auth")}
-          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", color: INK_V, background: "none", border: "none", cursor: "pointer", padding: "7px 12px", borderRadius: "9999px" }}
+          style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500, color: INK, background: "none", border: "none", cursor: "pointer", padding: "7px 12px", borderRadius: "9999px" }}
         >
           {t('website.nav.signIn')}
         </button>
