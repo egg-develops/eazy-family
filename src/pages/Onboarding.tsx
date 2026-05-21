@@ -5,6 +5,7 @@ import { cloudSet } from '@/lib/preferencesSync';
 import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
 import { DigestMock } from '@/components/onboarding/DigestMock';
 import i18n from '@/i18n/config';
@@ -765,9 +766,23 @@ const AccountScreen = ({
         <button
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
-              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app`, skipBrowserRedirect: true } });
-              if (error) { setAuthError('Apple sign-in unavailable. Please use email/password.'); return; }
-              if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
+              try {
+                const options: SignInWithAppleOptions = {
+                  clientId: 'eazy.family.app',
+                  redirectURI: 'https://jfztyhuagxruhawchfem.supabase.co/auth/v1/callback',
+                  scopes: 'name email',
+                };
+                const result = await SignInWithApple.authorize(options);
+                const idToken = result.response.identityToken;
+                if (!idToken) throw new Error('No identity token received');
+                const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken });
+                if (error) throw error;
+              } catch (err: any) {
+                const code = err?.error ?? err?.message ?? '';
+                if (code === 'canceled' || code.includes('AuthorizationError error 1001')) return;
+                console.error('Apple sign-in error:', err);
+                setAuthError('Apple sign-in failed. Please try again or use email/password.');
+              }
             } else {
               const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
               if (error) setAuthError('Apple sign-in unavailable. Please use email/password.');

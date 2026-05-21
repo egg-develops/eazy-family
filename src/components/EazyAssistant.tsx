@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Sparkles, Mic, MicOff } from "lucide-react";
+import { X, Send, Sparkles, Mic, MicOff, Check, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTranslation } from "react-i18next";
+
 const getMonthKey = () => {
   const d = new Date();
   return `eazy-ai-queries-${d.getFullYear()}-${d.getMonth()}`;
@@ -26,6 +27,23 @@ const incrementAIQueryCount = () => {
 interface Message {
   role: "user" | "assistant";
   content: string;
+}
+
+interface ParsedShoppingItem {
+  name: string;
+  category: string;
+  quantity: string | null;
+}
+
+interface ConfirmDialog {
+  type: "shopping" | "task" | "calendar";
+  items?: ParsedShoppingItem[];
+  task?: string;
+  dueDate?: string | null;
+  title?: string;
+  date?: string;
+  time?: string | null;
+  unparseable?: string | null;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -52,6 +70,15 @@ function fuzzyMatch(a: string, b: string): boolean {
   return na.includes(nb) || nb.includes(na);
 }
 
+function detectVoiceIntent(text: string): "shopping" | "task" | "calendar" | "general" {
+  const t = text.toLowerCase();
+  if (/shopping list|grocery|groceries|einkaufsliste|liste de courses|lista della spesa/.test(t)) return "shopping";
+  if (/\bto(?:\s+(?:my|our|the))?\s+tasks?\b|to.?do\s+list|remind\s+me\s+to/.test(t)) return "task";
+  if (/\bcalendar\b|\bschedule\b|\bappointment\b|\bmeeting\b|\bevent\b/.test(t)) return "calendar";
+  if (/\badd\b/.test(t) && /,|(\band\b)/.test(t) && !/\btask\b|\bremind\b/.test(t)) return "shopping";
+  return "general";
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const EazyAssistant = () => {
@@ -60,6 +87,10 @@ export const EazyAssistant = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isParsingVoice, setIsParsingVoice] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editText, setEditText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
@@ -70,6 +101,155 @@ export const EazyAssistant = () => {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
+
+  // ── Voice parser (calls edge function) ────────────────────────────────────
+  const callVoiceParser = async (text: string, mode: string): Promise<any> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/shopping-voice-assistant`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ text, mode, today: new Date().toISOString().split("T")[0] }),
+          signal: controller.signal,
+        }
+      );
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error("Voice parser error:", err);
+      throw err;
+    }
+  };
+
+  // ── Add helpers ────────────────────────────────────────────────────────────
+  const addShoppingItems = async (items: ParsedShoppingItem[]) => {
+    if (!user?.id || !items.length) return;
+    const rows = items.map(item => ({
+      title: item.quantity ? `${item.name} (${item.quantity})` : item.name,
+      type: "shopping",
+      user_id: user.id,
+      completed: false,
+    }));
+    await supabase.from("tasks").insert(rows);
+  };
+
+  const addTaskItem = async (task: string, dueDate: string | null) => {
+    if (!user?.id) return;
+    await supabase.from("tasks").insert({
+      title: task,
+      type: "task",
+      user_id: user.id,
+      completed: false,
+      due_date: dueDate || null,
+    });
+  };
+
+  const addCalendarEventLocal = (title: string, dateStr: string, timeStr: string | null) => {
+    const startDate = new Date(`${dateStr}${timeStr ? `T${timeStr}` : "T00:00"}`);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    const newEvent = {
+      id: Date.now().toString(),
+      title,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      allDay: !timeStr,
+      type: "event",
+      color: "hsl(220 70% 50%)",
+      repeat: "never",
+    };
+    saveCalendarItems([...calendarItems(), newEvent]);
+  };
+
+  // ── Process voice input ────────────────────────────────────────────────────
+  const processVoiceInput = async (rawText: string) => {
+    const intent = detectVoiceIntent(rawText);
+    if (intent === "general") {
+      setInput(rawText);
+      return;
+    }
+
+    setIsParsingVoice(true);
+    try {
+      if (intent === "shopping") {
+        const result = await callVoiceParser(rawText, "shopping-v2");
+        if (result.unparseable || !result.items?.length) {
+          setConfirmDialog({ type: "shopping", items: [], unparseable: rawText });
+        } else {
+          setConfirmDialog({ type: "shopping", items: result.items, unparseable: null });
+        }
+      } else if (intent === "task") {
+        const result = await callVoiceParser(rawText, "task-v2");
+        if (result.unparseable || !result.task) {
+          setConfirmDialog({ type: "task", task: "", dueDate: null, unparseable: rawText });
+        } else {
+          setConfirmDialog({ type: "task", task: result.task, dueDate: result.dueDate || null, unparseable: null });
+        }
+      } else if (intent === "calendar") {
+        const result = await callVoiceParser(rawText, "calendar-v2");
+        if (result.unparseable || !result.title || !result.date) {
+          setConfirmDialog({ type: "calendar", title: "", date: "", time: null, unparseable: rawText });
+        } else {
+          setConfirmDialog({ type: "calendar", title: result.title, date: result.date, time: result.time || null, unparseable: null });
+        }
+      }
+    } catch {
+      setConfirmDialog({ type: intent as any, unparseable: rawText });
+    } finally {
+      setIsParsingVoice(false);
+    }
+  };
+
+  // ── Confirm dialog handlers ────────────────────────────────────────────────
+  const handleConfirmApprove = async () => {
+    if (!confirmDialog) return;
+    try {
+      if (confirmDialog.type === "shopping" && confirmDialog.items?.length) {
+        await addShoppingItems(confirmDialog.items);
+        toast({ title: `Added ${confirmDialog.items.length} item${confirmDialog.items.length > 1 ? "s" : ""} to shopping list` });
+      } else if (confirmDialog.type === "task" && confirmDialog.task) {
+        await addTaskItem(confirmDialog.task, confirmDialog.dueDate || null);
+        toast({ title: confirmDialog.dueDate ? `Task added for ${confirmDialog.dueDate}` : "Task added" });
+      } else if (confirmDialog.type === "calendar" && confirmDialog.title && confirmDialog.date) {
+        addCalendarEventLocal(confirmDialog.title, confirmDialog.date, confirmDialog.time || null);
+        toast({ title: `Event added: ${confirmDialog.title}` });
+      }
+    } catch {
+      toast({ title: "Could not save. Please try again.", variant: "destructive" });
+    }
+    setConfirmDialog(null);
+    setEditMode(false);
+    setEditText("");
+  };
+
+  const handleConfirmEdit = () => {
+    if (!confirmDialog) return;
+    let defaultText = "";
+    if (confirmDialog.type === "shopping") defaultText = confirmDialog.items?.map(i => i.name).join(", ") || confirmDialog.unparseable || "";
+    else if (confirmDialog.type === "task") defaultText = confirmDialog.task || confirmDialog.unparseable || "";
+    else if (confirmDialog.type === "calendar") defaultText = confirmDialog.title || confirmDialog.unparseable || "";
+    setEditText(defaultText);
+    setEditMode(true);
+  };
+
+  const handleEditSubmit = () => {
+    if (!editText.trim() || !confirmDialog) return;
+    if (confirmDialog.type === "shopping") {
+      const items = editText.split(/,|;/).map(s => s.trim()).filter(Boolean).map(name => ({ name, category: "Other", quantity: null }));
+      setConfirmDialog({ ...confirmDialog, items, unparseable: null });
+    } else if (confirmDialog.type === "task") {
+      setConfirmDialog({ ...confirmDialog, task: editText.trim(), unparseable: null });
+    } else if (confirmDialog.type === "calendar") {
+      setConfirmDialog({ ...confirmDialog, title: editText.trim(), unparseable: null });
+    }
+    setEditMode(false);
+  };
 
   // ── Voice input ───────────────────────────────────────────────────────────
   const startListening = () => {
@@ -86,7 +266,11 @@ export const EazyAssistant = () => {
       : i18n.language === "it" ? "it-IT"
       : i18n.language === "en-GB" ? "en-GB"
       : "en-US";
-    recognition.onresult = (e: any) => { setInput(prev => prev + (prev ? " " : "") + e.results[0][0].transcript); setIsListening(false); };
+    recognition.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript;
+      setIsListening(false);
+      processVoiceInput(transcript);
+    };
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
     recognitionRef.current = recognition;
@@ -98,17 +282,13 @@ export const EazyAssistant = () => {
   // ── Shopping: add ─────────────────────────────────────────────────────────
   const handleShoppingAdd = async (content: string): Promise<boolean> => {
     const patterns = [
-      // English
       /add (.+) to (?:the |my |our )?shopping list/i,
       /put (.+) on (?:the |my |our )?shopping list/i,
       /shopping list:?\s*(.+)/i,
-      // German
       /(?:füge?|leg|steck)\s+(.+?)\s+(?:zur|in die|auf die)\s+(?:einkaufsliste|liste)/i,
       /(?:füge?|leg)\s+(.+?)\s+(?:auf die\s+)?einkaufsliste/i,
-      // French
       /(?:ajoute?|mets|rajoute?)\s+(.+?)\s+(?:à la liste de courses|sur la liste d'achats|dans la liste)/i,
       /liste (?:de courses|d'achats):?\s*(.+)/i,
-      // Italian
       /(?:aggiungi|metti)\s+(.+?)\s+(?:alla lista della spesa|alla lista)/i,
       /lista della spesa:?\s*(.+)/i,
     ];
@@ -140,22 +320,17 @@ export const EazyAssistant = () => {
   // ── Calendar: add (with recurring support) ───────────────────────────────
   const handleCalendarAdd = (content: string): string | null => {
     const intentPatterns = [
-      // English
       /(?:add|schedule|create|put|set up)\s+(.+?)\s+(?:to|on|in|for)\s+(?:the\s+)?(?:family\s+)?calendar/i,
       /(?:add|schedule|create|put|set up)\s+(.+?)\s+(?:on|for|at)\s+(.+)/i,
       /calendar[:\s]+(.+)/i,
-      // German
       /(?:füge?|erstelle?|plan|trag ein)\s+(.+?)\s+(?:zum|in den|im|für den)\s+kalender/i,
       /(?:füge?|erstelle?|plan)\s+(.+?)\s+(?:am|um|für)\s+(.+)/i,
-      // French
       /(?:ajoute?|crée?|planifie?|mets)\s+(.+?)\s+(?:au|dans le)\s+calendrier/i,
       /(?:ajoute?|crée?|planifie?)\s+(.+?)\s+(?:le|à)\s+(.+)/i,
-      // Italian
       /(?:aggiungi|crea|pianifica|metti)\s+(.+?)\s+(?:al|nel)\s+calendario/i,
       /(?:aggiungi|crea|pianifica)\s+(.+?)\s+(?:il|a|per)\s+(.+)/i,
     ];
 
-    // Skip if it's a delete/cancel intent (all languages)
     if (/^(?:cancel|remove|delete|storniere?|lösche?|annule?|supprime?)\b/i.test(content.trim())) return null;
 
     let rawTitle: string | null = null;
@@ -165,7 +340,6 @@ export const EazyAssistant = () => {
     }
     if (!rawTitle) return null;
 
-    // Detect recurring pattern
     const recurMatch = content.match(/every\s+(day|daily|monday|tuesday|wednesday|thursday|friday|saturday|sunday|week|weekday)/i);
     const repeat = recurMatch
       ? (/(day|daily|week|weekday)/.test(recurMatch[1]) ? "daily" : "weekly")
@@ -252,7 +426,6 @@ export const EazyAssistant = () => {
     setMessages(newMessages);
     setIsLoading(true);
 
-    // Local actions — resolve without calling the LLM
     const calendarRemoveReply = handleCalendarRemove(userMessage);
     if (calendarRemoveReply) {
       setMessages(prev => [...prev, { role: "assistant", content: calendarRemoveReply }]);
@@ -386,6 +559,63 @@ export const EazyAssistant = () => {
     "Quick dinner recipe with 5 ingredients",
   ];
 
+  // ── Confirm dialog UI ─────────────────────────────────────────────────────
+  const renderConfirmDialog = () => {
+    if (!confirmDialog) return null;
+    const hasData = (confirmDialog.type === "shopping" && confirmDialog.items?.length)
+      || (confirmDialog.type === "task" && confirmDialog.task)
+      || (confirmDialog.type === "calendar" && confirmDialog.title && confirmDialog.date);
+
+    return (
+      <div className="border-t p-3 bg-muted/40 space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground">
+          {confirmDialog.unparseable && !hasData ? "Couldn't parse — review below:" : "Did you mean:"}
+        </p>
+
+        {editMode ? (
+          <div className="flex gap-2">
+            <Input
+              value={editText}
+              onChange={e => setEditText(e.target.value)}
+              onKeyPress={e => e.key === "Enter" && handleEditSubmit()}
+              className="flex-1 text-sm h-8"
+              autoFocus
+            />
+            <Button size="sm" className="h-8 text-xs" onClick={handleEditSubmit}>OK</Button>
+          </div>
+        ) : (
+          <div className="text-sm text-foreground">
+            {confirmDialog.type === "shopping" && confirmDialog.items?.length ? (
+              <span>{confirmDialog.items.map(i => `${i.name}${i.quantity ? ` (${i.quantity})` : ""} · ${i.category}`).join(", ")}</span>
+            ) : confirmDialog.type === "task" && confirmDialog.task ? (
+              <span>{confirmDialog.task}{confirmDialog.dueDate ? ` · due ${confirmDialog.dueDate}` : ""}</span>
+            ) : confirmDialog.type === "calendar" && confirmDialog.title ? (
+              <span>{confirmDialog.title} · {confirmDialog.date}{confirmDialog.time ? ` at ${confirmDialog.time}` : ""}</span>
+            ) : (
+              <span className="text-muted-foreground italic">{confirmDialog.unparseable}</span>
+            )}
+          </div>
+        )}
+
+        {!editMode && (
+          <div className="flex gap-2">
+            {hasData && (
+              <Button size="sm" className="h-7 text-xs gap-1" onClick={handleConfirmApprove}>
+                <Check className="w-3 h-3" /> Approve
+              </Button>
+            )}
+            <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleConfirmEdit}>
+              <Pencil className="w-3 h-3" /> Edit
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={() => { setConfirmDialog(null); setEditMode(false); }}>
+              Dismiss
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ── Collapsed state ───────────────────────────────────────────────────────
   if (!isOpen) {
     return (
@@ -463,7 +693,7 @@ export const EazyAssistant = () => {
               </div>
             </div>
           ))}
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
+          {(isLoading || isParsingVoice) && messages[messages.length - 1]?.role === "user" && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-lg p-3">
                 <div className="flex gap-1">
@@ -477,6 +707,8 @@ export const EazyAssistant = () => {
         </div>
       </ScrollArea>
 
+      {renderConfirmDialog()}
+
       <div className="border-t p-4">
         <div className="flex gap-2">
           <Button
@@ -485,9 +717,10 @@ export const EazyAssistant = () => {
             variant={isListening ? "destructive" : "outline"}
             aria-label={isListening ? "Stop listening" : "Start voice input"}
             className="relative"
+            disabled={isParsingVoice}
           >
             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            {!isListening && (
+            {!isListening && !isParsingVoice && (
               <Sparkles className="absolute -top-1 -right-1 w-3 h-3" style={{ color: "#FFC861" }} />
             )}
           </Button>
@@ -495,13 +728,13 @@ export const EazyAssistant = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
-            placeholder={isListening ? "Listening..." : "How can I help?"}
-            disabled={isLoading}
+            placeholder={isListening ? "Listening..." : isParsingVoice ? "Parsing..." : "How can I help?"}
+            disabled={isLoading || isParsingVoice}
             className="flex-1 bg-background"
           />
           <Button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isLoading || isParsingVoice}
             size="icon"
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
             aria-label="Send message"
