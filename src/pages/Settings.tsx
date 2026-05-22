@@ -6,6 +6,16 @@ import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Switch } from "@/components/ui/switch";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   User, Mail, Share2, Lock, Globe, Sparkles, Database,
   Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
   UserPlus, LogOut, X, Plus, Check, Trash2
@@ -599,25 +609,24 @@ const Settings = () => {
         {t('settings.actions.signOut')}
       </button>
 
-      {/* ── Delete Account ── */}
-      {!showDeleteConfirm ? (
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="w-full py-3 rounded-2xl text-sm font-semibold"
-          style={{ color: '#C0392B', background: 'transparent', border: '1.5px solid #C0392B' }}>
-          {t('settings.deleteMyAccount')}
-        </button>
-      ) : (
-        <div className="rounded-2xl px-4 py-4 space-y-3" style={{ background: '#FFF5F5', border: '1.5px solid #C0392B' }}>
-          <p className="text-sm font-medium" style={{ color: '#C0392B' }}>{t('settings.deleteWarning')}</p>
-          <div className="flex gap-2">
-            <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#F1EDE7', color: MUTED }} onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>{t('settings.cancel')}</button>
-            <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: '#C0392B' }} onClick={handleDeleteAccount} disabled={deletingAccount}>
+      {/* ── Delete Account modal ── */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={open => { if (!deletingAccount) setShowDeleteConfirm(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={{ color: '#C0392B' }}>{t('settings.deleteMyAccount')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('settings.deleteWarning')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAccount}>{t('settings.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={e => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deletingAccount}
+              style={{ background: '#C0392B' }}>
               {deletingAccount ? t('settings.deleting') : t('settings.deleteEverything')}
-            </button>
-          </div>
-        </div>
-      )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );
