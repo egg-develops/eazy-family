@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, ExternalLink } from "lucide-react";
+import { Check, Crown } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -137,21 +137,16 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           {/* Billing / CTA */}
           <div className="space-y-4 pt-4 border-t">
             {isNative ? (
-              /* iOS: direct to website — Apple IAP not yet available */
+              /* iOS: all features currently free — no external payment */
               <div className="space-y-3 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Subscribe at <span className="font-medium text-foreground">eazy.family</span> to unlock the Family Plan. Your subscription will be available on all your devices instantly.
-                </p>
-                <Button
-                  className="w-full gradient-primary text-white border-0"
-                  size="lg"
-                  onClick={() => window.open('https://eazy.family', '_blank')}
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Subscribe at eazy.family
-                </Button>
+                <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
+                  <p className="text-sm font-medium text-green-800">All features included</p>
+                  <p className="text-xs text-green-700 mt-1">
+                    Every feature in Eazy.Family is currently available at no cost. No subscription required.
+                  </p>
+                </div>
                 <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
-                  Maybe Later
+                  Got it
                 </Button>
               </div>
             ) : (

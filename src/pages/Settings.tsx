@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   User, Mail, Share2, Lock, Globe, Sparkles, Database,
   Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
-  UserPlus, LogOut, X, Plus, Check
+  UserPlus, LogOut, X, Plus, Check, Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -306,8 +306,14 @@ const Settings = () => {
                 icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
                 title={t('settings.referFriends')}
                 right={<Arrow />}
-                last
                 onClick={handleReferFriends}
+              />
+              <Row
+                icon={<Trash2 className="w-4 h-4" style={{ color: '#C0392B' }} />}
+                title={t('settings.deleteMyAccount')}
+                right={<ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#C0392B' }} />}
+                last
+                onClick={() => setShowDeleteConfirm(true)}
               />
             </>
           )}
