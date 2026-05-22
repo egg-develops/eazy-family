@@ -227,10 +227,17 @@ const Settings = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const { error } = await supabase.functions.invoke('delete-account', { headers: { Authorization: `Bearer ${session?.access_token}` } });
-      if (error) throw error;
+      if (error) {
+        let description = "Could not delete account. Contact support@eazy.family";
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) description = body.error;
+        } catch {}
+        throw new Error(description);
+      }
       await signOut();
     } catch (err: any) {
-      toast({ title: "Error", description: err?.message || "Could not delete account. Contact support@eazy.family", variant: "destructive" });
+      toast({ title: "Error deleting account", description: err?.message || "Could not delete account. Contact support@eazy.family", variant: "destructive" });
     } finally { setDeletingAccount(false); setShowDeleteConfirm(false); }
   };
 
