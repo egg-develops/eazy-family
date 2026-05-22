@@ -60,6 +60,7 @@ import { error as logError } from "@/lib/logger";
 import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
+import { Capacitor } from "@capacitor/core";
 import { format } from "date-fns";
 
 const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
@@ -280,14 +281,15 @@ const AppLayout = () => {
     return () => window.removeEventListener('eazy-home-config-updated', onConfigUpdate);
   }, []);
 
-  // Eagerly request mic permission once at app launch so individual voice features
-  // don't each trigger a separate OS permission dialog.
+  // Eagerly warm mic permission on web only — native uses the Capacitor
+  // SpeechRecognition plugin which handles its own permission prompt on first use.
   useEffect(() => {
-    if (navigator.mediaDevices?.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => stream.getTracks().forEach(t => t.stop()))
-        .catch(() => {});
-    }
+    if (Capacitor.isNativePlatform()) return;
+    if (localStorage.getItem('eazy-mic-asked')) return;
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => { stream.getTracks().forEach(t => t.stop()); localStorage.setItem('eazy-mic-asked', '1'); })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

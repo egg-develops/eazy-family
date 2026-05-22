@@ -151,9 +151,19 @@ const Settings = () => {
         const { data: { user: u } } = await supabase.auth.getUser();
         if (u) {
           setUserEmail(u.email || '');
-          const { data } = await supabase.from('profiles').select('display_name').eq('user_id', u.id).single();
+          const { data } = await supabase.from('profiles').select('display_name, home_config').eq('user_id', u.id).single();
           if (data) {
             setDisplayName(data.display_name || '');
+            // home_config in profiles is the authoritative cloud copy — merge it in
+            if (data.home_config && typeof data.home_config === 'object') {
+              const cloud = data.home_config as Partial<HomeConfig>;
+              setHomeConfig(prev => ({ ...prev, ...cloud }));
+              if (cloud.appTitle !== undefined) setAppTitleDraft(cloud.appTitle ?? '');
+              // Keep localStorage in sync so App.tsx title bar is correct
+              const merged = { ...JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'), ...cloud };
+              localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+              window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
+            }
           }
         }
       } catch (e) { logError('Settings fetch:', e); }
@@ -169,7 +179,7 @@ const Settings = () => {
       const lang = localStorage.getItem('eazy-family-language');
       if (lang) { setLanguage(lang); await i18n.changeLanguage(lang); }
       const cfg = localStorage.getItem('eazy-family-home-config');
-      if (cfg) { try { setHomeConfig(p => ({ ...p, ...JSON.parse(cfg) })); } catch {} }
+      if (cfg) { try { const parsed = JSON.parse(cfg); setHomeConfig(p => ({ ...p, ...parsed })); if (parsed.appTitle !== undefined) setAppTitleDraft(parsed.appTitle ?? ''); } catch {} }
     };
     window.addEventListener('eazy-prefs-loaded', handler);
     return () => window.removeEventListener('eazy-prefs-loaded', handler);
