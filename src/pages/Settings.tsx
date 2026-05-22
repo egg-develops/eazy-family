@@ -439,7 +439,7 @@ const Settings = () => {
             <Row
               key={m.key}
               title={t(m.labelKey)}
-              right={<Tog checked={!!(homeConfig as any)[m.key] ?? true} onChange={v => saveHomeConfig({ [m.key]: v })} />}
+              right={<Tog checked={(homeConfig as any)[m.key] !== false} onChange={v => saveHomeConfig({ [m.key]: v })} />}
               last={i === MODULE_OPTIONS.length - 1}
             />
           ))}
