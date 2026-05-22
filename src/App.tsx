@@ -28,10 +28,17 @@ import Download from "./pages/Download";
 import Waitlist from "./pages/Waitlist";
 import NotFound from "./pages/NotFound";
 
-// Lazy load heavy pages — with one automatic retry on chunk-load failure
-// (Capacitor iOS can return a stale MIME type on first load after an update)
+// Lazy load heavy pages — retry on chunk-load failure, then force reload
+// (iOS WebView can return stale chunks with wrong MIME type after an app update)
 const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>) =>
-  lazy(() => fn().catch(() => fn()));
+  lazy(() =>
+    fn().catch(() =>
+      fn().catch(() => {
+        window.location.reload();
+        return new Promise<never>(() => {});
+      })
+    )
+  );
 
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
 const Shopping = lazyWithRetry(() => import("./pages/Shopping"));

@@ -310,10 +310,10 @@ const AppLayout = () => {
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header — hidden on Calendar (it has its own) */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#FDF9F3', borderBottom: '1px solid #DAC1BB', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 'none' : undefined }}>
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 'none' : undefined }}>
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
-          <h1 className="font-bold text-2xl" style={{ color: '#1C1C18' }}>
+          <h1 className="font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>
             {isHomePath ? appTitle : (() => {
               const allNav = [
                 { path: '/app/calendar', label: 'Calendar' },
@@ -561,13 +561,13 @@ const HomeWeatherInline = ({
       onClick={onToggle}
       className="flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors"
       style={{
-        background: expanded ? '#964735' : '#F1EDE7',
-        border: '1px solid #DAC1BB',
+        background: expanded ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+        border: '1px solid hsl(var(--border))',
       }}
     >
       <span style={{ fontSize: '1.1rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{emoji}</span>
       {temp !== null && (
-        <span className="text-sm font-semibold" style={{ color: expanded ? '#fff' : '#1C1C18' }}>
+        <span className="text-sm font-semibold" style={{ color: expanded ? '#fff' : 'hsl(var(--foreground))' }}>
           {temp}°
         </span>
       )}
@@ -943,7 +943,7 @@ const AppHome = () => {
       {/* Morning greeting + weather */}
       <div className="space-y-2" data-tutorial="home-greeting">
         <div className="flex items-center justify-between">
-          <p className="font-bold text-lg" style={{ color: '#1C1C18' }}>
+          <p className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>
             {new Date().getHours() < 12 ? t('home.goodMorning') : new Date().getHours() < 17 ? t('home.goodAfternoon') : t('home.goodEvening')}
           </p>
           {homeConfig.showWeather !== false && (
@@ -981,16 +981,16 @@ const AppHome = () => {
       {/* Conflict Alert */}
       {conflicts.length > 0 && (
         <div className="rounded-2xl overflow-hidden" style={{ background: '#FFF8F0', border: '1px solid #EDCFB8' }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#C4621A' }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C4621A' }}>Schedule Conflict{conflicts.length > 1 ? 's' : ''}</p>
           </div>
           {conflicts.map((c, i) => {
             const fmt = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
             return (
-              <button key={i} onClick={() => navigate('/app/calendar')} className="w-full px-4 py-3 text-left" style={{ borderBottom: i < conflicts.length - 1 ? '1px solid #F1EDE7' : 'none' }}>
-                <p className="text-sm font-semibold" style={{ color: '#1C1C18' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>overlaps</span> {c.eventB.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>{fmt(c.eventA.start)}</p>
+              <button key={i} onClick={() => navigate('/app/calendar')} className="w-full px-4 py-3 text-left" style={{ borderBottom: i < conflicts.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>overlaps</span> {c.eventB.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(c.eventA.start)}</p>
               </button>
             );
           })}
@@ -999,17 +999,17 @@ const AppHome = () => {
 
       {/* Stale Task Escalation */}
       {staleTasks.length > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#7A6660' }} />
-            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: '#7A6660' }}>Overdue Tasks</p>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Overdue Tasks</p>
             <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
           </div>
           {staleTasks.slice(0, 3).map((task, i) => (
-            <button key={task.id} onClick={() => navigate('/app/todos')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid #F1EDE7' : 'none' }}>
-              <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : '#DAC1BB' }} />
+            <button key={task.id} onClick={() => navigate('/app/todos')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+              <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : 'hsl(var(--border))' }} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{task.title}</p>
+                <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{task.title}</p>
                 <p className="text-xs" style={{ color: task.isEscalated ? '#C4621A' : '#7A6660' }}>
                   {task.isEscalated ? 'Stuck for ' : 'No activity for '}{task.daysSinceUpdate}d{task.isEscalated ? ' — delegate or drop?' : ''}
                 </p>
@@ -1038,10 +1038,10 @@ const AppHome = () => {
       )}
 
       {/* Today's Rituals card */}
-      {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: '#F7F3ED', border: '1px solid #DAC1BB' }}>
+      {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))' }}>
         <div className="space-y-0.5">
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>{t('home.ritualsSection')}</p>
-          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.ritualsSection')}</p>
+          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
             {(() => {
               const completed: string[] = (() => {
                 try {
@@ -1078,17 +1078,17 @@ const AppHome = () => {
 
         if (todayEvts.length > 0) {
           return (
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#7A6660' }}>{t('calendar.today')}</p>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
                 <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
               </div>
               {todayEvts.map((e, i) => (
-                <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid #F1EDE7' : 'none', background: '#FFFFFF' }}>
+                <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
                   <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{e.title}</p>
-                    <p className="text-xs" style={{ color: '#7A6660' }}>{format(e.startDate, 'h:mm a')}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
+                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{format(e.startDate, 'h:mm a')}</p>
                   </div>
                 </div>
               ))}
@@ -1101,28 +1101,28 @@ const AppHome = () => {
           .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
         if (upcoming) {
           return (
-            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>{t('home.nextUp')}</p>
-              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{upcoming.title}</p>
-              <p className="text-xs mt-0.5" style={{ color: '#7A6660' }}>
+            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
               </p>
             </button>
           );
         }
         return (
-          <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#7A6660' }}>{t('calendar.today')}</p>
-            <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.nothingScheduled')}</p>
+          <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nothingScheduled')}</p>
           </button>
         );
       })()}
 
       {/* Top Tasks */}
       {homeConfig.showTasks !== false && (
-      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-          <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{t('home.topTasks')}</p>
+      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
           <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
         </div>
         <QuickToDos navigate={navigate} />
@@ -1145,9 +1145,9 @@ const AppHome = () => {
           m.type === 'poll' ? '📊 Poll' :
           m.type === 'document' ? '📄 Document' : 'New message';
         return (
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB', background: '#FFFFFF' }}>
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F1EDE7' }}>
-              <p className="font-bold text-sm" style={{ color: '#1C1C18' }}>{t('home.familyChannel')}</p>
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyChannel')}</p>
               <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
             </div>
             {recentMsgs.length > 0 ? (
@@ -1159,18 +1159,18 @@ const AppHome = () => {
                     {msg.authorInitials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold" style={{ color: '#1C1C18' }}>{msg.authorName}</p>
-                    <p className="text-xs truncate" style={{ color: '#7A6660' }}>{msgPreview(msg)}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{msg.authorName}</p>
+                    <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{msgPreview(msg)}</p>
                   </div>
-                  <p className="text-xs flex-shrink-0" style={{ color: '#B5A09A' }}>
+                  <p className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {format(new Date(msg.timestamp), 'h:mm a')}
                   </p>
                 </button>
               ))
             ) : (
               <div className="px-4 py-5 text-center">
-                <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.noMessages')}</p>
-                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: '#F1EDE7', color: '#964735' }}>{t('home.openChannel')}</button>
+                <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noMessages')}</p>
+                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
               </div>
             )}
           </div>
@@ -1179,7 +1179,7 @@ const AppHome = () => {
 
       {/* Gallery */}
       {homeConfig.showGallery !== false && galleryImages.length > 0 && (
-        <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid #DAC1BB' }}>
+        <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid hsl(var(--border))' }}>
           <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
         </div>
       )}
@@ -1294,9 +1294,9 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
 
   return (
     <div>
-      <div className="divide-y" style={{ borderColor: '#F1EDE7' }}>
+      <div className="divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
         {quickTasks.map((task) => (
-          <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: '#F7F3ED' }}>
+          <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: 'hsl(var(--muted))' }}>
             <button
               onClick={() => toggleTask(task.id)}
               className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all appearance-none p-0"
@@ -1314,11 +1314,11 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
         ))}
         {quickTasks.length === 0 && !showInlineAdd && (
           <div className="px-4 py-4 text-center">
-            <p className="text-sm" style={{ color: '#7A6660' }}>{t('home.noTasksYet')}</p>
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noTasksYet')}</p>
           </div>
         )}
         {showInlineAdd && (
-          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderTop: quickTasks.length ? '1px solid #F1EDE7' : 'none' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderTop: quickTasks.length ? '1px solid hsl(var(--border))' : 'none' }}>
             <input
               ref={inlineInputRef}
               value={newTaskTitle}
@@ -1329,7 +1329,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
               }}
               placeholder={t('home.taskPlaceholder')}
               className="flex-1 text-sm outline-none bg-transparent"
-              style={{ color: '#1C1C18' }}
+              style={{ color: 'hsl(var(--foreground))' }}
               autoFocus
             />
             <button
@@ -1340,7 +1340,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
             >
               {t('common.add')}
             </button>
-            <button onClick={() => { setShowInlineAdd(false); setNewTaskTitle(''); }} className="text-xs flex-shrink-0" style={{ color: '#7A6660' }}>✕</button>
+            <button onClick={() => { setShowInlineAdd(false); setNewTaskTitle(''); }} className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>✕</button>
           </div>
         )}
         {!showInlineAdd && (

@@ -468,7 +468,7 @@ const ToDoList = () => {
     <div className="space-y-4 pb-4">
 
       {/* Time tabs */}
-      <div className="flex gap-1 p-1 rounded-2xl" style={{ background: '#F1EDE7' }}>
+      <div className="flex gap-1 p-1 rounded-2xl" style={{ background: 'hsl(var(--muted))' }}>
         {(['today','upcoming','complete'] as const).map(tab => (
           <button
             key={tab}
@@ -476,7 +476,7 @@ const ToDoList = () => {
             className="flex-1 py-2 rounded-xl text-sm font-semibold capitalize transition-all"
             style={{
               background: timeTab === tab ? '#964735' : 'transparent',
-              color: timeTab === tab ? '#FFFFFF' : '#7A6660',
+              color: timeTab === tab ? '#FFFFFF' : 'hsl(var(--muted-foreground))',
             }}
           >
             {tab === 'today' ? t('todos.today') : tab === 'upcoming' ? t('todos.upcoming') : t('todos.complete')}
@@ -486,13 +486,13 @@ const ToDoList = () => {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5A09A' }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
         <input
           placeholder={t('todos.searchPlaceholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none"
-          style={{ background: '#F1EDE7', border: '1px solid #DAC1BB', color: '#1C1C18' }}
+          style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}
         />
       </div>
 
@@ -508,7 +508,7 @@ const ToDoList = () => {
         <button
           onClick={() => setActiveTab(activeTab === 'shared' ? 'task' : 'shared')}
           className="flex items-center gap-2 text-sm font-medium ml-auto"
-          style={{ color: activeTab === 'shared' ? '#964735' : '#7A6660' }}
+          style={{ color: activeTab === 'shared' ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))' }}
         >
           <Users className="w-4 h-4" />
           {activeTab === 'shared' ? t('todos.backToMyTasks') : t('todos.viewSharedLists')}
@@ -633,13 +633,13 @@ const ToDoList = () => {
                   if (listed.length === 0) {
                     return (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: '#F1EDE7' }}>
-                          <CheckSquare className="w-7 h-7" style={{ color: '#B5A09A' }} />
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: 'hsl(var(--muted))' }}>
+                          <CheckSquare className="w-7 h-7" style={{ color: 'hsl(var(--muted-foreground))' }} />
                         </div>
-                        <p className="font-semibold" style={{ color: '#1C1C18' }}>
+                        <p className="font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
                           {timeTab === 'complete' ? t('todos.noCompletedYet') : t('todos.allClear')}
                         </p>
-                        <p className="text-sm mt-1" style={{ color: '#7A6660' }}>
+                        <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                           {timeTab === 'complete' ? t('todos.completeToSeeHere') : t('todos.upcomingWillAppear')}
                         </p>
                       </div>
@@ -651,8 +651,8 @@ const ToDoList = () => {
                       {Object.entries(groups).map(([cat, catTasks]) => (
                         <div key={cat}>
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: '#7A6660' }}>{cat}</h3>
-                            <span className="text-xs" style={{ color: '#B5A09A' }}>{catTasks.length} {catTasks.length !== 1 ? t('todos.tasksPlural') : t('todos.tasks')}</span>
+                            <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground))' }}>{cat}</h3>
+                            <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{catTasks.length} {catTasks.length !== 1 ? t('todos.tasksPlural') : t('todos.tasks')}</span>
                           </div>
                           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #EBE8E2' }}>
                             {catTasks.map((task, i) => {
@@ -662,8 +662,8 @@ const ToDoList = () => {
                                   key={task.id}
                                   className="flex items-center gap-3 px-4 py-3 transition-colors"
                                   style={{
-                                    background: '#FFFFFF',
-                                    borderTop: i > 0 ? '1px solid #F1EDE7' : 'none',
+                                    background: 'hsl(var(--card))',
+                                    borderTop: i > 0 ? '1px solid hsl(var(--border))' : 'none',
                                   }}
                                 >
                                   <button
@@ -678,7 +678,7 @@ const ToDoList = () => {
                                   </button>
                                   <div className="flex-1 min-w-0">
                                     <span className="text-sm" style={{
-                                      color: task.completed ? '#B5A09A' : '#1C1C18',
+                                      color: task.completed ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
                                       textDecoration: task.completed ? 'line-through' : 'none',
                                     }}>
                                       {task.title}
@@ -693,7 +693,7 @@ const ToDoList = () => {
                                     onClick={() => deleteTask(task.id)}
                                     className="opacity-40 hover:opacity-100 transition-opacity p-1"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" style={{ color: '#7A6660' }} />
+                                    <Trash2 className="w-3.5 h-3.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
                                   </button>
                                 </div>
                               );
@@ -766,7 +766,7 @@ const ToDoList = () => {
                     <button type="button"
                       onClick={() => setShowNewCategoryField(p => !p)}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold"
-                      style={{ background: '#F1EDE7', color: '#7A6660', border: '1px dashed #DAC1BB' }}>
+                      style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))', border: '1px dashed #DAC1BB' }}>
                       {t('todos.categoryNew')}
                     </button>
                   </div>

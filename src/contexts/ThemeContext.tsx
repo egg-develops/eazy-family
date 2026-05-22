@@ -15,7 +15,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     // Get theme from localStorage or default to 'system'
     const stored = localStorage.getItem('theme') as Theme | null;
-    return stored || 'system';
+    return stored || 'light';
   });
 
   const [isDark, setIsDark] = useState(false);

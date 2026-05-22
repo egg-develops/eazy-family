@@ -371,7 +371,7 @@ const Rituals = () => {
       {/* Daily Rituals */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.title')}</h2>
+          <h2 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.title')}</h2>
           <button
             onClick={() => { setEditMode(p => !p); setNewRitualTitle(''); }}
             className="text-xs font-semibold"
@@ -432,7 +432,7 @@ const Rituals = () => {
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold truncate" style={{ color: '#1C1C18' }}>{r.title}</p>
+                    <p className="text-xs font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{r.title}</p>
                   </div>
                 </button>
                 {editMode && (
@@ -459,7 +459,7 @@ const Rituals = () => {
                   onChange={e => setNewRitualTitle(e.target.value)}
                   placeholder={t('rituals.newRitualPlaceholder')}
                   className="flex-1 bg-transparent text-xs outline-none min-w-0"
-                  style={{ color: '#1C1C18' }}
+                  style={{ color: 'hsl(var(--foreground))' }}
                   autoFocus
                 />
                 <button
@@ -477,11 +477,11 @@ const Rituals = () => {
           {completedRituals.size > 0 && (
             <div style={{ marginTop: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ flex: 1, height: '0.5px', background: '#DAC1BB' }} />
+                <div style={{ flex: 1, height: '0.5px', background: 'hsl(var(--border))' }} />
                 <span style={{ fontSize: 10, color: '#B5A09A', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   Done · {completedRituals.size}/{rituals.length}
                 </span>
-                <div style={{ flex: 1, height: '0.5px', background: '#DAC1BB' }} />
+                <div style={{ flex: 1, height: '0.5px', background: 'hsl(var(--border))' }} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {rituals.filter(r => completedRituals.has(r.id)).map(r => (
@@ -513,7 +513,7 @@ const Rituals = () => {
       {settings.showOnRituals && (
         <div onClick={() => closeSwipe()}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{t('rituals.journal')}</h2>
+            <h2 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journal')}</h2>
             {!showAllJournal && entries.length > baseCount && (
               <button
                 onClick={e => { e.stopPropagation(); setShowAllJournal(true); }}
@@ -560,7 +560,7 @@ const Rituals = () => {
                   <div
                     ref={el => { if (el) innerRefs.current.set(entry.id, el); else innerRefs.current.delete(entry.id); }}
                     className="relative p-4"
-                    style={{ background: '#FFFFFF', willChange: 'transform' }}
+                    style={{ background: 'hsl(var(--card))', willChange: 'transform' }}
                     onTouchStart={e => onTouchStart(e, entry.id)}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}
@@ -568,7 +568,7 @@ const Rituals = () => {
                     <div className="flex items-start gap-2">
                       <div className="flex-1 space-y-1.5">
                         <p className="text-xs font-semibold" style={{ color: MUTED }}>{getTimeLabel(entry.date)}</p>
-                        <p className="text-sm leading-relaxed" style={{ color: '#1C1C18' }}>"{entry.text}"</p>
+                        <p className="text-sm leading-relaxed" style={{ color: 'hsl(var(--foreground))' }}>"{entry.text}"</p>
                       </div>
                     </div>
                   </div>

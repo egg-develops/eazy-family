@@ -53,12 +53,12 @@ interface FamilyMember {
   user_id?: string;
 }
 
-const TC = '#964735';
-const CARD = '#FFFFFF';
-const BORDER = '#DAC1BB';
-const DIVIDER = '#F1EDE7';
-const MUTED = '#7A6660';
-const INK = '#1C1C18';
+const TC = 'hsl(var(--primary))';
+const CARD = 'hsl(var(--card))';
+const BORDER = 'hsl(var(--border))';
+const DIVIDER = 'hsl(var(--border))';
+const MUTED = 'hsl(var(--muted-foreground))';
+const INK = 'hsl(var(--foreground))';
 const BG = '#F7F3ED';
 const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
@@ -235,6 +235,11 @@ const Settings = () => {
         } catch {}
         throw new Error(description);
       }
+      toast({
+        title: "Account deleted",
+        description: "Your Eazy.Family account and all its associated data have been deleted.",
+      });
+      await new Promise(r => setTimeout(r, 1800));
       await signOut();
     } catch (err: any) {
       toast({ title: "Error deleting account", description: err?.message || "Could not delete account. Contact support@eazy.family", variant: "destructive" });

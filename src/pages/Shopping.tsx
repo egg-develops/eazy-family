@@ -43,12 +43,13 @@ const guessCategory = (title: string): string => {
   return 'Other';
 };
 
-const TC = '#964735';
-const TL = '#D97B66';
-const CARD = '#FFFFFF';
-const BORDER = '#DAC1BB';
-const MUTED = '#7A6660';
-const BG = '#F7F3ED';
+const TC = 'hsl(var(--primary))';
+const TL = 'hsl(var(--primary))';
+const CARD = 'hsl(var(--card))';
+const BORDER = 'hsl(var(--border))';
+const MUTED = 'hsl(var(--muted-foreground))';
+const BG = 'hsl(var(--muted))';
+const INK = 'hsl(var(--foreground))';
 
 const Shopping = () => {
   const { t } = useTranslation();
@@ -253,7 +254,7 @@ const Shopping = () => {
           onKeyDown={e => e.key === 'Enter' && addItem()}
           placeholder={t('shopping.addItemPlaceholder')}
           className="flex-1 outline-none text-sm"
-          style={{ color: '#1C1C18', background: 'transparent' }}
+          style={{ color: INK, background: 'transparent' }}
         />
         <button onClick={isListening ? stopListening : startListening}
           className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
@@ -299,7 +300,7 @@ const Shopping = () => {
                 {/* Quantity pill */}
                 <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '1px 6px', gap: '4px' }}>
                   <button onClick={() => updateQty(item.id, -1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                  <span className="text-xs font-semibold" style={{ color: '#1C1C18', minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
+                  <span className="text-xs font-semibold" style={{ color: INK, minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
                   <button onClick={() => updateQty(item.id, 1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
@@ -339,7 +340,7 @@ const Shopping = () => {
       {!loading && filtered.length === 0 && (
         <div className="text-center py-12">
           <p className="text-3xl mb-3">🛒</p>
-          <p className="font-semibold" style={{ color: '#1C1C18' }}>{t('shopping.emptyList')}</p>
+          <p className="font-semibold" style={{ color: INK }}>{t('shopping.emptyList')}</p>
           <p className="text-sm mt-1" style={{ color: MUTED }}>{t('shopping.emptyListHint')}</p>
         </div>
       )}

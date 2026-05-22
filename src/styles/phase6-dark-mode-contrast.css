@@ -48,13 +48,18 @@
 .dark .bg-yellow-100 { background: hsl(45 40% 20%); }
 .dark .text-yellow-700 { color: hsl(45 60% 70%); }
 
-/* Input fields */
-.dark input,
-.dark textarea,
+/* Input fields — don't override explicitly transparent inputs */
+.dark input:not(.bg-transparent),
+.dark textarea:not(.bg-transparent),
 .dark select {
   background-color: hsl(var(--card));
   color: hsl(var(--foreground));
   border-color: hsl(var(--border));
+}
+/* Transparent inputs inherit foreground color from parent */
+.dark input.bg-transparent,
+.dark textarea.bg-transparent {
+  color: hsl(var(--foreground));
 }
 
 /* Ensure text is readable on dark backgrounds */
