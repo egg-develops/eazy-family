@@ -287,7 +287,24 @@
     "moduleRituals": "Rituali del giorno",
     "moduleTasks": "Attività principali",
     "moduleFamily": "Canale famiglia",
-    "moduleGallery": "Galleria foto"
+    "moduleGallery": "Galleria foto",
+    "appTour": {
+      "title": "Tour dell'app",
+      "featureSlides": "Diapositive delle funzioni",
+      "featureSlidesSub": "Rivedi le diapositive introduttive",
+      "interactiveTour": "Tour interattivo",
+      "interactiveTourSub": "Tour spotlight della schermata iniziale"
+    },
+    "helpCenter": {
+      "title": "Centro assistenza",
+      "faqs": "FAQ",
+      "features": "Funzionalità",
+      "contact": "Contatto"
+    },
+    "deleteWarning": "Tutti i tuoi dati verranno eliminati definitivamente e non potranno essere ripristinati.",
+    "cancel": "Annulla",
+    "deleteEverything": "Sì, elimina tutto",
+    "deleting": "Eliminazione…"
   },
   "privacySettings": {
     "title": "Impostazioni privacy",
@@ -756,7 +773,8 @@
     "sending": "Invio in corso...",
     "sendInvitation": "Invia invito",
     "validationError": "Errore di validazione",
-    "failedToSendInvitation": "Invio dell'invito fallito"
+    "failedToSendInvitation": "Invio dell'invito fallito",
+    "couldNotAddItem": "Impossibile aggiungere l'elemento. Riprova."
   },
   "shopping": {
     "title": "Spesa",
@@ -769,6 +787,9 @@
     "emptyList": "La tua lista è vuota",
     "emptyListHint": "Aggiungi articoli sopra o usa EZ Capture",
     "couldNotAdd": "Impossibile aggiungere l'articolo",
+    "couldNotLoad": "Impossibile caricare la lista della spesa",
+    "couldNotUpdate": "Impossibile aggiornare l'articolo",
+    "couldNotDelete": "Impossibile eliminare l'articolo",
     "voiceNotSupported": "L'input vocale non è supportato in questo browser",
     "micDenied": "Accesso al microfono negato",
     "micDeniedDesc": "Consenti il microfono nelle impostazioni del tuo browser.",

@@ -208,6 +208,7 @@ const ToDoList = () => {
       setAddingToListId(null);
     } catch (e) {
       console.error(e);
+      toast({ title: t('todos.couldNotAddItem'), variant: 'destructive' });
     }
   };
 

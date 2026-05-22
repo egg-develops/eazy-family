@@ -287,7 +287,24 @@
     "moduleRituals": "Rituels du jour",
     "moduleTasks": "Tâches prioritaires",
     "moduleFamily": "Canal famille",
-    "moduleGallery": "Galerie photos"
+    "moduleGallery": "Galerie photos",
+    "appTour": {
+      "title": "Visite de l'appli",
+      "featureSlides": "Diapositives des fonctionnalités",
+      "featureSlidesSub": "Revoir les diapositives d'introduction",
+      "interactiveTour": "Visite interactive",
+      "interactiveTourSub": "Tour guidé de l'écran d'accueil"
+    },
+    "helpCenter": {
+      "title": "Centre d'aide",
+      "faqs": "FAQ",
+      "features": "Fonctionnalités",
+      "contact": "Contact"
+    },
+    "deleteWarning": "Toutes vos données seront définitivement supprimées et cela ne peut pas être annulé.",
+    "cancel": "Annuler",
+    "deleteEverything": "Oui, tout supprimer",
+    "deleting": "Suppression…"
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",
@@ -756,7 +773,8 @@
     "sending": "Envoi en cours...",
     "sendInvitation": "Envoyer l'invitation",
     "validationError": "Erreur de validation",
-    "failedToSendInvitation": "Échec de l'envoi de l'invitation"
+    "failedToSendInvitation": "Échec de l'envoi de l'invitation",
+    "couldNotAddItem": "Impossible d'ajouter l'élément. Veuillez réessayer."
   },
   "shopping": {
     "title": "Courses",
@@ -769,6 +787,9 @@
     "emptyList": "Votre liste est vide",
     "emptyListHint": "Ajoutez des articles ci-dessus ou utilisez EZ Capture",
     "couldNotAdd": "Impossible d'ajouter l'article",
+    "couldNotLoad": "Impossible de charger la liste de courses",
+    "couldNotUpdate": "Impossible de mettre à jour l'article",
+    "couldNotDelete": "Impossible de supprimer l'article",
     "voiceNotSupported": "La saisie vocale n'est pas prise en charge dans ce navigateur",
     "micDenied": "Accès au microphone refusé",
     "micDeniedDesc": "Autorisez le microphone dans les paramètres de votre navigateur.",

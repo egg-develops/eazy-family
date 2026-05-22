@@ -287,7 +287,24 @@
     "moduleRituals": "Heutige Rituale",
     "moduleTasks": "Wichtigste Aufgaben",
     "moduleFamily": "Familienkanal",
-    "moduleGallery": "Fotogalerie"
+    "moduleGallery": "Fotogalerie",
+    "appTour": {
+      "title": "App-Tour",
+      "featureSlides": "Feature-Folien",
+      "featureSlidesSub": "Intro-Folien erneut ansehen",
+      "interactiveTour": "Interaktive Tour",
+      "interactiveTourSub": "Spotlight-Tour durch den Startbildschirm"
+    },
+    "helpCenter": {
+      "title": "Hilfe-Center",
+      "faqs": "Häufige Fragen",
+      "features": "Funktionen",
+      "contact": "Kontakt"
+    },
+    "deleteWarning": "Dadurch werden alle Ihre Daten dauerhaft gelöscht und können nicht rückgängig gemacht werden.",
+    "cancel": "Abbrechen",
+    "deleteEverything": "Ja, alles löschen",
+    "deleting": "Wird gelöscht…"
   },
   "privacySettings": {
     "title": "Datenschutzeinstellungen",
@@ -756,7 +773,8 @@
     "sending": "Wird gesendet...",
     "sendInvitation": "Einladung senden",
     "validationError": "Validierungsfehler",
-    "failedToSendInvitation": "Einladung konnte nicht gesendet werden"
+    "failedToSendInvitation": "Einladung konnte nicht gesendet werden",
+    "couldNotAddItem": "Eintrag konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
   },
   "shopping": {
     "title": "Einkaufen",
@@ -769,6 +787,9 @@
     "emptyList": "Ihre Liste ist leer",
     "emptyListHint": "Fügen Sie oben Einträge hinzu oder verwenden Sie EZ Capture",
     "couldNotAdd": "Eintrag konnte nicht hinzugefügt werden",
+    "couldNotLoad": "Einkaufsliste konnte nicht geladen werden",
+    "couldNotUpdate": "Eintrag konnte nicht aktualisiert werden",
+    "couldNotDelete": "Eintrag konnte nicht gelöscht werden",
     "voiceNotSupported": "Spracheingabe wird in diesem Browser nicht unterstützt",
     "micDenied": "Mikrofonzugriff verweigert",
     "micDeniedDesc": "Erlauben Sie den Mikrofonzugriff in Ihren Browsereinstellungen.",

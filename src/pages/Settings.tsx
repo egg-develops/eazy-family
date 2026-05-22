@@ -170,7 +170,7 @@ const Settings = () => {
     setHomeConfig(newConfig);
     cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
     window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
-    if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
+    if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(({ error }) => { if (error) logError('saveHomeConfig:', error); });
   };
 
   const handleLanguageChange = (lang: string) => {
@@ -436,7 +436,7 @@ const Settings = () => {
         <Card_>
           <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
             {homeConfig.iconImage
-              ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} />
+              ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               : <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style={{ background: '#D97B66' }}>
                   {(displayName || userEmail || 'EF').slice(0, 2).toUpperCase()}
                 </div>
@@ -462,7 +462,7 @@ const Settings = () => {
                   <div key={idx} className="relative aspect-video rounded-xl overflow-hidden flex items-center justify-center" style={{ background: '#F1EDE7', border: `1px solid ${BORDER}` }}>
                     {img ? (
                       <>
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={img} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         <button onClick={() => { const n = imgs.filter((_, i) => i !== idx); saveHomeConfig({ headerImages: n, headerImage: n[0] }); deleteStorageFile('user-uploads', img).catch(() => {}); }}
                           className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(28,28,24,0.6)' }}>
                           <X className="w-2.5 h-2.5 text-white" />
@@ -534,18 +534,18 @@ const Settings = () => {
 
       {/* ── App Tour ── */}
       <div className="space-y-2">
-        <SectionLabel>App Tour</SectionLabel>
+        <SectionLabel>{t('settings.appTour.title')}</SectionLabel>
         <Card_>
           <Row
             icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>✨</span>}
-            title="Feature slides"
-            subtitle="Watch the intro slides again"
+            title={t('settings.appTour.featureSlides')}
+            subtitle={t('settings.appTour.featureSlidesSub')}
             onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
           />
           <Row
             icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>🔍</span>}
-            title="Interactive tour"
-            subtitle="Spotlight tour of the home screen"
+            title={t('settings.appTour.interactiveTour')}
+            subtitle={t('settings.appTour.interactiveTourSub')}
             last
             onClick={() => window.dispatchEvent(new Event('tutorial-start'))}
           />
@@ -554,23 +554,23 @@ const Settings = () => {
 
       {/* ── Help Center ── */}
       <div className="space-y-2">
-        <SectionLabel>Help Center</SectionLabel>
+        <SectionLabel>{t('settings.helpCenter.title')}</SectionLabel>
         <Card_>
           <Row
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
-            title="FAQs"
+            title={t('settings.helpCenter.faqs')}
             right={<Arrow />}
             onClick={() => window.open('https://www.eazy.family/app/help#faqs', '_blank')}
           />
           <Row
             icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Features"
+            title={t('settings.helpCenter.features')}
             right={<Arrow />}
             onClick={() => window.open('https://www.eazy.family/app/help#features', '_blank')}
           />
           <Row
             icon={<ExternalLink className="w-4 h-4" style={{ color: MUTED }} />}
-            title="Contact"
+            title={t('settings.helpCenter.contact')}
             right={<Arrow />}
             onClick={() => window.open('https://www.eazy.family/app/help#contact', '_blank')}
           />
@@ -603,11 +603,11 @@ const Settings = () => {
         </button>
       ) : (
         <div className="rounded-2xl px-4 py-4 space-y-3" style={{ background: '#FFF5F5', border: '1.5px solid #C0392B' }}>
-          <p className="text-sm font-medium" style={{ color: '#C0392B' }}>This will permanently delete all your data and cannot be undone.</p>
+          <p className="text-sm font-medium" style={{ color: '#C0392B' }}>{t('settings.deleteWarning')}</p>
           <div className="flex gap-2">
-            <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#F1EDE7', color: MUTED }} onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>Cancel</button>
+            <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold" style={{ background: '#F1EDE7', color: MUTED }} onClick={() => setShowDeleteConfirm(false)} disabled={deletingAccount}>{t('settings.cancel')}</button>
             <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: '#C0392B' }} onClick={handleDeleteAccount} disabled={deletingAccount}>
-              {deletingAccount ? 'Deleting…' : 'Yes, delete everything'}
+              {deletingAccount ? t('settings.deleting') : t('settings.deleteEverything')}
             </button>
           </div>
         </div>

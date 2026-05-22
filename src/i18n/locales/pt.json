@@ -287,7 +287,24 @@
     "moduleRituals": "Rituais de hoje",
     "moduleTasks": "Tarefas principais",
     "moduleFamily": "Canal familiar",
-    "moduleGallery": "Galeria de fotos"
+    "moduleGallery": "Galeria de fotos",
+    "appTour": {
+      "title": "Tour da app",
+      "featureSlides": "Diapositivos de funcionalidades",
+      "featureSlidesSub": "Ver os diapositivos introdutórios novamente",
+      "interactiveTour": "Tour interativo",
+      "interactiveTourSub": "Tour destacado do ecrã inicial"
+    },
+    "helpCenter": {
+      "title": "Centro de ajuda",
+      "faqs": "Perguntas frequentes",
+      "features": "Funcionalidades",
+      "contact": "Contacto"
+    },
+    "deleteWarning": "Todos os teus dados serão eliminados permanentemente e não pode ser desfeito.",
+    "cancel": "Cancelar",
+    "deleteEverything": "Sim, eliminar tudo",
+    "deleting": "A eliminar…"
   },
   "privacySettings": {
     "title": "Definições de privacidade",
@@ -756,7 +773,8 @@
     "sending": "A enviar...",
     "sendInvitation": "Enviar convite",
     "validationError": "Erro de validação",
-    "failedToSendInvitation": "Não foi possível enviar o convite"
+    "failedToSendInvitation": "Não foi possível enviar o convite",
+    "couldNotAddItem": "Não foi possível adicionar o elemento. Tenta novamente."
   },
   "shopping": {
     "title": "Compras",
@@ -769,6 +787,9 @@
     "emptyList": "A tua lista está vazia",
     "emptyListHint": "Adiciona artigos acima ou usa o EZ Capture",
     "couldNotAdd": "Não foi possível adicionar o artigo",
+    "couldNotLoad": "Não foi possível carregar a lista de compras",
+    "couldNotUpdate": "Não foi possível atualizar o artigo",
+    "couldNotDelete": "Não foi possível eliminar o artigo",
     "voiceNotSupported": "A entrada de voz não é suportada neste navegador",
     "micDenied": "Acesso ao microfone negado",
     "micDeniedDesc": "Permite o acesso ao microfone nas definições do navegador.",

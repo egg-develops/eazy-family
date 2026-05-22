@@ -81,7 +81,9 @@ const Shopping = () => {
         listType: (d.type === 'shopping_personal' ? 'personal' : 'shared') as const,
       })));
       setLastSynced(new Date());
-    } catch { /* silent */ } finally { setLoading(false); }
+    } catch {
+      toast({ title: t('shopping.couldNotLoad'), variant: 'destructive' });
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, [user]);
@@ -91,17 +93,12 @@ const Shopping = () => {
     const itemTitles = parseShoppingItems(newItem.trim());
     if (!itemTitles.length) return;
     haptic('light');
+    const dbType = listType === 'personal' ? 'shopping_personal' : 'shopping';
+    const rows = itemTitles.map(title => ({ title, type: dbType, user_id: user.id, completed: false }));
     try {
-      const dbType = listType === 'personal' ? 'shopping_personal' : 'shopping';
-      const results = await Promise.all(
-        itemTitles.map(title =>
-          supabase.from('tasks').insert({ title, type: dbType, user_id: user.id, completed: false }).select().single()
-        )
-      );
-      const newRows = results
-        .map(r => r.data)
-        .filter(Boolean)
-        .map(d => ({ id: d!.id, title: d!.title, completed: false, quantity: 1, category: guessCategory(d!.title), listType }));
+      const { data, error } = await supabase.from('tasks').insert(rows).select();
+      if (error) throw error;
+      const newRows = (data || []).map(d => ({ id: d.id, title: d.title, completed: false, quantity: 1, category: guessCategory(d.title), listType }));
       setItems(prev => [...prev, ...newRows]);
       setNewItem('');
     } catch { toast({ title: t('shopping.couldNotAdd'), variant: 'destructive' }); }
@@ -113,8 +110,12 @@ const Shopping = () => {
     if (!item) return;
     const nowCompleted = !item.completed;
     setItems(prev => prev.map(i => i.id === id ? { ...i, completed: nowCompleted } : i));
-    await supabase.from('tasks').update({ completed: nowCompleted }).eq('id', id);
-    // Log purchase for frequency engine when item is checked off
+    const { error } = await supabase.from('tasks').update({ completed: nowCompleted }).eq('id', id);
+    if (error) {
+      setItems(prev => prev.map(i => i.id === id ? { ...i, completed: item.completed } : i));
+      toast({ title: t('shopping.couldNotUpdate'), variant: 'destructive' });
+      return;
+    }
     if (nowCompleted && user) {
       logPurchase(user.id, item.title);
     }
@@ -127,16 +128,27 @@ const Shopping = () => {
 
   const deleteItem = async (id: string) => {
     haptic('light');
-    setItems(prev => prev.filter(i => i.id !== id));
-    await supabase.from('tasks').delete().eq('id', id);
+    const prev = items;
+    setItems(p => p.filter(i => i.id !== id));
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if (error) {
+      setItems(prev);
+      toast({ title: t('shopping.couldNotDelete'), variant: 'destructive' });
+    }
   };
 
   const clearCompleted = async () => {
     haptic('medium');
     const completedIds = items.filter(i => i.completed).map(i => i.id);
     if (!completedIds.length) return;
-    setItems(prev => prev.filter(i => !i.completed));
-    await supabase.from('tasks').delete().in('id', completedIds);
+    const prev = items;
+    setItems(p => p.filter(i => !i.completed));
+    const { error } = await supabase.from('tasks').delete().in('id', completedIds);
+    if (error) {
+      setItems(prev);
+      toast({ title: t('shopping.couldNotDelete'), variant: 'destructive' });
+      return;
+    }
     toast({ title: `${completedIds.length} ${t('shopping.itemsRemoved')}` });
   };
 

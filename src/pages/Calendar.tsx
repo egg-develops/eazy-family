@@ -18,6 +18,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
+import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
 import {
   requestCalendarAccess,
@@ -291,7 +292,7 @@ const Calendar = () => {
             color: '#555555',
           }))
       );
-    });
+    }).catch(err => logError('fetchAppleCalendarEvents:', err));
   }, [appleCalendarEnabled, selectedDate.getFullYear(), selectedDate.getMonth()]);
 
   const handleAppleCalendarConnect = async () => {

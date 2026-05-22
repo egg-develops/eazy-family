@@ -287,7 +287,24 @@
     "moduleRituals": "Today's Rituals",
     "moduleTasks": "Top Tasks",
     "moduleFamily": "Family Channel",
-    "moduleGallery": "Photo Gallery"
+    "moduleGallery": "Photo Gallery",
+    "appTour": {
+      "title": "App Tour",
+      "featureSlides": "Feature slides",
+      "featureSlidesSub": "Watch the intro slides again",
+      "interactiveTour": "Interactive tour",
+      "interactiveTourSub": "Spotlight tour of the home screen"
+    },
+    "helpCenter": {
+      "title": "Help Center",
+      "faqs": "FAQs",
+      "features": "Features",
+      "contact": "Contact"
+    },
+    "deleteWarning": "This will permanently delete all your data and cannot be undone.",
+    "cancel": "Cancel",
+    "deleteEverything": "Yes, delete everything",
+    "deleting": "Deleting…"
   },
   "privacySettings": {
     "title": "Privacy Settings",
@@ -756,7 +773,8 @@
     "sending": "Sending...",
     "sendInvitation": "Send Invitation",
     "validationError": "Validation Error",
-    "failedToSendInvitation": "Failed to send invitation"
+    "failedToSendInvitation": "Failed to send invitation",
+    "couldNotAddItem": "Could not add item. Please try again."
   },
   "shopping": {
     "title": "Shopping",
@@ -769,6 +787,9 @@
     "emptyList": "Your list is empty",
     "emptyListHint": "Add items above or use EZ Capture",
     "couldNotAdd": "Could not add item",
+    "couldNotLoad": "Could not load shopping list",
+    "couldNotUpdate": "Could not update item",
+    "couldNotDelete": "Could not delete item",
     "voiceNotSupported": "Voice input not supported in this browser",
     "micDenied": "Microphone access denied",
     "micDeniedDesc": "Allow microphone in your browser settings.",

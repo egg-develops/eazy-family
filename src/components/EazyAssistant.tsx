@@ -91,6 +91,7 @@ export const EazyAssistant = () => {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editText, setEditText] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
@@ -101,6 +102,15 @@ export const EazyAssistant = () => {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    if (!confirmDialog) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setConfirmDialog(null); setEditMode(false); setEditText(""); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [confirmDialog]);
 
   // ── Voice parser (calls edge function) ────────────────────────────────────
   const callVoiceParser = async (text: string, mode: string): Promise<any> => {
@@ -208,7 +218,8 @@ export const EazyAssistant = () => {
 
   // ── Confirm dialog handlers ────────────────────────────────────────────────
   const handleConfirmApprove = async () => {
-    if (!confirmDialog) return;
+    if (!confirmDialog || isApproving) return;
+    setIsApproving(true);
     try {
       if (confirmDialog.type === "shopping" && confirmDialog.items?.length) {
         await addShoppingItems(confirmDialog.items);
@@ -222,6 +233,8 @@ export const EazyAssistant = () => {
       }
     } catch {
       toast({ title: "Could not save. Please try again.", variant: "destructive" });
+    } finally {
+      setIsApproving(false);
     }
     setConfirmDialog(null);
     setEditMode(false);
@@ -600,8 +613,8 @@ export const EazyAssistant = () => {
         {!editMode && (
           <div className="flex gap-2">
             {hasData && (
-              <Button size="sm" className="h-7 text-xs gap-1" onClick={handleConfirmApprove}>
-                <Check className="w-3 h-3" /> Approve
+              <Button size="sm" className="h-7 text-xs gap-1" onClick={handleConfirmApprove} disabled={isApproving}>
+                <Check className="w-3 h-3" /> {isApproving ? "Saving…" : "Approve"}
               </Button>
             )}
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleConfirmEdit}>
