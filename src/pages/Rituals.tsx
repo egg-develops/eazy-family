@@ -98,10 +98,10 @@ const Rituals = () => {
   const savedRef = useRef(false);
   const DELETE_W = 72;
 
-  const TC = '#964735';
+  const TC = 'hsl(var(--primary))';
   const TL = '#D97B66';
-  const BORDER = '#DAC1BB';
-  const MUTED = '#7A6660';
+  const BORDER = 'hsl(var(--border))';
+  const MUTED = 'hsl(var(--muted-foreground))';
 
   const reloadEntries = () => {
     const stored = localStorage.getItem('eazy-journal-entries');
@@ -394,7 +394,7 @@ const Rituals = () => {
                   onClick={() => !editMode && toggleRitual(r.id)}
                   className="w-full flex items-center gap-2 p-3 rounded-xl text-left"
                   style={{
-                    background: '#F7F3ED',
+                    background: 'hsl(var(--muted))',
                     border: `1px solid ${BORDER}`,
                     cursor: editMode ? 'default' : 'pointer',
                     transform: justCompletedId === r.id ? 'scale(1.06)' : 'scale(1)',
@@ -414,7 +414,7 @@ const Rituals = () => {
                         onClick={e => e.stopPropagation()}
                         style={{
                           position: 'absolute', top: '110%', left: 0, zIndex: 50,
-                          background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12,
+                          background: 'hsl(var(--card))', border: `1px solid ${BORDER}`, borderRadius: 12,
                           padding: 8, display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4,
                           boxShadow: '0 4px 16px rgba(28,28,24,0.12)', width: 196,
                         }}
@@ -423,7 +423,7 @@ const Rituals = () => {
                           <button
                             key={em}
                             onClick={() => updateRitualEmoji(r.id, em)}
-                            style={{ fontSize: 18, lineHeight: 1, padding: 4, borderRadius: 6, border: 'none', background: r.emoji === em ? '#FDF3EE' : 'transparent', cursor: 'pointer' }}
+                            style={{ fontSize: 18, lineHeight: 1, padding: 4, borderRadius: 6, border: 'none', background: r.emoji === em ? 'hsl(var(--accent))' : 'transparent', cursor: 'pointer' }}
                           >
                             {em}
                           </button>
@@ -451,7 +451,7 @@ const Rituals = () => {
               <form
                 onSubmit={e => { e.preventDefault(); addRitual(); }}
                 className="flex items-center gap-2 p-3 rounded-xl"
-                style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}
+                style={{ background: 'hsl(var(--muted))', border: `1px dashed ${BORDER}` }}
               >
                 <span className="text-lg flex-shrink-0">{pickRitualEmoji(newRitualTitle)}</span>
                 <input
@@ -576,7 +576,7 @@ const Rituals = () => {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl p-5 text-center" style={{ background: '#F7F3ED', border: `1px dashed ${BORDER}` }}>
+            <div className="rounded-2xl p-5 text-center" style={{ background: 'hsl(var(--muted))', border: `1px dashed ${BORDER}` }}>
               <p className="text-sm font-medium" style={{ color: MUTED }}>{t('rituals.whatsOnYourMind')}</p>
               <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>{t('rituals.useVoiceHint')}</p>
             </div>

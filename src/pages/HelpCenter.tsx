@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronDown, ChevronUp, Mail, MessageCircle, Sparkles, Calendar, CheckSquare, ShoppingCart, Users, Bell, Mic } from "lucide-react";
 
-const TC = '#964735';
-const BG = '#F7F3ED';
-const CARD = '#FFFFFF';
-const BORDER = '#DAC1BB';
-const DIVIDER = '#F1EDE7';
-const MUTED = '#7A6660';
-const INK = '#1C1C18';
+const TC = 'hsl(var(--primary))';
+const BG = 'hsl(var(--background))';
+const CARD = 'hsl(var(--card))';
+const BORDER = 'hsl(var(--border))';
+const DIVIDER = 'hsl(var(--border))';
+const MUTED = 'hsl(var(--muted-foreground))';
+const INK = 'hsl(var(--foreground))';
 const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
 const SAGE_BORDER = '#C8DDD0';
@@ -38,8 +38,20 @@ const FAQ = ({ q, a }: { q: string; a: string }) => {
 
 const HelpCenter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
-  const [tab, setTab] = useState<'features' | 'faqs' | 'contact'>('features');
+  const [tab, setTab] = useState<'features' | 'faqs' | 'contact'>(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('tab');
+    if (t === 'faqs' || t === 'contact' || t === 'features') return t;
+    return 'features';
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const t = params.get('tab');
+    if (t === 'faqs' || t === 'contact' || t === 'features') setTab(t);
+  }, [location.search]);
 
   const TABS = [
     { id: 'features' as const, label: t('helpCenter.tabs.features') },

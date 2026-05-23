@@ -304,13 +304,14 @@ const AppLayout = () => {
   const isHomePath = currentPath === "/app" || currentPath === "/app/";
   const isCalendarPath = currentPath === "/app/calendar";
   const isFamilyAgendaPath = currentPath === "/app/family-agenda";
+  const isFamilyChannelPath = currentPath === "/app/family-channel";
   const isHelpPath = currentPath === "/app/help";
   const isActive = (path: string) => currentPath === path;
 
   return (
     <div className="min-h-screen flex w-full bg-background">
       {/* Header — hidden on Calendar (it has its own) */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 'none' : undefined }}>
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: 'hsl(var(--background))', borderBottom: '1px solid hsl(var(--border))', paddingTop: 'max(0px, env(safe-area-inset-top))', display: (isCalendarPath || isFamilyAgendaPath || isFamilyChannelPath || isHelpPath) ? 'none' : undefined }}>
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>
@@ -322,7 +323,8 @@ const AppLayout = () => {
                 { path: '/app/family', label: 'Family' },
                 { path: '/app/rituals', label: 'Rituals' },
                 { path: '/app/settings', label: 'Settings' },
-                { path: '/app/family-agenda', label: 'Family' },
+                { path: '/app/family-agenda', label: 'Agenda' },
+                { path: '/app/family-channel', label: 'Channel' },
                 { path: '/app/messaging', label: 'Messages' },
                 { path: '/app/events', label: 'Events' },
                 { path: '/app/community', label: 'Community' },
@@ -334,8 +336,8 @@ const AppLayout = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 0 : '3.5rem', paddingBottom: (isCalendarPath || isFamilyAgendaPath || isHelpPath) ? 0 : undefined }}>
-        {(isCalendarPath || isFamilyAgendaPath || isHelpPath) ? (
+      <main className="flex-1 overflow-x-hidden" style={{ paddingTop: (isCalendarPath || isFamilyAgendaPath || isFamilyChannelPath || isHelpPath) ? 0 : '3.5rem', paddingBottom: (isCalendarPath || isFamilyAgendaPath || isFamilyChannelPath || isHelpPath) ? 0 : undefined }}>
+        {(isCalendarPath || isFamilyAgendaPath || isFamilyChannelPath || isHelpPath) ? (
           <Outlet />
         ) : (
           <div className="max-w-7xl mx-auto px-4 pb-24 pt-3">
@@ -1148,13 +1150,13 @@ const AppHome = () => {
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
               <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyChannel')}</p>
-              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
+              <button onClick={() => navigate('/app/family-channel')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
             </div>
             {recentMsgs.length > 0 ? (
               recentMsgs.map((msg, i) => (
-                <button key={i} onClick={() => navigate('/app/family-agenda')}
+                <button key={i} onClick={() => navigate('/app/family-channel')}
                   className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
-                  style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid #F7F3ED' : 'none' }}>
+                  style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
                   <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: msg.authorColor || '#964735' }}>
                     {msg.authorInitials}
                   </div>
@@ -1170,7 +1172,7 @@ const AppHome = () => {
             ) : (
               <div className="px-4 py-5 text-center">
                 <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noMessages')}</p>
-                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
+                <button onClick={() => navigate('/app/family-channel')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
               </div>
             )}
           </div>

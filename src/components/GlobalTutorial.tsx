@@ -42,6 +42,20 @@ export const GlobalTutorial = () => {
     };
   }, []);
 
+  // Push a history entry when a tour opens so iOS back gesture dismisses it
+  // rather than navigating away from the page.
+  useEffect(() => {
+    if (!showSlides && !showJoyride) return;
+    history.pushState({ eazyTutorial: true }, '');
+    const onPopState = (e: PopStateEvent) => {
+      if (e.state?.eazyTutorial) return;
+      setShowSlides(false);
+      setShowJoyride(false);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [showSlides, showJoyride]);
+
   const handleSlidesDone = () => {
     localStorage.setItem("eazy-family-tutorial-completed", "true");
     setShowSlides(false);

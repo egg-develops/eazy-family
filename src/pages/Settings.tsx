@@ -598,19 +598,19 @@ const Settings = () => {
             icon={<HelpCircle className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.helpCenter.faqs')}
             right={<Arrow />}
-            onClick={() => window.open('https://www.eazy.family/app/help#faqs', '_blank')}
+            onClick={() => navigate('/app/help?tab=faqs')}
           />
           <Row
             icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.helpCenter.features')}
             right={<Arrow />}
-            onClick={() => window.open('https://www.eazy.family/app/help#features', '_blank')}
+            onClick={() => navigate('/app/help?tab=features')}
           />
           <Row
             icon={<ExternalLink className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.helpCenter.contact')}
             right={<Arrow />}
-            onClick={() => window.open('https://www.eazy.family/app/help#contact', '_blank')}
+            onClick={() => navigate('/app/help?tab=contact')}
           />
           <Row
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}

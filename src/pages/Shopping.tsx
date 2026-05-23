@@ -292,13 +292,13 @@ const Shopping = () => {
                 {/* Checkbox — rounded square, text height */}
                 <button onClick={() => toggleItem(item.id)}
                   className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors appearance-none p-0"
-                  style={{ border: `1.5px solid ${item.completed ? TC : '#C4AEA8'}`, background: item.completed ? TC : 'transparent' }}>
+                  style={{ border: `1.5px solid ${item.completed ? TC : 'hsl(var(--border))'}`, background: item.completed ? TC : 'transparent' }}>
                   {item.completed && <span className="text-white" style={{ fontSize: '8px', lineHeight: 1 }}>✓</span>}
                 </button>
                 {/* Title */}
-                <span className="flex-1 text-sm" style={{ color: item.completed ? MUTED : '#1C1C18', textDecoration: item.completed ? 'line-through' : 'none' }}>{item.title}</span>
+                <span className="flex-1 text-sm" style={{ color: item.completed ? MUTED : INK, textDecoration: item.completed ? 'line-through' : 'none' }}>{item.title}</span>
                 {/* Quantity pill */}
-                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: '#F1EDE7', padding: '1px 6px', gap: '4px' }}>
+                <div className="flex items-center rounded-full flex-shrink-0" style={{ background: 'hsl(var(--muted))', padding: '1px 6px', gap: '4px' }}>
                   <button onClick={() => updateQty(item.id, -1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
                   <span className="text-xs font-semibold" style={{ color: INK, minWidth: '14px', textAlign: 'center' }}>{item.quantity}</span>
                   <button onClick={() => updateQty(item.id, 1)} style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>

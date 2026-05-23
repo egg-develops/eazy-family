@@ -45,7 +45,8 @@ const Shopping = lazyWithRetry(() => import("./pages/Shopping"));
 const Rituals = lazyWithRetry(() => import("./pages/Rituals"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
 const FamilyProfile = lazyWithRetry(() => import("./pages/FamilyProfile"));
-const FamilyAgenda = lazyWithRetry(() => import("./pages/FamilyAgenda"));
+const FamilyAgenda = lazyWithRetry(() => import("./pages/FamilyAgendaView"));
+const FamilyChannel = lazyWithRetry(() => import("./pages/FamilyChannel"));
 const HelpCenter = lazyWithRetry(() => import("./pages/HelpCenter"));
 
 // Loading fallback component
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
                 <Route path="rituals" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Rituals /></Suspense></ErrorBoundary>} />
                 <Route path="family-agenda" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyAgenda /></Suspense></ErrorBoundary>} />
+                <Route path="family-channel" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyChannel /></Suspense></ErrorBoundary>} />
                 <Route path="help" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><HelpCenter /></Suspense></ErrorBoundary>} />
               </Route>
               

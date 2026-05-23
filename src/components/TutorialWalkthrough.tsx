@@ -1,5 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+
+function readCSSVar(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v ? `hsl(${v})` : fallback;
+}
 
 interface TutorialWalkthroughProps {
   run: boolean;
@@ -8,6 +14,14 @@ interface TutorialWalkthroughProps {
 
 export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProps) {
   const [stepIndex, setStepIndex] = useState(0);
+
+  const joyrideColors = useMemo(() => ({
+    bgColor: readCSSVar('--card', '#FFFFFF'),
+    fgColor: readCSSVar('--foreground', '#1C1C18'),
+    borderColor: readCSSVar('--border', '#DAC1BB'),
+    primaryColor: readCSSVar('--primary', '#964735'),
+    mutedColor: readCSSVar('--muted-foreground', '#7A6660'),
+  }), [run]);
 
   const steps: Step[] = [
     {
@@ -135,26 +149,26 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableScrolling={false}
       styles={{
         options: {
-          primaryColor: '#964735',
-          textColor: '#1C1C18',
-          backgroundColor: '#FFFFFF',
+          primaryColor: joyrideColors.primaryColor,
+          textColor: joyrideColors.fgColor,
+          backgroundColor: joyrideColors.bgColor,
           overlayColor: 'rgba(28,20,18,0.5)',
-          arrowColor: '#FFFFFF',
+          arrowColor: joyrideColors.bgColor,
           zIndex: 10000,
           width: 340,
         },
-        tooltip: { borderRadius: '16px', padding: '20px', border: '1px solid #DAC1BB' },
+        tooltip: { borderRadius: '16px', padding: '20px', border: `1px solid ${joyrideColors.borderColor}` },
         tooltipContent: { padding: '4px 0 8px' },
         buttonNext: {
-          backgroundColor: '#964735',
+          backgroundColor: joyrideColors.primaryColor,
           color: '#FFFFFF',
           borderRadius: '999px',
           padding: '8px 20px',
           fontWeight: 600,
           fontSize: '13px',
         },
-        buttonBack: { color: '#7A6660', marginRight: 8, fontSize: '13px' },
-        buttonSkip: { color: '#7A6660', fontSize: '13px' },
+        buttonBack: { color: joyrideColors.mutedColor, marginRight: 8, fontSize: '13px' },
+        buttonSkip: { color: joyrideColors.mutedColor, fontSize: '13px' },
         spotlight: { borderRadius: '16px' },
         beacon: { display: 'none' },
       }}

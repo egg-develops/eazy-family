@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { X, ArrowRight, ShoppingCart, MessageCircle, Sparkles } from "lucide-react";
 
-const TC = '#964735';
+const TC = 'hsl(var(--primary))';
 const TL = '#D97B66';
-const BG = '#F7F3ED';
-const CARD = '#FFFFFF';
-const BORDER = '#DAC1BB';
-const INK = '#1C1C18';
-const MUTED = '#7A6660';
+const BG = 'hsl(var(--muted))';
+const CARD = 'hsl(var(--card))';
+const BORDER = 'hsl(var(--border))';
+const INK = 'hsl(var(--foreground))';
+const MUTED = 'hsl(var(--muted-foreground))';
 
 const EZButtonIcon = () => (
   <div style={{ position: 'relative', width: 80, height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -46,35 +46,35 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     icon: <img src="/logo.png" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
-    accentBg: '#FDF3EE',
+    accentBg: 'hsl(var(--muted))',
     title: "Welcome to Eazy.Family",
     body: "Your family's private space — organized, connected, and always in sync.",
     hint: "A quick 60-second look at your key features.",
   },
   {
     icon: <EZButtonIcon />,
-    accentBg: '#FDF3EE',
+    accentBg: 'hsl(var(--muted))',
     title: "EZ — Your Smart Assistant",
     body: "EZ is the smart button that controls your app. Tap it once to add anything by voice or text — events, tasks, shopping, journal entries. Press and swipe up to access your menu. Long-press to move it anywhere on your screen.",
     hint: "Try it: tap EZ and say \"Dentist on Monday at 3pm\" or \"add milk and eggs to our shopping list\".",
   },
   {
     icon: <ShoppingCart className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: '#FDF3EE',
+    accentBg: 'hsl(var(--muted))',
     title: "Lists & Tasks",
     body: "Shared shopping lists, to-dos, and reminders — visible to everyone the moment you add them. Tick them off together in real time.",
     hint: "Use EZ to add tasks and assign them.",
   },
   {
     icon: <MessageCircle className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: '#FDF3EE',
+    accentBg: 'hsl(var(--muted))',
     title: "Family Channel",
     body: "A private group chat just for your family. Send text, voice notes, photos, and locations. Only your family can see it.",
     hint: "Find it on your home screen.",
   },
   {
     icon: <Sparkles className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: '#FDF3EE',
+    accentBg: 'hsl(var(--muted))',
     title: "Morning Digest",
     body: "Get a daily or weekly summary of your family's schedule, tasks, and reminders — delivered in-app and by email. Eazy thinks ahead so you don't have to.",
     hint: "Set your digest frequency in Settings.",
@@ -130,7 +130,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
         <button
           onClick={onDone}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-          style={{ background: '#F1EDE7', color: MUTED }}
+          style={{ background: 'hsl(var(--muted))', color: MUTED }}
           aria-label="Skip tour"
         >
           <X className="w-4 h-4" />
@@ -160,7 +160,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
           {slide.hint && (
             <p
               className="text-xs leading-relaxed px-3 py-2 rounded-xl"
-              style={{ background: '#FDF3EE', color: TC, borderLeft: `3px solid ${TL}` }}
+              style={{ background: 'hsl(var(--muted))', color: TC, borderLeft: `3px solid ${TL}` }}
             >
               {slide.hint}
             </p>
