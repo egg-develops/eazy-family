@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, MessageCircle, Calendar, CheckSquare, Bell, Clock } from "lucide-react";
+import { ChevronLeft, MessageCircle, Calendar, CheckSquare, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, isToday, isTomorrow, startOfDay, addDays } from "date-fns";
+import { format, isToday, isTomorrow, startOfDay, addDays, } from "date-fns";
 
 const TC = 'hsl(var(--primary))';
 const CARD = 'hsl(var(--card))';
@@ -18,7 +18,7 @@ interface AgendaItem {
   title: string;
   startDate: Date;
   endDate?: Date;
-  type: 'event' | 'task' | 'reminder';
+  type: 'event' | 'task';
   location?: string;
   allDay?: boolean;
 }
@@ -44,7 +44,6 @@ function groupByDay(items: AgendaItem[]): { label: string; date: Date; items: Ag
 const TYPE_META = {
   event: { icon: Calendar, color: TC, label: 'Event' },
   task: { icon: CheckSquare, color: '#6E8FE5', label: 'Task' },
-  reminder: { icon: Bell, color: '#B88A00', label: 'Reminder' },
 };
 
 const AgendaItemRow = ({ item }: { item: AgendaItem }) => {
@@ -103,7 +102,7 @@ const FamilyAgendaView = () => {
           .select('id, title, due_date, type')
           .not('due_date', 'is', null)
           .eq('completed', false)
-          .in('type', ['shared', 'reminder'])
+          .eq('type', 'shared')
           .gte('due_date', startOfDay(now).toISOString())
           .lte('due_date', cutoff)
           .order('due_date', { ascending: true }),
@@ -123,34 +122,11 @@ const FamilyAgendaView = () => {
         id: `task-${t.id}`,
         title: t.title,
         startDate: new Date(t.due_date!),
-        type: t.type === 'reminder' ? 'reminder' as const : 'task' as const,
+        type: 'task' as const,
       }));
 
-      // Also pull calendar reminders from localStorage
-      const localItems: AgendaItem[] = (() => {
-        try {
-          const saved = localStorage.getItem('eazy-family-calendar-items');
-          if (!saved) return [];
-          const parsed: any[] = JSON.parse(saved);
-          return parsed
-            .filter(i => i?.type === 'reminder' && i?.dueDate)
-            .map(i => ({
-              id: `local-${i.id ?? i.dueDate}`,
-              title: typeof i.title === 'string' ? i.title : 'Reminder',
-              startDate: new Date(i.dueDate),
-              type: 'reminder' as const,
-            }))
-            .filter(i => i.startDate >= startOfDay(now));
-        } catch {
-          return [];
-        }
-      })();
-
-      const all = [...eventItems, ...taskItems, ...localItems];
-      // Deduplicate by id
-      const seen = new Set<string>();
-      const deduped = all.filter(i => { if (seen.has(i.id)) return false; seen.add(i.id); return true; });
-      deduped.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+      const all = [...eventItems, ...taskItems];
+      all.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
       setItems(deduped);
       setLoading(false);
     };

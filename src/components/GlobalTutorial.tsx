@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { App as CapApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 import { FeatureTour } from "@/components/FeatureTour";
 import { TutorialWalkthrough } from "@/components/TutorialWalkthrough";
 
@@ -42,18 +44,25 @@ export const GlobalTutorial = () => {
     };
   }, []);
 
-  // Push a history entry when a tour opens so iOS back gesture dismisses it
-  // rather than navigating away from the page.
+  // On native iOS: intercept the hardware back button to close the tour overlay.
+  // On web: listen for Escape key.
   useEffect(() => {
     if (!showSlides && !showJoyride) return;
-    history.pushState({ eazyTutorial: true }, '');
-    const onPopState = (e: PopStateEvent) => {
-      if (e.state?.eazyTutorial) return;
-      setShowSlides(false);
-      setShowJoyride(false);
+
+    const close = () => { setShowSlides(false); setShowJoyride(false); };
+
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    window.addEventListener('keydown', onKey);
+
+    let backHandle: { remove: () => void } | null = null;
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener('backButton', close).then(h => { backHandle = h; });
+    }
+
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      backHandle?.remove();
     };
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
   }, [showSlides, showJoyride]);
 
   const handleSlidesDone = () => {

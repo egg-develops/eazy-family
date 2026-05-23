@@ -45,13 +45,15 @@ interface ChannelMessage {
 // ─────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────
-const TC = "#964735";
+const TC = "hsl(var(--primary))";
 const TL = "#D97B66";
-const BORDER = "#DAC1BB";
-const MUTED = "#7A6660";
+const BORDER = "hsl(var(--border))";
+const MUTED = "hsl(var(--muted-foreground))";
 const SAGE = "#44664F";
 const SAGE_BG = "#EEF4F0";
-const BG = "#FDF9F3";
+const BG = "hsl(var(--background))";
+const CARD = "hsl(var(--card))";
+const INK = "hsl(var(--foreground))";
 const LS_KEY = "eazy-family-channel-messages";
 const MAX_MESSAGES = 200;
 
@@ -126,8 +128,8 @@ const TextBubble = ({ msg }: { msg: ChannelMessage }) => (
   <div
     className="rounded-2xl px-3.5 py-2.5 text-sm"
     style={{
-      background: msg.isMe ? TC : "#fff",
-      color: msg.isMe ? "#fff" : "#1C1C18",
+      background: msg.isMe ? TC : CARD,
+      color: msg.isMe ? "#fff" : INK,
       border: msg.isMe ? "none" : `1px solid ${BORDER}`,
       borderTopRightRadius: msg.isMe ? "4px" : undefined,
       borderTopLeftRadius: !msg.isMe ? "4px" : undefined,
@@ -149,7 +151,7 @@ const VoiceBubble = ({ msg }: { msg: ChannelMessage }) => {
     <div
       className="rounded-2xl px-3.5 py-2.5 flex items-center gap-2"
       style={{
-        background: msg.isMe ? TC : "#fff",
+        background: msg.isMe ? TC : CARD,
         border: msg.isMe ? "none" : `1px solid ${BORDER}`,
         borderTopRightRadius: msg.isMe ? "4px" : undefined,
         borderTopLeftRadius: !msg.isMe ? "4px" : undefined,
@@ -190,7 +192,7 @@ const LocationBubble = ({ msg }: { msg: ChannelMessage }) => (
   >
     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SAGE }} />
     <div>
-      <p className="text-sm font-semibold" style={{ color: "#1C1C18" }}>{msg.locationName || "Location"}</p>
+      <p className="text-sm font-semibold" style={{ color: INK }}>{msg.locationName || "Location"}</p>
       {msg.lat !== undefined && msg.lon !== undefined && (
         <p className="text-xs" style={{ color: MUTED }}>{msg.lat.toFixed(4)}, {msg.lon.toFixed(4)}</p>
       )}
@@ -215,13 +217,13 @@ const DocumentBubble = ({ msg }: { msg: ChannelMessage }) => {
     <button
       onClick={handleOpen}
       className="rounded-2xl px-3.5 py-2.5 flex items-center gap-3 text-left"
-      style={{ background: "#fff", border: `1px solid ${BORDER}`, maxWidth: "72%" }}
+      style={{ background: CARD, border: `1px solid ${BORDER}`, maxWidth: "72%" }}
     >
       <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
         <FileText className="w-4 h-4" style={{ color: SAGE }} />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-medium truncate" style={{ color: "#1C1C18", maxWidth: "180px" }}>{msg.fileName}</p>
+        <p className="text-sm font-medium truncate" style={{ color: INK, maxWidth: "180px" }}>{msg.fileName}</p>
         <p className="text-xs" style={{ color: MUTED }}>{msg.fileSize} · Document</p>
       </div>
     </button>
@@ -239,9 +241,9 @@ const PollBubble = ({
   return (
     <div
       className="rounded-2xl px-3.5 py-3 space-y-2"
-      style={{ background: "#fff", border: `1px solid ${BORDER}`, maxWidth: "72%", minWidth: "200px" }}
+      style={{ background: CARD, border: `1px solid ${BORDER}`, maxWidth: "72%", minWidth: "200px" }}
     >
-      <p className="text-sm font-semibold" style={{ color: "#1C1C18" }}>{msg.pollQuestion}</p>
+      <p className="text-sm font-semibold" style={{ color: INK }}>{msg.pollQuestion}</p>
       {(msg.pollOptions || []).map((opt, i) => {
         const votes = (msg.pollVotes || {})[String(i)] || 0;
         const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
@@ -258,7 +260,7 @@ const PollBubble = ({
               style={{ width: `${pct}%`, background: isMyVote ? `${TC}22` : `${SAGE}15`, transition: "width 0.3s ease" }}
             />
             <div className="relative flex items-center justify-between px-2.5 py-2">
-              <span className="text-sm" style={{ color: isMyVote ? TC : "#1C1C18", fontWeight: isMyVote ? 600 : 400 }}>{opt}</span>
+              <span className="text-sm" style={{ color: isMyVote ? TC : INK, fontWeight: isMyVote ? 600 : 400 }}>{opt}</span>
               <span className="text-xs font-medium ml-2" style={{ color: MUTED }}>{pct}%</span>
             </div>
           </button>
@@ -274,13 +276,13 @@ const EventCard = ({ msg }: { msg: ChannelMessage }) => {
   return (
     <div
       className="flex items-center gap-3 rounded-2xl px-3.5 py-3"
-      style={{ background: "#fff", border: `1px solid ${BORDER}`, maxWidth: "85%" }}
+      style={{ background: CARD, border: `1px solid ${BORDER}`, maxWidth: "85%" }}
     >
       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: SAGE_BG }}>
         <span style={{ fontSize: "18px" }}>🗓️</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: "#1C1C18" }}>{msg.eventTitle}</p>
+        <p className="text-sm font-semibold truncate" style={{ color: INK }}>{msg.eventTitle}</p>
         <p className="text-xs mt-0.5" style={{ color: MUTED }}>{msg.eventDate}{msg.eventLocation ? ` · ${msg.eventLocation}` : ""}</p>
       </div>
       <button
@@ -335,19 +337,19 @@ const MessageRow = ({
           {bubble}
           <Avatar initials={msg.authorInitials} color={msg.authorColor} size={28} />
         </div>
-        <span className="text-xs mr-9" style={{ color: "#B5A09A" }}>{ts}</span>
+        <span className="text-xs mr-9" style={{ color: MUTED }}>{ts}</span>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-start gap-0.5">
-      <p className="text-xs font-semibold ml-9 mb-0.5" style={{ color: "#1C1C18" }}>{msg.authorName}</p>
+      <p className="text-xs font-semibold ml-9 mb-0.5" style={{ color: INK }}>{msg.authorName}</p>
       <div className="flex items-end gap-1.5">
         <Avatar initials={msg.authorInitials} color={msg.authorColor} size={28} />
         {bubble}
       </div>
-      <span className="text-xs ml-9" style={{ color: "#B5A09A" }}>{ts}</span>
+      <span className="text-xs ml-9" style={{ color: MUTED }}>{ts}</span>
     </div>
   );
 };
@@ -375,14 +377,14 @@ const PollCreator = ({
   const valid = question.trim() && options.filter(o => o.trim()).length >= 2;
 
   return (
-    <div className="mx-4 mb-3 rounded-2xl p-4 shadow-lg" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+    <div className="mx-4 mb-3 rounded-2xl p-4 shadow-lg" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold" style={{ color: "#1C1C18" }}>{t('familyAgenda.createPoll')}</p>
+        <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.createPoll')}</p>
         <button onClick={onCancel}><X className="w-4 h-4" style={{ color: MUTED }} /></button>
       </div>
       <input
         className="w-full text-sm rounded-xl px-3 py-2 mb-3 outline-none"
-        style={{ border: `1px solid ${BORDER}`, color: "#1C1C18" }}
+        style={{ border: `1px solid ${BORDER}`, color: INK }}
         placeholder={t('familyAgenda.askQuestion')}
         value={question}
         onChange={e => setQuestion(e.target.value)}
@@ -392,7 +394,7 @@ const PollCreator = ({
         <input
           key={i}
           className="w-full text-sm rounded-xl px-3 py-2 mb-2 outline-none"
-          style={{ border: `1px solid ${BORDER}`, color: "#1C1C18" }}
+          style={{ border: `1px solid ${BORDER}`, color: INK }}
           placeholder={`${t('familyAgenda.optionPlaceholder')} ${i + 1}`}
           value={opt}
           onChange={e => setOption(i, e.target.value)}
@@ -714,7 +716,7 @@ const FamilyAgenda = () => {
           >
             <ChevronLeft className="w-5 h-5" style={{ color: TC }} />
           </button>
-          <p className="font-bold text-xl" style={{ color: "#1C1C18" }}>{t('familyAgenda.title')}</p>
+          <p className="font-bold text-xl" style={{ color: INK }}>{t('familyAgenda.title')}</p>
           <div className="w-9 h-9 flex-shrink-0" />
         </div>
       </div>
@@ -740,7 +742,7 @@ const FamilyAgenda = () => {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-full gap-3 text-center py-16">
             <div className="text-4xl">💬</div>
-            <p className="font-semibold" style={{ color: "#1C1C18" }}>{t('familyAgenda.emptyChannel')}</p>
+            <p className="font-semibold" style={{ color: INK }}>{t('familyAgenda.emptyChannel')}</p>
             <p className="text-sm" style={{ color: MUTED, maxWidth: "240px" }}>
               {t('familyAgenda.emptyChannelDesc')}
             </p>
@@ -774,7 +776,7 @@ const FamilyAgenda = () => {
             <div className="flex items-end gap-1.5">
               <div
                 className="rounded-2xl rounded-tr-sm px-3.5 py-2.5 text-sm italic"
-                style={{ background: `${TC}33`, color: "#1C1C18", maxWidth: "72%" }}
+                style={{ background: `${TC}33`, color: INK, maxWidth: "72%" }}
               >
                 {liveTranscript}
               </div>
@@ -801,7 +803,7 @@ const FamilyAgenda = () => {
         <div style={{ flexShrink: 0, animation: "slideUp 0.2s ease" }}>
           <div
             className="mx-4 mb-2 rounded-2xl p-4 shadow-xl"
-            style={{ background: "#fff", border: `1px solid ${BORDER}` }}
+            style={{ background: CARD, border: `1px solid ${BORDER}` }}
           >
             <div className="grid grid-cols-4 gap-3">
               {/* PHOTOS */}
@@ -889,7 +891,7 @@ const FamilyAgenda = () => {
             placeholder={isListening ? t('familyAgenda.listening') : ""}
             disabled={isListening || uploading}
             className="flex-1 bg-transparent outline-none text-sm"
-            style={{ color: "#1C1C18", minWidth: 0 }}
+            style={{ color: INK, minWidth: 0 }}
           />
 
           {/* Send or camera/mic */}

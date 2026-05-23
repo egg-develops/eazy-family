@@ -1302,13 +1302,13 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
             <button
               onClick={() => toggleTask(task.id)}
               className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all appearance-none p-0"
-              style={{ borderColor: task.completed ? '#964735' : '#C4AEA8', background: task.completed ? '#964735' : 'transparent' }}
+              style={{ borderColor: task.completed ? '#964735' : 'hsl(var(--border))', background: task.completed ? '#964735' : 'transparent' }}
             >
               {task.completed && <span className="text-white" style={{ fontSize: '7px', lineHeight: 1 }}>✓</span>}
             </button>
             <span
               className={`text-sm flex-1 ${task.completed ? 'line-through' : ''}`}
-              style={{ color: task.completed ? '#7A6660' : '#1C1C18' }}
+              style={{ color: task.completed ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))' }}
             >
               {task.title}
             </span>

@@ -154,7 +154,7 @@ const WheelCol = ({ items, idx, setIdx, width }: { items: string[]; idx: number;
       <div style={{ height: ITEM_H * 2 }} />
       {items.map((item, i) => (
         <div key={i} onClick={() => { setIdx(i); ref.current?.scrollTo({ top: i * ITEM_H, behavior: 'smooth' }); }}
-          style={{ height: ITEM_H, scrollSnapAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: i === idx ? '15px' : '13px', fontWeight: i === idx ? 600 : 400, color: i === idx ? '#1C1C18' : Math.abs(i-idx)===1 ? '#7A6660' : '#C4B5B0', cursor: 'pointer', transition: 'color 0.1s' }}>
+          style={{ height: ITEM_H, scrollSnapAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: i === idx ? '15px' : '13px', fontWeight: i === idx ? 600 : 400, color: i === idx ? 'hsl(var(--foreground))' : Math.abs(i-idx)===1 ? 'hsl(var(--muted-foreground))' : 'hsl(var(--muted-foreground))', cursor: 'pointer', transition: 'color 0.1s' }}>
           {item}
         </div>
       ))}
@@ -173,7 +173,7 @@ const EZWheelPicker = ({
   minIdx: number; setMinIdx: (i: number) => void;
   ampmIdx: number; setAmPmIdx: (i: number) => void;
 }) => (
-  <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative', background: '#F7F3ED', overflow: 'hidden' }}>
+  <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative', background: 'hsl(var(--muted))', overflow: 'hidden' }}>
     {/* Center selection highlight */}
     <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
     <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
@@ -970,18 +970,18 @@ const Calendar = () => {
   const renderTimeGrid = (days: Date[]) => {
     const columnWidth = days.length === 1 ? "w-full" : days.length === 3 ? "w-1/3" : "w-1/7";
     return (
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
         {/* Column headers */}
-        <div className="flex border-b" style={{ borderColor: "#EBE8E2" }}>
+        <div className="flex border-b" style={{ borderColor: "hsl(var(--border))" }}>
           <div className="w-12 flex-shrink-0" />
           {days.map(day => {
             const isTodayDate = isToday(day);
             return (
-              <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#964735" : "#7A6660" }}>
+              <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#964735" : "hsl(var(--muted-foreground))" }}>
                 <div>{format(day, "EEE")}</div>
                 <div
                   className="w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-semibold"
-                  style={{ background: isTodayDate ? "#964735" : "transparent", color: isTodayDate ? "#fff" : "#1C1C18" }}
+                  style={{ background: isTodayDate ? "#964735" : "transparent", color: isTodayDate ? "#fff" : "hsl(var(--foreground))" }}
                 >
                   {format(day, "d")}
                 </div>
@@ -992,16 +992,16 @@ const Calendar = () => {
         {/* Time slots */}
         <div className="overflow-y-auto max-h-[60vh]">
           {HOURS.map(hour => (
-            <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "#F7F3ED" }}>
+            <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "hsl(var(--border))" }}>
               <div className="w-12 flex-shrink-0 text-right pr-2 pt-1">
-                <span className="text-[10px]" style={{ color: "#B5A09A" }}>
+                <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
                   {hour === 12 ? "12pm" : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
                 </span>
               </div>
               {days.map(day => {
                 const events = getEventsForDateAndHour(day, hour);
                 return (
-                  <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "#EBE8E2" }}>
+                  <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "hsl(var(--border))" }}>
                     {events.map(item => {
                       if (item.type !== "event") return null;
                       const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#F1EDE7", border: "#964735", label: "Event" };
@@ -1009,7 +1009,7 @@ const Calendar = () => {
                         <div
                           key={item.id}
                           className="text-[10px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
-                          style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "#1C1C18" }}
+                          style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "hsl(var(--foreground))" }}
                           onClick={() => handleEditItem(item)}
                         >
                           {item.title}
@@ -1033,16 +1033,16 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         {/* Mini week strip for navigation */}
-        <div className="rounded-2xl p-3" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
+        <div className="rounded-2xl p-3" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
           <div className="mb-2">
-            <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
+            <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
               {format(selectedDate, "MMMM")}{" "}
               <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
             </h2>
           </div>
           <div className="grid grid-cols-7">
             {weekDays.map((d, i) => (
-              <div key={i} className="text-center text-[10px] font-medium py-1" style={{ color: "#7A6660" }}>{d}</div>
+              <div key={i} className="text-center text-[10px] font-medium py-1" style={{ color: "hsl(var(--muted-foreground))" }}>{d}</div>
             ))}
             {weekDates.map(day => {
               const isTodayDate = isToday(day);
@@ -1053,7 +1053,7 @@ const Calendar = () => {
                     className="w-6 h-6 text-xs font-medium rounded-full flex items-center justify-center"
                     style={{
                       background: isTodayDate ? "#964735" : isSel ? "#F1EDE7" : "transparent",
-                      color: isTodayDate ? "#fff" : isSel ? "#964735" : "#1C1C18",
+                      color: isTodayDate ? "#fff" : isSel ? "#964735" : "hsl(var(--foreground))",
                     }}
                   >{format(day, "d")}</span>
                 </button>
@@ -1071,7 +1071,7 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         <div className="px-1">
-          <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
+          <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
             {format(days[0], "MMM d")} – {format(days[2], "d")}
           </h2>
         </div>
@@ -1086,7 +1086,7 @@ const Calendar = () => {
     return (
       <div className="space-y-3">
         <div className="px-1">
-          <h2 className="font-serif text-lg font-light" style={{ color: "#1C1C18" }}>
+          <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
             {format(days[0], "MMM d")} – {format(days[6], "MMM d")}
           </h2>
         </div>
@@ -1104,10 +1104,10 @@ const Calendar = () => {
     const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
 
     return (
-      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "#FDF9F3", border: "1px solid #EBE8E2" }}>
+      <div className="rounded-2xl p-4 sm:p-5" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
         {/* Header: "May '26" style */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif text-2xl font-light" style={{ color: "#1C1C18" }}>
+          <h2 className="font-serif text-2xl font-light" style={{ color: "hsl(var(--foreground))" }}>
             {format(selectedDate, "MMMM")}{" "}
             <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
           </h2>
@@ -1115,14 +1115,14 @@ const Calendar = () => {
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
-              style={{ border: "1px solid #DAC1BB" }}
+              style={{ border: "1px solid hsl(var(--border))" }}
             >
               <ChevronLeft className="w-4 h-4" style={{ color: "#964735" }} />
             </button>
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
-              style={{ border: "1px solid #DAC1BB" }}
+              style={{ border: "1px solid hsl(var(--border))" }}
             >
               <ChevronRight className="w-4 h-4" style={{ color: "#964735" }} />
             </button>
@@ -1132,7 +1132,7 @@ const Calendar = () => {
         {/* Day headers */}
         <div className="grid grid-cols-7 mb-1">
           {weekDays.map((d, i) => (
-            <div key={i} className="text-center text-xs font-medium py-1.5" style={{ color: "#7A6660" }}>
+            <div key={i} className="text-center text-xs font-medium py-1.5" style={{ color: "hsl(var(--muted-foreground))" }}>
               {d}
             </div>
           ))}
@@ -1157,7 +1157,7 @@ const Calendar = () => {
                   className="text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full leading-none"
                   style={{
                     background: isTodayDate ? "#964735" : isSelected ? "#F1EDE7" : "transparent",
-                    color: isTodayDate ? "#FFFFFF" : isSelected ? "#964735" : "#1C1C18",
+                    color: isTodayDate ? "#fff" : isSelected ? "#964735" : "hsl(var(--foreground))",
                   }}
                 >
                   {format(day, "d")}
@@ -1180,11 +1180,11 @@ const Calendar = () => {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 pt-3" style={{ borderTop: "1px solid #EBE8E2" }}>
+        <div className="flex flex-wrap gap-x-5 gap-y-1 mt-4 pt-3" style={{ borderTop: "1px solid hsl(var(--border))" }}>
           {(Object.entries(TAGS) as [EventTag, typeof TAGS[EventTag]][]).map(([key, tag]) => (
             <div key={key} className="flex items-center gap-1.5 text-xs">
               <div className="w-2 h-2 rounded-full" style={{ background: tag.dot }} />
-              <span className="font-medium" style={{ color: "#1C1C18" }}>{tag.label}</span>
+              <span className="font-medium" style={{ color: "hsl(var(--foreground))" }}>{tag.label}</span>
             </div>
           ))}
         </div>
@@ -1225,12 +1225,12 @@ const Calendar = () => {
                 onClick={() => { const d = new Date(year, monthIdx, 1); setSelectedDate(d); setCalendarView('month'); }}
                 className="rounded-2xl p-3 text-left transition-all active:scale-95"
                 style={{
-                  background: selectedDate.getMonth() === monthIdx ? '#964735' : '#FFFFFF',
-                  border: `1px solid ${selectedDate.getMonth() === monthIdx ? '#964735' : '#EBE8E2'}`,
+                  background: selectedDate.getMonth() === monthIdx ? '#964735' : 'hsl(var(--card))',
+                  border: `1px solid ${selectedDate.getMonth() === monthIdx ? '#964735' : 'hsl(var(--border))'}`,
                 }}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold" style={{ color: selectedDate.getMonth() === monthIdx ? '#FFFFFF' : '#1C1C18' }}>
+                  <p className="text-xs font-bold" style={{ color: selectedDate.getMonth() === monthIdx ? '#FFFFFF' : 'hsl(var(--foreground))' }}>
                     {format(monthDate, 'MMM')}
                   </p>
                   {hasEventInMonth && (
@@ -1247,7 +1247,7 @@ const Calendar = () => {
                         className="w-full aspect-square flex items-center justify-center rounded-sm"
                         style={{
                           fontSize: '7px',
-                          color: !isCurrentMonth ? 'transparent' : isTodayDate ? '#FFFFFF' : selectedDate.getMonth() === monthIdx ? 'rgba(255,255,255,0.8)' : '#1C1C18',
+                          color: !isCurrentMonth ? 'transparent' : isTodayDate ? '#FFFFFF' : selectedDate.getMonth() === monthIdx ? 'rgba(255,255,255,0.8)' : 'hsl(var(--foreground))',
                           background: isTodayDate && isCurrentMonth ? '#D97B66' : 'transparent',
                           fontWeight: isTodayDate ? 700 : 400,
                         }}
@@ -1266,12 +1266,12 @@ const Calendar = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: '#FDF9F3', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+    <div className="flex flex-col min-h-screen" style={{ background: 'hsl(var(--background))', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
 
       {/* Own Header */}
-      <div className="flex items-center justify-between px-4 h-14" style={{ background: '#FDF9F3' }}>
+      <div className="flex items-center justify-between px-4 h-14" style={{ background: 'hsl(var(--background))' }}>
         <div className="flex items-center gap-2">
-          <h1 className="font-bold text-base" style={{ color: '#1C1C18' }}>{format(selectedDate, 'MMMM yyyy')}</h1>
+          <h1 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{format(selectedDate, 'MMMM yyyy')}</h1>
           <button
             onClick={() => setShowViewPicker(v => !v)}
             className="w-7 h-7 flex items-center justify-center rounded"
@@ -1292,9 +1292,9 @@ const Calendar = () => {
           <button
             onClick={() => { setShowSearch(s => !s); setSearchQuery(''); }}
             className="w-9 h-9 flex items-center justify-center rounded-full"
-            style={{ background: showSearch ? '#964735' : '#F1EDE7' }}
+            style={{ background: showSearch ? '#964735' : 'hsl(var(--muted))' }}
           >
-            <Search className="w-4 h-4" style={{ color: showSearch ? '#fff' : '#7A6660' }} />
+            <Search className="w-4 h-4" style={{ color: showSearch ? '#fff' : 'hsl(var(--muted-foreground))' }} />
           </button>
         </div>
       </div>
@@ -1309,10 +1309,10 @@ const Calendar = () => {
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search events…"
             className="w-full px-4 py-2.5 rounded-2xl text-sm outline-none"
-            style={{ background: '#F7F3ED', border: '1.5px solid #DAC1BB', color: '#1C1C18' }}
+            style={{ background: 'hsl(var(--muted))', border: '1.5px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}
           />
           {searchQuery.trim() && (
-            <div className="mt-2 rounded-2xl overflow-hidden" style={{ border: '1px solid #DAC1BB' }}>
+            <div className="mt-2 rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
               {allItems
                 .filter(i => i.title?.toLowerCase().includes(searchQuery.toLowerCase()))
                 .slice(0, 8)
@@ -1320,13 +1320,13 @@ const Calendar = () => {
                   <div
                     key={item.id}
                     className="flex items-center gap-3 px-4 py-3"
-                    style={{ background: '#fff', borderBottom: idx < arr.length - 1 ? '1px solid #F1EDE7' : 'none' }}
+                    style={{ background: 'hsl(var(--card))', borderBottom: idx < arr.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}
                   >
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color || '#964735' }} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate" style={{ color: '#1C1C18' }}>{item.title}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{item.title}</p>
                       {item.startDate && (
-                        <p className="text-xs" style={{ color: '#7A6660' }}>
+                        <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                           {new Date(item.startDate).toLocaleDateString('en-CH', { weekday: 'short', month: 'short', day: 'numeric' })}
                         </p>
                       )}
@@ -1334,7 +1334,7 @@ const Calendar = () => {
                   </div>
                 ))}
               {allItems.filter(i => i.title?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                <div className="px-4 py-3 text-sm" style={{ color: '#7A6660' }}>No events found</div>
+                <div className="px-4 py-3 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>No events found</div>
               )}
             </div>
           )}
@@ -1345,7 +1345,7 @@ const Calendar = () => {
       {showViewPicker && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowViewPicker(false)} />
-          <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+          <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
             {(['day', 'week', '3day', 'month', 'year'] as const).map(v => (
               <button
                 key={v}
@@ -1353,9 +1353,9 @@ const Calendar = () => {
                 className="w-full px-4 py-3 text-sm flex items-center justify-center"
                 style={{
                   background: calendarView === v ? '#964735' : 'transparent',
-                  color: calendarView === v ? '#FFFFFF' : '#1C1C18',
+                  color: calendarView === v ? '#FFFFFF' : 'hsl(var(--foreground))',
                   fontWeight: calendarView === v ? 600 : 400,
-                  borderBottom: '1px solid #F1EDE7',
+                  borderBottom: '1px solid hsl(var(--border))',
                 }}
               >
                 {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
@@ -1375,7 +1375,7 @@ const Calendar = () => {
       {/* Year header row */}
       {calendarView === 'year' && (
         <div className="flex items-center justify-center px-4 mb-3">
-          <p className="font-bold text-base" style={{ color: '#1C1C18' }}>{selectedDate.getFullYear()}</p>
+          <p className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{selectedDate.getFullYear()}</p>
         </div>
       )}
 
@@ -1391,7 +1391,7 @@ const Calendar = () => {
           <div className="px-1">
             <div className="grid grid-cols-7 mb-1">
               {weekDays.map((d, i) => (
-                <div key={i} className="text-center text-sm font-semibold py-2" style={{ color: '#B5A09A' }}>{d}</div>
+                <div key={i} className="text-center text-sm font-semibold py-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7">
@@ -1411,8 +1411,8 @@ const Calendar = () => {
                     <span
                       className="w-10 h-10 flex items-center justify-center rounded-full text-xl font-bold"
                       style={{
-                        background: isTodayDate ? '#964735' : isSelected ? '#F1EDE7' : 'transparent',
-                        color: isTodayDate ? '#FFFFFF' : isWeekend && isCurrentMonth ? '#7A6660' : '#1C1C18',
+                        background: isTodayDate ? '#964735' : isSelected ? 'hsl(var(--muted))' : 'transparent',
+                        color: isTodayDate ? '#FFFFFF' : isWeekend && isCurrentMonth ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
                         fontWeight: isTodayDate ? 800 : isSelected ? 700 : 600,
                       }}
                     >
@@ -1445,7 +1445,7 @@ const Calendar = () => {
       {calendarView !== 'year' && (
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Family Agenda</h2>
+            <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>Family Agenda</h2>
             {allItems.filter(i => i.type === 'event').length > 5 && (
               <button onClick={() => setShowAllAgenda(p => !p)} className="text-xs font-semibold" style={{ color: '#964735' }}>
                 {showAllAgenda ? 'SHOW LESS' : 'VIEW ALL'}
@@ -1458,14 +1458,14 @@ const Calendar = () => {
                 const ev = item as Event;
                 const initials = ev.title.slice(0, 1).toUpperCase();
                 return (
-                  <div key={ev.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+                  <div key={ev.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
                       style={{ background: ev.color || '#964735' }}>
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: '#1C1C18' }}>{ev.title}</p>
-                      <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'EEE MMM d · hh:mm aa')}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'EEE MMM d · hh:mm aa')}</p>
                     </div>
                   </div>
                 );
@@ -1483,22 +1483,22 @@ const Calendar = () => {
                 const ev = item as Event;
                 const initials = ev.title.slice(0, 1).toUpperCase();
                 return (
-                  <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: '#FFFFFF', border: '1px solid #EBE8E2' }}>
+                  <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                         style={{ background: ev.color || '#964735' }}>
                         {initials}
                       </div>
-                      <span className="text-xs font-medium truncate" style={{ color: '#7A6660' }}>{ev.title.split(' ')[0]}</span>
+                      <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
                     </div>
-                    <p className="text-sm font-semibold leading-tight" style={{ color: '#1C1C18' }}>{ev.title}</p>
-                    <p className="text-xs" style={{ color: '#B5A09A' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
+                    <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
                   </div>
                 );
               })}
               {allItems.filter(i => i.type === 'event').length === 0 && (
-                <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: '#F7F3ED', border: '1px dashed #DAC1BB' }}>
-                  <p className="text-xs text-center" style={{ color: '#B5A09A' }}>No events yet</p>
+                <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed #DAC1BB' }}>
+                  <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>No events yet</p>
                 </div>
               )}
             </div>
@@ -1511,11 +1511,11 @@ const Calendar = () => {
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>
+              <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>
                 {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEEE, MMM d')}
               </h2>
             </div>
-            <span className="text-sm" style={{ color: '#7A6660' }}>
+            <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
               {selectedDayEvents.length} EVENT{selectedDayEvents.length !== 1 ? 'S' : ''}
             </span>
           </div>
@@ -1529,7 +1529,7 @@ const Calendar = () => {
                 return (
                   <div key={ev.id}
                     className="flex gap-3 rounded-2xl p-4"
-                    style={{ background: '#FFFFFF', border: '1px solid #EBE8E2', cursor: ev.id.startsWith('apple-device-') ? 'default' : 'pointer' }}
+                    style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', cursor: ev.id.startsWith('apple-device-') ? 'default' : 'pointer' }}
                     onClick={() => !ev.id.startsWith('apple-device-') && handleEditItem(ev)}
                   >
                     <div className="text-right flex-shrink-0 w-12">
@@ -1537,16 +1537,16 @@ const Calendar = () => {
                     </div>
                     <div className="w-px self-stretch" style={{ background: ev.color || '#964735', borderRadius: '1px' }} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{ev.title}</p>
-                      {ev.location && <p className="text-xs mt-0.5" style={{ color: '#B5A09A' }}>{ev.location}</p>}
-                      {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: '#B5A09A' }}>Apple Calendar</p>}
+                      <p className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                      {ev.location && <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.location}</p>}
+                      {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Apple Calendar</p>}
                     </div>
                     {!ev.id.startsWith('apple-device-') && (
                       <button
                         onClick={e => { e.stopPropagation(); handleDeleteItem(ev.id); }}
                         className="opacity-30 hover:opacity-100 transition-opacity"
                       >
-                        <X className="w-4 h-4" style={{ color: '#7A6660' }} />
+                        <X className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
                       </button>
                     )}
                   </div>
@@ -1554,8 +1554,8 @@ const Calendar = () => {
               })}
             </div>
           ) : (
-            <div className="rounded-2xl p-6 text-center" style={{ background: '#FFFFFF', border: '1px dashed #DAC1BB' }}>
-              <p className="text-sm" style={{ color: '#B5A09A' }}>Nothing scheduled. A clear, open day.</p>
+            <div className="rounded-2xl p-6 text-center" style={{ background: 'hsl(var(--card))', border: '1px dashed #DAC1BB' }}>
+              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Nothing scheduled. A clear, open day.</p>
             </div>
           )}
 
@@ -1740,11 +1740,11 @@ const Calendar = () => {
 
       {/* New Event Overlay */}
       {isDialogOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: '#F7F3ED', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
+        <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: 'hsl(var(--muted))', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
           {/* Header */}
-          <div className="flex items-center justify-between px-4 h-14 flex-shrink-0" style={{ background: '#F7F3ED', borderBottom: '1px solid #DAC1BB' }}>
-            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: '#7A6660' }}>{t('common.cancel')}</button>
-            <h2 className="font-bold text-base" style={{ color: '#1C1C18' }}>{editingItemId ? t('calendar.editEvent') : t('calendar.newEvent')}</h2>
+          <div className="flex items-center justify-between px-4 h-14 flex-shrink-0" style={{ background: 'hsl(var(--muted))', borderBottom: '1px solid hsl(var(--border))' }}>
+            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('common.cancel')}</button>
+            <h2 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{editingItemId ? t('calendar.editEvent') : t('calendar.newEvent')}</h2>
             <button onClick={dialogTab==='event'?handleAddEvent:handleAddReminder} className="text-sm font-semibold" style={{ color: '#964735' }}>
               {editingItemId ? t('common.update') : t('common.add')}
             </button>
@@ -1754,12 +1754,12 @@ const Calendar = () => {
           <div className="flex-1 overflow-y-auto py-4 space-y-3 px-4 pb-32">
 
             {/* Title */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
               <div className="px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>{t('calendar.titleLabel')}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.titleLabel')}</p>
                 <input
                   className="w-full text-base outline-none"
-                  style={{ background: 'transparent', color: '#1C1C18' }}
+                  style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
                   placeholder={dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle')}
                   value={dialogTab === 'event' ? eventTitle : reminderTitle}
                   onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
@@ -1770,13 +1770,13 @@ const Calendar = () => {
             {dialogTab === 'event' ? (
               <>
                 {/* Starts */}
-                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
                     onClick={() => { setShowStartPicker(p => !p); setShowEndPicker(false); }}>
-                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.starts')}</span>
+                    <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.starts')}</span>
                     <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>
                     </div>
                   </button>
                   {showStartPicker && (
@@ -1791,13 +1791,13 @@ const Calendar = () => {
                 </div>
 
                 {/* Ends */}
-                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
                     onClick={() => { setShowEndPicker(p => !p); setShowStartPicker(false); }}>
-                    <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.ends')}</span>
+                    <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.ends')}</span>
                     <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: '#F1EDE7', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>
                     </div>
                   </button>
                   {showEndPicker && (
@@ -1812,11 +1812,11 @@ const Calendar = () => {
                 </div>
 
                 {/* Reminder */}
-                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <span className="font-semibold text-sm" style={{ color: '#1C1C18' }}>{t('calendar.reminder')}</span>
+                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.reminder')}</span>
                   <select value={eventReminder} onChange={e => setEventReminder(e.target.value)}
                     className="text-sm font-medium outline-none rounded-lg px-2.5 py-1"
-                    style={{ background: '#F1EDE7', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
+                    style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
                     <option value="none">{t('calendar.none')}</option>
                     <option value="5min">{t('calendar.5minBefore')}</option>
                     <option value="15min">{t('calendar.15minBefore')}</option>
@@ -1827,49 +1827,49 @@ const Calendar = () => {
                 </div>
 
                 {/* Location */}
-                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
-                  <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: '#1C1C18' }}
+                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
                     placeholder={t('calendar.location')} value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
                 </div>
 
                 {/* Notes */}
-                <div className="rounded-2xl flex items-start gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <AlignLeft className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#B5A09A' }} />
-                  <textarea className="flex-1 outline-none text-sm resize-none" style={{ background: 'transparent', color: '#1C1C18', minHeight: '60px' }}
+                <div className="rounded-2xl flex items-start gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <AlignLeft className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <textarea className="flex-1 outline-none text-sm resize-none" style={{ background: 'transparent', color: 'hsl(var(--foreground))', minHeight: '60px' }}
                     placeholder={t('calendar.notesPlaceholder')} value={eventNotes} onChange={e => setEventNotes(e.target.value)} />
                 </div>
 
                 {/* Attachment */}
-                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: '#B5A09A' }} />
-                  <span className="flex-1 text-sm" style={{ color: '#B5A09A' }}>{t('calendar.addAttachment')}</span>
-                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: '#DAC1BB' }} />
+                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  <span className="flex-1 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.addAttachment')}</span>
+                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--border))' }} />
                 </div>
               </>
             ) : (
               <>
                 {/* Reminder form */}
-                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
-                  <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid #F1EDE7' }}>
-                    <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>{t('calendar.dueDate')}</span>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <div className="px-4 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                    <span className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.dueDate')}</span>
                     <input type="date" value={reminderDate ? format(reminderDate, "yyyy-MM-dd") : ""}
                       onChange={e => setReminderDate(e.target.value ? new Date(e.target.value) : undefined)}
-                      className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
+                      className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }} />
                   </div>
                   {reminderDate && (
                     <div className="px-4 py-3.5 flex items-center justify-between">
-                      <span className="text-sm font-medium" style={{ color: '#1C1C18' }}>{t('calendar.time')}</span>
+                      <span className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.time')}</span>
                       <input type="time" value={reminderTime} onChange={e => setReminderTime(e.target.value)}
-                        className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: '#F1EDE7', color: '#964735', border: 'none' }} />
+                        className="text-sm outline-none rounded-lg px-2 py-1" style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }} />
                     </div>
                   )}
                 </div>
-                <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #DAC1BB' }}>
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   {(['low','medium','high'] as const).map((p, i, arr) => (
                     <button key={p} onClick={() => setReminderPriority(p)}
                       className="w-full flex items-center justify-between px-4 py-3.5"
-                      style={{ background: reminderPriority===p ? '#964735' : 'transparent', color: reminderPriority===p ? '#fff' : '#1C1C18', borderBottom: i<arr.length-1 ? '1px solid #F1EDE7' : 'none', fontWeight: reminderPriority===p ? 600 : 400 }}>
+                      style={{ background: reminderPriority===p ? '#964735' : 'transparent', color: reminderPriority===p ? '#fff' : 'hsl(var(--foreground))', borderBottom: i<arr.length-1 ? '1px solid hsl(var(--border))' : 'none', fontWeight: reminderPriority===p ? 600 : 400 }}>
                       {t(`calendar.${p}`)} {t('calendar.priority')}
                     </button>
                   ))}
