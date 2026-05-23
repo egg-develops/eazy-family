@@ -30,6 +30,12 @@ interface ParsedEntry {
   mood: string | null;
 }
 
+const CARD = 'hsl(var(--card))';
+const MUTED_BG = 'hsl(var(--muted))';
+const BORDER = 'hsl(var(--border))';
+const INK = 'hsl(var(--foreground))';
+const MUTED = 'hsl(var(--muted-foreground))';
+
 const TYPES: { id: CaptureType; label: string; icon: string }[] = [
   { id: 'event',    label: 'Event',    icon: '📅' },
   { id: 'task',     label: 'Task',     icon: '✓'  },
@@ -452,10 +458,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
           {/* ── CAPTURE STEP ── */}
           {step === 'capture' && (
-            <div className="rounded-3xl p-6 space-y-5" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+            <div className="rounded-3xl p-6 space-y-5" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="text-center space-y-1">
-                <h2 className="text-2xl font-bold tracking-tight" style={{ color: '#1C1C18' }}>What's on your mind?</h2>
-                <p className="text-sm" style={{ color: '#7A6660' }}>Capture thoughts — Schedule tasks</p>
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>What's on your mind?</h2>
+                <p className="text-sm" style={{ color: MUTED }}>Capture thoughts — Schedule tasks</p>
               </div>
 
               <div className="relative">
@@ -467,9 +473,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{
-                    background: '#F7F3ED',
-                    border: `1.5px solid ${text ? '#D97B66' : '#DAC1BB'}`,
-                    color: '#1C1C18',
+                    background: MUTED_BG,
+                    border: `1.5px solid ${text ? '#D97B66' : BORDER}`,
+                    color: INK,
                     lineHeight: '1.6',
                     transition: 'border-color 0.2s',
                   }}
@@ -501,9 +507,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                       padding: '1px 8px',
                       fontSize: '11px',
                       lineHeight: '18px',
-                      background: type === t.id ? '#964735' : '#F1EDE7',
-                      color: type === t.id ? '#FFFFFF' : '#55433F',
-                      border: `1px solid ${type === t.id ? '#964735' : '#DAC1BB'}`,
+                      background: type === t.id ? '#964735' : MUTED_BG,
+                      color: type === t.id ? '#FFFFFF' : MUTED,
+                      border: `1px solid ${type === t.id ? '#964735' : BORDER}`,
                     }}
                   >
                     <span style={{ fontSize: '10px' }}>{t.icon}</span>
@@ -516,7 +522,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 <button
                   onClick={onClose}
                   className="flex-1 py-2 rounded-full text-sm font-semibold"
-                  style={{ background: '#F1EDE7', color: '#7A6660', border: '1px solid #DAC1BB' }}
+                  style={{ background: MUTED_BG, color: MUTED, border: `1px solid ${BORDER}` }}
                 >
                   Cancel
                 </button>
@@ -539,31 +545,31 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
           {/* ── PROCESSING STEP ── */}
           {step === 'processing' && (
-            <div className="rounded-3xl p-8 flex flex-col items-center gap-5" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+            <div className="rounded-3xl p-8 flex flex-col items-center gap-5" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full animate-spin" style={{ border: '3px solid #F1EDE7', borderTopColor: '#964735' }} />
+                <div className="absolute inset-0 rounded-full animate-spin" style={{ border: `3px solid ${MUTED_BG}`, borderTopColor: '#964735' }} />
                 <img src="/logo.png" alt="" className="absolute inset-0 m-auto w-8 h-8 object-contain" />
               </div>
               <div className="text-center space-y-1">
-                <p className="font-bold" style={{ color: '#1C1C18' }}>Parsing with AI…</p>
-                <p className="text-sm" style={{ color: '#7A6660' }}>Understanding your intent</p>
+                <p className="font-bold" style={{ color: INK }}>Parsing with AI…</p>
+                <p className="text-sm" style={{ color: MUTED }}>Understanding your intent</p>
               </div>
             </div>
           )}
 
           {/* ── PREVIEW STEP ── */}
           {step === 'preview' && parsed && (
-            <div className="rounded-3xl overflow-hidden" style={{ background: '#FFFFFF', boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+            <div className="rounded-3xl overflow-hidden" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="px-6 pt-6 pb-4 space-y-4">
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setStep('capture')}
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#F1EDE7' }}
+                    style={{ background: MUTED_BG }}
                   >
-                    <ChevronLeft className="w-4 h-4" style={{ color: '#55433F' }} />
+                    <ChevronLeft className="w-4 h-4" style={{ color: MUTED }} />
                   </button>
-                  <h2 className="font-bold text-lg" style={{ color: '#1C1C18' }}>Confirm</h2>
+                  <h2 className="font-bold text-lg" style={{ color: INK }}>Confirm</h2>
                 </div>
 
                 {/* Type badge */}
@@ -580,65 +586,65 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
                 <div className="space-y-2">
                   {/* Editable title — textarea so long names wrap rather than overflow */}
-                  <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#B5A09A' }}>Title</p>
+                  <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: MUTED }}>Title</p>
                     <textarea
                       rows={2}
                       value={parsed.title}
                       onChange={e => setParsed(p => p ? { ...p, title: e.target.value.replace(/\n/g, ' ') } : p)}
                       className="w-full bg-transparent outline-none font-semibold text-sm resize-none"
-                      style={{ color: '#1C1C18', lineHeight: '1.5' }}
+                      style={{ color: INK, lineHeight: '1.5' }}
                     />
                   </div>
 
                   {/* Editable date + time — always shown for event/reminder, shown when parsed for others */}
                   {(activeType === 'event' || activeType === 'reminder' || parsed.date || parsed.time) && (
-                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#B5A09A' }}>When</p>
+                    <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: MUTED }}>When</p>
                       <div className="flex gap-2">
                         <input
                           type="date"
                           value={parsed.date ?? ''}
                           onChange={e => setParsed(p => p ? { ...p, date: e.target.value || null } : p)}
-                          className="flex-1 bg-white rounded-xl px-3 py-2 text-sm outline-none border"
-                          style={{ color: '#1C1C18', borderColor: '#DAC1BB' }}
+                          className="flex-1 rounded-xl px-3 py-2 text-sm outline-none border"
+                          style={{ background: CARD, color: INK, borderColor: BORDER }}
                         />
                         <input
                           type="time"
                           value={parsed.time ?? ''}
                           onChange={e => setParsed(p => p ? { ...p, time: e.target.value || null } : p)}
-                          className="flex-1 bg-white rounded-xl px-3 py-2 text-sm outline-none border"
-                          style={{ color: '#1C1C18', borderColor: '#DAC1BB' }}
+                          className="flex-1 rounded-xl px-3 py-2 text-sm outline-none border"
+                          style={{ background: CARD, color: INK, borderColor: BORDER }}
                         />
                       </div>
                     </div>
                   )}
 
                   {parsed.location && (
-                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Location</p>
-                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.location}</p>
+                    <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Location</p>
+                      <p className="font-medium text-sm" style={{ color: INK }}>{parsed.location}</p>
                     </div>
                   )}
 
                   {parsed.assignees && parsed.assignees.length > 0 && (
-                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>With</p>
-                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.assignees.join(', ')}</p>
+                    <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>With</p>
+                      <p className="font-medium text-sm" style={{ color: INK }}>{parsed.assignees.join(', ')}</p>
                     </div>
                   )}
 
                   {parsed.reminder && (
-                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Reminder</p>
-                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.reminder}</p>
+                    <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Reminder</p>
+                      <p className="font-medium text-sm" style={{ color: INK }}>{parsed.reminder}</p>
                     </div>
                   )}
 
                   {parsed.mood && (
-                    <div className="p-3 rounded-2xl" style={{ background: '#F7F3ED' }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: '#B5A09A' }}>Mood</p>
-                      <p className="font-medium text-sm" style={{ color: '#1C1C18' }}>{parsed.mood}</p>
+                    <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Mood</p>
+                      <p className="font-medium text-sm" style={{ color: INK }}>{parsed.mood}</p>
                     </div>
                   )}
                 </div>
@@ -664,7 +670,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       <div onClick={e => e.stopPropagation()} className="px-4 pb-28">
         <div
           className="px-4 py-3 rounded-2xl flex items-center gap-3"
-          style={{ background: 'rgba(253, 249, 243, 0.95)', border: '1px solid #DAC1BB' }}
+          style={{ background: CARD, border: `1px solid ${BORDER}` }}
         >
           <img
             src="/logo.png"
@@ -672,7 +678,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
             className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
             style={{ background: '#D97B66', padding: '3px' }}
           />
-          <p className="text-sm" style={{ color: '#55433F', fontStyle: 'italic' }}>
+          <p className="text-sm" style={{ color: MUTED, fontStyle: 'italic' }}>
             {step === 'capture' && `"${userName ? `Hey ${userName}, speak` : 'Speak'} or type anything — I'll figure out the rest."`}
             {step === 'processing' && '"Reading between the lines…"'}
             {step === 'preview' && parsed && `"${AI_MESSAGES[activeType](userName)}"`}

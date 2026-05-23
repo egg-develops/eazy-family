@@ -127,7 +127,7 @@ const FamilyAgendaView = () => {
 
       const all = [...eventItems, ...taskItems];
       all.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-      setItems(deduped);
+      setItems(all);
       setLoading(false);
     };
     load();

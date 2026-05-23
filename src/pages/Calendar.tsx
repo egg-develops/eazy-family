@@ -49,6 +49,7 @@ interface Event {
   color: string;
   tag?: EventTag;
   appleCalendarId?: string;
+  attendees?: string[];
 }
 
 interface Reminder {
@@ -188,13 +189,13 @@ const EZWheelPicker = ({
 const Calendar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { isPremium } = useAuth();
+  const { isPremium, user } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAllAgenda, setShowAllAgenda] = useState(false);
+
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleSwipeStart = (e: React.TouchEvent) => {
@@ -352,10 +353,16 @@ const Calendar = () => {
   const [endHourIdx, setEndHourIdx] = useState(9);
   const [endMinIdx, setEndMinIdx] = useState(0);
   const [endAmPmIdx, setEndAmPmIdx] = useState(0);
+  const [eventAttendees, setEventAttendees] = useState<string[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<{ id: string; name: string; user_id: string }[]>([]);
 
   // Voice-to-calendar state
   const [isListeningVoice, setIsListeningVoice] = useState(false);
   const calendarRecognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (isDialogOpen && familyMembers.length === 0) loadFamilyMembers();
+  }, [isDialogOpen]);
 
   // Re-hydrate synced state when cloud preferences arrive
   useEffect(() => {
@@ -723,6 +730,22 @@ const Calendar = () => {
     setEditingItemId(null);
     setCustomRepeatNumber("1");
     setCustomRepeatUnit("weeks");
+    setEventAttendees([]);
+  };
+
+  const loadFamilyMembers = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('family_members')
+      .select('id, user_id, profiles:user_id(first_name, last_name)')
+      .eq('is_active', true);
+    if (data) {
+      setFamilyMembers(data.map((m: any) => ({
+        id: m.id,
+        user_id: m.user_id,
+        name: [m.profiles?.first_name, m.profiles?.last_name].filter(Boolean).join(' ') || 'Member',
+      })));
+    }
   };
 
   const resetReminderForm = () => {
@@ -904,6 +927,7 @@ const Calendar = () => {
         color: eventTag ? TAGS[eventTag].border : "#964735",
         tag: eventTag || undefined,
         appleCalendarId,
+        attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
       };
 
       setItems([...items, newEvent]);
@@ -1446,63 +1470,40 @@ const Calendar = () => {
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>Family Agenda</h2>
-            {allItems.filter(i => i.type === 'event').length > 5 && (
-              <button onClick={() => setShowAllAgenda(p => !p)} className="text-xs font-semibold" style={{ color: '#964735' }}>
-                {showAllAgenda ? 'SHOW LESS' : 'VIEW ALL'}
-              </button>
-            )}
+            <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>
+              VIEW ALL
+            </button>
           </div>
-          {showAllAgenda ? (
-            <div className="space-y-2">
-              {allItems.filter(i => i.type === 'event').map((item) => {
-                const ev = item as Event;
-                const initials = ev.title.slice(0, 1).toUpperCase();
-                return (
-                  <div key={ev.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+          <div
+            className="flex gap-3 overflow-x-auto pb-2"
+            style={{ scrollbarWidth: 'none', touchAction: 'pan-x' }}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
+            onTouchEnd={e => e.stopPropagation()}
+          >
+            {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
+              const ev = item as Event;
+              const initials = ev.title.slice(0, 1).toUpperCase();
+              return (
+                <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                       style={{ background: ev.color || '#964735' }}>
                       {initials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'EEE MMM d · hh:mm aa')}</p>
-                    </div>
+                    <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div
-              className="flex gap-3 overflow-x-auto pb-2"
-              style={{ scrollbarWidth: 'none', touchAction: 'pan-x' }}
-              onTouchStart={e => e.stopPropagation()}
-              onTouchMove={e => e.stopPropagation()}
-              onTouchEnd={e => e.stopPropagation()}
-            >
-              {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
-                const ev = item as Event;
-                const initials = ev.title.slice(0, 1).toUpperCase();
-                return (
-                  <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: ev.color || '#964735' }}>
-                        {initials}
-                      </div>
-                      <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
-                    </div>
-                    <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
-                  </div>
-                );
-              })}
-              {allItems.filter(i => i.type === 'event').length === 0 && (
-                <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed #DAC1BB' }}>
-                  <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>No events yet</p>
+                  <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })}
+            {allItems.filter(i => i.type === 'event').length === 0 && (
+              <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed hsl(var(--border))' }}>
+                <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>No events yet</p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1832,6 +1833,37 @@ const Calendar = () => {
                   <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
                     placeholder={t('calendar.location')} value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
                 </div>
+
+                {/* Family members */}
+                {familyMembers.length > 0 && (
+                  <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                    <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Invite family members</p>
+                    <div className="flex flex-wrap gap-2">
+                      {familyMembers.map(m => {
+                        const selected = eventAttendees.includes(m.user_id);
+                        return (
+                          <button
+                            key={m.id}
+                            onClick={() => setEventAttendees(prev =>
+                              selected ? prev.filter(id => id !== m.user_id) : [...prev, m.user_id]
+                            )}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                            style={{
+                              background: selected ? '#964735' : 'hsl(var(--muted))',
+                              color: selected ? '#fff' : 'hsl(var(--foreground))',
+                            }}
+                          >
+                            <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                              style={{ background: selected ? 'rgba(255,255,255,0.25)' : '#964735' }}>
+                              {m.name.charAt(0).toUpperCase()}
+                            </span>
+                            {m.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Notes */}
                 <div className="rounded-2xl flex items-start gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
