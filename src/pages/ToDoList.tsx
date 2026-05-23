@@ -31,10 +31,13 @@ interface Task {
   updated_at: string;
   shared_with?: string[] | null;
   parent_id?: string | null;
+  family_id?: string | null;
+  assigned_to?: string | null;
 }
 
 interface FamilyMember {
   id: string;
+  user_id: string;
   full_name: string | null;
   email: string | null;
   phone: string | null;
@@ -54,6 +57,8 @@ const ToDoList = () => {
   const [newTaskDueDate, setNewTaskDueDate] = useState<string | undefined>(undefined);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [userFamilyId, setUserFamilyId] = useState<string | null>(null);
+  const [assigningItemId, setAssigningItemId] = useState<string | null>(null);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -127,7 +132,11 @@ const ToDoList = () => {
   };
 
   useEffect(() => {
-    if (activeTab === "shared" && isDialogOpen) {
+    loadFamilyMembers();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "shared" && isDialogOpen && familyMembers.length === 0) {
       loadFamilyMembers();
     }
   }, [activeTab, isDialogOpen]);
@@ -144,10 +153,11 @@ const ToDoList = () => {
         .maybeSingle();
 
       if (!mine?.family_id) { setFamilyMembers([]); return; }
+      setUserFamilyId(mine.family_id);
 
       const { data, error } = await supabase
         .from('family_members')
-        .select('*')
+        .select('id, user_id, full_name, email, phone, role')
         .eq('family_id', mine.family_id)
         .eq('is_active', true);
 
@@ -166,6 +176,16 @@ const ToDoList = () => {
         ? prev.filter(id => id !== memberId)
         : [...prev, memberId]
     );
+  };
+
+  const assignTask = async (taskId: string, userId: string | null) => {
+    try {
+      await supabase.from('tasks').update({ assigned_to: userId }).eq('id', taskId);
+      setAssigningItemId(null);
+    } catch (e) {
+      console.error(e);
+      toast({ title: t('todos.couldNotAddItem'), variant: 'destructive' });
+    }
   };
 
   const filteredTasks = tasks.filter(task => {
@@ -197,12 +217,14 @@ const ToDoList = () => {
   const handleAddListItem = async (listId: string) => {
     if (!newListItemTitle.trim() || !user?.id) return;
     try {
+      const parentTask = tasks.find(t => t.id === listId);
       await supabase.from('tasks').insert([{
         title: newListItemTitle.trim(),
         type: 'shared',
         user_id: user.id,
         parent_id: listId,
         completed: false,
+        family_id: parentTask?.family_id ?? userFamilyId,
       }]);
       setNewListItemTitle("");
       setAddingToListId(null);
@@ -259,6 +281,7 @@ const ToDoList = () => {
             user_id: user?.id || '',
             parent_id: targetListId,
             completed: false,
+            family_id: targetList?.family_id ?? userFamilyId,
           }])
         );
         const results = await Promise.all(insertPromises);
@@ -313,7 +336,7 @@ const ToDoList = () => {
         type: activeTab,
         user_id: user.id,
         due_date: newTaskDueDate || null,
-        shared_with: activeTab === "shared" ? selectedMembers : null,
+        family_id: activeTab === "shared" ? userFamilyId : null,
       };
 
       const { data: insertedTask, error } = await supabase
@@ -339,7 +362,7 @@ const ToDoList = () => {
       
       toast({
         title: activeTab === "shopping" ? t('todos.itemAdded') : activeTab === "shared" ? t('todos.listCreated') : t('todos.taskAdded'),
-        description: `"${newTaskTitle}" has been ${activeTab === "shared" ? `${t('todos.sharedWith')} ${selectedMembers.length} member(s)` : t('todos.addedToList')}.`,
+        description: `"${newTaskTitle}" ${activeTab === "shared" ? 'shared with your family' : t('todos.addedToList')}.`,
       });
     } catch (error) {
       console.error('Error adding task:', error);
@@ -576,23 +599,66 @@ const ToDoList = () => {
                       <div className="border-t bg-muted/20">
                         {items.length > 0 && (
                           <div className="p-3 space-y-1">
-                            {items.map(item => (
-                              <div key={item.id} className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
-                                <Checkbox
-                                  checked={item.completed}
-                                  onCheckedChange={() => toggleTask(item.id)}
-                                />
-                                <span className={`flex-1 text-sm ${item.completed ? "line-through text-muted-foreground" : ""}`}>
-                                  {item.title}
-                                </span>
-                                <button
-                                  onClick={() => deleteTask(item.id)}
-                                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+                            {items.map(item => {
+                              const assignee = familyMembers.find(m => m.user_id === item.assigned_to);
+                              const isAssigning = assigningItemId === item.id;
+                              return (
+                              <div key={item.id}>
+                                <div className="flex items-center gap-3 p-2 rounded hover:bg-muted/50">
+                                  <Checkbox
+                                    checked={item.completed}
+                                    onCheckedChange={() => toggleTask(item.id)}
+                                  />
+                                  <span className={`flex-1 text-sm ${item.completed ? "line-through text-muted-foreground" : ""}`}>
+                                    {item.title}
+                                  </span>
+                                  <button
+                                    onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all"
+                                    style={{
+                                      background: assignee ? '#964735' : 'hsl(var(--muted))',
+                                      color: assignee ? '#fff' : 'hsl(var(--muted-foreground))',
+                                    }}
+                                    title={assignee ? `Assigned to ${assignee.full_name || 'member'}` : 'Assign'}
+                                  >
+                                    {assignee ? (assignee.full_name?.charAt(0).toUpperCase() ?? '?') : '+'}
+                                  </button>
+                                  <button
+                                    onClick={() => deleteTask(item.id)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                                {isAssigning && (
+                                  <div className="ml-8 mb-1 flex flex-wrap gap-1.5">
+                                    {item.assigned_to && (
+                                      <button
+                                        onClick={() => assignTask(item.id, null)}
+                                        className="px-2.5 py-1 rounded-full text-xs font-medium"
+                                        style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                                      >
+                                        Unassign
+                                      </button>
+                                    )}
+                                    {familyMembers.map(m => (
+                                      <button
+                                        key={m.id}
+                                        onClick={() => assignTask(item.id, m.user_id)}
+                                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                                        style={{
+                                          background: item.assigned_to === m.user_id ? '#964735' : 'hsl(var(--muted))',
+                                          color: item.assigned_to === m.user_id ? '#fff' : 'hsl(var(--foreground))',
+                                        }}
+                                      >
+                                        {m.full_name || m.email || 'Member'}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                         {addingToListId === list.id ? (

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronLeft, MessageCircle, Calendar, CheckSquare, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, isToday, isTomorrow, startOfDay, addDays, } from "date-fns";
+import { format, isToday, isTomorrow, startOfDay, addDays } from "date-fns";
 
 const TC = 'hsl(var(--primary))';
 const CARD = 'hsl(var(--card))';
@@ -21,6 +21,11 @@ interface AgendaItem {
   type: 'event' | 'task';
   location?: string;
   allDay?: boolean;
+  assignedTo?: string | null;
+}
+
+interface MemberMap {
+  [userId: string]: string;
 }
 
 function dateLabel(date: Date): string {
@@ -46,10 +51,11 @@ const TYPE_META = {
   task: { icon: CheckSquare, color: '#6E8FE5', label: 'Task' },
 };
 
-const AgendaItemRow = ({ item }: { item: AgendaItem }) => {
+const AgendaItemRow = ({ item, members }: { item: AgendaItem; members: MemberMap }) => {
   const meta = TYPE_META[item.type];
   const Icon = meta.icon;
   const timeStr = item.allDay ? 'All day' : format(item.startDate, 'h:mm a');
+  const assigneeName = item.assignedTo ? members[item.assignedTo] : null;
 
   return (
     <div
@@ -70,8 +76,19 @@ const AgendaItemRow = ({ item }: { item: AgendaItem }) => {
           {item.location && (
             <p className="text-xs truncate" style={{ color: MUTED }}>· {item.location}</p>
           )}
+          {assigneeName && (
+            <p className="text-xs truncate" style={{ color: MUTED }}>· {assigneeName}</p>
+          )}
         </div>
       </div>
+      {assigneeName && (
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
+          style={{ background: '#964735' }}
+        >
+          {assigneeName.charAt(0).toUpperCase()}
+        </div>
+      )}
     </div>
   );
 };
@@ -81,6 +98,7 @@ const FamilyAgendaView = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [items, setItems] = useState<AgendaItem[]>([]);
+  const [members, setMembers] = useState<MemberMap>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -89,6 +107,27 @@ const FamilyAgendaView = () => {
       setLoading(true);
       const now = new Date();
       const cutoff = addDays(now, 60).toISOString();
+
+      // Load family members for assignee name resolution
+      const { data: myMembership } = await supabase
+        .from('family_members')
+        .select('family_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (myMembership?.family_id) {
+        const { data: fmData } = await supabase
+          .from('family_members')
+          .select('user_id, full_name')
+          .eq('family_id', myMembership.family_id)
+          .eq('is_active', true);
+        if (fmData) {
+          const map: MemberMap = {};
+          fmData.forEach(m => { if (m.user_id && m.full_name) map[m.user_id] = m.full_name; });
+          setMembers(map);
+        }
+      }
 
       const [eventsRes, tasksRes] = await Promise.all([
         supabase
@@ -99,10 +138,11 @@ const FamilyAgendaView = () => {
           .order('start_date', { ascending: true }),
         supabase
           .from('tasks')
-          .select('id, title, due_date, type')
+          .select('id, title, due_date, type, assigned_to')
           .not('due_date', 'is', null)
           .eq('completed', false)
           .eq('type', 'shared')
+          .is('parent_id', null)
           .gte('due_date', startOfDay(now).toISOString())
           .lte('due_date', cutoff)
           .order('due_date', { ascending: true }),
@@ -123,6 +163,7 @@ const FamilyAgendaView = () => {
         title: t.title,
         startDate: new Date(t.due_date!),
         type: 'task' as const,
+        assignedTo: t.assigned_to ?? null,
       }));
 
       const all = [...eventItems, ...taskItems];
@@ -203,7 +244,7 @@ const FamilyAgendaView = () => {
                   key={item.id}
                   style={i === group.items.length - 1 ? { borderBottom: 'none' } : undefined}
                 >
-                  <AgendaItemRow item={item} />
+                  <AgendaItemRow item={item} members={members} />
                 </div>
               ))}
             </div>
