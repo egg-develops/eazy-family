@@ -701,96 +701,48 @@ const AppHome = () => {
     return () => window.removeEventListener('eazy-home-config-updated', handler);
   }, []);
 
-  // Sync home_config from Supabase on mount
+  // Fetch pending task count independently (no user ID needed, RLS handles scoping)
   useEffect(() => {
-    if (!user) return;
-    const syncFromSupabase = async () => {
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('home_config')
-          .eq('user_id', user.id)
-          .single();
-        if (data?.home_config && typeof data.home_config === 'object') {
-          setHomeConfig(prev => {
-            const merged = { ...prev, ...(data.home_config as Partial<HomeConfig>) };
-            cloudSet('eazy-family-home-config', JSON.stringify(merged));
-            return merged;
-          });
-        }
-      } catch {
-        // Column may not exist yet — fall back to localStorage silently
-      }
-    };
-    syncFromSupabase();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchPendingTasks = async () => {
-      try {
-        const { count } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('completed', false)
-          .in('type', ['task', 'shared']);
-        setPendingTasksCount(count || 0);
-      } catch { /* silent */ }
-    };
-    fetchPendingTasks();
+    supabase.from('tasks').select('*', { count: 'exact', head: true })
+      .eq('completed', false).in('type', ['task', 'shared'])
+      .then(({ count }) => setPendingTasksCount(count || 0))
+      .catch(() => {});
   }, []);
 
+  // Fetch all user-scoped home data in parallel — one round-trip instead of four
   useEffect(() => {
     if (!user) return;
     const COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
-    supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5)
-      .then(({ data }) => {
-        setSharedItems((data || []).map((t, i) => ({
+    Promise.all([
+      supabase.from('profiles').select('home_config').eq('user_id', user.id).single(),
+      supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5),
+      supabase.from('tasks').select('id, title, due_date, type').not('due_date', 'is', null).eq('completed', false).in('type', ['task', 'shared']),
+      supabase.from('events').select('id, title, start_date, end_date, all_day, location').order('start_date', { ascending: true }).limit(90),
+    ]).then(([profilesRes, sharedRes, calTasksRes, eventsRes]) => {
+      if (profilesRes.data?.home_config && typeof profilesRes.data.home_config === 'object') {
+        setHomeConfig(prev => {
+          const merged = { ...prev, ...(profilesRes.data.home_config as Partial<HomeConfig>) };
+          cloudSet('eazy-family-home-config', JSON.stringify(merged));
+          return merged;
+        });
+      }
+      if (sharedRes.data) {
+        setSharedItems(sharedRes.data.map((t, i) => ({
           id: t.id, title: t.title, type: 'task',
           initials: (t.user_id || 'U').slice(0, 2).toUpperCase(),
           color: COLORS[i % COLORS.length],
         })));
-      });
-  }, [user]);
-
-  // Sync tasks/reminders with due dates into the homepage calendar
-  useEffect(() => {
-    if (!user) return;
-    const fetchTasksForCalendar = async () => {
-      try {
-        const { data } = await supabase
-          .from('tasks')
-          .select('id, title, due_date, type')
-          .not('due_date', 'is', null)
-          .eq('completed', false)
-          .in('type', ['task', 'shared']);
-        if (data) {
-          const events: HomeCalendarEvent[] = data
-            .filter(t => t.due_date)
-            .map(t => ({
-              id: `task-${t.id}`,
-              title: t.title,
-              startDate: new Date(t.due_date!),
-              itemType: 'task' as const,
-            }));
-          setCalendarTasks(events);
-        }
-      } catch {
-        // silently fail
       }
-    };
-    fetchTasksForCalendar();
-  }, [user]);
-
-  // Pull events from Supabase events table into home calendar
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('events')
-      .select('id, title, start_date, end_date, all_day, location')
-      .order('start_date', { ascending: true })
-      .then(({ data }) => {
-        if (!data) return;
-        setSupabaseEvents(data.map(e => ({
+      if (calTasksRes.data) {
+        setCalendarTasks(calTasksRes.data.filter(t => t.due_date).map(t => ({
+          id: `task-${t.id}`,
+          title: t.title,
+          startDate: new Date(t.due_date!),
+          itemType: 'task' as const,
+        })));
+      }
+      if (eventsRes.data) {
+        setSupabaseEvents(eventsRes.data.map(e => ({
           id: `supabase-${e.id}`,
           title: e.title,
           startDate: new Date(e.start_date),
@@ -799,7 +751,8 @@ const AppHome = () => {
           location: e.location ?? undefined,
           itemType: 'event' as const,
         })));
-      });
+      }
+    }).catch(() => {});
   }, [user]);
 
   const calendarEvents = [...getCalendarItems(), ...calendarTasks, ...supabaseEvents];

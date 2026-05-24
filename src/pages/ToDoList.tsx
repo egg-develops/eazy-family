@@ -88,24 +88,18 @@ const ToDoList = () => {
     loadTasks();
   }, []);
 
-  // Set up realtime subscription
+  // Set up realtime subscription — debounced so rapid batch changes fire one reload
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel('tasks-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tasks'
-        },
-        () => {
-          loadTasks();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(loadTasks, 300);
+      })
       .subscribe();
-
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       supabase.removeChannel(channel);
     };
   }, []);

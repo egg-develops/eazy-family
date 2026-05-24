@@ -147,31 +147,26 @@ const Settings = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: { user: u } } = await supabase.auth.getUser();
-        if (u) {
-          setUserEmail(u.email || '');
-          const { data } = await supabase.from('profiles').select('display_name, home_config').eq('user_id', u.id).single();
-          if (data) {
-            setDisplayName(data.display_name || '');
-            // home_config in profiles is the authoritative cloud copy — merge it in
-            if (data.home_config && typeof data.home_config === 'object') {
-              const cloud = data.home_config as Partial<HomeConfig>;
-              setHomeConfig(prev => ({ ...prev, ...cloud }));
-              if (cloud.appTitle !== undefined) setAppTitleDraft(cloud.appTitle ?? '');
-              // Keep localStorage in sync so App.tsx title bar is correct
-              const merged = { ...JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'), ...cloud };
-              localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
-              window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
-            }
+    if (!user) return;
+    // user is already in context — skip supabase.auth.getUser() round-trip
+    setUserEmail(user.email || '');
+    supabase.from('profiles').select('display_name, home_config').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setDisplayName(data.display_name || '');
+          if (data.home_config && typeof data.home_config === 'object') {
+            const cloud = data.home_config as Partial<HomeConfig>;
+            setHomeConfig(prev => ({ ...prev, ...cloud }));
+            if (cloud.appTitle !== undefined) setAppTitleDraft(cloud.appTitle ?? '');
+            const merged = { ...JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'), ...cloud };
+            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
+            window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
           }
         }
-      } catch (e) { logError('Settings fetch:', e); }
-      finally { setLoadingSubscription(false); }
-    };
-    fetchUser();
-  }, []);
+      })
+      .catch(e => logError('Settings fetch:', e))
+      .finally(() => setLoadingSubscription(false));
+  }, [user]);
 
 
   // Re-hydrate from cloud
