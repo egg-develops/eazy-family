@@ -578,14 +578,8 @@ const Settings = () => {
             icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>✨</span>}
             title={t('settings.appTour.featureSlides')}
             subtitle={t('settings.appTour.featureSlidesSub')}
-            onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
-          />
-          <Row
-            icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>🔍</span>}
-            title={t('settings.appTour.interactiveTour')}
-            subtitle={t('settings.appTour.interactiveTourSub')}
             last
-            onClick={() => window.dispatchEvent(new Event('tutorial-start'))}
+            onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
           />
         </Card_>
       </div>

@@ -290,10 +290,8 @@
     "moduleGallery": "Photo Gallery",
     "appTour": {
       "title": "App Tour",
-      "featureSlides": "Feature slides",
-      "featureSlidesSub": "Watch the intro slides again",
-      "interactiveTour": "Interactive tour",
-      "interactiveTourSub": "Spotlight tour of the home screen"
+      "featureSlides": "Features Tour",
+      "featureSlidesSub": "Replay the features walkthrough"
     },
     "helpCenter": {
       "title": "Help Center",

@@ -290,10 +290,8 @@
     "moduleGallery": "Fotogalerie",
     "appTour": {
       "title": "App-Tour",
-      "featureSlides": "Feature-Folien",
-      "featureSlidesSub": "Intro-Folien erneut ansehen",
-      "interactiveTour": "Interaktive Tour",
-      "interactiveTourSub": "Spotlight-Tour durch den Startbildschirm"
+      "featureSlides": "Features Tour",
+      "featureSlidesSub": "Funktionen erneut ansehen"
     },
     "helpCenter": {
       "title": "Hilfe-Center",

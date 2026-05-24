@@ -290,10 +290,8 @@
     "moduleGallery": "Galerie photos",
     "appTour": {
       "title": "Visite de l'appli",
-      "featureSlides": "Diapositives des fonctionnalités",
-      "featureSlidesSub": "Revoir les diapositives d'introduction",
-      "interactiveTour": "Visite interactive",
-      "interactiveTourSub": "Tour guidé de l'écran d'accueil"
+      "featureSlides": "Features Tour",
+      "featureSlidesSub": "Revoir les fonctionnalités"
     },
     "helpCenter": {
       "title": "Centre d'aide",
