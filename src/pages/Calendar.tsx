@@ -1224,6 +1224,9 @@ const Calendar = () => {
     .filter(i => i.type === 'event')
     .sort((a, b) => new Date((a as Event).startDate).getTime() - new Date((b as Event).startDate).getTime());
 
+  const selectedDayReminders = getItemsForDate(selectedDate)
+    .filter(i => i.type === 'reminder') as Reminder[];
+
   const renderYearCalendar = () => {
     const year = selectedDate.getFullYear();
     const months = Array.from({ length: 12 }, (_, i) => i);
@@ -1481,7 +1484,7 @@ const Calendar = () => {
             onTouchMove={e => e.stopPropagation()}
             onTouchEnd={e => e.stopPropagation()}
           >
-            {allItems.filter(i => i.type === 'event').slice(0, 5).map((item) => {
+            {allItems.filter(i => i.type === 'event' && (i as Event).attendees?.length).slice(0, 5).map((item) => {
               const ev = item as Event;
               const initials = ev.title.slice(0, 1).toUpperCase();
               return (
@@ -1498,7 +1501,7 @@ const Calendar = () => {
                 </div>
               );
             })}
-            {allItems.filter(i => i.type === 'event').length === 0 && (
+            {allItems.filter(i => i.type === 'event' && (i as Event).attendees?.length).length === 0 && (
               <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed hsl(var(--border))' }}>
                 <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>No events yet</p>
               </div>
@@ -1557,6 +1560,35 @@ const Calendar = () => {
           ) : (
             <div className="rounded-2xl p-6 text-center" style={{ background: 'hsl(var(--card))', border: '1px dashed #DAC1BB' }}>
               <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Nothing scheduled. A clear, open day.</p>
+            </div>
+          )}
+
+          {/* Reminders for the selected day */}
+          {selectedDayReminders.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wide px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                Reminders
+              </p>
+              {selectedDayReminders.map(rem => (
+                <div key={rem.id}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                  style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                >
+                  <button
+                    onClick={() => toggleReminder(rem.id)}
+                    className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ borderColor: rem.completed ? '#6E8FE5' : 'hsl(var(--border))', background: rem.completed ? '#6E8FE5' : 'transparent' }}
+                  >
+                    {rem.completed && <span className="text-white text-[10px] font-bold">✓</span>}
+                  </button>
+                  <p className="flex-1 text-sm font-medium" style={{ color: 'hsl(var(--foreground))', textDecoration: rem.completed ? 'line-through' : 'none', opacity: rem.completed ? 0.5 : 1 }}>
+                    {rem.title}
+                  </p>
+                  <button onClick={() => handleDeleteItem(rem.id)} className="opacity-30 hover:opacity-100 transition-opacity">
+                    <X className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 

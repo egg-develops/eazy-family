@@ -367,7 +367,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           title: parsed.title,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
-          ...(entryType === 'reminder' ? { dueDate: startDate.toISOString() } : {}),
+          ...(entryType === 'reminder' ? { dueDate: startDate.toISOString(), completed: false } : {}),
           allDay: !parsed.time,
           type: entryType,
           color: entryType === 'reminder' ? '#6E8FE5' : '#D97B66',
