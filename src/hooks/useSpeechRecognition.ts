@@ -1,9 +1,26 @@
 import { useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
+import { supabase } from "@/integrations/supabase/client";
 
 // Module-level cache — permission granted status persists for the app session
 let nativePermissionGranted = false;
+
+// Use MediaRecorder + Whisper on mobile web (iOS Safari has no Web Speech API;
+// mobile Chrome's Web Speech API is unreliable). Desktop keeps Web Speech API.
+function shouldUseWhisper(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const hasSpeechAPI = typeof window !== 'undefined' &&
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  return isMobile || !hasSpeechAPI;
+}
+
+function getBestMimeType(): string {
+  if (typeof MediaRecorder === 'undefined') return '';
+  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
+  return candidates.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
+}
 
 export type SpeechRecognitionOptions = {
   lang?: string;
@@ -14,17 +31,24 @@ export type SpeechRecognitionOptions = {
 
 export const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // Native path
   const nativeCleanupRef = useRef<(() => void) | null>(null);
   const nativeActiveRef = useRef(false);
 
-  // Web path
+  // Web Speech API path (desktop only)
   const recognitionRef = useRef<any>(null);
   const webActiveRef = useRef(false);
   const sessionIdRef = useRef(0);
 
+  // MediaRecorder + Whisper path (mobile web)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const transcribeAbortRef = useRef<AbortController | null>(null);
+
   const isNative = Capacitor.isNativePlatform();
+  const useWhisper = !isNative && shouldUseWhisper();
 
   const stop = () => {
     if (isNative) {
@@ -33,6 +57,17 @@ export const useSpeechRecognition = () => {
       nativeCleanupRef.current = null;
       SpeechRecognition.stop().catch(() => {});
       setIsListening(false);
+    } else if (useWhisper) {
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop(); // triggers onstop → transcription
+      } else {
+        // Stopped before recording started or already done
+        transcribeAbortRef.current?.abort();
+        mediaStreamRef.current?.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+        setIsListening(false);
+        setIsTranscribing(false);
+      }
     } else {
       webActiveRef.current = false;
       sessionIdRef.current++;
@@ -67,7 +102,7 @@ export const useSpeechRecognition = () => {
       }
     }
 
-    if (!nativeActiveRef.current) return; // stopped before permissions resolved
+    if (!nativeActiveRef.current) return;
 
     setIsListening(true);
 
@@ -117,6 +152,81 @@ export const useSpeechRecognition = () => {
     }
   };
 
+  const startMediaRecorder = async (opts: SpeechRecognitionOptions) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      const mimeType = getBestMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        mediaStreamRef.current?.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+        setIsListening(false);
+
+        const totalSize = chunks.reduce((sum, c) => sum + c.size, 0);
+        if (totalSize < 500) {
+          opts.onEnd?.();
+          return;
+        }
+
+        setIsTranscribing(true);
+        const abort = new AbortController();
+        transcribeAbortRef.current = abort;
+
+        try {
+          const ext = mimeType.includes('mp4') || mimeType.includes('aac') ? 'mp4' : 'webm';
+          const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+          const { data: { session } } = await supabase.auth.getSession();
+          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+
+          const fd = new FormData();
+          fd.append('audio', blob, `recording.${ext}`);
+          fd.append('language', (opts.lang ?? 'en-US').split('-')[0]);
+
+          const res = await fetch(`${supabaseUrl}/functions/v1/transcribe-audio`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token ?? anonKey}`,
+              'apikey': anonKey,
+            },
+            body: fd,
+            signal: abort.signal,
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const transcript = (data.text ?? '').trim();
+            if (transcript) opts.onResult(transcript, true);
+          }
+        } catch (err: any) {
+          if (err?.name !== 'AbortError') {
+            console.error('[useSpeechRecognition] Whisper transcription failed:', err);
+          }
+        }
+
+        setIsTranscribing(false);
+        opts.onEnd?.();
+      };
+
+      recorder.start(250);
+      mediaRecorderRef.current = recorder;
+      setIsListening(true);
+
+    } catch (err: any) {
+      const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
+      opts.onError?.(denied ? 'not-allowed' : 'unknown');
+    }
+  };
+
   const start = (opts: SpeechRecognitionOptions) => {
     if (isNative) {
       nativeActiveRef.current = true;
@@ -124,7 +234,12 @@ export const useSpeechRecognition = () => {
       return;
     }
 
-    // Web fallback
+    if (useWhisper) {
+      startMediaRecorder(opts);
+      return;
+    }
+
+    // Desktop: Web Speech API
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       opts.onError?.('not-supported');
@@ -140,7 +255,6 @@ export const useSpeechRecognition = () => {
     setIsListening(true);
 
     const sessionId = sessionIdRef.current;
-
     const r = new SR();
     r.lang = opts.lang ?? 'en-US';
     r.interimResults = false;
@@ -181,5 +295,5 @@ export const useSpeechRecognition = () => {
     }
   };
 
-  return { isListening, start, stop };
+  return { isListening, isTranscribing, start, stop };
 };

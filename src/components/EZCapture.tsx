@@ -111,6 +111,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const userName = getUserFirstName();
   const speech = useSpeechRecognition();
   const isListening = speech.isListening;
+  const isTranscribing = speech.isTranscribing;
 
   useEffect(() => {
     haptic('medium');
@@ -469,7 +470,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   ref={textareaRef}
                   value={text}
                   onChange={e => setTextTracked(e.target.value)}
-                  placeholder="Speak or type anything — event, task, note, reminder…"
+                  placeholder={isTranscribing ? "Transcribing your voice…" : "Speak or type anything — event, task, note, reminder…"}
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{
@@ -481,17 +482,21 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   }}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
                 />
-                {/* Mic button with pulse ring when active */}
+                {/* Mic button — pulse when recording, spinner when transcribing */}
                 <div className="absolute bottom-3 right-3 w-7 h-7">
-                  {(intendingToListen || isListening) && (
+                  {(intendingToListen || isListening) && !isTranscribing && (
                     <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
                   )}
                   <button
                     onClick={(intendingToListen || isListening) ? stopListening : startListening}
+                    disabled={isTranscribing}
                     className="relative w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                    style={{ background: (intendingToListen || isListening) ? '#D97B66' : '#964735' }}
+                    style={{ background: (intendingToListen || isListening || isTranscribing) ? '#D97B66' : '#964735' }}
                   >
-                    <Mic className="w-3.5 h-3.5 text-white" />
+                    {isTranscribing
+                      ? <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      : <Mic className="w-3.5 h-3.5 text-white" />
+                    }
                   </button>
                 </div>
               </div>

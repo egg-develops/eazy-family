@@ -1,5 +1,9 @@
 [
 	{
+		"pkg": "@capacitor-community/apple-sign-in",
+		"classpath": "com.getcapacitor.community.applesignin.SignInWithApple"
+	},
+	{
 		"pkg": "@capacitor-community/speech-recognition",
 		"classpath": "com.getcapacitor.community.speechrecognition.SpeechRecognition"
 	},
@@ -18,5 +22,9 @@
 	{
 		"pkg": "@ebarooni/capacitor-calendar",
 		"classpath": "dev.barooni.capacitor.calendar.CapacitorCalendarPlugin"
+	},
+	{
+		"pkg": "@revenuecat/purchases-capacitor",
+		"classpath": "com.revenuecat.purchases.capacitor.PurchasesPlugin"
 	}
 ]

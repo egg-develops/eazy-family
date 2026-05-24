@@ -7,15 +7,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown } from "lucide-react";
-import { useState } from "react";
+import { Check, Crown, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
+import { getRCOfferings, purchaseRCPackage, restoreRCPurchases, type RCPackage } from "@/lib/revenuecat";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -24,45 +24,92 @@ interface UpgradeDialogProps {
 }
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
-  const { isPremium } = useAuth();
+  const { isPremium, refreshSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+  const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+
+  const isNative = Capacitor.isNativePlatform();
+
+  useEffect(() => {
+    if (open && isNative) {
+      getRCOfferings().then(pkgs => setRcPackages(pkgs));
+    }
+  }, [open, isNative]);
 
   if (isPremium) {
     return <>{children}</>;
   }
 
-  const handleUpgrade = async () => {
+  const annualPkg = rcPackages.find(p =>
+    p.packageType === 'ANNUAL' || p.identifier.toLowerCase().includes('annual') || p.identifier === 'yearly'
+  );
+  const monthlyPkg = rcPackages.find(p =>
+    p.packageType === 'MONTHLY' || p.identifier.toLowerCase().includes('monthly')
+  );
+
+  const handleNativeUpgrade = async () => {
+    const pkg = billingCycle === 'annual' ? annualPkg : monthlyPkg;
+    if (!pkg) {
+      toast({ title: "Not available", description: "Could not load offerings. Try again.", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const granted = await purchaseRCPackage(pkg.identifier);
+      if (granted) {
+        await refreshSubscription();
+        setOpen(false);
+        toast({ title: "Welcome to Family Plan!", description: "Your subscription is now active." });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes('userCancelled')) {
+        logError("RC purchase error:", err);
+        toast({ title: "Purchase failed", description: "Please try again.", variant: "destructive" });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setIsLoading(true);
+    try {
+      const granted = await restoreRCPurchases();
+      if (granted) {
+        await refreshSubscription();
+        setOpen(false);
+        toast({ title: "Purchases restored", description: "Your subscription is active." });
+      } else {
+        toast({ title: "Nothing to restore", description: "No active subscription found." });
+      }
+    } catch {
+      toast({ title: "Restore failed", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWebUpgrade = async () => {
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to upgrade to the Family Plan.",
-          variant: "destructive",
-        });
+        toast({ title: "Authentication Required", description: "Please sign in to upgrade.", variant: "destructive" });
         return;
       }
-
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { billing_cycle: billingCycle },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
-
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (error) {
       logError("Error creating checkout:", error);
-      toast({
-        title: "Error",
-        description: "Failed to start checkout. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to start checkout. Please try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -136,45 +183,82 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
           {/* Billing / CTA */}
           <div className="space-y-4 pt-4 border-t">
+            {/* Billing toggle — shared between native and web */}
+            <div className="flex rounded-xl border border-border overflow-hidden">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  billingCycle === 'monthly'
+                    ? 'bg-primary text-white'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annual')}
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                  billingCycle === 'annual'
+                    ? 'bg-primary text-white'
+                    : 'bg-background text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                Annual
+              </button>
+            </div>
+
             {isNative ? (
-              /* iOS: all features currently free — no external payment */
-              <div className="space-y-3 text-center">
-                <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
-                  <p className="text-sm font-medium text-green-800">All features included</p>
-                  <p className="text-xs text-green-700 mt-1">
-                    Every feature in Eazy.Family is currently available at no cost. No subscription required.
-                  </p>
-                </div>
-                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
-                  Got it
-                </Button>
-              </div>
-            ) : (
-              /* Web: full Stripe checkout */
+              /* iOS: RevenueCat purchase flow */
               <>
-                <div className="flex rounded-xl border border-border overflow-hidden">
-                  <button
-                    onClick={() => setBillingCycle('monthly')}
-                    className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                      billingCycle === 'monthly'
-                        ? 'bg-primary text-white'
-                        : 'bg-background text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    Monthly
-                  </button>
-                  <button
-                    onClick={() => setBillingCycle('annual')}
-                    className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                      billingCycle === 'annual'
-                        ? 'bg-primary text-white'
-                        : 'bg-background text-muted-foreground hover:bg-muted'
-                    }`}
-                  >
-                    Annual
-                  </button>
+                <div className="text-center">
+                  {billingCycle === 'annual' && annualPkg ? (
+                    <div>
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
+                      </div>
+                      <p className="text-3xl font-bold">
+                        {annualPkg.product.priceString}
+                        <span className="text-lg text-muted-foreground font-normal">/year</span>
+                      </p>
+                    </div>
+                  ) : billingCycle === 'monthly' && monthlyPkg ? (
+                    <div>
+                      <p className="text-3xl font-bold">
+                        {monthlyPkg.product.priceString}
+                        <span className="text-lg text-muted-foreground font-normal">/month</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-2">Loading pricing…</p>
+                  )}
                 </div>
 
+                <Button
+                  className="w-full gradient-primary text-white border-0"
+                  size="lg"
+                  onClick={handleNativeUpgrade}
+                  disabled={isLoading || (!annualPkg && !monthlyPkg)}
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {isLoading ? "Processing…" : "Subscribe"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full text-muted-foreground text-xs"
+                  onClick={handleRestore}
+                  disabled={isLoading}
+                >
+                  <RotateCcw className="h-3 w-3 mr-1.5" />
+                  Restore Purchases
+                </Button>
+                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
+                  Maybe Later
+                </Button>
+              </>
+            ) : (
+              /* Web: Stripe checkout */
+              <>
                 <div className="text-center">
                   {billingCycle === 'monthly' ? (
                     <div>
@@ -201,7 +285,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 <Button
                   className="w-full gradient-primary text-white border-0"
                   size="lg"
-                  onClick={handleUpgrade}
+                  onClick={handleWebUpgrade}
                   disabled={isLoading}
                 >
                   <Crown className="h-4 w-4 mr-2" />

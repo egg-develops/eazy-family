@@ -7,6 +7,7 @@ import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
+import { configureRC, identifyRCUser, resetRCUser, getRCIsPremium } from '@/lib/revenuecat';
 
 
 // Dev bypass - set to true to skip authentication
@@ -39,10 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(DEV_BYPASS_AUTH ? DEMO_USER : null);
   const [session, setSession] = useState<Session | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState(true); // default true; native overrides via RC
   const [loading, setLoading] = useState(DEV_BYPASS_AUTH ? false : true);
   const navigate = useNavigate();
-
-  const isPremium = true; // all features are free — no subscription tiers
 
   const fetchSubscriptionTier = async (userId: string) => {
     const { data } = await supabase
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .select('subscription_tier')
       .eq('user_id', userId)
       .maybeSingle();
-    
+
     if (data?.subscription_tier) {
       setSubscriptionTier(data.subscription_tier);
     }
@@ -58,13 +58,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshSubscription = async () => {
     if (DEV_BYPASS_AUTH) {
-      // In dev mode, set premium tier for testing
       setSubscriptionTier('family');
       return;
     }
-    
     if (user?.id) {
       await fetchSubscriptionTier(user.id);
+    }
+    if (Capacitor.isNativePlatform()) {
+      const premium = await getRCIsPremium();
+      setIsPremium(premium);
     }
   };
 
@@ -75,16 +77,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    // Configure RevenueCat early (before session resolves) so it's ready
+    configureRC();
+
     // Check for existing session FIRST
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchSubscriptionTier(session.user.id);
         loadCloudPreferences(session.user.id);
-        // Refresh widget token on cold launch (token may have rotated)
         if (session.access_token) {
           syncWidgetToken(session.access_token, session.user.id);
+        }
+        if (Capacitor.isNativePlatform()) {
+          await identifyRCUser(session.user.id);
+          const premium = await getRCIsPremium();
+          setIsPremium(premium);
         }
       }
       setLoading(false);
@@ -121,15 +130,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           fetchSubscriptionTier(session.user.id);
           if (event === 'SIGNED_IN') {
             loadCloudPreferences(session.user.id);
-            // Push JWT to native widget via App Group UserDefaults
             if (session.access_token) {
               syncWidgetToken(session.access_token, session.user.id);
+            }
+            if (Capacitor.isNativePlatform()) {
+              identifyRCUser(session.user.id).then(() =>
+                getRCIsPremium().then(premium => setIsPremium(premium))
+              );
             }
           }
         } else {
           setSubscriptionTier(null);
           setPreferenceUserId(null);
-          if (event === 'SIGNED_OUT') clearWidgetToken();
+          if (event === 'SIGNED_OUT') {
+            clearWidgetToken();
+            if (Capacitor.isNativePlatform()) {
+              resetRCUser().catch(() => {});
+              setIsPremium(false);
+            }
+          }
         }
 
         // Create profile if it doesn't exist (atomic upsert to prevent race condition)

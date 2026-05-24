@@ -1,0 +1,94 @@
+import { Capacitor } from '@capacitor/core';
+
+const isNative = Capacitor.isNativePlatform();
+const RC_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY as string;
+const ENTITLEMENT = 'premium';
+
+// Lazy-import the native plugin only on native platforms to avoid web build issues
+async function getRC() {
+  const { Purchases } = await import('@revenuecat/purchases-capacitor');
+  return Purchases;
+}
+
+export async function configureRC(userId?: string): Promise<void> {
+  if (!isNative || !RC_KEY) return;
+  const Purchases = await getRC();
+  await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
+}
+
+export async function identifyRCUser(userId: string): Promise<void> {
+  if (!isNative) return;
+  const Purchases = await getRC();
+  await Purchases.logIn({ appUserID: userId });
+}
+
+export async function resetRCUser(): Promise<void> {
+  if (!isNative) return;
+  const Purchases = await getRC();
+  await Purchases.logOut();
+}
+
+export async function getRCIsPremium(): Promise<boolean> {
+  if (!isNative) return true; // web always treated as premium (Stripe not wired)
+  try {
+    const Purchases = await getRC();
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    return ENTITLEMENT in customerInfo.entitlements.active;
+  } catch {
+    return false;
+  }
+}
+
+export interface RCPackage {
+  identifier: string;
+  packageType: string;
+  product: {
+    title: string;
+    description: string;
+    priceString: string;
+    currencyCode: string;
+    price: number;
+  };
+}
+
+export async function getRCOfferings(): Promise<RCPackage[]> {
+  if (!isNative) return [];
+  try {
+    const Purchases = await getRC();
+    const { current } = await Purchases.getOfferings();
+    if (!current) return [];
+    return current.availablePackages.map(p => ({
+      identifier: p.identifier,
+      packageType: p.packageType,
+      product: {
+        title: p.product.title,
+        description: p.product.description,
+        priceString: p.product.priceString,
+        currencyCode: p.product.currencyCode,
+        price: p.product.price,
+      },
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function purchaseRCPackage(packageIdentifier: string): Promise<boolean> {
+  if (!isNative) return false;
+  const Purchases = await getRC();
+  const { current } = await Purchases.getOfferings();
+  if (!current) throw new Error('No offerings available');
+
+  const pkg = current.availablePackages.find(p => p.identifier === packageIdentifier);
+  if (!pkg) throw new Error(`Package ${packageIdentifier} not found`);
+
+  const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+  return ENTITLEMENT in customerInfo.entitlements.active;
+}
+
+export async function restoreRCPurchases(): Promise<boolean> {
+  if (!isNative) return false;
+  const Purchases = await getRC();
+  const { customerInfo } = await Purchases.restorePurchases();
+  return ENTITLEMENT in customerInfo.entitlements.active;
+}
