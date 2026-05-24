@@ -61,7 +61,7 @@ import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { Capacitor } from "@capacitor/core";
-import { format } from "date-fns";
+import { format, addDays, isToday, isTomorrow } from "date-fns";
 
 const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
 
@@ -457,6 +457,7 @@ interface HomeConfig {
   showTasks?: boolean;
   showFamilyChannel?: boolean;
   showGallery?: boolean;
+  showFamilyAgenda?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -1130,6 +1131,53 @@ const AppHome = () => {
         <QuickToDos navigate={navigate} />
       </div>
       )}
+
+      {/* Family Agenda */}
+      {homeConfig.showFamilyAgenda !== false && (() => {
+        const now = new Date();
+        const cutoff = addDays(now, 60);
+        const rawEvents: any[] = (() => { try { return JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); } catch { return []; } })();
+        const agendaEvents = rawEvents
+          .filter(e => {
+            if (!e.attendees?.length) return false;
+            const d = new Date(e.startDate);
+            return d >= now && d <= cutoff;
+          })
+          .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+          .slice(0, 5);
+        const dateLabel = (d: Date) => isToday(d) ? 'Today' : isTomorrow(d) ? 'Tomorrow' : format(d, 'EEE, MMM d');
+        return (
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyAgenda')}</p>
+              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+            </div>
+            {agendaEvents.length > 0 ? (
+              agendaEvents.map((ev, i) => {
+                const d = new Date(ev.startDate);
+                return (
+                  <button key={ev.id || i} onClick={() => navigate('/app/calendar')}
+                    className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
+                    style={{ borderBottom: i < agendaEvents.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: ev.color || '#964735' }}>
+                      {ev.title.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{dateLabel(d)}{ev.allDay ? '' : ` · ${format(d, 'h:mm a')}`}</p>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="px-4 py-5 text-center">
+                <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noSharedEvents')}</p>
+                <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Family Channel */}
       {homeConfig.showFamilyChannel !== false && (() => {

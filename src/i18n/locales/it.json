@@ -287,6 +287,7 @@
     "moduleRituals": "Rituali del giorno",
     "moduleTasks": "Attività principali",
     "moduleFamily": "Canale famiglia",
+    "moduleFamilyAgenda": "Agenda famiglia",
     "moduleGallery": "Galleria foto",
     "appTour": {
       "title": "Tour dell'app",
@@ -355,7 +356,10 @@
     "noMessages": "Nessun messaggio ancora — inizia la conversazione.",
     "openChannel": "Apri canale",
     "noTasksYet": "Nessuna attività ancora.",
-    "addTaskBtn": "Aggiungi attività"
+    "addTaskBtn": "Aggiungi attività",
+    "familyAgenda": "Agenda famiglia",
+    "noSharedEvents": "Nessun evento condiviso in arrivo.",
+    "openCalendar": "Apri calendario"
   },
   "common": {
     "add": "Aggiungi",

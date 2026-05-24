@@ -106,7 +106,7 @@ const FamilyAgendaView = () => {
     const load = async () => {
       setLoading(true);
       const now = new Date();
-      const cutoff = addDays(now, 60).toISOString();
+      const cutoff = addDays(now, 60).toISOString(); // used for tasks query
 
       // Load family members for assignee name resolution
       const { data: myMembership } = await supabase
@@ -129,34 +129,35 @@ const FamilyAgendaView = () => {
         }
       }
 
-      const [eventsRes, tasksRes] = await Promise.all([
-        supabase
-          .from('events')
-          .select('id, title, start_date, end_date, all_day, location')
-          .gte('start_date', now.toISOString())
-          .lte('start_date', cutoff)
-          .order('start_date', { ascending: true }),
-        supabase
-          .from('tasks')
-          .select('id, title, due_date, type, assigned_to')
-          .not('due_date', 'is', null)
-          .eq('completed', false)
-          .eq('type', 'shared')
-          .is('parent_id', null)
-          .gte('due_date', startOfDay(now).toISOString())
-          .lte('due_date', cutoff)
-          .order('due_date', { ascending: true }),
-      ]);
+      // Read family calendar events from localStorage (family events, not community events)
+      const rawEvents: any[] = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
+      const cutoffDate = addDays(now, 60);
+      const eventItems: AgendaItem[] = rawEvents
+        .filter(e => {
+          if (!e.attendees?.length) return false;
+          const d = new Date(e.startDate);
+          return d >= now && d <= cutoffDate;
+        })
+        .map(e => ({
+          id: `ev-${e.id}`,
+          title: e.title,
+          startDate: new Date(e.startDate),
+          endDate: e.endDate ? new Date(e.endDate) : undefined,
+          allDay: e.allDay ?? false,
+          location: e.location ?? undefined,
+          type: 'event' as const,
+        }));
 
-      const eventItems: AgendaItem[] = (eventsRes.data || []).map(e => ({
-        id: `ev-${e.id}`,
-        title: e.title,
-        startDate: new Date(e.start_date),
-        endDate: e.end_date ? new Date(e.end_date) : undefined,
-        allDay: e.all_day ?? false,
-        location: e.location ?? undefined,
-        type: 'event' as const,
-      }));
+      const tasksRes = await supabase
+        .from('tasks')
+        .select('id, title, due_date, type, assigned_to')
+        .not('due_date', 'is', null)
+        .eq('completed', false)
+        .eq('type', 'shared')
+        .is('parent_id', null)
+        .gte('due_date', startOfDay(now).toISOString())
+        .lte('due_date', cutoff)
+        .order('due_date', { ascending: true });
 
       const taskItems: AgendaItem[] = (tasksRes.data || []).map(t => ({
         id: `task-${t.id}`,

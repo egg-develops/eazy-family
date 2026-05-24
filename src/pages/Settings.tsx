@@ -36,6 +36,7 @@ interface HomeConfig {
   showTasks?: boolean;
   showFamilyChannel?: boolean;
   showGallery?: boolean;
+  showFamilyAgenda?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -114,10 +115,10 @@ const Settings = () => {
       const saved = localStorage.getItem('eazy-family-home-config');
       if (saved) {
         const p = JSON.parse(saved);
-        return { showCalendar: true, showWeather: true, showGreeting: true, showRituals: true, showTasks: true, showFamilyChannel: true, topNotifications: [], quickActions: [], ...p };
+        return { showCalendar: true, showWeather: true, showGreeting: true, showRituals: true, showTasks: true, showFamilyChannel: true, showFamilyAgenda: true, topNotifications: [], quickActions: [], ...p };
       }
     } catch { localStorage.removeItem('eazy-family-home-config'); }
-    return { greeting: "Good morning! ☀️", byline: "Let's make today amazing", showCalendar: true, showWeather: true, showGreeting: true, showRituals: true, showTasks: true, showFamilyChannel: true, topNotifications: [], quickActions: [] };
+    return { greeting: "Good morning! ☀️", byline: "Let's make today amazing", showCalendar: true, showWeather: true, showGreeting: true, showRituals: true, showTasks: true, showFamilyChannel: true, showFamilyAgenda: true, topNotifications: [], quickActions: [] };
   });
 
   const [appTitleDraft, setAppTitleDraft] = useState(() => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle ?? ''; } catch { return ''; } });
@@ -293,6 +294,7 @@ const Settings = () => {
     { key: 'showRituals', labelKey: 'settings.moduleRituals' },
     { key: 'showTasks', labelKey: 'settings.moduleTasks' },
     { key: 'showFamilyChannel', labelKey: 'settings.moduleFamily' },
+    { key: 'showFamilyAgenda', labelKey: 'settings.moduleFamilyAgenda' },
     { key: 'showGallery', labelKey: 'settings.moduleGallery' },
   ] as const;
 
