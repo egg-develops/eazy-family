@@ -1219,5 +1219,35 @@
         "a": "Vai a Definições → desliza até ao fundo → Eliminar a minha conta. Isto remove permanentemente todos os teus dados e não pode ser desfeito."
       }
     ]
+  },
+  "tour": {
+    "skip": "Saltar",
+    "next": "Seguinte",
+    "letsGo": "Vamos lá!",
+    "slide1": {
+      "title": "Bem-vindo ao Eazy.Family",
+      "body": "O espaço privado da tua família — organizado, conectado e sempre sincronizado.",
+      "hint": "Uma visão rápida de 60 segundos das tuas funcionalidades principais."
+    },
+    "slide2": {
+      "title": "EZ — O Teu Assistente Inteligente",
+      "body": "EZ é o botão inteligente que controla a tua app. Toca uma vez para adicionar qualquer coisa por voz ou texto — eventos, tarefas, compras, entradas de diário. Prime e desliza para cima para aceder ao menu. Prime sem soltar para o mover para qualquer lugar do ecrã.",
+      "hint": "Experimenta: toca em EZ e diz «Dentista na segunda às 15h» ou «adiciona leite e ovos à lista de compras»."
+    },
+    "slide3": {
+      "title": "Listas e Tarefas",
+      "body": "Listas de compras partilhadas, tarefas e lembretes — visíveis para todos no momento em que os adicionas. Marca-os juntos em tempo real.",
+      "hint": "Usa EZ para adicionar tarefas e atribuí-las."
+    },
+    "slide4": {
+      "title": "Canal Familiar",
+      "body": "Um chat de grupo privado só para a tua família. Envia textos, notas de voz, fotos e localizações. Só a tua família o pode ver.",
+      "hint": "Encontra-o no teu ecrã de início."
+    },
+    "slide5": {
+      "title": "Digest Matinal",
+      "body": "Recebe um resumo diário ou semanal do calendário, das tarefas e dos lembretes da tua família — na app e por email. O Eazy pensa com antecedência para que não tenhas de o fazer.",
+      "hint": "Define a frequência do digest nas Definições."
+    }
   }
 }

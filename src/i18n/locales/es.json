@@ -1217,5 +1217,35 @@
         "a": "Ve a Ajustes → desplázate hasta abajo → Eliminar mi cuenta. Esto elimina permanentemente todos tus datos y no se puede deshacer."
       }
     ]
+  },
+  "tour": {
+    "skip": "Omitir",
+    "next": "Siguiente",
+    "letsGo": "¡Vamos!",
+    "slide1": {
+      "title": "Bienvenido a Eazy.Family",
+      "body": "El espacio privado de tu familia — organizado, conectado y siempre sincronizado.",
+      "hint": "Un vistazo rápido de 60 segundos a tus funciones principales."
+    },
+    "slide2": {
+      "title": "EZ — Tu Asistente Inteligente",
+      "body": "EZ es el botón inteligente que controla tu app. Tócalo una vez para añadir cualquier cosa por voz o texto — eventos, tareas, compras, entradas de diario. Presiona y desliza hacia arriba para acceder al menú. Mantén presionado para moverlo a cualquier lugar de la pantalla.",
+      "hint": "Pruébalo: toca EZ y di «Dentista el lunes a las 15 h» o «añade leche y huevos a la lista de compras»."
+    },
+    "slide3": {
+      "title": "Listas y Tareas",
+      "body": "Listas de compras compartidas, tareas y recordatorios — visibles para todos en el momento en que los añades. Márcalos juntos en tiempo real.",
+      "hint": "Usa EZ para añadir tareas y asignarlas."
+    },
+    "slide4": {
+      "title": "Canal Familiar",
+      "body": "Un chat de grupo privado solo para tu familia. Envía textos, notas de voz, fotos y ubicaciones. Solo tu familia puede verlo.",
+      "hint": "Encuéntralo en tu pantalla de inicio."
+    },
+    "slide5": {
+      "title": "Resumen Matutino",
+      "body": "Recibe un resumen diario o semanal del calendario, las tareas y los recordatorios de tu familia — en la app y por correo. Eazy piensa con antelación para que tú no tengas que hacerlo.",
+      "hint": "Configura la frecuencia del resumen en Ajustes."
+    }
   }
 }

@@ -8,6 +8,19 @@ import it from './locales/it.json';
 import es from './locales/es.json';
 import pt from './locales/pt.json';
 
+function detectLng(): string {
+  const stored = localStorage.getItem('eazy-family-language');
+  if (stored) return stored;
+  const nav = (navigator.language || '').toLowerCase();
+  if (nav.startsWith('de')) return 'de';
+  if (nav.startsWith('fr')) return 'fr';
+  if (nav.startsWith('it')) return 'it';
+  if (nav.startsWith('es')) return 'es';
+  if (nav.startsWith('pt')) return 'pt';
+  if (nav === 'en-gb') return 'en-GB';
+  return 'en';
+}
+
 i18n
   .use(initReactI18next)
   .init({
@@ -20,7 +33,7 @@ i18n
       es: { translation: es },
       pt: { translation: pt },
     },
-    lng: localStorage.getItem('eazy-family-language') || 'en',
+    lng: detectLng(),
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
