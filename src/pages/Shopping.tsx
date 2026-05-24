@@ -69,7 +69,6 @@ const Shopping = () => {
   const { predictions: shoppingPredictions } = useShoppingPredictions();
 
   const load = async () => {
-    if (!user) return;
     setLoading(true);
     try {
       const { data } = await supabase.from('tasks').select('*').in('type', ['shopping', 'shopping_personal']).order('created_at', { ascending: true });
@@ -87,7 +86,7 @@ const Shopping = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => { load(); }, []);
 
   const addItem = async () => {
     if (!newItem.trim() || !user) return;

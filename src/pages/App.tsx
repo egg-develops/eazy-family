@@ -586,6 +586,7 @@ const AppHome = () => {
   const [snippetDay, setSnippetDay] = useState<Date | null>(null);
   const [calendarTasks, setCalendarTasks] = useState<HomeCalendarEvent[]>([]);
   const [supabaseEvents, setSupabaseEvents] = useState<HomeCalendarEvent[]>([]);
+  const [initialQuickTasks, setInitialQuickTasks] = useState<Array<{id: string, title: string, completed: boolean, due_date?: string | null}>>([]);
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [showGalleryDialog, setShowGalleryDialog] = useState(false);
   const [carouselIndex, setCarouselIndex] = useState(() => {
@@ -718,7 +719,8 @@ const AppHome = () => {
       supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('tasks').select('id, title, due_date, type').not('due_date', 'is', null).eq('completed', false).in('type', ['task', 'shared']),
       supabase.from('events').select('id, title, start_date, end_date, all_day, location').order('start_date', { ascending: true }).limit(90),
-    ]).then(([profilesRes, sharedRes, calTasksRes, eventsRes]) => {
+      supabase.from('tasks').select('*').eq('type', 'task').eq('completed', false).order('created_at', { ascending: false }).limit(3),
+    ]).then(([profilesRes, sharedRes, calTasksRes, eventsRes, quickTasksRes]) => {
       if (profilesRes.data?.home_config && typeof profilesRes.data.home_config === 'object') {
         setHomeConfig(prev => {
           const merged = { ...prev, ...(profilesRes.data.home_config as Partial<HomeConfig>) };
@@ -752,6 +754,7 @@ const AppHome = () => {
           itemType: 'event' as const,
         })));
       }
+      if (quickTasksRes.data) setInitialQuickTasks(quickTasksRes.data);
     }).catch(() => {});
   }, [user]);
 
@@ -1081,7 +1084,7 @@ const AppHome = () => {
           <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
           <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
         </div>
-        <QuickToDos navigate={navigate} />
+        <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
       </div>
       )}
 
@@ -1191,18 +1194,19 @@ const AppHome = () => {
 };
 
 // Quick To-Do's Component
-const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
+const QuickToDos = ({ navigate, initialTasks = [] }: { navigate?: (path: string) => void; initialTasks?: Array<{id: string, title: string, completed: boolean, due_date?: string | null}> }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [quickTasks, setQuickTasks] = useState<Array<{id: string, title: string, completed: boolean}>>([]);
+  const [quickTasks, setQuickTasks] = useState(initialTasks);
   const [showInlineAdd, setShowInlineAdd] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const inlineInputRef = useRef<HTMLInputElement>(null);
 
+  // Sync when parent's Promise.all resolves (initialTasks goes from [] to real data)
   useEffect(() => {
-    loadQuickTasks();
-  }, []);
+    if (initialTasks.length > 0) setQuickTasks(initialTasks);
+  }, [initialTasks]);
 
   const loadQuickTasks = async () => {
     try {
