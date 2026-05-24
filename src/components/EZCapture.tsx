@@ -220,7 +220,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
 JSON fields:
 - type: "event"|"task"|"shopping"|"reminder"|"ritual"|"journal"
-- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals. Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". Keep it short. For type "shopping", ALWAYS separate each item with a comma — even if the input has no commas. Example: "oatmeal bananas raisins" → "oatmeal, bananas, raisins".
+- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals AND strip leading action verbs / task command words ("add", "add task to", "remind me to", "create", "schedule", "task to", "task:"). Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". "Add task to return library books on Wednesday" → "Return library books". "Remind me to call dentist tomorrow" → "Call dentist". Keep it short. For type "shopping", ALWAYS separate each item with a comma — even if the input has no commas. Example: "oatmeal bananas raisins" → "oatmeal, bananas, raisins".
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
 - time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null
@@ -388,6 +388,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           type: 'task',
           user_id: user.id,
           completed: false,
+          due_date: parsed.date
+            ? new Date(`${parsed.date}T${parsed.time ?? '00:00:00'}`).toISOString()
+            : null,
         });
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: '✓ Task added' });

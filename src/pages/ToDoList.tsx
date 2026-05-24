@@ -749,11 +749,15 @@ const ToDoList = () => {
                                     }}>
                                       {task.title}
                                     </span>
-                                    {task.due_date && (
-                                      <div className="text-xs mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
-                                        {isOverdue ? `${t('todos.urgent')} · ` : ''}{format(new Date(task.due_date), "EEE, h:mm a")}
-                                      </div>
-                                    )}
+                                    {task.due_date && (() => {
+                                      const dd = new Date(task.due_date);
+                                      const hasTime = dd.getHours() !== 0 || dd.getMinutes() !== 0;
+                                      return (
+                                        <div className="text-xs mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
+                                          {isOverdue ? `${t('todos.urgent')} · ` : ''}{format(dd, hasTime ? "EEE, h:mm a" : "EEE, MMM d")}
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                   <button
                                     onClick={() => deleteTask(task.id)}
