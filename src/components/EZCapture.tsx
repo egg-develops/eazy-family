@@ -470,7 +470,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   ref={textareaRef}
                   value={text}
                   onChange={e => setTextTracked(e.target.value)}
-                  placeholder={isTranscribing ? "Transcribing your voice…" : "Speak or type anything — event, task, note, reminder…"}
+                  placeholder={isTranscribing ? "Transcribing your voice…" : isListening ? "Recording… tap mic again to stop & transcribe" : "Speak or type anything — event, task, note, reminder…"}
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{

@@ -16,8 +16,12 @@ function shouldUseWhisper(): boolean {
   return isMobile || !hasSpeechAPI;
 }
 
+const IS_IOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 function getBestMimeType(): string {
   if (typeof MediaRecorder === 'undefined') return '';
+  // iOS Safari's isTypeSupported is unreliable — prefer mp4 explicitly
+  if (IS_IOS) return MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
   const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
   return candidates.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
 }
@@ -42,10 +46,11 @@ export const useSpeechRecognition = () => {
   const webActiveRef = useRef(false);
   const sessionIdRef = useRef(0);
 
-  // MediaRecorder + Whisper path (mobile web)
+  // MediaRecorder + Deepgram path (mobile web)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const transcribeAbortRef = useRef<AbortController | null>(null);
+  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isNative = Capacitor.isNativePlatform();
   const useWhisper = !isNative && shouldUseWhisper();
@@ -58,6 +63,10 @@ export const useSpeechRecognition = () => {
       SpeechRecognition.stop().catch(() => {});
       setIsListening(false);
     } else if (useWhisper) {
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+        autoStopTimerRef.current = null;
+      }
       if (mediaRecorderRef.current?.state === 'recording') {
         mediaRecorderRef.current.stop(); // triggers onstop → transcription
       } else {
@@ -159,6 +168,9 @@ export const useSpeechRecognition = () => {
 
       const mimeType = getBestMimeType();
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      // recorder.mimeType is the authoritative format the browser actually chose.
+      // On iOS, isTypeSupported lies and recorder.mimeType may be '' — fall back to mp4.
+      const effectiveMimeType = recorder.mimeType || (IS_IOS ? 'audio/mp4' : 'audio/webm');
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -166,6 +178,10 @@ export const useSpeechRecognition = () => {
       };
 
       recorder.onstop = async () => {
+        if (autoStopTimerRef.current) {
+          clearTimeout(autoStopTimerRef.current);
+          autoStopTimerRef.current = null;
+        }
         mediaStreamRef.current?.getTracks().forEach(t => t.stop());
         mediaStreamRef.current = null;
         mediaRecorderRef.current = null;
@@ -182,8 +198,8 @@ export const useSpeechRecognition = () => {
         transcribeAbortRef.current = abort;
 
         try {
-          const ext = mimeType.includes('mp4') || mimeType.includes('aac') ? 'mp4' : 'webm';
-          const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+          const ext = effectiveMimeType.includes('mp4') || effectiveMimeType.includes('aac') ? 'mp4' : 'webm';
+          const blob = new Blob(chunks, { type: effectiveMimeType });
           const { data: { session } } = await supabase.auth.getSession();
           const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -220,6 +236,12 @@ export const useSpeechRecognition = () => {
       recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsListening(true);
+      // Auto-stop after 30s — prevents silent infinite recording when user doesn't tap stop
+      autoStopTimerRef.current = setTimeout(() => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          mediaRecorderRef.current.stop();
+        }
+      }, 30000);
 
     } catch (err: any) {
       const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
