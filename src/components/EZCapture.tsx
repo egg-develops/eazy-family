@@ -69,16 +69,19 @@ const getUserLocale = (): string => {
   return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
 };
 
-const cleanCaptureTitle = (raw: string): string =>
-  raw
+const cleanCaptureTitle = (raw: string): string => {
+  const cleaned = raw
     .replace(/^(please\s+)?(add|create|schedule|set\s+up|put|book|make|remind\s+me\s+to?)\s+/i, '')
+    // Strip type-word prefixes the AI may leave: "task to", "a reminder to", "event for", etc.
+    .replace(/^(an?\s+)?(task|reminder|event|note|appointment)\s*(to\s+|:\s*|for\s+)?/i, '')
     .replace(/\s+(on|to|in)\s+(the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
-    // Strip orphaned trailing prepositions left after date/time text is removed
     .replace(/\s+(for|at|on|by|the)\s*$/i, '')
     .trim();
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+};
 
 const getUserFirstName = (): string => {
   try {
