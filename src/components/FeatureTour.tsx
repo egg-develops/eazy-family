@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X, ArrowRight, ShoppingCart, MessageCircle, Sparkles } from "lucide-react";
 
 const TC = 'hsl(var(--primary))';
@@ -43,50 +44,52 @@ interface Slide {
   hint?: string;
 }
 
-const SLIDES: Slide[] = [
-  {
-    icon: <img src="/logo.png" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
-    accentBg: 'hsl(var(--muted))',
-    title: "Welcome to Eazy.Family",
-    body: "Your family's private space — organized, connected, and always in sync.",
-    hint: "A quick 60-second look at your key features.",
-  },
-  {
-    icon: <EZButtonIcon />,
-    accentBg: 'hsl(var(--muted))',
-    title: "EZ — Your Smart Assistant",
-    body: "EZ is the smart button that controls your app. Tap it once to add anything by voice or text — events, tasks, shopping, journal entries. Press and swipe up to access your menu. Long-press to move it anywhere on your screen.",
-    hint: "Try it: tap EZ and say \"Dentist on Monday at 3pm\" or \"add milk and eggs to our shopping list\".",
-  },
-  {
-    icon: <ShoppingCart className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: 'hsl(var(--muted))',
-    title: "Lists & Tasks",
-    body: "Shared shopping lists, to-dos, and reminders — visible to everyone the moment you add them. Tick them off together in real time.",
-    hint: "Use EZ to add tasks and assign them.",
-  },
-  {
-    icon: <MessageCircle className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: 'hsl(var(--muted))',
-    title: "Family Channel",
-    body: "A private group chat just for your family. Send text, voice notes, photos, and locations. Only your family can see it.",
-    hint: "Find it on your home screen.",
-  },
-  {
-    icon: <Sparkles className="w-8 h-8" style={{ color: TC }} />,
-    accentBg: 'hsl(var(--muted))',
-    title: "Morning Digest",
-    body: "Get a daily or weekly summary of your family's schedule, tasks, and reminders — delivered in-app and by email. Eazy thinks ahead so you don't have to.",
-    hint: "Set your digest frequency in Settings.",
-  },
-];
-
 interface FeatureTourProps {
   onDone: () => void;
 }
 
 export function FeatureTour({ onDone }: FeatureTourProps) {
+  const { t } = useTranslation();
   const [idx, setIdx] = useState(0);
+
+  const SLIDES: Slide[] = [
+    {
+      icon: <img src="/logo.png" alt="Eazy.Family" className="w-16 h-16 object-contain" />,
+      accentBg: 'hsl(var(--muted))',
+      title: t('tour.slide1.title'),
+      body: t('tour.slide1.body'),
+      hint: t('tour.slide1.hint'),
+    },
+    {
+      icon: <EZButtonIcon />,
+      accentBg: 'hsl(var(--muted))',
+      title: t('tour.slide2.title'),
+      body: t('tour.slide2.body'),
+      hint: t('tour.slide2.hint'),
+    },
+    {
+      icon: <ShoppingCart className="w-8 h-8" style={{ color: TC }} />,
+      accentBg: 'hsl(var(--muted))',
+      title: t('tour.slide3.title'),
+      body: t('tour.slide3.body'),
+      hint: t('tour.slide3.hint'),
+    },
+    {
+      icon: <MessageCircle className="w-8 h-8" style={{ color: TC }} />,
+      accentBg: 'hsl(var(--muted))',
+      title: t('tour.slide4.title'),
+      body: t('tour.slide4.body'),
+      hint: t('tour.slide4.hint'),
+    },
+    {
+      icon: <Sparkles className="w-8 h-8" style={{ color: TC }} />,
+      accentBg: 'hsl(var(--muted))',
+      title: t('tour.slide5.title'),
+      body: t('tour.slide5.body'),
+      hint: t('tour.slide5.hint'),
+    },
+  ];
+
   const slide = SLIDES[idx];
   const isLast = idx === SLIDES.length - 1;
 
@@ -195,14 +198,14 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
             className="text-xs font-medium transition-opacity hover:opacity-60"
             style={{ color: MUTED }}
           >
-            Skip
+            {t('tour.skip')}
           </button>
           <button
             onClick={next}
             className="flex items-center gap-1.5 text-sm font-semibold px-5 py-2.5 rounded-full text-white transition-opacity hover:opacity-90"
             style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}
           >
-            {isLast ? "Let's go" : "Next"}
+            {isLast ? t('tour.letsGo') : t('tour.next')}
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

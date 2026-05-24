@@ -1221,5 +1221,35 @@
         "a": "Go to Settings → scroll to the bottom → Delete my account. This permanently removes all your data and cannot be undone."
       }
     ]
+  },
+  "tour": {
+    "skip": "Skip",
+    "next": "Next",
+    "letsGo": "Let's go",
+    "slide1": {
+      "title": "Welcome to Eazy.Family",
+      "body": "Your family's private space — organized, connected, and always in sync.",
+      "hint": "A quick 60-second look at your key features."
+    },
+    "slide2": {
+      "title": "EZ — Your Smart Assistant",
+      "body": "EZ is the smart button that controls your app. Tap it once to add anything by voice or text — events, tasks, shopping, journal entries. Press and swipe up to access your menu. Long-press to move it anywhere on your screen.",
+      "hint": "Try it: tap EZ and say \"Dentist on Monday at 3pm\" or \"add milk and eggs to our shopping list\"."
+    },
+    "slide3": {
+      "title": "Lists & Tasks",
+      "body": "Shared shopping lists, to-dos, and reminders — visible to everyone the moment you add them. Tick them off together in real time.",
+      "hint": "Use EZ to add tasks and assign them."
+    },
+    "slide4": {
+      "title": "Family Channel",
+      "body": "A private group chat just for your family. Send text, voice notes, photos, and locations. Only your family can see it.",
+      "hint": "Find it on your home screen."
+    },
+    "slide5": {
+      "title": "Morning Digest",
+      "body": "Get a daily or weekly summary of your family's schedule, tasks, and reminders — delivered in-app and by email. Eazy thinks ahead so you don't have to.",
+      "hint": "Set your digest frequency in Settings."
+    }
   }
 }

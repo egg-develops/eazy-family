@@ -1221,5 +1221,35 @@
         "a": "Gehe zu Einstellungen → nach unten scrollen → Konto löschen. Damit werden alle deine Daten dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden."
       }
     ]
+  },
+  "tour": {
+    "skip": "Überspringen",
+    "next": "Weiter",
+    "letsGo": "Los geht's",
+    "slide1": {
+      "title": "Willkommen bei Eazy.Family",
+      "body": "Der private Raum deiner Familie — organisiert, vernetzt und immer synchron.",
+      "hint": "Ein kurzer 60-Sekunden-Überblick über deine wichtigsten Funktionen."
+    },
+    "slide2": {
+      "title": "EZ — Dein smarter Assistent",
+      "body": "EZ ist der smarte Button, der deine App steuert. Tippe einmal, um per Sprache oder Text alles hinzuzufügen — Termine, Aufgaben, Einkäufe, Tagebucheinträge. Drücken und nach oben wischen für das Menü. Lang drücken, um ihn überall auf dem Bildschirm zu platzieren.",
+      "hint": "Probiere es: Tippe auf EZ und sage „Zahnarzt am Montag um 15 Uhr" oder „Milch und Eier auf die Einkaufsliste"."
+    },
+    "slide3": {
+      "title": "Listen & Aufgaben",
+      "body": "Gemeinsame Einkaufslisten, To-dos und Erinnerungen — sofort für alle sichtbar, sobald du sie hinzufügst. Gemeinsam abhaken in Echtzeit.",
+      "hint": "Nutze EZ, um Aufgaben hinzuzufügen und zuzuweisen."
+    },
+    "slide4": {
+      "title": "Familienkanal",
+      "body": "Ein privater Gruppenchat nur für deine Familie. Sende Texte, Sprachnachrichten, Fotos und Standorte. Nur deine Familie kann ihn sehen.",
+      "hint": "Auf deinem Startbildschirm zu finden."
+    },
+    "slide5": {
+      "title": "Morgen-Digest",
+      "body": "Erhalte eine tägliche oder wöchentliche Zusammenfassung des Familienkalenders, der Aufgaben und Erinnerungen — in der App und per E-Mail. Eazy denkt voraus, damit du es nicht musst.",
+      "hint": "Stelle die Häufigkeit in den Einstellungen ein."
+    }
   }
 }

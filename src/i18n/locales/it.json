@@ -1221,5 +1221,35 @@
         "a": "Vai in Impostazioni → scorri fino in fondo → Elimina il mio account. Questo elimina definitivamente tutti i tuoi dati e non può essere annullato."
       }
     ]
+  },
+  "tour": {
+    "skip": "Salta",
+    "next": "Avanti",
+    "letsGo": "Iniziamo",
+    "slide1": {
+      "title": "Benvenuto su Eazy.Family",
+      "body": "Lo spazio privato della tua famiglia — organizzato, connesso e sempre sincronizzato.",
+      "hint": "Un rapido sguardo di 60 secondi alle funzionalità principali."
+    },
+    "slide2": {
+      "title": "EZ — Il tuo assistente intelligente",
+      "body": "EZ è il pulsante intelligente che controlla la tua app. Toccalo una volta per aggiungere qualsiasi cosa con la voce o il testo — eventi, attività, spesa, voci di diario. Premi e scorri verso l'alto per accedere al menu. Tieni premuto per spostarlo ovunque sullo schermo.",
+      "hint": "Provalo: tocca EZ e di' «Dentista lunedì alle 15» o «aggiungi latte e uova alla lista della spesa»."
+    },
+    "slide3": {
+      "title": "Liste & Attività",
+      "body": "Liste della spesa condivise, to-do e promemoria — visibili a tutti nel momento in cui li aggiungi. Spuntali insieme in tempo reale.",
+      "hint": "Usa EZ per aggiungere attività e assegnarle."
+    },
+    "slide4": {
+      "title": "Canale famiglia",
+      "body": "Una chat di gruppo privata solo per la tua famiglia. Invia testi, messaggi vocali, foto e posizioni. Solo la tua famiglia può vederla.",
+      "hint": "Trovalo sulla tua schermata iniziale."
+    },
+    "slide5": {
+      "title": "Riassunto mattutino",
+      "body": "Ricevi un riepilogo giornaliero o settimanale del calendario familiare, delle attività e dei promemoria — nell'app e via email. Eazy pensa in anticipo per te.",
+      "hint": "Imposta la frequenza nelle Impostazioni."
+    }
   }
 }

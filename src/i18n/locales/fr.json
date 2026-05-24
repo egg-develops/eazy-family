@@ -1221,5 +1221,35 @@
         "a": "Va dans Paramètres → défile jusqu'en bas → Supprimer mon compte. Cela supprime définitivement toutes tes données et ne peut pas être annulé."
       }
     ]
+  },
+  "tour": {
+    "skip": "Passer",
+    "next": "Suivant",
+    "letsGo": "C'est parti",
+    "slide1": {
+      "title": "Bienvenue sur Eazy.Family",
+      "body": "L'espace privé de ta famille — organisé, connecté et toujours synchronisé.",
+      "hint": "Un aperçu rapide de 60 secondes de tes fonctionnalités clés."
+    },
+    "slide2": {
+      "title": "EZ — Ton assistant intelligent",
+      "body": "EZ est le bouton intelligent qui contrôle ton application. Appuie une fois pour ajouter n'importe quoi par voix ou texte — événements, tâches, courses, entrées de journal. Appuie et glisse vers le haut pour accéder au menu. Appuie longuement pour le déplacer sur l'écran.",
+      "hint": "Essaie : appuie sur EZ et dis « Dentiste lundi à 15h » ou « ajoute du lait et des œufs à la liste de courses »."
+    },
+    "slide3": {
+      "title": "Listes & Tâches",
+      "body": "Listes de courses partagées, to-dos et rappels — visibles par tous dès que tu les ajoutes. Cochons-les ensemble en temps réel.",
+      "hint": "Utilise EZ pour ajouter des tâches et les assigner."
+    },
+    "slide4": {
+      "title": "Canal famille",
+      "body": "Un chat de groupe privé rien que pour ta famille. Envoie des textes, des notes vocales, des photos et des localisations. Seule ta famille peut le voir.",
+      "hint": "Retrouve-le sur ton écran d'accueil."
+    },
+    "slide5": {
+      "title": "Résumé matinal",
+      "body": "Reçois un résumé quotidien ou hebdomadaire du calendrier familial, des tâches et des rappels — dans l'application et par e-mail. Eazy pense à l'avance pour que tu n'aies pas à le faire.",
+      "hint": "Règle la fréquence dans les Paramètres."
+    }
   }
 }

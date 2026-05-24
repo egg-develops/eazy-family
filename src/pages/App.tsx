@@ -1256,7 +1256,7 @@ const QuickToDos = ({ navigate }: { navigate?: (path: string) => void }) => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .in('type', ['task', 'shared'])
+        .eq('type', 'task')
         .eq('completed', false)
         .order('created_at', { ascending: false })
         .limit(3);
