@@ -132,6 +132,8 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
+  const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
+
   const shouldRestartRef = useRef(false);
   const consecutiveFailsRef = useRef(0);
   const [intendingToListen, setIntendingToListen] = useState(false);
@@ -306,6 +308,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       }
 
       setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
+      parseSnapshotRef.current = { rawInput: text.trim(), aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
     } else {
       // Fallback: chrono-node extracts date/time; strip the matched date text from the title
       const raw = text.trim();
@@ -436,6 +439,25 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: '✓ Journal entry saved' });
         onClose(); navigate('/app/rituals');
+      }
+
+      // Fire-and-forget telemetry — never blocks or surfaces errors to the user
+      if (parseSnapshotRef.current && session) {
+        const snap = parseSnapshotRef.current;
+        const final = parsed;
+        const wasCorrected =
+          snap.aiResult.title !== final.title ||
+          snap.aiResult.type !== final.type ||
+          snap.aiResult.date !== final.date ||
+          snap.aiResult.time !== final.time;
+        supabase.from('parse_events').insert({
+          user_id: session.user.id,
+          raw_input: snap.rawInput,
+          ai_result: snap.aiResult,
+          final_result: final,
+          was_corrected: wasCorrected,
+          locale: localStorage.getItem('eazy-family-language') || 'en',
+        }).then(() => {});
       }
     } catch {
       toast({ title: 'Something went wrong', variant: 'destructive' });
