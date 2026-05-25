@@ -76,7 +76,7 @@ const cleanCaptureTitle = (raw: string): string => {
     .replace(/^(please\s+)?(add|create|schedule|set\s+up|put|book|make|remind\s+me\s+to?)\s+/i, '')
     // Strip type-word prefixes the AI may leave: "task to", "a reminder to", "event for", etc.
     .replace(/^(an?\s+)?(task|reminder|event|note|appointment)\s*(to\s+|:\s*|for\s+)?/i, '')
-    .replace(/\s+(on|to|in)\s+(the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
+    .replace(/\s+(on|to|in)\s+(my\s+|our\s+|the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
@@ -130,7 +130,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (/\b(buy|get|pick up|need|grab)\b/.test(lower) || /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b/.test(lower)) { setType('shopping'); return; }
     if (/\b(remind|don't forget|remember)\b/.test(lower)) { setType('reminder'); return; }
     if (/\b(feel|journal|today i|grateful|reflection|dear diary)\b/.test(lower)) { setType('journal'); return; }
-    if (/\b(task|todo|to-do|finish|complete)\b/.test(lower)) { setType('task'); return; }
+    if (/\b(task|todo|to-do|finish|complete|clean|wash|water|organis|organiz|tidy|fix|repair|mow|vacuum|sweep|mop|call|email|book|return|drop\s*off|pick\s*up\s+\w+\s+from)\b/.test(lower)) { setType('task'); return; }
     if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
   }, [text]);
 
@@ -233,9 +233,17 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       const dayOfWeek = format(new Date(), 'EEEE');
       const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
 
+TYPE CLASSIFICATION — pick exactly one:
+- "shopping": items to BUY or PURCHASE (food, groceries, products, supplements). Triggered by: buy, get, grab, pick up X from store, add X to shopping list.
+- "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
+- "event": time-specific appointment, meeting, or occurrence with a date/time.
+- "reminder": "remind me to X".
+- "ritual": habit, gratitude, or reflection entry.
+- "journal": diary or feelings entry.
+
 JSON fields:
-- type: "event"|"task"|"shopping"|"reminder"|"ritual"|"journal"
-- title: ONLY the subject/topic — NEVER include date, time, location, or command words. Strip ALL date/time phrases including ordinals AND strip leading action verbs / task command words ("add", "add task to", "remind me to", "create", "schedule", "task to", "task:"). Examples: "Doctor appointment next Thursday at 4pm" → "Doctor appointment". "Video appointment for the 29th at 3pm" → "video appointment". "Add milk and eggs to the shopping list" → "milk, eggs". "Add task to return library books on Wednesday" → "Return library books". "Remind me to call dentist tomorrow" → "Call dentist". Keep it short. For type "shopping", ALWAYS separate each item with a comma — even if the input has no commas. Example: "oatmeal bananas raisins" → "oatmeal, bananas, raisins".
+- type: one of the types above
+- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
 - time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null
@@ -411,17 +419,15 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
       } else if (entryType === 'task') {
         if (!user || !session) return;
-        await supabase.from('tasks').insert({
-          title: parsed.title,
-          type: 'task',
-          user_id: user.id,
-          completed: false,
-          due_date: parsed.date
-            ? new Date(`${parsed.date}T${parsed.time ?? '00:00:00'}`).toISOString()
-            : null,
-        });
+        const taskItems = parsed.title.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+        const dueDate = parsed.date
+          ? new Date(`${parsed.date}T${parsed.time ?? '00:00:00'}`).toISOString()
+          : null;
+        await Promise.all(taskItems.map(t =>
+          supabase.from('tasks').insert({ title: t, type: 'task', user_id: user.id, completed: false, due_date: dueDate })
+        ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: '✓ Task added' });
+        toast({ title: taskItems.length > 1 ? `✓ ${taskItems.length} tasks added` : '✓ Task added' });
         onClose(); navigate('/app/lists');
 
       } else if (entryType === 'shopping') {

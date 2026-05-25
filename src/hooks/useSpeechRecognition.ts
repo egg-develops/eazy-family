@@ -162,6 +162,21 @@ export const useSpeechRecognition = () => {
   };
 
   const startMediaRecorder = async (opts: SpeechRecognitionOptions) => {
+    // Create AudioContext synchronously while still inside the user-gesture call stack.
+    // iOS Safari drops the activation context once we hit the first `await`, so
+    // AudioContext must be instantiated before getUserMedia.
+    let analyser: AnalyserNode | null = null;
+    let timeDomainData: Uint8Array | null = null;
+    try {
+      const audioCtx = new AudioContext();
+      audioCtxRef.current = audioCtx;
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      timeDomainData = new Uint8Array(analyser.fftSize);
+    } catch {
+      // AudioContext not available — VAD will be skipped
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
@@ -169,42 +184,41 @@ export const useSpeechRecognition = () => {
       // Voice Activity Detection — auto-stop after silence so users don't need to tap stop
       let hasSpeech = false;
       let silenceStartMs: number | null = null;
-      const SILENCE_STOP_MS = 1800; // stop after 1.8s of silence following speech
+      const SILENCE_STOP_MS = 1800;
       const SPEECH_RMS_THRESHOLD = 0.015;
 
-      try {
-        const audioCtx = new AudioContext();
-        audioCtxRef.current = audioCtx;
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        audioCtx.createMediaStreamSource(stream).connect(analyser);
-        const timeDomainData = new Uint8Array(analyser.fftSize);
+      if (analyser && timeDomainData && audioCtxRef.current) {
+        try {
+          audioCtxRef.current.createMediaStreamSource(stream).connect(analyser);
+          const _analyser = analyser;
+          const _data = timeDomainData;
 
-        vadIntervalRef.current = setInterval(() => {
-          if (mediaRecorderRef.current?.state !== 'recording') {
-            clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
-            return;
-          }
-          analyser.getByteTimeDomainData(timeDomainData);
-          let sum = 0;
-          for (const v of timeDomainData) { const n = (v - 128) / 128; sum += n * n; }
-          const rms = Math.sqrt(sum / timeDomainData.length);
-
-          if (rms > SPEECH_RMS_THRESHOLD) {
-            hasSpeech = true;
-            silenceStartMs = null;
-          } else if (hasSpeech) {
-            if (silenceStartMs === null) silenceStartMs = Date.now();
-            if (Date.now() - silenceStartMs > SILENCE_STOP_MS) {
+          vadIntervalRef.current = setInterval(() => {
+            if (mediaRecorderRef.current?.state !== 'recording') {
               clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
-              if (mediaRecorderRef.current?.state === 'recording') {
-                mediaRecorderRef.current.stop();
+              return;
+            }
+            _analyser.getByteTimeDomainData(_data);
+            let sum = 0;
+            for (const v of _data) { const n = (v - 128) / 128; sum += n * n; }
+            const rms = Math.sqrt(sum / _data.length);
+
+            if (rms > SPEECH_RMS_THRESHOLD) {
+              hasSpeech = true;
+              silenceStartMs = null;
+            } else if (hasSpeech) {
+              if (silenceStartMs === null) silenceStartMs = Date.now();
+              if (Date.now() - silenceStartMs > SILENCE_STOP_MS) {
+                clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
+                if (mediaRecorderRef.current?.state === 'recording') {
+                  mediaRecorderRef.current.stop();
+                }
               }
             }
-          }
-        }, 100);
-      } catch {
-        // AudioContext unavailable — VAD disabled, fall back to manual stop + 30s timeout
+          }, 100);
+        } catch {
+          // Stream connection failed — VAD disabled
+        }
       }
 
       const mimeType = getBestMimeType();
@@ -284,12 +298,13 @@ export const useSpeechRecognition = () => {
       recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsListening(true);
-      // Hard 30s safety limit — VAD should stop it sooner in normal use
+      // 8s hard limit — VAD stops it sooner when working; 8s is the fallback for
+      // cases where VAD is unavailable (e.g. iOS Safari loses AudioContext context)
       autoStopTimerRef.current = setTimeout(() => {
         if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
-      }, 30000);
+      }, 8000);
 
     } catch (err: any) {
       const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
