@@ -231,6 +231,16 @@ const AppLayout = () => {
     return () => el.removeEventListener('touchmove', onTouchMove);
   }, []);
 
+  const CartCheckIcon = ({ color }: { color: string }) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+      <path d="M2 3h2l3 12h10a2 2 0 0 0 2-1.5l1.5-6.5a.75.75 0 0 0-.75-.75H7" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M7 7h14" stroke={color} strokeWidth="1.75" strokeLinecap="round"/>
+      <circle cx="9.5" cy="20.5" r="1.5" stroke={color} strokeWidth="1.75"/>
+      <circle cx="16.5" cy="20.5" r="1.5" stroke={color} strokeWidth="1.75"/>
+      <path d="M10 13l2 2 3.5-3.5" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
   const JournalIcon = ({ color }: { color: string }) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
       <rect x="4" y="3" width="13" height="18" rx="2" stroke={color} strokeWidth="1.8" fill="none"/>
@@ -253,7 +263,7 @@ const AppLayout = () => {
     { label: t('nav.home'), icon: Home, path: '/app' },
     { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar' },
     { label: t('nav.family'), icon: Users, path: '/app/family-agenda' },
-    { label: t('nav.lists'), icon: CheckSquare, path: '/app/lists' },
+    { label: t('nav.lists'), customIcon: (c) => <CartCheckIcon color={c} />, path: '/app/lists' },
     { label: t('nav.rituals'), customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: t('nav.settings'), icon: Settings, path: '/app/settings' },
   ];
