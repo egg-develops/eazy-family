@@ -72,17 +72,20 @@ const getUserLocale = (): string => {
 };
 
 const cleanCaptureTitle = (raw: string): string => {
-  const cleaned = raw
+  let s = raw
     .replace(/^(please\s+)?(add|create|schedule|set\s+up|put|book|make|remind\s+me\s+to?)\s+/i, '')
-    // Strip type-word prefixes the AI may leave: "task to", "a reminder to", "event for", etc.
     .replace(/^(an?\s+)?(task|reminder|event|note|appointment)\s*(to\s+|:\s*|for\s+)?/i, '')
     .replace(/\s+(on|to|in)\s+(my\s+|our\s+|the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
-    .replace(/\s+(for|at|on|by|the)\s*$/i, '')
+    // Strip bare time like "4PM" or "4:30pm" at end (no "at" prefix)
+    .replace(/\s+\d{1,2}(:\d{2})?\s*(am|pm)\s*$/i, '')
     .trim();
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  // Strip orphaned trailing prepositions — apply twice to catch chains like "for at"
+  s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
+  s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 const getUserFirstName = (): string => {
@@ -117,6 +120,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const speech = useSpeechRecognition();
   const isListening = speech.isListening;
   const isTranscribing = speech.isTranscribing;
+  const isSingleShot = speech.isSingleShot; // MediaRecorder path — no restart loop
 
   useEffect(() => {
     haptic('medium');
@@ -135,6 +139,9 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   }, [text]);
 
   const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
+  // Always points to the latest handleParseAndPreview — avoids stale closure when
+  // called from onEnd (which may close over an older render's function reference).
+  const handleParseAndPreviewRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   const shouldRestartRef = useRef(false);
   const consecutiveFailsRef = useRef(0);
@@ -204,12 +211,19 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
           }
         },
         onEnd: () => {
-          if (shouldRestartRef.current) {
-            // Give iOS native recognizer more time to fully reset before restarting
+          // Single-shot path (mobile web MediaRecorder): never restart — auto-parse instead.
+          // Continuous path (desktop Web Speech API / native): restart after each utterance,
+          // but not after the user explicitly tapped stop (shouldRestartRef=false).
+          if (shouldRestartRef.current && !isSingleShot) {
             const delay = Capacitor.isNativePlatform() ? 700 : 300;
             setTimeout(run, delay);
           } else {
+            shouldRestartRef.current = false;
             setIntendingToListen(false);
+            // Auto-parse if we captured text — removes the manual "Create" tap
+            if (latestTextRef.current.trim()) {
+              setTimeout(() => handleParseAndPreviewRef.current?.(), 50);
+            }
           }
         },
       });
@@ -263,7 +277,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: text.trim() }],
+          messages: [{ role: 'user', content: latestTextRef.current.trim() }],
           systemPrompt: systemContext,
         }),
       });
@@ -297,7 +311,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
   };
 
   const handleParseAndPreview = async () => {
-    if (!text.trim()) return;
+    if (!latestTextRef.current.trim()) return;
     haptic('medium');
     if (isListening) stopListening();
     setStep('processing');
@@ -326,10 +340,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       }
 
       setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
-      parseSnapshotRef.current = { rawInput: text.trim(), aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
+      parseSnapshotRef.current = { rawInput: latestTextRef.current.trim(), aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
     } else {
       // Fallback: chrono-node extracts date/time; strip the matched date text from the title
-      const raw = text.trim();
+      const raw = latestTextRef.current.trim();
       const chronoParsed = chrono.parse(raw, new Date())[0];
       const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
       const fallbackHour = chronoParsed?.start.get('hour');
@@ -363,6 +377,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     setStep('preview');
     haptic('light');
   };
+
+  // Keep the ref current on every render so onEnd can call the latest version
+  // without capturing a stale closure from when startListening was defined.
+  handleParseAndPreviewRef.current = handleParseAndPreview;
 
   const handleConfirm = async () => {
     if (!parsed) return;
@@ -526,7 +544,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   ref={textareaRef}
                   value={text}
                   onChange={e => setTextTracked(e.target.value)}
-                  placeholder={isTranscribing ? "Transcribing your voice…" : isListening ? "Recording… tap mic again to stop & transcribe" : "Speak or type anything — event, task, note, reminder…"}
+                  placeholder={isTranscribing ? "Transcribing…" : isListening ? (isSingleShot ? "Listening… stop speaking to auto-submit" : "Recording… tap mic to stop") : "Speak or type anything — event, task, note, reminder…"}
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{

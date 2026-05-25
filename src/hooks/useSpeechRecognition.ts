@@ -380,5 +380,7 @@ export const useSpeechRecognition = () => {
     }
   };
 
-  return { isListening, isTranscribing, start, stop };
+  // True when the path is single-shot (MediaRecorder → Deepgram) rather than
+  // continuous Web Speech API. Callers use this to skip the restart loop.
+  return { isListening, isTranscribing, start, stop, isSingleShot: useWhisper };
 };
