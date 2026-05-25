@@ -501,6 +501,26 @@ export default function Index() {
         button={t('website.cta.button')}
       />
 
+      {/* ── Footer ── */}
+      <footer style={{
+        background: T.ink,
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+        padding: "20px 40px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 12,
+      }}>
+        <p style={{ fontFamily: dm, fontSize: 12, color: T.faint, margin: 0 }}>
+          © {new Date().getFullYear()} Eazy Family. All rights reserved.
+        </p>
+        <div style={{ display: "flex", gap: 24 }}>
+          <a href="/privacy" style={{ fontFamily: dm, fontSize: 12, color: T.faint, textDecoration: "none" }}>Privacy Policy</a>
+          <a href="/terms" style={{ fontFamily: dm, fontSize: 12, color: T.faint, textDecoration: "none" }}>Terms of Service</a>
+        </div>
+      </footer>
+
       <style>{`
         @media (max-width: 768px) {
           .hero-grid { grid-template-columns: 1fr !important; }
