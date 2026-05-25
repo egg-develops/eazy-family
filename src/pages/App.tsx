@@ -22,7 +22,8 @@ import {
   ImagePlus,
   AlertTriangle,
   ShoppingBasket,
-  Clock
+  Clock,
+  Users
 } from "lucide-react";
 import { useConflictDetection } from "@/hooks/useConflictDetection";
 import { useShoppingPredictions } from "@/hooks/useShoppingPredictions";
@@ -253,6 +254,7 @@ const AppLayout = () => {
   const menuItems: MenuItem[] = [
     { label: 'Home', icon: Home, path: '/app' },
     { label: 'Calendar', icon: Calendar, path: '/app/calendar' },
+    { label: 'Family', icon: Users, path: '/app/family-agenda' },
     { label: 'Lists', icon: CheckSquare, path: '/app/lists' },
     { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: 'Settings', icon: Settings, path: '/app/settings' },
