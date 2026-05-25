@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Mic, Sparkles, ChevronLeft, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -186,7 +187,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
           if (error === 'not-supported') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: 'Voice input not supported in this browser' });
+            toast({ title: 'Voice input not available on this device' });
             return;
           }
           if (error === 'transcription-failed') {
@@ -204,7 +205,9 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         },
         onEnd: () => {
           if (shouldRestartRef.current) {
-            setTimeout(run, 300);
+            // Give iOS native recognizer more time to fully reset before restarting
+            const delay = Capacitor.isNativePlatform() ? 700 : 300;
+            setTimeout(run, delay);
           } else {
             setIntendingToListen(false);
           }

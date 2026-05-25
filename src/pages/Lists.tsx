@@ -5,16 +5,6 @@ import {
   CheckSquare, Users, Plus, Check, Trash2, X,
   Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw,
 } from "lucide-react";
-
-const CartCheckIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
-  <svg className={className} style={style} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M2 3h2l3 12h10a2 2 0 0 0 2-1.5l1.5-6.5a.75.75 0 0 0-.75-.75H7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M7 7h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
-    <circle cx="9.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
-    <circle cx="16.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
-    <path d="M10 13l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +16,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useShoppingPredictions, logPurchase } from "@/hooks/useShoppingPredictions";
+
+// ─── Custom icons ─────────────────────────────────────────────────────────────
+
+const CartCheckIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg className={className} style={style} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 3h2l3 12h10a2 2 0 0 0 2-1.5l1.5-6.5a.75.75 0 0 0-.75-.75H7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 7h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+    <circle cx="9.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
+    <circle cx="16.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
+    <path d="M10 13l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

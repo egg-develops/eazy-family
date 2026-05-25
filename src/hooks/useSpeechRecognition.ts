@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Module-level cache — permission granted status persists for the app session
 let nativePermissionGranted = false;
 
-// Use MediaRecorder + Whisper on mobile web (iOS Safari has no Web Speech API;
+// Use MediaRecorder + Deepgram on mobile web (iOS Safari has no Web Speech API;
 // mobile Chrome's Web Speech API is unreliable). Desktop keeps Web Speech API.
 function shouldUseWhisper(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -51,6 +51,8 @@ export const useSpeechRecognition = () => {
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const transcribeAbortRef = useRef<AbortController | null>(null);
   const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const vadIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   const isNative = Capacitor.isNativePlatform();
   const useWhisper = !isNative && shouldUseWhisper();
@@ -63,14 +65,12 @@ export const useSpeechRecognition = () => {
       SpeechRecognition.stop().catch(() => {});
       setIsListening(false);
     } else if (useWhisper) {
-      if (autoStopTimerRef.current) {
-        clearTimeout(autoStopTimerRef.current);
-        autoStopTimerRef.current = null;
-      }
+      if (vadIntervalRef.current) { clearInterval(vadIntervalRef.current); vadIntervalRef.current = null; }
+      audioCtxRef.current?.close().catch(() => {}); audioCtxRef.current = null;
+      if (autoStopTimerRef.current) { clearTimeout(autoStopTimerRef.current); autoStopTimerRef.current = null; }
       if (mediaRecorderRef.current?.state === 'recording') {
         mediaRecorderRef.current.stop(); // triggers onstop → transcription
       } else {
-        // Stopped before recording started or already done
         transcribeAbortRef.current?.abort();
         mediaStreamRef.current?.getTracks().forEach(t => t.stop());
         mediaStreamRef.current = null;
@@ -166,10 +166,49 @@ export const useSpeechRecognition = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
+      // Voice Activity Detection — auto-stop after silence so users don't need to tap stop
+      let hasSpeech = false;
+      let silenceStartMs: number | null = null;
+      const SILENCE_STOP_MS = 1800; // stop after 1.8s of silence following speech
+      const SPEECH_RMS_THRESHOLD = 0.015;
+
+      try {
+        const audioCtx = new AudioContext();
+        audioCtxRef.current = audioCtx;
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        audioCtx.createMediaStreamSource(stream).connect(analyser);
+        const timeDomainData = new Uint8Array(analyser.fftSize);
+
+        vadIntervalRef.current = setInterval(() => {
+          if (mediaRecorderRef.current?.state !== 'recording') {
+            clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
+            return;
+          }
+          analyser.getByteTimeDomainData(timeDomainData);
+          let sum = 0;
+          for (const v of timeDomainData) { const n = (v - 128) / 128; sum += n * n; }
+          const rms = Math.sqrt(sum / timeDomainData.length);
+
+          if (rms > SPEECH_RMS_THRESHOLD) {
+            hasSpeech = true;
+            silenceStartMs = null;
+          } else if (hasSpeech) {
+            if (silenceStartMs === null) silenceStartMs = Date.now();
+            if (Date.now() - silenceStartMs > SILENCE_STOP_MS) {
+              clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
+              if (mediaRecorderRef.current?.state === 'recording') {
+                mediaRecorderRef.current.stop();
+              }
+            }
+          }
+        }, 100);
+      } catch {
+        // AudioContext unavailable — VAD disabled, fall back to manual stop + 30s timeout
+      }
+
       const mimeType = getBestMimeType();
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      // recorder.mimeType is the authoritative format the browser actually chose.
-      // On iOS, isTypeSupported lies and recorder.mimeType may be '' — fall back to mp4.
       const effectiveMimeType = recorder.mimeType || (IS_IOS ? 'audio/mp4' : 'audio/webm');
       const chunks: Blob[] = [];
 
@@ -178,10 +217,11 @@ export const useSpeechRecognition = () => {
       };
 
       recorder.onstop = async () => {
-        if (autoStopTimerRef.current) {
-          clearTimeout(autoStopTimerRef.current);
-          autoStopTimerRef.current = null;
-        }
+        // Clean up VAD and audio context
+        if (vadIntervalRef.current) { clearInterval(vadIntervalRef.current); vadIntervalRef.current = null; }
+        audioCtxRef.current?.close().catch(() => {}); audioCtxRef.current = null;
+
+        if (autoStopTimerRef.current) { clearTimeout(autoStopTimerRef.current); autoStopTimerRef.current = null; }
         mediaStreamRef.current?.getTracks().forEach(t => t.stop());
         mediaStreamRef.current = null;
         mediaRecorderRef.current = null;
@@ -228,7 +268,7 @@ export const useSpeechRecognition = () => {
             if (transcript) opts.onResult(transcript, true);
           } else {
             console.error('[useSpeechRecognition] Transcription HTTP error:', res.status);
-            opts.onError?.(res.status === 401 ? 'not-allowed' : 'transcription-failed');
+            opts.onError?.('transcription-failed');
           }
         } catch (err: any) {
           if (err?.name !== 'AbortError') {
@@ -244,7 +284,7 @@ export const useSpeechRecognition = () => {
       recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsListening(true);
-      // Auto-stop after 30s — prevents silent infinite recording when user doesn't tap stop
+      // Hard 30s safety limit — VAD should stop it sooner in normal use
       autoStopTimerRef.current = setTimeout(() => {
         if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
