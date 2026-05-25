@@ -358,17 +358,6 @@ const Lists = () => {
           ══════════════════════════════════════════ */}
       {mainTab === 'tasks' && (
         <>
-          {/* Add button row */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsAddOpen(true)}
-              className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
-              style={{ background: ACCENT, color: '#fff' }}
-            >
-              {scope === 'shared' ? t('todos.newList', 'New List') : t('todos.newTask', 'New Task')}
-            </button>
-          </div>
-
           {/* ── Personal tasks ── */}
           {scope === 'personal' && (
             <>
@@ -381,6 +370,17 @@ const Lists = () => {
                     {tab === 'today' ? t('todos.today') : tab === 'upcoming' ? t('todos.upcoming') : t('todos.complete')}
                   </button>
                 ))}
+              </div>
+
+              {/* Add button row — below the time filter tabs */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
+                  style={{ background: ACCENT, color: '#fff' }}
+                >
+                  {t('todos.newTask', 'New Task')}
+                </button>
               </div>
 
               <div className="relative">
@@ -465,6 +465,15 @@ const Lists = () => {
           {/* ── Shared task lists ── */}
           {scope === 'shared' && (
             <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsAddOpen(true)}
+                  className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
+                  style={{ background: ACCENT, color: '#fff' }}
+                >
+                  {t('todos.newList', 'New List')}
+                </button>
+              </div>
               {sharedLists.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: MUTEDBG }}>
