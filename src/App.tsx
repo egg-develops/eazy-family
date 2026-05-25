@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,7 +21,6 @@ import Onboarding from "./pages/Onboarding";
 import Splash from "./pages/Splash";
 import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
-import ToDoList from "./pages/ToDoList";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
@@ -41,7 +41,7 @@ const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>)
   );
 
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
-const Shopping = lazyWithRetry(() => import("./pages/Shopping"));
+const Lists = lazyWithRetry(() => import("./pages/Lists"));
 const Rituals = lazyWithRetry(() => import("./pages/Rituals"));
 const Settings = lazyWithRetry(() => import("./pages/Settings"));
 const FamilyProfile = lazyWithRetry(() => import("./pages/FamilyProfile"));
@@ -91,10 +91,11 @@ const App = () => (
               <Route path="/app" element={<ProtectedRoute><ErrorBoundary><AppLayout /></ErrorBoundary></ProtectedRoute>}>
                 <Route path="calendar" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Calendar /></Suspense></ErrorBoundary>} />
                 <Route path="calendar/outlook-callback" element={<ProtectedRoute><OutlookCallback /></ProtectedRoute>} />
-                <Route path="todos" element={<ErrorBoundary><ToDoList /></ErrorBoundary>} />
+                <Route path="lists" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Lists /></Suspense></ErrorBoundary>} />
+                <Route path="todos" element={<Navigate to="/app/lists?tab=tasks" replace />} />
+                <Route path="shopping" element={<Navigate to="/app/lists?tab=shopping" replace />} />
                 <Route path="settings" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Settings /></Suspense></ErrorBoundary>} />
                 <Route path="family" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyProfile /></Suspense></ErrorBoundary>} />
-                <Route path="shopping" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Shopping /></Suspense></ErrorBoundary>} />
                 <Route path="rituals" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Rituals /></Suspense></ErrorBoundary>} />
                 <Route path="family-agenda" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyAgenda /></Suspense></ErrorBoundary>} />
                 <Route path="family-channel" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><FamilyChannel /></Suspense></ErrorBoundary>} />

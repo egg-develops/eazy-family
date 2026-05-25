@@ -253,8 +253,7 @@ const AppLayout = () => {
   const menuItems: MenuItem[] = [
     { label: 'Home', icon: Home, path: '/app' },
     { label: 'Calendar', icon: Calendar, path: '/app/calendar' },
-    { label: 'Tasks', icon: CheckSquare, path: '/app/todos' },
-    { label: 'Shopping', icon: ShoppingCart, path: '/app/shopping' },
+    { label: 'Lists', icon: CheckSquare, path: '/app/lists' },
     { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: 'Settings', icon: Settings, path: '/app/settings' },
   ];
@@ -318,8 +317,7 @@ const AppLayout = () => {
             {isHomePath ? appTitle : (() => {
               const allNav = [
                 { path: '/app/calendar', label: 'Calendar' },
-                { path: '/app/todos', label: 'Tasks' },
-                { path: '/app/shopping', label: 'Shopping' },
+                { path: '/app/lists', label: 'Lists' },
                 { path: '/app/family', label: 'Family' },
                 { path: '/app/rituals', label: 'Rituals' },
                 { path: '/app/settings', label: 'Settings' },
@@ -435,8 +433,8 @@ const AppLayout = () => {
 
       {/* EZ Capture Overlay */}
       {ezOpen && <EZCapture onClose={() => setEzOpen(false)} defaultType={
-        currentPath.includes('/shopping') ? 'shopping' :
-        currentPath.includes('/todos') ? 'task' :
+        currentPath.includes('/lists') && new URLSearchParams(window.location.search).get('tab') === 'shopping' ? 'shopping' :
+        currentPath.includes('/lists') ? 'task' :
         currentPath.includes('/calendar') ? 'event' :
         'event'
       } />}
@@ -962,10 +960,10 @@ const AppHome = () => {
           <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
             <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
             <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Overdue Tasks</p>
-            <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+            <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
           </div>
           {staleTasks.slice(0, 3).map((task, i) => (
-            <button key={task.id} onClick={() => navigate('/app/todos')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+            <button key={task.id} onClick={() => navigate('/app/lists')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
               <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : 'hsl(var(--border))' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{task.title}</p>
@@ -980,7 +978,7 @@ const AppHome = () => {
 
       {/* Shopping Predictions */}
       {shoppingPredictions.length > 0 && (
-        <button onClick={() => navigate('/app/shopping')} className="w-full rounded-2xl overflow-hidden text-left" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
+        <button onClick={() => navigate('/app/lists?tab=shopping')} className="w-full rounded-2xl overflow-hidden text-left" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
           <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #C8DDD0' }}>
             <ShoppingBasket className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
             <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: '#44664F' }}>Probably Running Low</p>
@@ -1082,7 +1080,7 @@ const AppHome = () => {
       <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
           <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
-          <button onClick={() => navigate('/app/todos')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+          <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
         </div>
         <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
       </div>

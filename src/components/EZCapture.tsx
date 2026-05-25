@@ -419,7 +419,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         });
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: '✓ Task added' });
-        onClose(); navigate('/app/todos');
+        onClose(); navigate('/app/lists');
 
       } else if (entryType === 'shopping') {
         if (!user || !session) return;
@@ -429,7 +429,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
         toast({ title: `✓ ${items.length} item${items.length > 1 ? 's' : ''} added` });
-        onClose(); navigate('/app/shopping');
+        onClose(); navigate('/app/lists?tab=shopping');
 
       } else if (entryType === 'ritual') {
         const entry = {
