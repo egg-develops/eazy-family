@@ -103,12 +103,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Only update state if we actually get a valid response — don't null-out user on network errors
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
+        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
           if (error) return; // network error — keep current state
           if (session) {
             setSession(session);
             setUser(session.user);
             fetchSubscriptionTier(session.user.id);
+            // Re-check RevenueCat entitlement so trial expirations that
+            // occurred while the app was backgrounded are caught immediately.
+            if (Capacitor.isNativePlatform()) {
+              const premium = await getRCIsPremium();
+              setIsPremium(premium);
+            }
           } else {
             // Only sign out if we got a definitive null (not a network failure)
             setSession(null);
