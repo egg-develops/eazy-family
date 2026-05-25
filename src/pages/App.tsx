@@ -252,12 +252,12 @@ const AppLayout = () => {
   };
 
   const menuItems: MenuItem[] = [
-    { label: 'Home', icon: Home, path: '/app' },
-    { label: 'Calendar', icon: Calendar, path: '/app/calendar' },
-    { label: 'Family', icon: Users, path: '/app/family-agenda' },
-    { label: 'Lists', icon: CheckSquare, path: '/app/lists' },
-    { label: 'Rituals', customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
-    { label: 'Settings', icon: Settings, path: '/app/settings' },
+    { label: t('nav.home'), icon: Home, path: '/app' },
+    { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar' },
+    { label: t('nav.family'), icon: Users, path: '/app/family-agenda' },
+    { label: t('nav.lists'), icon: CheckSquare, path: '/app/lists' },
+    { label: t('nav.rituals'), customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
+    { label: t('nav.settings'), icon: Settings, path: '/app/settings' },
   ];
 
   const navigationItems = [
@@ -318,16 +318,16 @@ const AppLayout = () => {
           <h1 className="font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>
             {isHomePath ? appTitle : (() => {
               const allNav = [
-                { path: '/app/calendar', label: 'Calendar' },
-                { path: '/app/lists', label: 'Lists' },
-                { path: '/app/family', label: 'Family' },
-                { path: '/app/rituals', label: 'Rituals' },
-                { path: '/app/settings', label: 'Settings' },
-                { path: '/app/family-agenda', label: 'Agenda' },
-                { path: '/app/family-channel', label: 'Channel' },
+                { path: '/app/calendar', label: t('nav.calendar') },
+                { path: '/app/lists', label: t('nav.lists') },
+                { path: '/app/family', label: t('nav.family') },
+                { path: '/app/rituals', label: t('nav.rituals') },
+                { path: '/app/settings', label: t('nav.settings') },
+                { path: '/app/family-agenda', label: t('nav.family') },
+                { path: '/app/family-channel', label: t('nav.family') },
                 { path: '/app/messaging', label: 'Messages' },
-                { path: '/app/events', label: 'Events' },
-                { path: '/app/community', label: 'Community' },
+                { path: '/app/events', label: t('nav.events') },
+                { path: '/app/community', label: t('nav.community') },
               ];
               return allNav.find(n => currentPath.startsWith(n.path))?.label ?? 'Eazy.Family';
             })()}

@@ -53,7 +53,9 @@
     "settings": "Ajustes",
     "todos": "Tareas",
     "shopping": "Compras",
-    "rituals": "Rituales"
+    "rituals": "Rituales",
+    "family": "Familia",
+    "lists": "Listas"
   },
   "calendar": {
     "title": "Calendario",
