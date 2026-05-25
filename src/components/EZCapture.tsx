@@ -189,6 +189,12 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
             toast({ title: 'Voice input not supported in this browser' });
             return;
           }
+          if (error === 'transcription-failed') {
+            shouldRestartRef.current = false;
+            setIntendingToListen(false);
+            toast({ title: 'Could not transcribe audio', description: 'Please try again.' });
+            return;
+          }
           consecutiveFailsRef.current++;
           if (consecutiveFailsRef.current >= 3) {
             shouldRestartRef.current = false;

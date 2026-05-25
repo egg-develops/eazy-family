@@ -200,7 +200,11 @@ export const useSpeechRecognition = () => {
         try {
           const ext = effectiveMimeType.includes('mp4') || effectiveMimeType.includes('aac') ? 'mp4' : 'webm';
           const blob = new Blob(chunks, { type: effectiveMimeType });
-          const { data: { session } } = await supabase.auth.getSession();
+          let { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            const { data: refreshed } = await supabase.auth.refreshSession();
+            session = refreshed.session;
+          }
           const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 
@@ -222,10 +226,14 @@ export const useSpeechRecognition = () => {
             const data = await res.json();
             const transcript = (data.text ?? '').trim();
             if (transcript) opts.onResult(transcript, true);
+          } else {
+            console.error('[useSpeechRecognition] Transcription HTTP error:', res.status);
+            opts.onError?.(res.status === 401 ? 'not-allowed' : 'transcription-failed');
           }
         } catch (err: any) {
           if (err?.name !== 'AbortError') {
             console.error('[useSpeechRecognition] Whisper transcription failed:', err);
+            opts.onError?.('transcription-failed');
           }
         }
 
