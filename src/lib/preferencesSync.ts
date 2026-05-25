@@ -12,6 +12,7 @@ const SYNC_KEYS = new Set([
   'eazy-google-calendar-synced',
   'eazy-outlook-calendar-events',
   'eazy-outlook-calendar-synced',
+  'eazy-apple-calendar-enabled',
   'eazy-family-calendar-items',
   'eazy-family-points',
   'eazy-morning-digest',

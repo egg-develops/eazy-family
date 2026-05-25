@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import * as chrono from "chrono-node";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { createAppleEvent } from "@/lib/appleCalendar";
 
 type CaptureType = 'event' | 'task' | 'shopping' | 'reminder' | 'ritual' | 'journal';
 type Step = 'capture' | 'processing' | 'preview';
@@ -368,6 +369,17 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           const ed = new Date(`${parsed.date}T${parsed.endTime}`);
           if (ed > startDate) endDate = ed;
         }
+        // Push to Apple Calendar if sync is enabled (events only, not reminders)
+        let appleCalendarId: string | undefined;
+        if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
+          appleCalendarId = (await createAppleEvent({
+            title: parsed.title,
+            startDate,
+            endDate,
+            allDay: !parsed.time,
+            location: parsed.location || undefined,
+          })) ?? undefined;
+        }
         const newEvent = {
           id: crypto.randomUUID(),
           title: parsed.title,
@@ -379,6 +391,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           color: entryType === 'reminder' ? '#6E8FE5' : '#D97B66',
           location: parsed.location || undefined,
           notes: parsed.notes || undefined,
+          ...(appleCalendarId ? { appleCalendarId } : {}),
         };
         const existing = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));

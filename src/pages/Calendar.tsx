@@ -20,8 +20,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 import {
   requestCalendarAccess,
+  checkCalendarAccess,
   fetchAppleEvents as fetchAppleCalendarEvents,
   createAppleEvent,
   updateAppleEvent,
@@ -268,6 +271,29 @@ const Calendar = () => {
   );
   const [appleEvents, setAppleEvents] = useState<Event[]>([]);
   const [isSyncingApple, setIsSyncingApple] = useState(false);
+  const [appleRefreshTick, setAppleRefreshTick] = useState(0);
+
+  // Revoke sync if iOS permission was removed outside the app
+  useEffect(() => {
+    if (!appleCalendarEnabled) return;
+    checkCalendarAccess().then(granted => {
+      if (!granted) {
+        setAppleCalendarEnabled(false);
+        setAppleEvents([]);
+        cloudSet('eazy-apple-calendar-enabled', 'false');
+      }
+    });
+  }, []);
+
+  // Re-sync whenever the app returns to foreground (picks up changes made in native Calendar)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let handle: { remove: () => void } | null = null;
+    CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive && appleCalendarEnabled) setAppleRefreshTick(t => t + 1);
+    }).then(h => { handle = h; });
+    return () => { handle?.remove(); };
+  }, [appleCalendarEnabled]);
 
   useEffect(() => {
     if (!appleCalendarEnabled) { setAppleEvents([]); return; }
@@ -294,14 +320,15 @@ const Calendar = () => {
           }))
       );
     }).catch(err => logError('fetchAppleCalendarEvents:', err));
-  }, [appleCalendarEnabled, selectedDate.getFullYear(), selectedDate.getMonth()]);
+  }, [appleCalendarEnabled, selectedDate.getFullYear(), selectedDate.getMonth(), appleRefreshTick]);
 
   const handleAppleCalendarConnect = async () => {
     setIsSyncingApple(true);
     const granted = await requestCalendarAccess();
     if (granted) {
       setAppleCalendarEnabled(true);
-      localStorage.setItem('eazy-apple-calendar-enabled', 'true');
+      cloudSet('eazy-apple-calendar-enabled', 'true');
+      setAppleRefreshTick(t => t + 1);
       setShowCalendarSyncDialog(false);
       toast({ title: 'Apple Calendar connected!' });
     } else {
@@ -313,7 +340,7 @@ const Calendar = () => {
   const handleDisconnectApple = () => {
     setAppleCalendarEnabled(false);
     setAppleEvents([]);
-    localStorage.removeItem('eazy-apple-calendar-enabled');
+    cloudSet('eazy-apple-calendar-enabled', 'false');
     toast({ title: 'Apple Calendar disconnected' });
   };
 
