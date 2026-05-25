@@ -21,12 +21,10 @@ import {
   Trash2,
   ImagePlus,
   AlertTriangle,
-  ShoppingBasket,
   Clock,
   Users
 } from "lucide-react";
 import { useConflictDetection } from "@/hooks/useConflictDetection";
-import { useShoppingPredictions } from "@/hooks/useShoppingPredictions";
 import { useStaleTaskDetection } from "@/hooks/useStaleTaskDetection";
 import { EZCapture } from "@/components/EZCapture";
 import { Button } from "@/components/ui/button";
@@ -678,7 +676,6 @@ const AppHome = () => {
   };
 
   const { conflicts } = useConflictDetection();
-  const { predictions: shoppingPredictions } = useShoppingPredictions();
   const { staleTasks } = useStaleTaskDetection();
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
   const [sharedItems, setSharedItems] = useState<Array<{ id: string; title: string; type: string; initials: string; color: string }>>([]);
@@ -976,24 +973,6 @@ const AppHome = () => {
             </button>
           ))}
         </div>
-      )}
-
-      {/* Shopping Predictions */}
-      {shoppingPredictions.length > 0 && (
-        <button onClick={() => navigate('/app/lists?tab=shopping')} className="w-full rounded-2xl overflow-hidden text-left" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid #C8DDD0' }}>
-            <ShoppingBasket className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
-            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: '#44664F' }}>Probably Running Low</p>
-            <span className="text-xs font-semibold" style={{ color: '#44664F' }}>Add →</span>
-          </div>
-          <div className="px-4 py-3 flex flex-wrap gap-2">
-            {shoppingPredictions.map(p => (
-              <span key={p.itemName} className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: '#C8DDD0', color: '#2D4F38' }}>
-                {p.itemName}
-              </span>
-            ))}
-          </div>
-        </button>
       )}
 
       {/* Today's Rituals card */}
