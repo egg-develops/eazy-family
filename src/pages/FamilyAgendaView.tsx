@@ -191,7 +191,7 @@ const FamilyAgendaView = () => {
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center -ml-1">
             <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
           </button>
-          <p className="flex-1 text-center font-bold text-base" style={{ color: INK }}>
+          <p className="flex-1 text-center font-bold text-2xl" style={{ color: INK }}>
             Family
           </p>
           <button

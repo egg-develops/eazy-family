@@ -1,10 +1,20 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
-  CheckSquare, ShoppingCart, Users, Plus, Check, Trash2,
+  CheckSquare, Users, Plus, Check, Trash2, X,
   Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw,
 } from "lucide-react";
+
+const CartCheckIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <svg className={className} style={style} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M2 3h2l3 12h10a2 2 0 0 0 2-1.5l1.5-6.5a.75.75 0 0 0-.75-.75H7" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 7h14" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+    <circle cx="9.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
+    <circle cx="16.5" cy="20.5" r="1.5" stroke="currentColor" strokeWidth="1.75"/>
+    <path d="M10 13l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +26,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useShoppingPredictions, logPurchase } from "@/hooks/useShoppingPredictions";
-import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +123,15 @@ const Lists = () => {
   const [newShoppingItem, setNewShoppingItem] = useState('');
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { predictions } = useShoppingPredictions();
+  const [dismissedPredictions, setDismissedPredictions] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('eazy-dismissed-predictions') || '[]')); } catch { return new Set(); }
+  });
+  const filteredPredictions = predictions.filter(p => !dismissedPredictions.has(p.itemName.toLowerCase()));
+  const dismissPrediction = (itemName: string) => {
+    const next = new Set(dismissedPredictions); next.add(itemName.toLowerCase());
+    setDismissedPredictions(next);
+    localStorage.setItem('eazy-dismissed-predictions', JSON.stringify([...next]));
+  };
 
   // ── Load ──────────────────────────────────────────────────────────────────────
 
@@ -315,7 +333,7 @@ const Lists = () => {
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{ background: mainTab === tab ? ACCENT : 'transparent', color: mainTab === tab ? '#fff' : MUTED }}
           >
-            {tab === 'tasks' ? <CheckSquare className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            {tab === 'tasks' ? <CheckSquare className="w-4 h-4" /> : <CartCheckIcon className="w-4 h-4" />}
             {tab === 'tasks' ? t('nav.todos', 'Tasks') : t('nav.shopping', 'Shopping')}
           </button>
         ))}
@@ -325,7 +343,7 @@ const Lists = () => {
       <div className="flex w-fit mx-auto gap-0.5 p-0.5 rounded-full" style={{ background: MUTEDBG, border: `1px solid ${BORDER}` }}>
         {(['personal', 'shared'] as const).map(s => (
           <button key={s} onClick={() => setScope(s)}
-            className="px-5 py-1.5 rounded-full text-xs font-semibold transition-all"
+            className="px-3 py-0.5 rounded-full text-xs font-semibold transition-all"
             style={{ background: scope === s ? ACCENT : 'transparent', color: scope === s ? '#fff' : MUTED }}
           >
             {s === 'personal' ? t('shopping.personalList', 'Personal') : t('shopping.sharedList', 'Shared')}
@@ -338,19 +356,13 @@ const Lists = () => {
           ══════════════════════════════════════════ */}
       {mainTab === 'tasks' && (
         <>
-          {/* Voice + Add button row */}
+          {/* Add button row */}
           <div className="flex items-center gap-2">
-            <VoiceShoppingAssistant
-              onItemsAdded={handleVoiceItemsAdded}
-              mode="task"
-              listenerDescription={t('todos.speakTasks', 'Speak your tasks')}
-            />
             <button
               onClick={() => setIsAddOpen(true)}
-              className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold"
+              className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
               style={{ background: ACCENT, color: '#fff' }}
             >
-              <Plus className="w-3.5 h-3.5" />
               {scope === 'shared' ? t('todos.newList', 'New List') : t('todos.newTask', 'New Task')}
             </button>
           </div>
@@ -599,27 +611,29 @@ const Lists = () => {
               className="flex-1 outline-none text-sm"
               style={{ color: INK, background: 'transparent' }}
             />
-            <VoiceShoppingAssistant
-              onItemsAdded={handleVoiceItemsAdded}
-              mode="shopping"
-              listenerDescription={t('todos.speakShoppingItems', 'Speak your shopping items')}
-            />
           </div>
 
           {/* Predictions */}
-          {predictions.length > 0 && (
+          {filteredPredictions.length > 0 && (
             <div className="rounded-2xl overflow-hidden" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
               <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid #C8DDD0' }}>
                 <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>Probably Running Low</p>
               </div>
               <div className="px-4 py-3 flex flex-wrap gap-2">
-                {predictions.map(p => (
-                  <button key={p.itemName} onClick={() => setNewShoppingItem(p.itemName)}
-                    className="text-xs font-medium px-2.5 py-1 rounded-full transition-colors"
-                    style={{ background: '#C8DDD0', color: '#2D4F38' }}>
-                    + {p.itemName}
-                  </button>
+                {filteredPredictions.map(p => (
+                  <div key={p.itemName} className="flex items-center gap-1 text-xs font-medium rounded-full" style={{ background: '#C8DDD0', color: '#2D4F38' }}>
+                    <button onClick={() => setNewShoppingItem(p.itemName)} className="pl-2.5 pr-1 py-1">
+                      + {p.itemName}
+                    </button>
+                    <button
+                      onClick={() => dismissPrediction(p.itemName)}
+                      className="flex items-center justify-center w-5 h-5 mr-1 rounded-full hover:bg-black/10 transition-colors flex-shrink-0"
+                      title="Remove suggestion"
+                    >
+                      <X className="w-2.5 h-2.5" style={{ color: '#44664F' }} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
