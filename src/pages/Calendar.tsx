@@ -470,7 +470,7 @@ const Calendar = () => {
   const handleGoogleConnect = async () => {
     setIsSyncing(true);
     try {
-      const redirectUri = window.location.origin + '/app/calendar';
+      const redirectUri = 'https://eazy.family/app/calendar';
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { action: 'get_auth_url', redirect_uri: redirectUri },
       });
@@ -487,7 +487,7 @@ const Calendar = () => {
   const handleGoogleCallback = async (code: string) => {
     setIsSyncing(true);
     try {
-      const redirectUri = window.location.origin + '/app/calendar';
+      const redirectUri = 'https://eazy.family/app/calendar';
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { action: 'exchange_code', code, redirect_uri: redirectUri },
       });
@@ -537,7 +537,7 @@ const Calendar = () => {
 
   const showAdminConsentDialog = async () => {
     try {
-      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
+      const redirectUri = 'https://eazy.family/app/calendar/outlook-callback';
       const { data } = await supabase.functions.invoke('outlook-calendar-auth', {
         body: { action: 'get_admin_consent_url', redirect_uri: redirectUri },
       });
@@ -562,7 +562,7 @@ const Calendar = () => {
   const handleOutlookConnect = async () => {
     setIsSyncingOutlook(true);
     try {
-      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
+      const redirectUri = 'https://eazy.family/app/calendar/outlook-callback';
       const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
         body: { action: 'get_auth_url', redirect_uri: redirectUri },
       });
@@ -595,7 +595,7 @@ const Calendar = () => {
   const handleOutlookCallback = async (code: string) => {
     setIsSyncingOutlook(true);
     try {
-      const redirectUri = `${window.location.origin}/app/calendar/outlook-callback`;
+      const redirectUri = 'https://eazy.family/app/calendar/outlook-callback';
       const { data, error } = await supabase.functions.invoke('outlook-calendar-auth', {
         body: { action: 'exchange_code', code, redirect_uri: redirectUri },
       });
