@@ -1784,7 +1784,11 @@ const Calendar = () => {
                   <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full flex-shrink-0">✓ On</span>
                 )}
               </div>
-              {appleCalendarEnabled ? (
+              {!Capacitor.isNativePlatform() ? (
+                <p className="text-xs text-center py-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Available in the iOS app — <a href="https://eazy.family" target="_blank" rel="noopener noreferrer" className="underline">download here</a>
+                </p>
+              ) : appleCalendarEnabled ? (
                 <Button size="sm" variant="outline" className="w-full h-8 text-xs text-destructive border-destructive/30" onClick={handleDisconnectApple}>
                   {t('calendar.disconnect')}
                 </Button>
