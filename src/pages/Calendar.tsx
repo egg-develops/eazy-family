@@ -737,6 +737,19 @@ const Calendar = () => {
     if (!showStartPicker) return;
     const [d,t] = pickerToDateTime(startDayIdx,startHourIdx,startMinIdx,startAmPmIdx);
     setEventStartDate(d); setEventStartTime(t);
+    // Bump end forward if it would be before (or equal to) the new start
+    const [startParts, endParts] = [t.split(':').map(Number), eventEndTime.split(':').map(Number)];
+    const startMins = d.getTime() + (startParts[0]*60+startParts[1])*60000;
+    const endD = new Date(eventEndDate); endD.setHours(0,0,0,0);
+    const endMins = endD.getTime() + (endParts[0]*60+endParts[1])*60000;
+    if (startMins >= endMins) {
+      const newEnd = new Date(startMins + 3600000); // +1 hour
+      const newEndDate = new Date(newEnd); newEndDate.setHours(0,0,0,0);
+      const eh = newEnd.getHours();
+      const em = newEnd.getMinutes();
+      setEventEndDate(newEndDate);
+      setEventEndTime(`${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`);
+    }
   },[startDayIdx,startHourIdx,startMinIdx,startAmPmIdx]);
 
   useEffect(()=>{
