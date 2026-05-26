@@ -80,28 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Configure RevenueCat early (before session resolves) so it's ready
     configureRC();
 
-    // Check for existing session FIRST — with a hard timeout so a hanging
-    // network call never leaves the app stuck on a blank screen.
-    const sessionTimeout = setTimeout(() => setLoading(false), 6000);
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      clearTimeout(sessionTimeout);
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchSubscriptionTier(session.user.id);
-        loadCloudPreferences(session.user.id);
-        if (session.access_token) {
-          syncWidgetToken(session.access_token, session.user.id);
-        }
-        if (Capacitor.isNativePlatform()) {
-          await identifyRCUser(session.user.id);
-          const premium = await getRCIsPremium();
-          setIsPremium(premium);
-        }
-      }
-      setLoading(false);
-    });
-
     // Re-check session when tab becomes visible (iOS Safari pauses JS timers, preventing token refresh)
     // Only update state if we actually get a valid response — don't null-out user on network errors
     const handleVisibilityChange = () => {
@@ -129,9 +107,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Set up auth state listener
+    // Set up auth state listener.
+    // INITIAL_SESSION fires as soon as Supabase resolves the stored session —
+    // this is the reliable way to clear the loading gate without a getSession()
+    // race or a blunt timeout.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        if (event === 'INITIAL_SESSION') {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            fetchSubscriptionTier(session.user.id);
+            loadCloudPreferences(session.user.id);
+            if (session.access_token) {
+              syncWidgetToken(session.access_token, session.user.id);
+            }
+            if (Capacitor.isNativePlatform()) {
+              await identifyRCUser(session.user.id);
+              const premium = await getRCIsPremium();
+              setIsPremium(premium);
+            }
+          }
+          setLoading(false);
+          return;
+        }
         setSession(session);
         setUser(session?.user ?? null);
 
