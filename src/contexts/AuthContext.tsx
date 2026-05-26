@@ -80,8 +80,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Configure RevenueCat early (before session resolves) so it's ready
     configureRC();
 
-    // Check for existing session FIRST
+    // Check for existing session FIRST — with a hard timeout so a hanging
+    // network call never leaves the app stuck on a blank screen.
+    const sessionTimeout = setTimeout(() => setLoading(false), 6000);
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(sessionTimeout);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
