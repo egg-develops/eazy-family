@@ -25,7 +25,7 @@ platform :ios do
       path: "ios/App/App.xcodeproj",
       team_id: "PU6P37HYB9",
       code_sign_identity: "Apple Distribution",
-      targets: ["App"]
+      targets: ["App", "EazyFamilyWidgetExtension"]
     )
     build_app(
       project: "ios/App/App.xcodeproj",
@@ -33,7 +33,8 @@ platform :ios do
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {
-          "eazy.family.app" => "match AppStore eazy.family.app"
+          "eazy.family.app" => "match AppStore eazy.family.app",
+          "eazy.family.app.EazyFamilyWidget" => "match AppStore eazy.family.app.EazyFamilyWidget"
         }
       }
     )
