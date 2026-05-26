@@ -1341,6 +1341,7 @@ const Calendar = () => {
 
   const render42DayCalendar = () => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
+    const offset = today.getDay(); // 0=Sun … 6=Sat — empty cells before today
     const days = Array.from({ length: 42 }, (_, i) => addDays(today, i));
     const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
     return (
@@ -1351,6 +1352,9 @@ const Calendar = () => {
           ))}
         </div>
         <div className="grid grid-cols-7">
+          {Array.from({ length: offset }).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
           {days.map(day => {
             const hasEvents = getItemsForDate(day).length > 0;
             const isSelected = isSameDay(day, selectedDate);
