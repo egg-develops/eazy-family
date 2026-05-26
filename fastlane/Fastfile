@@ -24,9 +24,8 @@ platform :ios do
       use_automatic_signing: false,
       path: "ios/App/App.xcodeproj",
       team_id: "PU6P37HYB9",
-      bundle_identifier: "eazy.family.app",
       code_sign_identity: "Apple Distribution",
-      profile_name: "match AppStore eazy.family.app"
+      targets: ["App"]
     )
     build_app(
       project: "ios/App/App.xcodeproj",
