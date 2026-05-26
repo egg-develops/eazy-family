@@ -1910,14 +1910,30 @@ const Calendar = () => {
 
             {dialogTab === 'event' ? (
               <>
+                {/* All day toggle */}
+                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>All day</span>
+                  <button
+                    type="button"
+                    onClick={() => { setEventAllDay(v => !v); setShowStartPicker(false); setShowEndPicker(false); }}
+                    className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0"
+                    style={{ background: eventAllDay ? '#964735' : 'hsl(var(--muted))' }}
+                  >
+                    <span
+                      className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+                      style={{ transform: eventAllDay ? 'translateX(20px)' : 'translateX(0)' }}
+                    />
+                  </button>
+                </div>
+
                 {/* Starts */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
-                    onClick={() => { setShowStartPicker(p => !p); setShowEndPicker(false); }}>
+                    onClick={() => { if (eventAllDay) return; setShowStartPicker(p => !p); setShowEndPicker(false); }}>
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.starts')}</span>
                     <div className="flex gap-2">
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>
+                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>}
                     </div>
                   </button>
                   {showStartPicker && (
@@ -1934,11 +1950,11 @@ const Calendar = () => {
                 {/* Ends */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button className="w-full flex items-center justify-between px-4 py-3.5"
-                    onClick={() => { setShowEndPicker(p => !p); setShowStartPicker(false); }}>
+                    onClick={() => { if (eventAllDay) return; setShowEndPicker(p => !p); setShowStartPicker(false); }}>
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.ends')}</span>
                     <div className="flex gap-2">
                       <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>
+                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>}
                     </div>
                   </button>
                   {showEndPicker && (
