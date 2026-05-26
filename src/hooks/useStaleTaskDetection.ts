@@ -22,10 +22,11 @@ export function useStaleTaskDetection() {
 
         const { data } = await supabase
           .from('tasks')
-          .select('id, title, updated_at')
+          .select('id, title, created_at, updated_at')
           .eq('completed', false)
           .eq('type', 'task')
-          .lte('updated_at', sevenDaysAgo)
+          .lte('created_at', sevenDaysAgo)   // must have existed for 7+ days
+          .lte('updated_at', sevenDaysAgo)   // AND not touched in 7 days
           .order('updated_at')
           .limit(5);
 
