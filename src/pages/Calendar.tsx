@@ -31,13 +31,15 @@ import {
   deleteAppleEvent,
 } from "@/lib/appleCalendar";
 
-const TAGS = {
-  school:   { label: "School",   bg: "#F1EDE7", border: "#964735", dot: "#964735" },
-  travel:   { label: "Travel",   bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
-  birthday: { label: "Birthday", bg: "#FFE4F0", border: "#D97B66", dot: "#D97B66" },
-  personal: { label: "Personal", bg: "#FFFBE6", border: "#FFC861", dot: "#FFC861" },
-} as const;
-type EventTag = keyof typeof TAGS;
+const TAGS: Record<string, { label: string; bg: string; border: string; dot: string }> = {
+  birthday:    { label: "Birthday",    bg: "#FFE4F0", border: "#E57C9A", dot: "#E57C9A" },
+  travel:      { label: "Travel",      bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
+  appointment: { label: "Appointment", bg: "#EEE8FF", border: "#8B7DD8", dot: "#8B7DD8" },
+  meeting:     { label: "Meeting",     bg: "#F4F4F4", border: "#666666", dot: "#666666" },
+  celebration: { label: "Celebration", bg: "#FFF3D0", border: "#FFC861", dot: "#FFC861" },
+  admin:       { label: "Admin",       bg: "#E8F5EC", border: "#44664F", dot: "#44664F" },
+};
+type EventTag = string; // preset TAGS key or user-entered custom string
 
 interface Event {
   id: string;
@@ -51,8 +53,10 @@ interface Event {
   type: "event";
   color: string;
   tag?: EventTag;
+  customTag?: string;
   appleCalendarId?: string;
   attendees?: string[];
+  visibleTo?: 'everyone' | 'parents' | 'me';
 }
 
 interface Reminder {
@@ -195,7 +199,7 @@ const Calendar = () => {
   const { isPremium, user } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week' | '3day' | 'day' | 'year' | '42day'>('month');
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -219,6 +223,7 @@ const Calendar = () => {
       else if (calendarView === '3day') d.setDate(d.getDate() + (fwd ? 3 : -3));
       else if (calendarView === 'day') d.setDate(d.getDate() + (fwd ? 1 : -1));
       else if (calendarView === 'year') d.setFullYear(d.getFullYear() + (fwd ? 1 : -1));
+      else if (calendarView === '42day') return prev; // 42-day always anchored to today
       return d;
     });
   };
@@ -381,6 +386,9 @@ const Calendar = () => {
   const [endMinIdx, setEndMinIdx] = useState(0);
   const [endAmPmIdx, setEndAmPmIdx] = useState(0);
   const [eventAttendees, setEventAttendees] = useState<string[]>([]);
+  const [eventColor, setEventColor] = useState('#964735');
+  const [eventVisibleTo, setEventVisibleTo] = useState<'everyone' | 'parents' | 'me'>('everyone');
+  const [eventCustomTag, setEventCustomTag] = useState('');
   const [familyMembers, setFamilyMembers] = useState<{ id: string; name: string; user_id: string }[]>([]);
 
   // Voice-to-calendar state
@@ -758,6 +766,9 @@ const Calendar = () => {
     setCustomRepeatNumber("1");
     setCustomRepeatUnit("weeks");
     setEventAttendees([]);
+    setEventColor('#964735');
+    setEventVisibleTo('everyone');
+    setEventCustomTag('');
   };
 
   const loadFamilyMembers = async () => {
@@ -855,6 +866,10 @@ const Calendar = () => {
       setEventRepeat(item.repeat || "never");
       setEventTravelTime(item.travelTime || "none");
       setEventTag(item.tag || null);
+      setEventColor(item.color || '#964735');
+      setEventVisibleTo(item.visibleTo || 'everyone');
+      setEventCustomTag(item.customTag || '');
+      setEventAttendees(item.attendees || []);
     } else {
       setDialogTab("reminder");
       setReminderTitle(item.title);
@@ -921,7 +936,10 @@ const Calendar = () => {
               repeat: repeatValue,
               travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
               tag: eventTag || undefined,
-              color: eventTag ? TAGS[eventTag].border : item.color,
+              customTag: eventTag && !TAGS[eventTag] ? eventTag : undefined,
+              color: eventColor,
+              visibleTo: eventVisibleTo,
+              attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
             }
           : item
       ));
@@ -951,10 +969,12 @@ const Calendar = () => {
         repeat: repeatValue,
         travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
         type: "event",
-        color: eventTag ? TAGS[eventTag].border : "#964735",
+        color: eventColor,
         tag: eventTag || undefined,
+        customTag: eventTag && !TAGS[eventTag] ? eventTag : undefined,
         appleCalendarId,
         attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
+        visibleTo: eventVisibleTo,
       };
 
       setItems([...items, newEvent]);
@@ -1319,6 +1339,56 @@ const Calendar = () => {
     );
   };
 
+  const render42DayCalendar = () => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = Array.from({ length: 42 }, (_, i) => addDays(today, i));
+    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    return (
+      <div className="px-1">
+        <div className="grid grid-cols-7 mb-1">
+          {weekDays.map((d, i) => (
+            <div key={i} className="text-center text-sm font-semibold py-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7">
+          {days.map(day => {
+            const hasEvents = getItemsForDate(day).length > 0;
+            const isSelected = isSameDay(day, selectedDate);
+            const isTodayDate = isToday(day);
+            const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+            const isNewMonth = day.getDate() === 1;
+            return (
+              <button
+                key={day.toISOString()}
+                onClick={() => setSelectedDate(day)}
+                className="relative flex flex-col items-center py-1 min-h-[52px]"
+              >
+                {isNewMonth && (
+                  <span className="absolute top-0 left-0 right-0 text-center text-[9px] font-bold uppercase tracking-wide" style={{ color: '#964735', lineHeight: '12px' }}>
+                    {format(day, 'MMM')}
+                  </span>
+                )}
+                <span
+                  className="w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold mt-3"
+                  style={{
+                    background: isTodayDate ? '#964735' : isSelected ? 'hsl(var(--muted))' : 'transparent',
+                    color: isTodayDate ? '#FFFFFF' : isWeekend ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                    fontWeight: isTodayDate ? 800 : isSelected ? 700 : 600,
+                  }}
+                >
+                  {format(day, 'd')}
+                </span>
+                {hasEvents && (
+                  <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'hsl(var(--background))', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
 
@@ -1400,7 +1470,7 @@ const Calendar = () => {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowViewPicker(false)} />
           <div className="absolute left-1/2 -translate-x-1/2 z-50 w-44 rounded-2xl shadow-lg overflow-hidden" style={{ top: '56px', background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            {(['day', 'week', '3day', 'month', 'year'] as const).map(v => (
+            {(['day', 'week', '3day', 'month', '42day', 'year'] as const).map(v => (
               <button
                 key={v}
                 onClick={() => { setCalendarView(v); setShowViewPicker(false); }}
@@ -1412,7 +1482,7 @@ const Calendar = () => {
                   borderBottom: '1px solid hsl(var(--border))',
                 }}
               >
-                {v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
+                {v === '42day' ? '42-day →' : v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
             ))}
           </div>
@@ -1483,11 +1553,14 @@ const Calendar = () => {
         );
       })()}
 
+      {/* 42-day rolling view */}
+      {calendarView === '42day' && render42DayCalendar()}
+
       {/* Year view */}
       {calendarView === 'year' && renderYearCalendar()}
 
-      {/* Non-month, non-year views */}
-      {calendarView !== 'month' && calendarView !== 'year' && (
+      {/* Non-month, non-year, non-42day views */}
+      {calendarView !== 'month' && calendarView !== 'year' && calendarView !== '42day' && (
         <div className="px-4">
           {calendarView === 'week' && renderWeekCalendar()}
           {calendarView === '3day' && render3DayCalendar()}
@@ -1890,6 +1963,101 @@ const Calendar = () => {
                   </select>
                 </div>
 
+                {/* Repeat */}
+                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>Repeat</span>
+                  <select value={eventRepeat} onChange={e => setEventRepeat(e.target.value)}
+                    className="text-sm font-medium outline-none rounded-lg px-2.5 py-1"
+                    style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
+                    <option value="never">Never</option>
+                    <option value="daily">Every day</option>
+                    <option value="weekday">Every weekday</option>
+                    <option value="weekly">Every week</option>
+                    <option value="biweekly">Every 2 weeks</option>
+                    <option value="monthly">Every month</option>
+                    <option value="yearly">Every year</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </div>
+                {eventRepeat === 'custom' && (
+                  <div className="rounded-2xl px-4 py-3.5 flex items-center gap-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                    <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Every</span>
+                    <input type="number" min="1" max="99" value={customRepeatNumber} onChange={e => setCustomRepeatNumber(e.target.value)}
+                      className="w-14 text-center text-sm font-semibold outline-none rounded-lg px-2 py-1"
+                      style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }} />
+                    <select value={customRepeatUnit} onChange={e => setCustomRepeatUnit(e.target.value as 'days' | 'weeks' | 'months')}
+                      className="flex-1 text-sm font-medium outline-none rounded-lg px-2.5 py-1"
+                      style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }}>
+                      <option value="days">days</option>
+                      <option value="weeks">weeks</option>
+                      <option value="months">months</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Tags */}
+                <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Tag</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(TAGS).map(([key, tag]) => {
+                      const isSelected = eventTag === key;
+                      return (
+                        <button key={key} onClick={() => {
+                          setEventTag(isSelected ? null : key);
+                          if (!isSelected) setEventColor(tag.border);
+                          setEventCustomTag('');
+                        }}
+                          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                          style={{ background: isSelected ? tag.border : tag.bg, color: isSelected ? '#fff' : tag.dot, border: `1.5px solid ${tag.border}` }}>
+                          {tag.label}
+                        </button>
+                      );
+                    })}
+                    <button onClick={() => { setEventTag('custom'); }}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                      style={{ background: eventTag === 'custom' ? '#555' : 'hsl(var(--muted))', color: eventTag === 'custom' ? '#fff' : 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border))' }}>
+                      + Custom
+                    </button>
+                  </div>
+                  {eventTag === 'custom' && (
+                    <input
+                      autoFocus
+                      className="mt-2.5 w-full text-sm outline-none rounded-lg px-3 py-2"
+                      style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--foreground))', border: '1.5px solid hsl(var(--border))' }}
+                      placeholder="Tag name…"
+                      value={eventCustomTag}
+                      onChange={e => setEventCustomTag(e.target.value)}
+                    />
+                  )}
+                </div>
+
+                {/* Color */}
+                <div className="rounded-2xl px-4 py-3.5 flex items-center gap-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="text-sm font-semibold flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>Color</span>
+                  <div className="flex gap-2 flex-wrap flex-1">
+                    {['#964735', '#D97B66', '#FFC861', '#4CAF50', '#64A0F0', '#6E8FE5', '#BA1A1A', '#555555'].map(c => (
+                      <button key={c} onClick={() => setEventColor(c)}
+                        className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center transition-transform"
+                        style={{ background: c, transform: eventColor === c ? 'scale(1.25)' : 'scale(1)', boxShadow: eventColor === c ? `0 0 0 2px #fff, 0 0 0 3.5px ${c}` : 'none' }}>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visible to */}
+                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>Visible to</span>
+                  <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
+                    {([['everyone', 'Everyone'], ['parents', 'Parents'], ['me', 'Just me']] as const).map(([val, label]) => (
+                      <button key={val} onClick={() => setEventVisibleTo(val)}
+                        className="px-3 py-1.5 text-xs font-semibold transition-all"
+                        style={{ background: eventVisibleTo === val ? '#964735' : 'transparent', color: eventVisibleTo === val ? '#fff' : 'hsl(var(--muted-foreground))' }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Location */}
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
@@ -1897,10 +2065,10 @@ const Calendar = () => {
                     placeholder={t('calendar.location')} value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
                 </div>
 
-                {/* Family members */}
+                {/* Participants */}
                 {familyMembers.length > 0 && (
                   <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                    <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Invite family members</p>
+                    <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Participants</p>
                     <div className="flex flex-wrap gap-2">
                       {familyMembers.map(m => {
                         const selected = eventAttendees.includes(m.user_id);

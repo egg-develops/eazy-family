@@ -43,6 +43,8 @@ interface ListItem {
   parent_id?: string | null;
   family_id?: string | null;
   assigned_to?: string | null;
+  assigned_to_users?: string[] | null;
+  visible_to?: string | null;
 }
 
 interface FamilyMember {
@@ -122,6 +124,9 @@ const Lists = () => {
   const [assigningItemId, setAssigningItemId] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [newAssignees, setNewAssignees] = useState<string[]>([]);
+  const [newListVisibleTo, setNewListVisibleTo] = useState<string>('family');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
 
   // ── Shopping state ────────────────────────────────────────────────────────────
   const [newShoppingItem, setNewShoppingItem] = useState('');
@@ -170,6 +175,8 @@ const Lists = () => {
       });
   }, [user]);
 
+  useEffect(() => { setAssigneeFilter('all'); }, [scope]);
+
   // ── Mutations ─────────────────────────────────────────────────────────────────
 
   const toggleItem = async (id: string) => {
@@ -201,6 +208,15 @@ const Lists = () => {
     setAssigningItemId(null);
   };
 
+  const toggleAssignUser = async (taskId: string, userId: string) => {
+    const item = items.find(i => i.id === taskId);
+    if (!item) return;
+    const current = item.assigned_to_users ?? [];
+    const next = current.includes(userId) ? current.filter(id => id !== userId) : [...current, userId];
+    setItems(prev => prev.map(i => i.id === taskId ? { ...i, assigned_to_users: next } : i));
+    await supabase.from('tasks').update({ assigned_to_users: next }).eq('id', taskId);
+  };
+
   const startEditing = (item: ListItem) => {
     setEditingItemId(item.id);
     setEditingTitle(item.title);
@@ -226,9 +242,13 @@ const Lists = () => {
       due_date: newDueDate || null,
       family_id: scope === 'shared' ? userFamilyId : null,
       completed: false,
+      ...(scope === 'shared' && {
+        visible_to: newListVisibleTo,
+        assigned_to_users: newAssignees.length > 0 ? newAssignees : null,
+      }),
     }]);
     if (error) { toast({ title: 'Could not add', variant: 'destructive' }); return; }
-    setNewTitle(''); setNewDueDate(''); setIsAddOpen(false);
+    setNewTitle(''); setNewDueDate(''); setNewAssignees([]); setNewListVisibleTo('family'); setIsAddOpen(false);
     haptic('success');
   };
 
@@ -313,7 +333,15 @@ const Lists = () => {
   };
 
   const sharedLists = items.filter(i => i.type === 'shared' && !i.parent_id);
-  const getListItems = (listId: string) => items.filter(i => i.parent_id === listId);
+  const getListItems = (listId: string) => {
+    const all = items.filter(i => i.parent_id === listId);
+    if (assigneeFilter === 'all') return all;
+    const filterId = assigneeFilter === 'me' ? (user?.id ?? '') : assigneeFilter;
+    return all.filter(i =>
+      i.assigned_to === filterId ||
+      (i.assigned_to_users ?? []).includes(filterId)
+    );
+  };
 
   const shoppingDbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
   const shoppingItems = items.filter(i => i.type === shoppingDbType);
@@ -504,6 +532,20 @@ const Lists = () => {
                   {t('todos.newList', 'New List')}
                 </button>
               </div>
+
+              {/* Assignee filter strip */}
+              {familyMembers.length > 0 && (
+                <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {[{ id: 'all', label: 'All' }, { id: 'me', label: 'Me' }, ...familyMembers.map(m => ({ id: m.user_id, label: (m.full_name || m.email || 'Member').split(' ')[0] }))].map(f => (
+                    <button key={f.id} onClick={() => setAssigneeFilter(f.id)}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                      style={{ background: assigneeFilter === f.id ? ACCENT : MUTEDBG, color: assigneeFilter === f.id ? '#fff' : MUTED }}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {sharedLists.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3" style={{ background: MUTEDBG }}>
@@ -569,37 +611,42 @@ const Lists = () => {
                                     {item.title}
                                   </span>
                                 )}
-                                <button
-                                  onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
-                                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                                  style={{ background: assignee ? ACCENT : MUTEDBG, color: assignee ? '#fff' : MUTED }}
-                                  title={assignee ? `Assigned to ${assignee.full_name || 'member'}` : 'Assign'}
-                                >
-                                  {assignee ? (assignee.full_name?.charAt(0).toUpperCase() ?? '?') : '+'}
-                                </button>
+                                {/* Multi-assignee avatars */}
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  {(item.assigned_to_users ?? []).slice(0, 3).map(uid => {
+                                    const m = familyMembers.find(fm => fm.user_id === uid);
+                                    return (
+                                      <span key={uid} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
+                                        style={{ background: ACCENT }} title={m?.full_name || 'Member'}>
+                                        {(m?.full_name || '?').charAt(0).toUpperCase()}
+                                      </span>
+                                    );
+                                  })}
+                                  <button
+                                    onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                    style={{ background: (item.assigned_to_users?.length ?? 0) > 0 ? 'transparent' : MUTEDBG, color: MUTED, border: `1px dashed ${MUTED}` }}
+                                    title="Assign">
+                                    +
+                                  </button>
+                                </div>
                                 <button onClick={() => deleteItem(item.id)} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
                                   <Trash2 className="w-3 h-3" style={{ color: MUTED }} />
                                 </button>
                               </div>
                               {isAssigning && (
                                 <div className="ml-12 mb-2 px-4 flex flex-wrap gap-1.5">
-                                  {item.assigned_to && (
-                                    <button onClick={() => assignTask(item.id, null)}
-                                      className="px-2.5 py-1 rounded-full text-xs font-medium"
-                                      style={{ background: MUTEDBG, color: MUTED }}>
-                                      Unassign
-                                    </button>
-                                  )}
-                                  {familyMembers.map(m => (
-                                    <button key={m.id} onClick={() => assignTask(item.id, m.user_id)}
-                                      className="px-2.5 py-1 rounded-full text-xs font-medium transition-all"
-                                      style={{
-                                        background: item.assigned_to === m.user_id ? ACCENT : MUTEDBG,
-                                        color: item.assigned_to === m.user_id ? '#fff' : INK,
-                                      }}>
-                                      {m.full_name || m.email || 'Member'}
-                                    </button>
-                                  ))}
+                                  {[{ user_id: user?.id ?? '', full_name: 'Me', id: 'self', email: null, role: 'parent' }, ...familyMembers].map(m => {
+                                    const isSelected = (item.assigned_to_users ?? []).includes(m.user_id);
+                                    return (
+                                      <button key={m.user_id} onClick={() => toggleAssignUser(item.id, m.user_id)}
+                                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                                        style={{ background: isSelected ? ACCENT : MUTEDBG, color: isSelected ? '#fff' : INK }}>
+                                        {isSelected && <span>✓</span>}
+                                        {m.full_name || m.email || 'Member'}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -776,7 +823,7 @@ const Lists = () => {
       )}
 
       {/* ── Add Task / New List dialog ── */}
-      <Dialog open={isAddOpen} onOpenChange={open => { setIsAddOpen(open); if (!open) { setNewTitle(''); setNewDueDate(''); } }}>
+      <Dialog open={isAddOpen} onOpenChange={open => { setIsAddOpen(open); if (!open) { setNewTitle(''); setNewDueDate(''); setNewAssignees([]); setNewListVisibleTo('family'); } }}>
         <DialogContent className="w-[95%] sm:w-full p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>
@@ -805,6 +852,57 @@ const Lists = () => {
                   onChange={e => setNewDueDate(e.target.value)}
                 />
               </div>
+            )}
+            {scope === 'shared' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Visible to</Label>
+                  <div className="flex gap-2">
+                    {(['family', 'parents'] as const).map(v => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setNewListVisibleTo(v)}
+                        className="flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors"
+                        style={{
+                          background: newListVisibleTo === v ? ACCENT : MUTEDBG,
+                          color: newListVisibleTo === v ? '#fff' : MUTED,
+                          borderColor: newListVisibleTo === v ? ACCENT : 'transparent',
+                        }}
+                      >
+                        {v === 'family' ? 'Everyone' : 'Parents only'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {familyMembers.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Assign to</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[{ user_id: user?.id ?? '', full_name: 'Me' }, ...familyMembers].map(m => {
+                        const uid = m.user_id;
+                        const name = (m.full_name || 'Member').split(' ')[0];
+                        const selected = newAssignees.includes(uid);
+                        return (
+                          <button
+                            key={uid}
+                            type="button"
+                            onClick={() => setNewAssignees(prev => selected ? prev.filter(id => id !== uid) : [...prev, uid])}
+                            className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
+                            style={{
+                              background: selected ? ACCENT : MUTEDBG,
+                              color: selected ? '#fff' : MUTED,
+                              borderColor: selected ? ACCENT : 'transparent',
+                            }}
+                          >
+                            {name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <DialogFooter className="flex gap-3 pt-2">
