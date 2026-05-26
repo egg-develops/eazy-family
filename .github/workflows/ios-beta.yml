@@ -32,6 +32,12 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
 
+      - name: Patch Package.swift for Xcode 16.4 compatibility
+        run: |
+          sed -i '' 's/\.iOS(\.v18)/\.iOS(\.v17)/g' ios/App/CapApp-SPM/Package.swift
+          echo "Patched Package.swift:"
+          grep "platforms" ios/App/CapApp-SPM/Package.swift
+
       - name: Cache SPM packages
         uses: actions/cache@v4
         with:
