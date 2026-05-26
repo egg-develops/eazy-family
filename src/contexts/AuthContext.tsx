@@ -107,12 +107,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Set up auth state listener.
-    // INITIAL_SESSION fires as soon as Supabase resolves the stored session —
-    // this is the reliable way to clear the loading gate without a getSession()
-    // race or a blunt timeout.
+    // Backup: if no auth event fires within 3s, unblock loading anyway
+    const fallback = setTimeout(() => setLoading(false), 3000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        clearTimeout(fallback);
+        setLoading(false); // always unblock on any auth event
+
         if (event === 'INITIAL_SESSION') {
           setSession(session);
           setUser(session?.user ?? null);
@@ -128,7 +130,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               setIsPremium(premium);
             }
           }
-          setLoading(false);
           return;
         }
         setSession(session);
