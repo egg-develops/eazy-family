@@ -181,18 +181,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Handle OAuth deep-link callback on native (capacitor://localhost/app#access_token=...)
     let urlListener: { remove: () => void } | null = null;
+    let stateListener: { remove: () => void } | null = null;
     if (Capacitor.isNativePlatform()) {
       CapApp.addListener('appUrlOpen', async ({ url }) => {
         if (url.includes('access_token') || url.includes('code=')) {
           await supabase.auth.getSessionFromUrl({ url, storeSession: true });
         }
       }).then(h => { urlListener = h; });
+
+      // Refresh session when app returns to foreground after being killed/suspended —
+      // WKWebView doesn't always fire visibilitychange reliably on iPadOS
+      CapApp.addListener('appStateChange', async ({ isActive }) => {
+        if (!isActive) return;
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) return;
+        if (session) {
+          setSession(session);
+          setUser(session.user);
+        } else {
+          setSession(null);
+          setUser(null);
+        }
+      }).then(h => { stateListener = h; });
     }
 
     return () => {
       subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       urlListener?.remove();
+      stateListener?.remove();
     };
   }, []);
 

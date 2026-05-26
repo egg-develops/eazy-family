@@ -253,7 +253,11 @@ const Onboarding = () => {
   };
 
   // ── Guest / skip-account flows (Apple Guideline 5.1.1v) ───────────────────
+  const [skipLoading, setSkipLoading] = useState(false);
+
   const handleSkipAccount = async () => {
+    if (skipLoading) return;
+    setSkipLoading(true);
     const guestData = {
       userName: authName.trim() || 'Guest',
       location: state.location,
@@ -265,10 +269,14 @@ const Onboarding = () => {
     localStorage.setItem('eazy-family-onboarding', JSON.stringify(guestData));
     localStorage.removeItem(STORAGE_KEY);
     try {
-      await supabase.auth.signInAnonymously();
-      // onAuthStateChange fires SIGNED_IN → user becomes truthy → redirect to /app
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) throw error;
+      // onAuthStateChange fires SIGNED_IN → user becomes truthy → Onboarding redirects to /app
     } catch {
+      // Anonymous sign-in unavailable — navigate directly; the app handles unauthenticated state
       navigate('/app');
+    } finally {
+      setSkipLoading(false);
     }
   };
 
@@ -375,6 +383,7 @@ const Onboarding = () => {
             loading={authLoading2} error={authError}
             onSubmit={handleSignUp}
             onSkip={handleSkipAccount}
+            skipDisabled={skipLoading}
           />
         )}
         {screen === 10 && (
@@ -704,12 +713,12 @@ const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () =
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
-  loading, error, onSubmit, onSkip,
+  loading, error, onSubmit, onSkip, skipDisabled,
 }: {
   name: string; setName: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   password: string; setPassword: (v: string) => void;
-  loading: boolean; error: string; onSubmit: () => void; onSkip: () => void;
+  loading: boolean; error: string; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
 }) => {
   const oauthBrowserOpen = useRef(false);
 
@@ -830,9 +839,10 @@ const AccountScreen = ({
 
       <button
         onClick={onSkip}
-        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', textDecoration: 'underline', fontFamily: SANS }}
+        disabled={skipDisabled}
+        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: skipDisabled ? 'default' : 'pointer', padding: '4px 0', textDecoration: 'underline', fontFamily: SANS, opacity: skipDisabled ? 0.6 : 1 }}
       >
-        Continue without account →
+        {skipDisabled ? 'Please wait…' : 'Continue without account →'}
       </button>
     </div>
   );

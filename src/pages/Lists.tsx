@@ -120,6 +120,8 @@ const Lists = () => {
   const [addingToListId, setAddingToListId] = useState<string | null>(null);
   const [newListItemTitle, setNewListItemTitle] = useState('');
   const [assigningItemId, setAssigningItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
 
   // ── Shopping state ────────────────────────────────────────────────────────────
   const [newShoppingItem, setNewShoppingItem] = useState('');
@@ -198,6 +200,21 @@ const Lists = () => {
     await supabase.from('tasks').update({ assigned_to: userId }).eq('id', taskId);
     setAssigningItemId(null);
   };
+
+  const startEditing = (item: ListItem) => {
+    setEditingItemId(item.id);
+    setEditingTitle(item.title);
+  };
+
+  const commitEdit = async (id: string) => {
+    const trimmed = editingTitle.trim();
+    setEditingItemId(null);
+    if (!trimmed) return;
+    setItems(prev => prev.map(i => i.id === id ? { ...i, title: trimmed } : i));
+    await supabase.from('tasks').update({ title: trimmed }).eq('id', id);
+  };
+
+  const cancelEdit = () => { setEditingItemId(null); setEditingTitle(''); };
 
   const addTask = async () => {
     if (!newTitle.trim() || !user) return;
@@ -431,13 +448,26 @@ const Lists = () => {
                                 {task.completed && <Check className="w-2.5 h-2.5 text-white" />}
                               </button>
                               <div className="flex-1 min-w-0">
-                                <span className="text-sm" style={{
-                                  color: task.completed ? MUTED : INK,
-                                  textDecoration: task.completed ? 'line-through' : 'none',
-                                }}>
-                                  {task.title}
-                                </span>
-                                {task.due_date && (() => {
+                                {editingItemId === task.id ? (
+                                  <input
+                                    autoFocus
+                                    value={editingTitle}
+                                    onChange={e => setEditingTitle(e.target.value)}
+                                    onBlur={() => commitEdit(task.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') commitEdit(task.id); if (e.key === 'Escape') cancelEdit(); }}
+                                    className="w-full text-sm outline-none rounded px-1"
+                                    style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
+                                  />
+                                ) : (
+                                  <span
+                                    className="text-sm cursor-text"
+                                    style={{ color: task.completed ? MUTED : INK, textDecoration: task.completed ? 'line-through' : 'none' }}
+                                    onClick={() => !task.completed && startEditing(task)}
+                                  >
+                                    {task.title}
+                                  </span>
+                                )}
+                                {task.due_date && editingItemId !== task.id && (() => {
                                   const dd = new Date(task.due_date);
                                   const hasTime = dd.getHours() !== 0 || dd.getMinutes() !== 0;
                                   return (
@@ -520,12 +550,25 @@ const Lists = () => {
                             <div key={item.id}>
                               <div className="flex items-center gap-3 px-4 py-2.5" style={{ borderTop: `1px solid ${BORDER}` }}>
                                 <Checkbox checked={item.completed} onCheckedChange={() => toggleItem(item.id)} />
-                                <span className="flex-1 text-sm" style={{
-                                  color: item.completed ? MUTED : INK,
-                                  textDecoration: item.completed ? 'line-through' : 'none',
-                                }}>
-                                  {item.title}
-                                </span>
+                                {editingItemId === item.id ? (
+                                  <input
+                                    autoFocus
+                                    value={editingTitle}
+                                    onChange={e => setEditingTitle(e.target.value)}
+                                    onBlur={() => commitEdit(item.id)}
+                                    onKeyDown={e => { if (e.key === 'Enter') commitEdit(item.id); if (e.key === 'Escape') cancelEdit(); }}
+                                    className="flex-1 text-sm outline-none rounded px-1"
+                                    style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
+                                  />
+                                ) : (
+                                  <span
+                                    className="flex-1 text-sm cursor-text"
+                                    style={{ color: item.completed ? MUTED : INK, textDecoration: item.completed ? 'line-through' : 'none' }}
+                                    onClick={() => !item.completed && startEditing(item)}
+                                  >
+                                    {item.title}
+                                  </span>
+                                )}
                                 <button
                                   onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
                                   className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
@@ -664,7 +707,19 @@ const Lists = () => {
                       className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 appearance-none p-0"
                       style={{ border: `1.5px solid ${BORDER}`, background: 'transparent' }}>
                     </button>
-                    <span className="flex-1 text-sm" style={{ color: INK }}>{item.title}</span>
+                    {editingItemId === item.id ? (
+                      <input
+                        autoFocus
+                        value={editingTitle}
+                        onChange={e => setEditingTitle(e.target.value)}
+                        onBlur={() => commitEdit(item.id)}
+                        onKeyDown={e => { if (e.key === 'Enter') commitEdit(item.id); if (e.key === 'Escape') cancelEdit(); }}
+                        className="flex-1 text-sm outline-none rounded px-1"
+                        style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
+                      />
+                    ) : (
+                      <span className="flex-1 text-sm cursor-text" style={{ color: INK }} onClick={() => startEditing(item)}>{item.title}</span>
+                    )}
                     <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '1px 6px', gap: '4px' }}>
                       <button onClick={() => updateQty(item.id, -1)}
                         style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
