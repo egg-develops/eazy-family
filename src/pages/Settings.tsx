@@ -858,10 +858,10 @@ const Settings = () => {
             <div className="rounded-2xl divide-y" style={{ border: `1px solid ${DIVIDER}` }}>
               {[
                 'Unlimited family members',
-                'Unlimited calendars — sync Google, Apple & Outlook',
-                'Unlimited private & shared lists for Shopping and Tasks',
+                'Unlimited calendars — sync your Google, Apple, and Outlook',
+                'Unlimited private and shared lists for Shopping and Tasks',
                 'Full voice AI — EZ Button, your family\'s own assistant',
-                'Full intelligence layer — conflict detection, shopping frequency & task escalation',
+                'Full intelligence layer — conflict detection, shopping frequency, task escalation',
                 'Rituals & Journal — your private space for reflection',
                 'Morning Digest — daily & email',
               ].map(f => (

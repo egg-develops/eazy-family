@@ -21,12 +21,12 @@ const ANNUAL_SAVINGS = MONTHLY_PRICE * 12 - ANNUAL_PRICE;
 
 const features = [
   "Unlimited family members",
-  "Eazy AI Assistant — unlimited",
-  "Shared lists & real-time sync",
-  "Outlook & Google Calendar sync",
-  "Private family messaging",
-  "Create & manage family groups",
-  "Priority support · No ads, ever",
+  "Unlimited calendars — sync your Google, Apple, and Outlook",
+  "Unlimited private and shared lists for Shopping and Tasks",
+  "Full voice AI — EZ Button, your family's own assistant",
+  "Full intelligence layer — conflict detection, shopping frequency, task escalation",
+  "Rituals & Journal — your private space for reflection",
+  "Morning Digest — daily & email",
 ];
 
 interface UpgradeDialogProps {
@@ -209,8 +209,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   </span>
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
-                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>CHF {ANNUAL_PRICE}/yr</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
+                  <p className="text-[10px] mt-1 leading-snug" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    Billed annually<br />CHF {ANNUAL_PRICE}/yr
+                  </p>
                 </button>
                 {/* Monthly */}
                 <button
@@ -225,7 +227,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   <span className="text-[9px] mb-2 select-none" style={{ opacity: 0 }}>SAVE</span>
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
                 </button>
               </div>
               <button
