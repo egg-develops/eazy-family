@@ -140,7 +140,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 <Sparkles className="h-3.5 w-3.5" />
                 Keep your full access
               </div>
-              <p className="text-white/75 text-xs mt-2">Upgrade before your trial ends. Cancel anytime.</p>
+              <p className="text-white/75 text-xs mt-2">
+                Upgrade before your trial ends.<br />Cancel anytime.
+              </p>
             </>
           ) : (
             <>
@@ -148,7 +150,9 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 <Sparkles className="h-3.5 w-3.5" />
                 14-day free trial
               </div>
-              <p className="text-white/75 text-xs mt-2">No charge today. Cancel anytime.</p>
+              <p className="text-white/75 text-xs mt-2">
+                No charge today.<br />Cancel anytime.
+              </p>
             </>
           )}
         </div>
@@ -190,35 +194,38 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           ) : (
             /* Web: Stripe — show pricing cards + CTA (web only, never shown on iOS) */
             <>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5 items-stretch">
+                {/* Annual */}
                 <button
                   onClick={() => setBillingCycle('annual')}
-                  className="relative rounded-2xl p-3.5 text-left transition-all"
+                  className="rounded-2xl p-4 text-left flex flex-col transition-all"
                   style={{
                     border: billingCycle === 'annual' ? '2px solid #964735' : '2px solid hsl(var(--border))',
                     background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
                   }}
                 >
-                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#964735' }}>
-                      SAVE CHF {ANNUAL_SAVINGS}
-                    </span>
-                  </div>
-                  <p className="text-xs font-semibold mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
-                  <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
-                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month · CHF {ANNUAL_PRICE}/yr</p>
+                  <span className="self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mb-2" style={{ background: '#964735' }}>
+                    SAVE CHF {ANNUAL_SAVINGS}
+                  </span>
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
+                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>CHF {ANNUAL_PRICE}/yr</p>
                 </button>
+                {/* Monthly */}
                 <button
                   onClick={() => setBillingCycle('monthly')}
-                  className="rounded-2xl p-3.5 text-left transition-all"
+                  className="rounded-2xl p-4 text-left flex flex-col transition-all"
                   style={{
                     border: billingCycle === 'monthly' ? '2px solid #964735' : '2px solid hsl(var(--border))',
                     background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
                   }}
                 >
+                  {/* Invisible spacer matches Annual badge row so card heights align */}
+                  <span className="text-[9px] mb-2 select-none" style={{ opacity: 0 }}>SAVE</span>
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
-                  <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
-                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
                 </button>
               </div>
               <button

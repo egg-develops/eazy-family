@@ -383,18 +383,11 @@ const Settings = () => {
                       </div>
                     </div>
                     <UpgradeDialog>
-                      <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: '#964735' }}>
-                        View Plans & Pricing
+                      <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
+                        <Crown className="w-4 h-4" />
+                        Upgrade to Premium
                       </button>
                     </UpgradeDialog>
-                    {Capacitor.isNativePlatform() && (
-                      <button onClick={handleRestorePurchases} disabled={restoringPurchases}
-                        className="w-full py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
-                        style={{ color: MUTED, background: 'hsl(var(--muted))' }}>
-                        <RotateCcw className="w-3 h-3" />
-                        {restoringPurchases ? 'Restoring…' : 'Restore Purchases'}
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
