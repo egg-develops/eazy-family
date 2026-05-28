@@ -89,12 +89,6 @@ const AppLayout = () => {
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
 
-  const snapButtonPos = (left: number, bottom: number): { left: number; bottom: number } => {
-    const w = window.innerWidth;
-    const anchors = [24, w / 2 - 32, w - 88];
-    const nearestLeft = anchors.reduce((a, b) => Math.abs(a - left) < Math.abs(b - left) ? a : b);
-    return { left: nearestLeft, bottom: Math.max(16, Math.min(window.innerHeight - 80, bottom)) };
-  };
 
   const openMenu = () => {
     setMenuOpen(true);
@@ -172,12 +166,10 @@ const AppLayout = () => {
       isDragModeRef.current = false;
       setIsDragMode(false);
       if (dragMovedRef.current) {
-        // Snap to nearest horizontal anchor, preserve vertical position
         setButtonPos(prev => {
           if (!prev) return prev;
-          const snapped = snapButtonPos(prev.left, prev.bottom);
-          localStorage.setItem('eazy-button-pos', JSON.stringify(snapped));
-          return snapped;
+          localStorage.setItem('eazy-button-pos', JSON.stringify(prev));
+          return prev;
         });
         haptic('light');
       } else {
@@ -446,6 +438,7 @@ const AppLayout = () => {
         currentPath.includes('/lists') && new URLSearchParams(window.location.search).get('tab') === 'shopping' ? 'shopping' :
         currentPath.includes('/lists') ? 'task' :
         currentPath.includes('/calendar') ? 'event' :
+        currentPath.includes('/rituals') ? 'journal' :
         'event'
       } />}
 
