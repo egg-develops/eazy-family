@@ -338,6 +338,40 @@ const Settings = () => {
             </div>
           ) : (
             <>
+              {/* Family Premium status — top of account card */}
+              {isPremium ? (
+                <Row
+                  icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
+                  title="Family Premium — Active"
+                />
+              ) : (
+                <div style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+                  <div className="px-4 py-3.5 space-y-2.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3D0' }}>
+                        <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold" style={{ color: INK }}>Upgrade to Family Premium</p>
+                        <p className="text-xs" style={{ color: MUTED }}>Unlimited members, AI, calendar sync & more</p>
+                      </div>
+                    </div>
+                    <UpgradeDialog>
+                      <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: '#964735' }}>
+                        View Plans & Pricing
+                      </button>
+                    </UpgradeDialog>
+                    {Capacitor.isNativePlatform() && (
+                      <button onClick={handleRestorePurchases} disabled={restoringPurchases}
+                        className="w-full py-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
+                        style={{ color: MUTED, background: 'hsl(var(--muted))' }}>
+                        <RotateCcw className="w-3 h-3" />
+                        {restoringPurchases ? 'Restoring…' : 'Restore Purchases'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
               <Row
                 icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
                 title={displayName || user?.email?.split('@')[0] || 'You'}
@@ -369,6 +403,20 @@ const Settings = () => {
               />
             </>
           )}
+        </Card_>
+      </div>
+
+      {/* ── App Tour ── */}
+      <div className="space-y-2">
+        <SectionLabel>{t('settings.appTour.title')}</SectionLabel>
+        <Card_>
+          <Row
+            icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>✨</span>}
+            title={t('settings.appTour.featureSlides')}
+            subtitle={t('settings.appTour.featureSlidesSub')}
+            last
+            onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
+          />
         </Card_>
       </div>
 
@@ -590,20 +638,6 @@ const Settings = () => {
         </Card_>
       </div>
 
-      {/* ── App Tour ── */}
-      <div className="space-y-2">
-        <SectionLabel>{t('settings.appTour.title')}</SectionLabel>
-        <Card_>
-          <Row
-            icon={<span style={{ fontSize: '1rem', lineHeight: 1 }}>✨</span>}
-            title={t('settings.appTour.featureSlides')}
-            subtitle={t('settings.appTour.featureSlidesSub')}
-            last
-            onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
-          />
-        </Card_>
-      </div>
-
       {/* ── Help Center ── */}
       <div className="space-y-2">
         <SectionLabel>{t('settings.helpCenter.title')}</SectionLabel>
@@ -634,63 +668,6 @@ const Settings = () => {
             onClick={() => navigate('/privacy')}
           />
         </Card_>
-      </div>
-
-      {/* ── Family Plan / Subscription ── */}
-      <div className="space-y-2">
-        <SectionLabel>Family Plan</SectionLabel>
-        {isPremium ? (
-          <Card_>
-            <Row
-              icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
-              title="Family Plan — Active"
-              subtitle="Thank you for subscribing!"
-              last
-            />
-            {Capacitor.isNativePlatform() && (
-              <Row
-                icon={<RotateCcw className="w-4 h-4" style={{ color: MUTED }} />}
-                title="Restore Purchases"
-                right={restoringPurchases ? <span className="text-xs" style={{ color: MUTED }}>…</span> : <Arrow />}
-                last
-                onClick={handleRestorePurchases}
-              />
-            )}
-          </Card_>
-        ) : (
-          <Card_>
-            <div className="px-4 py-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3D0' }}>
-                  <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: INK }}>Upgrade to Family Plan</p>
-                  <p className="text-xs" style={{ color: MUTED }}>Unlock unlimited members, AI, calendar sync & more</p>
-                </div>
-              </div>
-              <UpgradeDialog>
-                <button
-                  className="w-full py-3 rounded-xl text-sm font-bold text-white"
-                  style={{ background: '#964735' }}
-                >
-                  View Plans & Pricing
-                </button>
-              </UpgradeDialog>
-              {Capacitor.isNativePlatform() && (
-                <button
-                  onClick={handleRestorePurchases}
-                  disabled={restoringPurchases}
-                  className="w-full py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
-                  style={{ color: MUTED, background: 'hsl(var(--muted))' }}
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  {restoringPurchases ? 'Restoring…' : 'Restore Purchases'}
-                </button>
-              )}
-            </div>
-          </Card_>
-        )}
       </div>
 
       {/* ── Sign Out ── */}
