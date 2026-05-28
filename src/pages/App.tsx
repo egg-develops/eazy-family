@@ -78,6 +78,10 @@ const AppLayout = () => {
   const [buttonPos, setButtonPos] = useState<{ left: number; bottom: number } | null>(() => {
     try { const s = localStorage.getItem('eazy-button-pos'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
+  const [ezIconOnly, setEzIconOnly] = useState(() => localStorage.getItem('eazy-ez-icon-only') === 'true');
+  const [ezMenuOrder, setEzMenuOrder] = useState<string[] | null>(() => {
+    try { const s = localStorage.getItem('eazy-ez-menu-order'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeMenuRef = useRef(false);
   const isDragModeRef = useRef(false);
@@ -88,6 +92,7 @@ const AppLayout = () => {
   const longPressOriginYRef = useRef(0);
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
+  const menuFlipRef = useRef(false);
 
 
   const openMenu = () => {
@@ -138,8 +143,10 @@ const AppLayout = () => {
     const swipeDelta = swipeStartYRef.current - e.clientY;
 
     if (!isSwipeMenuRef.current) {
-      // Detect upward swipe — open menu
-      if (swipeDelta > 20) {
+      const triggered = menuFlipRef.current
+        ? (e.clientY - swipeStartYRef.current) > 20   // flipped: swipe down
+        : swipeDelta > 20;                              // normal: swipe up
+      if (triggered) {
         if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
         isSwipeMenuRef.current = true;
         longPressOriginYRef.current = swipeStartYRef.current;
@@ -150,7 +157,9 @@ const AppLayout = () => {
     }
 
     // Menu open — track which item the finger is over
-    const deltaY = longPressOriginYRef.current - e.clientY;
+    const deltaY = menuFlipRef.current
+      ? (e.clientY - longPressOriginYRef.current)       // flipped: positive = swiping down
+      : (longPressOriginYRef.current - e.clientY);       // normal: positive = swiping up
     const newIndex = deltaY < 40 ? -1 : Math.min(Math.floor((deltaY - 40) / 56), menuItems.length - 1);
     if (newIndex !== prevActiveIndexRef.current) {
       prevActiveIndexRef.current = newIndex;
@@ -181,7 +190,7 @@ const AppLayout = () => {
     }
 
     if (isSwipeMenuRef.current) {
-      if (activeMenuIndex >= 0) navigate(menuItems[activeMenuIndex].path);
+      if (activeMenuIndex >= 0) navigate(orderedMenuItems[activeMenuIndex].path);
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
@@ -211,6 +220,16 @@ const AppLayout = () => {
       longPressTimer.current = null;
     }
   };
+
+  // Sync EZ button prefs when Settings changes them
+  useEffect(() => {
+    const handler = () => {
+      setEzIconOnly(localStorage.getItem('eazy-ez-icon-only') === 'true');
+      try { const s = localStorage.getItem('eazy-ez-menu-order'); setEzMenuOrder(s ? JSON.parse(s) : null); } catch {}
+    };
+    window.addEventListener('ez-prefs-changed', handler);
+    return () => window.removeEventListener('ez-prefs-changed', handler);
+  }, []);
 
   // Non-passive touchmove to block page scroll during swipe-up or drag.
   useEffect(() => {
@@ -259,6 +278,15 @@ const AppLayout = () => {
     { label: t('nav.rituals'), customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: t('nav.settings'), icon: Settings, path: '/app/settings' },
   ];
+
+  // Apply saved order from Settings
+  const orderedMenuItems = ezMenuOrder
+    ? (ezMenuOrder.map(p => menuItems.find(m => m.path === p)).filter(Boolean) as MenuItem[])
+    : menuItems;
+
+  // Flip menu downward when button is near the top (not enough space above)
+  const spaceAbove = buttonPos ? (window.innerHeight - buttonPos.bottom - 64) : window.innerHeight;
+  menuFlipRef.current = spaceAbove < 420;
 
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
@@ -367,13 +395,13 @@ const AppLayout = () => {
           {/* Menu items — above button, bottom-to-top */}
           {menuOpen && (
             <div
-              className="absolute flex flex-col-reverse items-center gap-2"
+              className={`absolute flex ${menuFlipRef.current ? 'flex-col' : 'flex-col-reverse'} items-center gap-2`}
               style={{
-                bottom: '76px',
-                // Clamp menu horizontally so it never clips the screen edge.
-                // Button container is at buttonPos.left; menu is 160px wide.
+                // Vertical: open above or below depending on available space
+                ...(menuFlipRef.current ? { top: '76px' } : { bottom: '76px' }),
+                // Horizontal: clamp so menu never clips screen edges
                 left: (() => {
-                  const MENU_W = 160;
+                  const MENU_W = ezIconOnly ? 64 : 160;
                   const PAD = 8;
                   const btnLeft = buttonPos?.left ?? (window.innerWidth / 2 - 32);
                   const ideal = btnLeft + 32 - MENU_W / 2;
@@ -383,32 +411,34 @@ const AppLayout = () => {
                 pointerEvents: menuVisible ? 'auto' : 'none',
               }}
             >
-              {menuItems.map((item, i) => {
+              {orderedMenuItems.map((item, i) => {
                 const isActive = activeMenuIndex === i;
                 const delay = i * 40;
                 const iconColor = isActive ? '#fff' : '#964735';
                 const iconEl = item.customIcon
                   ? item.customIcon(iconColor)
-                  : item.icon ? <item.icon className="w-4 h-4" style={{ color: iconColor }} /> : null;
+                  : item.icon ? <item.icon className={ezIconOnly ? 'w-5 h-5' : 'w-4 h-4'} style={{ color: iconColor }} /> : null;
+                const translateDir = menuFlipRef.current ? 'translateY(-16px)' : 'translateY(16px)';
                 return (
                   <button
                     key={item.path}
                     onClick={() => { closeMenu(); haptic('tap'); navigate(item.path); }}
-                    className={`${isActive ? 'ez-menu-pill-active' : 'ez-menu-pill'} flex items-center rounded-full font-semibold text-sm`}
+                    className={`${isActive ? 'ez-menu-pill-active' : 'ez-menu-pill'} flex items-center justify-center rounded-full font-semibold text-sm`}
                     style={{
-                      width: '160px',
-                      padding: '12px 16px',
+                      width: ezIconOnly ? '64px' : '160px',
+                      height: ezIconOnly ? '64px' : undefined,
+                      padding: ezIconOnly ? '0' : '12px 16px',
                       boxShadow: isActive
                         ? '0 4px 20px rgba(150,71,53,0.4)'
                         : '0 4px 16px rgba(28,28,24,0.15)',
-                      transform: isActive ? 'scale(1.06)' : (menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)'),
+                      transform: isActive ? 'scale(1.06)' : (menuVisible ? 'translateY(0) scale(1)' : `${translateDir} scale(0.9)`),
                       opacity: menuVisible ? 1 : 0,
                       transition: `transform 0.15s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background-color 0.1s ease`,
                     }}
                   >
-                    <span style={{ width: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
-                    <span style={{ flex: 1, textAlign: 'center' }}>{item.label}</span>
-                    <span style={{ width: '20px', flexShrink: 0 }} />
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
+                    {!ezIconOnly && <span style={{ flex: 1, textAlign: 'center' }}>{item.label}</span>}
+                    {!ezIconOnly && <span style={{ width: '20px', flexShrink: 0 }} />}
                   </button>
                 );
               })}

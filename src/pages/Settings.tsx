@@ -19,7 +19,7 @@ import {
 import {
   User, Mail, Share2, Lock, Globe, Sparkles, Database,
   Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
-  UserPlus, LogOut, X, Plus, Check, Trash2, Crown, RotateCcw
+  UserPlus, LogOut, X, Plus, Check, Trash2, Crown, RotateCcw, GripVertical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -152,6 +152,27 @@ const Settings = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
   const [showPremiumSheet, setShowPremiumSheet] = useState(false);
+
+  // EZ Button prefs
+  const EZ_DEFAULTS = [
+    { path: '/app', label: 'Home' },
+    { path: '/app/calendar', label: 'Calendar' },
+    { path: '/app/family-agenda', label: 'Family' },
+    { path: '/app/lists', label: 'Lists' },
+    { path: '/app/rituals', label: 'Rituals' },
+    { path: '/app/settings', label: 'Settings' },
+  ];
+  const [ezMenuOrder, setEzMenuOrder] = useState<string[]>(() => {
+    try { const s = localStorage.getItem('eazy-ez-menu-order'); if (s) return JSON.parse(s); } catch {}
+    return EZ_DEFAULTS.map(i => i.path);
+  });
+  const [ezIconOnly, setEzIconOnly] = useState(() => localStorage.getItem('eazy-ez-icon-only') === 'true');
+  const [ezDragIndex, setEzDragIndex] = useState<number | null>(null);
+  const [ezDragOver, setEzDragOver] = useState<number | null>(null);
+  const ezDragIndexRef = useRef<number | null>(null);
+  const ezDragOverRef = useRef<number | null>(null);
+  const ezItemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const orderedEzItems = ezMenuOrder.map(p => EZ_DEFAULTS.find(i => i.path === p) ?? EZ_DEFAULTS[0]);
 
   const handleRestorePurchases = async () => {
     setRestoringPurchases(true);
@@ -508,6 +529,90 @@ const Settings = () => {
               </div>
             )}
           </div>
+        </Card_>
+      </div>
+
+      {/* ── EZ Button ── */}
+      <div className="space-y-2">
+        <SectionLabel>EZ Button</SectionLabel>
+        <Card_>
+          {orderedEzItems.map((item, i) => (
+            <div
+              key={item.path}
+              ref={el => { ezItemRefs.current[i] = el; }}
+              className="flex items-center gap-3 px-4 py-3.5"
+              style={{
+                borderBottom: `1px solid ${DIVIDER}`,
+                background: ezDragOver === i && ezDragIndex !== i ? '#FDF3EE' : 'transparent',
+                opacity: ezDragIndex === i ? 0.35 : 1,
+                transition: 'background 0.1s, opacity 0.1s',
+              }}
+            >
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
+                <span className="text-sm font-bold" style={{ color: '#964735' }}>{item.label[0]}</span>
+              </div>
+              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{item.label}</p>
+              <div
+                className="p-1 touch-none"
+                style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
+                onPointerDown={e => {
+                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                  ezDragIndexRef.current = i;
+                  ezDragOverRef.current = i;
+                  setEzDragIndex(i);
+                  setEzDragOver(i);
+                }}
+                onPointerMove={e => {
+                  if (ezDragIndexRef.current === null) return;
+                  const y = e.clientY;
+                  let newOver = ezDragIndexRef.current;
+                  ezItemRefs.current.forEach((ref, idx) => {
+                    if (!ref) return;
+                    const r = ref.getBoundingClientRect();
+                    if (y >= r.top && y <= r.bottom) newOver = idx;
+                  });
+                  if (newOver !== ezDragOverRef.current) {
+                    ezDragOverRef.current = newOver;
+                    setEzDragOver(newOver);
+                  }
+                }}
+                onPointerUp={() => {
+                  const from = ezDragIndexRef.current;
+                  const to = ezDragOverRef.current;
+                  if (from !== null && to !== null && from !== to) {
+                    const next = [...ezMenuOrder];
+                    const [moved] = next.splice(from, 1);
+                    next.splice(to, 0, moved);
+                    setEzMenuOrder(next);
+                    localStorage.setItem('eazy-ez-menu-order', JSON.stringify(next));
+                    window.dispatchEvent(new Event('ez-prefs-changed'));
+                  }
+                  ezDragIndexRef.current = null;
+                  ezDragOverRef.current = null;
+                  setEzDragIndex(null);
+                  setEzDragOver(null);
+                }}
+                onPointerCancel={() => {
+                  ezDragIndexRef.current = null;
+                  setEzDragIndex(null);
+                  setEzDragOver(null);
+                }}
+              >
+                <GripVertical className="w-5 h-5" />
+              </div>
+            </div>
+          ))}
+          <Row
+            icon={<div className="w-4 h-4 rounded-full" style={{ background: '#964735' }} />}
+            title="Icon only"
+            subtitle="Circular buttons, no labels"
+            last
+            right={<Tog checked={ezIconOnly} onChange={v => {
+              setEzIconOnly(v);
+              localStorage.setItem('eazy-ez-icon-only', String(v));
+              window.dispatchEvent(new Event('ez-prefs-changed'));
+            }} />}
+          />
         </Card_>
       </div>
 
