@@ -624,6 +624,13 @@ const AppHome = () => {
   const [initialQuickTasks, setInitialQuickTasks] = useState<Array<{id: string, title: string, completed: boolean, due_date?: string | null}>>([]);
   const headerImageInputRef = useRef<HTMLInputElement>(null);
   const [showGalleryDialog, setShowGalleryDialog] = useState(false);
+  const [showTourBanner, setShowTourBanner] = useState(() =>
+    localStorage.getItem('eazy-tour-banner-dismissed') !== 'true'
+  );
+  const dismissTourBanner = () => {
+    setShowTourBanner(false);
+    localStorage.setItem('eazy-tour-banner-dismissed', 'true');
+  };
   const [carouselIndex, setCarouselIndex] = useState(() => {
     // Rotate carousel index on every homepage visit
     const key = 'eazy-carousel-visit-index';
@@ -969,6 +976,54 @@ const AppHome = () => {
         )}
       </div>
 
+      {/* Feature Tour Banner */}
+      {showTourBanner && (
+        <div
+          className="rounded-2xl relative overflow-hidden"
+          style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+        >
+          <button
+            onClick={dismissTourBanner}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-opacity hover:opacity-70"
+            style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+            aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="px-4 pt-4 pb-4 pr-12">
+            <div className="flex items-center gap-2 mb-3">
+              <img src="/logo.png" alt="" className="w-6 h-6 object-contain" style={{ filter: 'none' }} />
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
+                Welcome to Eazy.Family
+              </p>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              {([
+                ['📅', 'Shared family calendar & reminders'],
+                ['✅', 'Lists, tasks & shopping in one place'],
+                ['🟠', 'EZ Button — quick capture from anywhere'],
+                ['🌅', 'Daily rituals & family moments'],
+              ] as [string, string][]).map(([icon, text]) => (
+                <div key={text} className="flex items-center gap-2">
+                  <span style={{ fontSize: '0.875rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{icon}</span>
+                  <span className="text-xs leading-snug" style={{ color: 'hsl(var(--muted-foreground))' }}>{text}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => window.dispatchEvent(new Event('tutorial-slides'))}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+            >
+              Take the Tour →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* AI Intelligence Cards */}
 
       {/* Conflict Alert */}
@@ -1200,10 +1255,41 @@ const AppHome = () => {
       })()}
 
       {/* Gallery */}
-      {homeConfig.showGallery !== false && galleryImages.length > 0 && (
-        <div className="rounded-2xl overflow-hidden relative aspect-video" style={{ border: '1px solid hsl(var(--border))' }}>
-          <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
-        </div>
+      {homeConfig.showGallery !== false && (
+        galleryImages.length > 0 ? (
+          <div
+            className="rounded-2xl overflow-hidden relative aspect-video"
+            style={{ border: '1px solid hsl(var(--border))' }}
+            onClick={() => setShowGalleryDialog(true)}
+          >
+            <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
+            {galleryImages.length > 1 && (
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                {galleryImages.map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: i === carouselIndex % galleryImages.length ? '16px' : '5px',
+                      height: '5px',
+                      background: i === carouselIndex % galleryImages.length ? '#fff' : 'rgba(255,255,255,0.5)',
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowGalleryDialog(true)}
+            className="w-full rounded-2xl flex flex-col items-center justify-center gap-2 py-8 transition-colors hover:opacity-80"
+            style={{ border: '2px dashed hsl(var(--border))', background: 'hsl(var(--muted) / 0.4)' }}
+          >
+            <ImagePlus className="w-6 h-6" style={{ color: 'hsl(var(--muted-foreground))' }} />
+            <p className="text-xs font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Add family photos</p>
+          </button>
+        )
       )}
     </div>
   );

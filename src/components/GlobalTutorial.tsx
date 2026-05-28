@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 import { App as CapApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { FeatureTour } from "@/components/FeatureTour";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const GlobalTutorial = () => {
+  const { user } = useAuth();
   const [showSlides, setShowSlides] = useState(false);
 
+  // Show tour on first sign-in — keyed to user ID so each account gets its own first-run
   useEffect(() => {
-    // Show Features Tour on first sign-in (until explicitly completed)
-    const completed = localStorage.getItem("eazy-family-tutorial-completed") === "true";
-    if (!completed) {
-      localStorage.setItem("eazy-family-first-launch", "true");
+    if (!user) return;
+    const key = `eazy-family-tutorial-completed-${user.id}`;
+    if (localStorage.getItem(key) !== "true") {
       setShowSlides(true);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
-    // "tutorial-slides" event from Settings "Features Tour" row
+    // "tutorial-slides" event from Settings / homepage banner
     const onSlides = () => setShowSlides(true);
     window.addEventListener("tutorial-slides", onSlides as EventListener);
     return () => window.removeEventListener("tutorial-slides", onSlides as EventListener);
@@ -39,7 +41,7 @@ export const GlobalTutorial = () => {
   }, [showSlides]);
 
   const handleDone = () => {
-    localStorage.setItem("eazy-family-tutorial-completed", "true");
+    if (user) localStorage.setItem(`eazy-family-tutorial-completed-${user.id}`, "true");
     setShowSlides(false);
   };
 
