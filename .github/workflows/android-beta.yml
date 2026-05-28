@@ -58,6 +58,13 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
 
+      - name: Verify keystore
+        run: |
+          ls -la android/app/keystore.jks
+          keytool -list -keystore android/app/keystore.jks \
+            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -alias "${{ secrets.ANDROID_KEY_ALIAS }}" 2>&1 || true
+
       - name: Build release AAB
         working-directory: android
         env:
