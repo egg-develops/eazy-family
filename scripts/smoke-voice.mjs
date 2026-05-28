@@ -21,38 +21,49 @@ const DEMO_PASSWORD   = process.env.DEMO_PASSWORD ?? 'EZ.Simpsons2026';
 // Each entry: [phrase, expectedType, titleMustContain (lowercase), allowedTypes?]
 // allowedTypes: list of acceptable types (for genuinely ambiguous phrases)
 const CASES = [
-  // Shopping
-  ['add coffee to our shopping list',           'shopping', 'coffee'],
-  ['buy milk and eggs',                          'shopping', 'milk'],
-  ['grab bread from the store',                  'shopping', 'bread'],
-  ['pick up peanut butter',                      'shopping', 'peanut butter'],
-  ['add cottage cheese to the grocery list',    'shopping', 'cottage cheese'],
+  // Shopping – shared (family/our/no possessive)
+  ['add coffee to our shopping list',                  'shopping',          'coffee'],
+  ['buy milk and eggs',                                'shopping',          'milk'],
+  ['grab bread from the store',                        'shopping',          'bread'],
+  ['pick up peanut butter',                            'shopping',          'peanut butter'],
+  ['add cottage cheese to the grocery list',           'shopping',          'cottage cheese'],
+  ['add avocado to the family list',                   'shopping',          'avocado'],
+  ['we need olive oil',                                'shopping',          'olive oil'],
+
+  // Shopping – personal ("my list")
+  ['add cottage cheese to my shopping list',           'shopping_personal', 'cottage cheese'],
+  ['add wine to my list',                              'shopping_personal', 'wine'],
+  ['put oat milk on my grocery list',                  'shopping_personal', 'oat milk'],
+  ['get protein bars for me',                          'shopping_personal', 'protein'],
+  ['add deodorant to my groceries',                    'shopping_personal', 'deodorant'],
+
+  // Task verb + "my list" → task, NOT shopping_personal
+  ['add clean the terrace to my list',                 'task',              'terrace'],
+  ['add water the plants to my list',                  'task',              'water'],
 
   // Task
-  ['clean the kitchen',                          'task',     'clean'],
-  ['water the plants',                           'task',     'water'],
-  ['call the dentist',                           'task',     'dentist'],
-  ['mow the lawn',                               'task',     'lawn'],
-  ['fix the leaky tap',                          'task',     'tap'],
+  ['clean the kitchen',                                'task',              'clean'],
+  ['call the dentist',                                 'task',              'dentist'],
+  ['mow the lawn',                                     'task',              'lawn'],
+  ['fix the leaky tap',                                'task',              'tap'],
 
   // Event
-  ["doctor's appointment tomorrow at 3pm",       'event',    'doctor'],
-  ['lunch with Sarah on Friday',                 'event',    'sarah'],
-  ["Mia's birthday party next Saturday",         'event',    'birthday'],
-  ['meeting at 10am',                            'event',    'meeting'],
+  ["doctor's appointment tomorrow at 3pm",             'event',             'doctor'],
+  ['lunch with Sarah on Friday',                       'event',             'sarah'],
+  ["Mia's birthday party next Saturday",               'event',             'birthday'],
+  ['meeting at 10am',                                  'event',             'meeting'],
 
   // Reminder
-  ['remind me to call mom this evening',         'reminder', 'call'],
-  ["don't forget to pay the rent",               'reminder', 'rent'],
+  ['remind me to call mom this evening',               'reminder',          'call'],
+  ["don't forget to pay the rent",                     'reminder',          'rent'],
 
   // Journal / Ritual — AI may reasonably classify gratitude as either
-  ['today I felt really grateful for the kids',  'journal',  'grateful',  ['journal', 'ritual']],
-  // "dear diary" is a journal trigger; AI strips command phrase so title won't contain "diary"
-  ['dear diary, tough morning today',            'journal',  'morning'],
+  ['today I felt really grateful for the kids',        'journal',           'grateful',  ['journal', 'ritual']],
+  ['dear diary, tough morning today',                  'journal',           'morning'],
 
   // Ritual
-  ['morning routine: 10 minutes of meditation',  'ritual',   'meditation'],
-  ['daily habit: read 20 pages before bed',      'ritual',   'read'],
+  ['morning routine: 10 minutes of meditation',        'ritual',            'meditation'],
+  ['daily habit: read 20 pages before bed',            'ritual',            'read'],
 ];
 
 // ── System prompt (mirrors EZCapture.tsx) ───────────────────────────────────
@@ -62,7 +73,8 @@ function buildSystemPrompt() {
   return `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
 
 TYPE CLASSIFICATION — pick exactly one:
-- "shopping": items to BUY or PURCHASE (food, groceries, products, supplements). Triggered by: buy, get, grab, pick up X from store, add X to shopping list.
+- "shopping": items to BUY for the family/shared list. Triggered by: "our shopping list", "the shopping list", "family list", "grocery list", or no possessive ("buy milk", "pick up bread").
+- "shopping_personal": items to BUY for YOUR OWN personal list. Triggered by: "my shopping list", "my list", "my groceries", "for me". Example: "add wine to my list" → shopping_personal.
 - "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
 - "event": time-specific appointment, meeting, or occurrence with a date/time.
 - "reminder": "remind me to X".
@@ -71,7 +83,7 @@ TYPE CLASSIFICATION — pick exactly one:
 
 JSON fields:
 - type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
+- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping_personal". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
 - time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null

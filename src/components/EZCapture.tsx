@@ -38,11 +38,12 @@ const INK = 'hsl(var(--foreground))';
 const MUTED = 'hsl(var(--muted-foreground))';
 
 const TYPES: { id: CaptureType; label: string; icon: string }[] = [
-  { id: 'event',    label: 'Event',    icon: '📅' },
-  { id: 'task',     label: 'Task',     icon: '✓'  },
-  { id: 'shopping', label: 'Shopping', icon: '🛒' },
-  { id: 'reminder', label: 'Reminder', icon: '🔔' },
-  { id: 'journal',  label: 'Journal',  icon: '📝' },
+  { id: 'event',             label: 'Event',          icon: '📅' },
+  { id: 'task',              label: 'Task',            icon: '✓'  },
+  { id: 'shopping',          label: 'Shopping',        icon: '🛒' },
+  { id: 'shopping_personal', label: 'My List',         icon: '🛒' },
+  { id: 'reminder',          label: 'Reminder',        icon: '🔔' },
+  { id: 'journal',           label: 'Journal',         icon: '📝' },
 ];
 
 const LOCALE_TO_LANG: Record<string, string> = {
@@ -58,7 +59,8 @@ const LOCALE_TO_LANG: Record<string, string> = {
 const AI_MESSAGES: Record<CaptureType, (name: string) => string> = {
   event:    (n) => n ? `I'll add this to your calendar, ${n}.` : "I'll add this to your calendar.",
   task:     (n) => n ? `Got it, ${n}. Adding to your task list.` : "Got it. Adding to your task list.",
-  shopping: (n) => n ? `On the list, ${n}. Anything else?` : "On the list. Anything else?",
+  shopping:          (n) => n ? `On the family list, ${n}. Anything else?` : "On the family list. Anything else?",
+  shopping_personal: (n) => n ? `On your personal list, ${n}. Anything else?` : "On your personal list. Anything else?",
   reminder: (n) => n ? `I'll make sure you don't forget, ${n}.` : "I'll make sure you don't forget.",
   ritual:   (n) => n ? `Beautiful ritual, ${n}. I'll track this.` : "Beautiful ritual. I'll track this.",
   journal:  (n) => n ? `Your thoughts are safe with me, ${n}.` : "Your thoughts are safe with me.",
@@ -244,7 +246,8 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
 
 TYPE CLASSIFICATION — pick exactly one:
-- "shopping": items to BUY or PURCHASE (food, groceries, products, supplements). Triggered by: buy, get, grab, pick up X from store, add X to shopping list.
+- "shopping": items to BUY for the family/shared list. Triggered by: "our shopping list", "the shopping list", "family list", "grocery list", or no possessive ("buy milk", "pick up bread").
+- "shopping_personal": items to BUY for YOUR OWN personal list. Triggered by: "my shopping list", "my list", "my groceries", "for me". Example: "add wine to my list" → shopping_personal.
 - "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
 - "event": time-specific appointment, meeting, or occurrence with a date/time.
 - "reminder": "remind me to X".
@@ -253,7 +256,7 @@ TYPE CLASSIFICATION — pick exactly one:
 
 JSON fields:
 - type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
+- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping_personal". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
 - time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
 - endTime: "HH:MM" 24h or null
@@ -449,14 +452,16 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         toast({ title: taskItems.length > 1 ? `✓ ${taskItems.length} tasks added` : '✓ Task added' });
         onClose(); navigate('/app/lists');
 
-      } else if (entryType === 'shopping') {
+      } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) return;
+        const dbType = entryType === 'shopping_personal' ? 'shopping_personal' : 'shopping';
         const items = parsed.title.split(/[,;\n]|\band\b/i).map(s => s.trim()).filter(Boolean);
         await Promise.all(items.map(item =>
-          supabase.from('tasks').insert({ title: item, type: 'shopping', user_id: user.id, completed: false })
+          supabase.from('tasks').insert({ title: item, type: dbType, user_id: user.id, completed: false })
         ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: `✓ ${items.length} item${items.length > 1 ? 's' : ''} added` });
+        const listLabel = dbType === 'shopping_personal' ? 'personal list' : 'shopping list';
+        toast({ title: `✓ ${items.length} item${items.length > 1 ? 's' : ''} added to ${listLabel}` });
         onClose(); navigate('/app/lists?tab=shopping');
 
       } else if (entryType === 'ritual') {
