@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
 import { cloudSet } from "@/lib/preferencesSync";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface JournalEntry {
   id: string;
@@ -92,8 +93,8 @@ const Rituals = () => {
   const innerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const pendingRef = useRef<Set<string>>(new Set());
 
-  const recognitionRef = useRef<any>(null);
-  // Use refs for transcript capture — avoids closure/race-condition issues on iOS
+  const speech = useSpeechRecognition();
+  // Use refs for transcript capture — avoids closure/race-condition issues
   const capturedRef = useRef('');
   const savedRef = useRef(false);
   const DELETE_W = 72;
@@ -185,65 +186,38 @@ const Rituals = () => {
   };
 
   const stopListening = () => {
-    recognitionRef.current?.stop();
-    // onend handles save + state reset
+    speech.stop();
   };
 
   const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-
     capturedRef.current = '';
     savedRef.current = false;
     setVoiceText('');
-
-    const r = new SR();
-    r.lang = 'en-US';
-    r.interimResults = true;
-    r.continuous = false;   // iOS doesn't support continuous reliably
-    r.maxAlternatives = 1;
-
-    r.onresult = (e: any) => {
-      // Accumulate all result segments
-      let transcript = '';
-      for (let i = 0; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript;
-      }
-      capturedRef.current = transcript;
-      setVoiceText(transcript);
-
-      // Save immediately on final result — primary path for mobile (iOS fires
-      // onend before onresult in some WebKit versions, this avoids that race)
-      if (e.results[e.results.length - 1].isFinal && !savedRef.current) {
-        savedRef.current = true;
-        saveEntry(transcript);
-      }
-    };
-
-    r.onend = () => {
-      setIsListening(false);
-      setVoiceText('');
-      // Fallback: save if onresult final never fired (network/timeout failure on iOS)
-      if (!savedRef.current && capturedRef.current.trim()) {
-        savedRef.current = true;
-        saveEntry(capturedRef.current);
-      }
-      capturedRef.current = '';
-      savedRef.current = false;
-    };
-
-    r.onerror = (e: any) => {
-      if (e.error === 'aborted') return; // user tapped stop — normal
-      setIsListening(false);
-      setVoiceText('');
-      capturedRef.current = '';
-      savedRef.current = false;
-    };
-
-    r.start();
-    recognitionRef.current = r;
     setIsListening(true);
     haptic('light');
+    speech.start({
+      lang: 'en-US',
+      onResult: (transcript) => {
+        capturedRef.current = transcript;
+        setVoiceText(transcript);
+      },
+      onEnd: () => {
+        setIsListening(false);
+        setVoiceText('');
+        if (!savedRef.current && capturedRef.current.trim()) {
+          savedRef.current = true;
+          saveEntry(capturedRef.current);
+        }
+        capturedRef.current = '';
+        savedRef.current = false;
+      },
+      onError: () => {
+        setIsListening(false);
+        setVoiceText('');
+        capturedRef.current = '';
+        savedRef.current = false;
+      },
+    });
   };
 
   const saveEntry = (text: string) => {
@@ -340,7 +314,7 @@ const Rituals = () => {
         <div className="px-5 py-4 flex items-center gap-4">
           {/* Mic button with ping ring when active */}
           <div className="relative flex-shrink-0 w-11 h-11">
-            {isListening && (
+            {(isListening || speech.isTranscribing) && (
               <span
                 className="absolute inset-0 rounded-full animate-ping"
                 style={{ background: 'rgba(255,255,255,0.35)' }}
@@ -348,21 +322,27 @@ const Rituals = () => {
             )}
             <button
               onClick={isListening ? stopListening : startListening}
+              disabled={speech.isTranscribing}
               className="relative w-11 h-11 rounded-full flex items-center justify-center transition-all"
-              style={{ background: isListening ? TL : 'rgba(255,255,255,0.2)' }}
+              style={{ background: (isListening || speech.isTranscribing) ? TL : 'rgba(255,255,255,0.2)' }}
             >
-              <Mic className="w-5 h-5 text-white" />
+              {speech.isTranscribing
+                ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                : <Mic className="w-5 h-5 text-white" />
+              }
             </button>
           </div>
 
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm text-white">
-              {isListening ? t('rituals.tapToStop') : t('rituals.voiceJournal')}
+              {speech.isTranscribing ? 'Processing…' : isListening ? t('rituals.tapToStop') : t('rituals.voiceJournal')}
             </p>
             <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {isListening
-                ? (voiceText || t('rituals.listening'))
-                : t('rituals.tapMicToRecord')}
+              {speech.isTranscribing
+                ? 'Transcribing your entry…'
+                : isListening
+                  ? (voiceText || t('rituals.listening'))
+                  : t('rituals.tapMicToRecord')}
             </p>
           </div>
         </div>

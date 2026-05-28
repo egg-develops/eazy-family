@@ -538,7 +538,7 @@ const Lists = () => {
                 <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                   {[{ id: 'all', label: 'All' }, { id: 'me', label: 'Me' }, ...familyMembers.map(m => ({ id: m.user_id, label: (m.full_name || m.email || 'Member').split(' ')[0] }))].map(f => (
                     <button key={f.id} onClick={() => setAssigneeFilter(f.id)}
-                      className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                      className="flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
                       style={{ background: assigneeFilter === f.id ? ACCENT : MUTEDBG, color: assigneeFilter === f.id ? '#fff' : MUTED }}>
                       {f.label}
                     </button>

@@ -184,7 +184,7 @@ export const useSpeechRecognition = () => {
       // Voice Activity Detection — auto-stop after silence so users don't need to tap stop
       let hasSpeech = false;
       let silenceStartMs: number | null = null;
-      const SILENCE_STOP_MS = 1800;
+      const SILENCE_STOP_MS = 2800;
       const SPEECH_RMS_THRESHOLD = 0.015;
 
       if (analyser && timeDomainData && audioCtxRef.current) {
@@ -298,13 +298,12 @@ export const useSpeechRecognition = () => {
       recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsListening(true);
-      // 8s hard limit — VAD stops it sooner when working; 8s is the fallback for
-      // cases where VAD is unavailable (e.g. iOS Safari loses AudioContext context)
+      // 30s hard limit — VAD stops it sooner on silence; 30s covers longer journal entries
       autoStopTimerRef.current = setTimeout(() => {
         if (mediaRecorderRef.current?.state === 'recording') {
           mediaRecorderRef.current.stop();
         }
-      }, 8000);
+      }, 30000);
 
     } catch (err: any) {
       const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';

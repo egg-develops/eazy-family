@@ -822,14 +822,14 @@ const ToDoList = () => {
                     {allCategories.map(cat => (
                       <button key={cat} type="button"
                         onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
-                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                        className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                         style={{ background: selectedCategory === cat ? '#964735' : '#F1EDE7', color: selectedCategory === cat ? '#fff' : '#7A6660', border: `1px solid ${selectedCategory === cat ? '#964735' : '#DAC1BB'}` }}>
                         {cat}
                       </button>
                     ))}
                     <button type="button"
                       onClick={() => setShowNewCategoryField(p => !p)}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold"
+                      className="px-2 py-0.5 rounded-full text-[11px] font-semibold"
                       style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))', border: '1px dashed #DAC1BB' }}>
                       {t('todos.categoryNew')}
                     </button>

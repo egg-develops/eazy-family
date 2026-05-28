@@ -287,7 +287,7 @@ const EventCard = ({ msg }: { msg: ChannelMessage }) => {
       </div>
       <button
         onClick={() => navigate("/app/calendar")}
-        className="text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0"
+        className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
         style={{ background: SAGE_BG, color: SAGE }}
       >
         View
@@ -404,7 +404,7 @@ const PollCreator = ({
         {options.length < 4 && (
           <button
             onClick={addOption}
-            className="text-xs px-3 py-1.5 rounded-full"
+            className="text-[11px] px-2.5 py-1 rounded-full"
             style={{ background: SAGE_BG, color: SAGE }}
           >
             {t('familyAgenda.addOption')}
@@ -413,7 +413,7 @@ const PollCreator = ({
         <button
           onClick={() => valid && onCreate(question.trim(), options.filter(o => o.trim()))}
           disabled={!valid}
-          className="text-xs px-4 py-1.5 rounded-full font-semibold text-white ml-auto"
+          className="text-[11px] px-3 py-1 rounded-full font-semibold text-white ml-auto"
           style={{ background: valid ? TC : BORDER }}
         >
           {t('familyAgenda.createPollBtn')}
@@ -725,7 +725,7 @@ const FamilyAgenda = () => {
       {isQuietHours && (
         <div className="flex justify-center py-2" style={{ background: BG, flexShrink: 0 }}>
           <div
-            className="px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5"
+            className="px-3 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5"
             style={{ background: SAGE_BG, color: SAGE }}
           >
             🌙 {t('familyAgenda.quietHours')}

@@ -110,6 +110,8 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     });
   };
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
+  // Tracks an explicit pill selection by the user — takes priority over AI classification
+  const [userLockedType, setUserLockedType] = useState<CaptureType | null>(defaultType ?? null);
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -319,7 +321,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     const result = await parseWithAI();
 
     if (result && result.title) {
-      if (result.type) setType(result.type);
+      if (result.type && !userLockedType) setType(result.type);
 
       // Post-process: if a date phrase is still present in the AI's title (e.g. "the 29th"),
       // extract it via chrono and use it as the date (overriding a wrong AI date).
@@ -519,7 +521,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     } catch { return date; }
   };
 
-  const activeType = parsed?.type || type;
+  const activeType = userLockedType || parsed?.type || type;
 
   return (
     <div
@@ -580,7 +582,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 {TYPES.map(t => (
                   <button
                     key={t.id}
-                    onClick={() => setType(t.id)}
+                    onClick={() => { setType(t.id); setUserLockedType(t.id); }}
                     className="flex items-center gap-0.5 rounded-full font-medium transition-all"
                     style={{
                       padding: '1px 8px',
@@ -676,8 +678,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                     />
                   </div>
 
-                  {/* Editable date + time — always shown for event/reminder, shown when parsed for others */}
-                  {(activeType === 'event' || activeType === 'reminder' || parsed.date || parsed.time) && (
+                  {/* Editable date + time — only for event/reminder */}
+                  {(activeType === 'event' || activeType === 'reminder') && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
                       <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: MUTED }}>When</p>
                       <div className="flex gap-2">
