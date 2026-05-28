@@ -81,7 +81,6 @@ platform :android do
     upload_to_play_store(
       track: "internal",
       aab: "android/app/build/outputs/bundle/release/app-release.aab",
-      json_key: "fastlane/google-play-key.json",
       package_name: "eazy.family.app"
     )
     telegram_notify(message: "✅ Android beta uploaded to Play Store internal track")
