@@ -30,7 +30,8 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid authentication' }),

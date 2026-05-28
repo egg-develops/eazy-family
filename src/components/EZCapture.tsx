@@ -10,8 +10,7 @@ import { format } from "date-fns";
 import * as chrono from "chrono-node";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
-
-type CaptureType = 'event' | 'task' | 'shopping' | 'reminder' | 'ritual' | 'journal';
+import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
 type Step = 'capture' | 'processing' | 'preview';
 
 interface EZCaptureProps {
@@ -131,13 +130,8 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
   // Auto-detect type from keywords as user types
   useEffect(() => {
-    if (!text.trim()) return;
-    const lower = text.toLowerCase();
-    if (/\b(buy|get|pick up|need|grab)\b/.test(lower) || /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b/.test(lower)) { setType('shopping'); return; }
-    if (/\b(remind|don't forget|remember)\b/.test(lower)) { setType('reminder'); return; }
-    if (/\b(feel|journal|today i|grateful|reflection|dear diary)\b/.test(lower)) { setType('journal'); return; }
-    if (/\b(task|todo|to-do|finish|complete|clean|wash|water|organis|organiz|tidy|fix|repair|mow|vacuum|sweep|mop|call|email|book|return|drop\s*off|pick\s*up\s+\w+\s+from)\b/.test(lower)) { setType('task'); return; }
-    if (/\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+am|\d+pm|at \d)\b/.test(lower)) { setType('event'); }
+    if (!text.trim() || userLockedType) return;
+    setType(classifyText(text));
   }, [text]);
 
   const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
@@ -321,12 +315,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     const result = await parseWithAI();
 
     if (result && result.title) {
-      // Guard: never let AI override shopping/task keywords with 'event'
-      const lower = latestTextRef.current.toLowerCase();
-      const isObviouslyShopping = /\b(shopping list|grocery list|groceries|to buy)\b/.test(lower) || /\b(buy|get|grab|pick up)\b/.test(lower);
-      const isObviouslyTask = /\b(task|todo|to-do|clean|wash|water|organis|fix|repair|mow|vacuum|call|email|book)\b/.test(lower);
-      if (result.type === 'event' && isObviouslyShopping) result.type = 'shopping';
-      if (result.type === 'event' && isObviouslyTask && !result.date && !result.time) result.type = 'task';
+      // Guard: never let AI override obvious keyword classifications
+      if (result.type) {
+        result.type = guardAIType(result.type, latestTextRef.current, result.date ?? null, result.time ?? null);
+      }
       if (result.type && !userLockedType) setType(result.type);
 
       // Post-process: if a date phrase is still present in the AI's title (e.g. "the 29th"),
@@ -374,14 +366,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       const correctedTime = correctedHour != null
         ? `${String(correctedHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
-      const rawLower = raw.toLowerCase();
-      const fallbackType: CaptureType = userLockedType ?? (
-        /\b(shopping list|grocery list|groceries|to buy)\b/.test(rawLower) || /\b(buy|get|grab|pick up)\b/.test(rawLower) ? 'shopping' :
-        /\b(remind|don't forget|remember)\b/.test(rawLower) ? 'reminder' :
-        /\b(feel|journal|today i|grateful|reflection)\b/.test(rawLower) ? 'journal' :
-        /\b(clean|wash|water|organis|fix|repair|mow|vacuum|call|email|book)\b/.test(rawLower) ? 'task' :
-        type
-      );
+      const fallbackType: CaptureType = userLockedType ?? classifyText(raw);
       setParsed({
         type: fallbackType,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
@@ -678,6 +663,36 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                     ) : null;
                   })()}
                 </div>
+
+                {/* "Did you mean?" — shown when AI type disagrees with keyword classifier and user hasn't locked */}
+                {(() => {
+                  if (userLockedType || !parsed) return null;
+                  const suggested = classifyText(latestTextRef.current || text);
+                  if (suggested === activeType) return null;
+                  const suggestedMeta = TYPES.find(t => t.id === suggested);
+                  if (!suggestedMeta) return null;
+                  return (
+                    <div
+                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl text-xs"
+                      style={{ background: '#FEF3EE', border: '1px solid #F5C8B8' }}
+                    >
+                      <span style={{ color: '#7A6660' }}>
+                        Did you mean <span style={{ fontWeight: 600, color: '#964735' }}>{suggestedMeta.icon} {suggestedMeta.label}</span>?
+                      </span>
+                      <button
+                        onClick={() => {
+                          setParsed(p => p ? { ...p, type: suggested } : p);
+                          setType(suggested);
+                          setUserLockedType(suggested);
+                        }}
+                        className="rounded-full px-2.5 py-1 font-semibold flex-shrink-0"
+                        style={{ background: '#964735', color: '#fff', fontSize: '11px' }}
+                      >
+                        Switch
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 <div className="space-y-2">
                   {/* Editable title — textarea so long names wrap rather than overflow */}
