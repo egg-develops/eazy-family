@@ -730,10 +730,12 @@ const Settings = () => {
             <div className="rounded-2xl divide-y" style={{ border: `1px solid ${DIVIDER}` }}>
               {[
                 'Unlimited family members',
-                'Eazy AI Assistant — unlimited',
-                'Shared lists & real-time sync',
-                'Outlook & Google Calendar sync',
-                'Private family messaging',
+                'Unlimited calendars — sync Google, Apple & Outlook',
+                'Unlimited private & shared lists for Shopping and Tasks',
+                'Full voice AI — EZ Button, your family\'s own assistant',
+                'Full intelligence layer — conflict detection, shopping frequency & task escalation',
+                'Rituals & Journal — your private space for reflection',
+                'Morning Digest — daily & email',
               ].map(f => (
                 <div key={f} className="flex items-center gap-3 px-4 py-3">
                   <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#964735' }} />
