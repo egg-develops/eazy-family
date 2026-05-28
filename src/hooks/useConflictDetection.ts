@@ -1,19 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { detectConflicts, type CalEvent, type ConflictPair } from '@/lib/intelligence';
 
-export interface ConflictEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  location?: string;
-}
-
-export interface ConflictPair {
-  eventA: ConflictEvent;
-  eventB: ConflictEvent;
-}
+// Re-export so callers that import from this hook still work
+export type ConflictEvent = CalEvent;
+export type { ConflictPair };
 
 export function useConflictDetection() {
   const { user } = useAuth();
@@ -47,18 +39,7 @@ export function useConflictDetection() {
           location: e.location ?? undefined,
         }));
 
-        const found: ConflictPair[] = [];
-        for (let i = 0; i < normalized.length; i++) {
-          for (let j = i + 1; j < normalized.length; j++) {
-            const a = normalized[i];
-            const b = normalized[j];
-            if (a.start < b.end && b.start < a.end) {
-              found.push({ eventA: a, eventB: b });
-            }
-          }
-        }
-
-        setConflicts(found.slice(0, 3));
+        setConflicts(detectConflicts(normalized).slice(0, 3));
       } catch {
         // silent — never block UI for AI features
       } finally {

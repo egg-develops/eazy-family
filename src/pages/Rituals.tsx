@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { pickRitualEmoji } from "@/lib/intelligence";
 import { Mic, Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
@@ -28,37 +29,6 @@ const DEFAULT_RITUALS: Ritual[] = [
   { id: 'r5', title: 'Quality Time', emoji: '❤️', time: 'Evening' },
 ];
 
-const pickRitualEmoji = (title: string): string => {
-  const t = title.toLowerCase();
-  if (/morning|sunrise|wake|rise|start/.test(t)) return '☀️';
-  if (/evening|night|sunset|bed|sleep|wind/.test(t)) return '🌙';
-  if (/run|jog|workout|gym|sport|exercise|train|cardio/.test(t)) return '🏃';
-  if (/yoga|meditat|mindful|breath|calm|peace/.test(t)) return '🧘';
-  if (/love|hug|family|togeth|connect|bond|couple/.test(t)) return '❤️';
-  if (/read|book|learn|study|library/.test(t)) return '📚';
-  if (/music|sing|song|guitar|piano|instrument/.test(t)) return '🎵';
-  if (/garden|plant|nature|outdoor|fresh|walk|hike/.test(t)) return '🌿';
-  if (/tea|coffee|drink|water|juice|smoothie/.test(t)) return '🍵';
-  if (/journal|write|diary|reflect|note/.test(t)) return '✍️';
-  if (/strength|lift|push|pull|weight/.test(t)) return '💪';
-  if (/goal|target|focus|achieve|plan|review/.test(t)) return '🎯';
-  if (/clean|tidy|organiz|declutter/.test(t)) return '🧹';
-  if (/cook|meal|food|prep|lunch|dinner|breakfast/.test(t)) return '🍳';
-  if (/kid|child|parent|dad|mom|story|stoytime/.test(t)) return '👨‍👩‍👧';
-  if (/art|draw|paint|sketch|creat/.test(t)) return '🎨';
-  if (/bath|shower|groom|hygien|skin/.test(t)) return '🛁';
-  if (/swim|pool|lap/.test(t)) return '🏊';
-  if (/bike|cycl|ride/.test(t)) return '🚴';
-  if (/stretch|flex|mobility/.test(t)) return '🤸';
-  if (/dog|pet|animal/.test(t)) return '🐕';
-  if (/nap|rest|relax/.test(t)) return '💤';
-  if (/sun|dawn|dusk|golden/.test(t)) return '🌅';
-  if (/screen|phone|digital|detox/.test(t)) return '📵';
-  if (/vitamin|supplement|pill|health/.test(t)) return '💊';
-  if (/gratitude|thank|bless/.test(t)) return '🙏';
-  if (/15 min|quick|short|brief/.test(t)) return '⏱️';
-  return '✨';
-};
 
 const getJournalSettings = () => {
   try {

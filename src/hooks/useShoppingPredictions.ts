@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { computeShoppingPredictions, cleanPurchaseItem, type ShoppingPrediction } from '@/lib/intelligence';
 
-export interface ShoppingPrediction {
-  itemName: string;
-  avgDaysBetween: number;
-  daysSinceLast: number;
-  daysOverdue: number;
-}
+export type { ShoppingPrediction };
 
 export function useShoppingPredictions() {
   const { user } = useAuth();
@@ -28,44 +24,8 @@ export function useShoppingPredictions() {
 
         if (!data || data.length === 0) { setLoading(false); return; }
 
-        // Group by item name (normalised lowercase)
-        const byItem: Record<string, Date[]> = {};
-        for (const row of data) {
-          const key = row.item_name.toLowerCase();
-          if (!byItem[key]) byItem[key] = [];
-          byItem[key].push(new Date(row.purchased_at));
-        }
-
-        const now = Date.now();
-        const preds: ShoppingPrediction[] = [];
-
-        for (const [name, dates] of Object.entries(byItem)) {
-          if (dates.length < 2) continue;
-          // Skip multi-word phrases that are clearly unprocessed voice commands
-          if (name.split(' ').length > 4) continue;
-
-          // dates already desc; compute intervals
-          const intervals: number[] = [];
-          for (let i = 0; i < dates.length - 1; i++) {
-            const diff = (dates[i].getTime() - dates[i + 1].getTime()) / 86400000;
-            intervals.push(diff);
-          }
-          const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-          const daysSince = (now - dates[0].getTime()) / 86400000;
-          const overdue = daysSince - avg;
-
-          if (overdue > 0) {
-            preds.push({
-              itemName: name.charAt(0).toUpperCase() + name.slice(1),
-              avgDaysBetween: Math.round(avg),
-              daysSinceLast: Math.round(daysSince),
-              daysOverdue: Math.round(overdue),
-            });
-          }
-        }
-
-        preds.sort((a, b) => b.daysOverdue - a.daysOverdue);
-        setPredictions(preds.slice(0, 5));
+        const rows = data.map(r => ({ itemName: r.item_name, purchasedAt: new Date(r.purchased_at) }));
+        setPredictions(computeShoppingPredictions(rows, new Date()));
       } catch {
         // silent
       } finally {
@@ -80,12 +40,8 @@ export function useShoppingPredictions() {
 }
 
 export async function logPurchase(userId: string, itemName: string) {
-  const cleaned = itemName
-    .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
-    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '')
-    .toLowerCase().trim();
-  // Don't log full sentences or concatenated phrases
-  if (!cleaned || cleaned.split(' ').length > 4) return;
+  const cleaned = cleanPurchaseItem(itemName);
+  if (!cleaned) return;
   try {
     await supabase
       .from('shopping_purchase_history')

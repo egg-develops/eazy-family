@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { guessShoppingCategory, guessTaskCategory } from "@/lib/intelligence";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
@@ -63,25 +64,8 @@ type TimeTab = 'today' | 'upcoming' | 'complete';
 
 const SHOPPING_CATS = ['Produce', 'Dairy', 'Meat', 'Bakery', 'Household', 'Baby', 'Drinks', 'Other'];
 
-const guessShoppingCat = (title: string): string => {
-  const t = title.toLowerCase();
-  if (/apple|banana|orange|lemon|lime|lettuce|tomato|carrot|spinach|kale|fruit|vegetable|avocado|onion|garlic|potato|pepper|celery|cucumber/.test(t)) return 'Produce';
-  if (/\bmilk\b|cheese|yogurt|butter|cream|egg|dairy|oat milk|almond milk|soy milk/.test(t)) return 'Dairy';
-  if (/chicken|beef|pork|lamb|fish|salmon|tuna|shrimp|meat|turkey|ham|bacon|sausage/.test(t)) return 'Meat';
-  if (/bread|bagel|muffin|cake|pastry|croissant|oatmeal|oat|cereal|granola|flour|rice|pasta|noodle/.test(t)) return 'Bakery';
-  if (/paper|soap|detergent|cleaning|towel|toilet|sponge|trash|bag|foil|wrap|wipe/.test(t)) return 'Household';
-  if (/diaper|formula|baby|puree/.test(t)) return 'Baby';
-  if (/water|juice|coffee|tea|beer|wine|soda|drink|beverage|smoothie/.test(t)) return 'Drinks';
-  return 'Other';
-};
-
-const guessTaskCat = (title: string): string => {
-  const lower = title.toLowerCase();
-  if (/school|homework|lesson|class|pick up|drop off|practice|kid|child|son|daughter/.test(lower)) return 'Kids';
-  if (/budget|bill|review|admin|account|insurance|tax|bank|report/.test(lower)) return 'Admin';
-  if (/clean|laundry|water|plant|groceries|cook|kitchen|garden|fix|repair/.test(lower)) return 'Home';
-  return 'Personal';
-};
+const guessShoppingCat = guessShoppingCategory;
+const guessTaskCat = guessTaskCategory;
 
 const parseShoppingItems = (text: string): string[] =>
   text

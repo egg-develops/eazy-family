@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { scoreStaleTask } from '@/lib/intelligence';
 
 export interface StaleTask {
   id: string;
   title: string;
   daysSinceUpdate: number;
-  isEscalated: boolean; // 14+ days → suggest delegate/drop
+  isEscalated: boolean;
 }
 
 export function useStaleTaskDetection() {
@@ -32,11 +33,11 @@ export function useStaleTaskDetection() {
 
         if (!data) return;
 
-        const now = Date.now();
+        const now = new Date();
         setStaleTasks(
           data.map(t => {
-            const days = Math.round((now - new Date(t.updated_at).getTime()) / 86400000);
-            return { id: t.id, title: t.title, daysSinceUpdate: days, isEscalated: days >= 14 };
+            const { daysSinceUpdate, isEscalated } = scoreStaleTask(new Date(t.updated_at), now);
+            return { id: t.id, title: t.title, daysSinceUpdate, isEscalated };
           })
         );
       } catch {
