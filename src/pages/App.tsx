@@ -92,7 +92,6 @@ const AppLayout = () => {
   const longPressOriginYRef = useRef(0);
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
-  const menuFlipRef = useRef(false);
 
 
   const openMenu = () => {
@@ -132,9 +131,12 @@ const AppLayout = () => {
       dragMovedRef.current = true;
       const newLeft = e.clientX - 32;
       const newBottom = window.innerHeight - e.clientY - 32;
+      const itemH = ezIconOnly ? 64 : 48;
+      const menuH = orderedMenuItems.length * itemH + Math.max(0, orderedMenuItems.length - 1) * 8;
+      const maxBottom = Math.max(16, window.innerHeight - 76 - menuH - 24);
       const pos = {
         left: Math.max(8, Math.min(window.innerWidth - 72, newLeft)),
-        bottom: Math.max(16, Math.min(window.innerHeight - 80, newBottom)),
+        bottom: Math.max(16, Math.min(maxBottom, newBottom)),
       };
       setButtonPos(pos);
       return;
@@ -143,10 +145,7 @@ const AppLayout = () => {
     const swipeDelta = swipeStartYRef.current - e.clientY;
 
     if (!isSwipeMenuRef.current) {
-      const triggered = menuFlipRef.current
-        ? (e.clientY - swipeStartYRef.current) > 20   // flipped: swipe down
-        : swipeDelta > 20;                              // normal: swipe up
-      if (triggered) {
+      if (swipeDelta > 20) {
         if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
         isSwipeMenuRef.current = true;
         longPressOriginYRef.current = swipeStartYRef.current;
@@ -156,10 +155,8 @@ const AppLayout = () => {
       return;
     }
 
-    // Menu open — track which item the finger is over
-    const deltaY = menuFlipRef.current
-      ? (e.clientY - longPressOriginYRef.current)       // flipped: positive = swiping down
-      : (longPressOriginYRef.current - e.clientY);       // normal: positive = swiping up
+    // Menu open — track which item the finger is over (always upward swipe)
+    const deltaY = longPressOriginYRef.current - e.clientY;
     const newIndex = deltaY < 40 ? -1 : Math.min(Math.floor((deltaY - 40) / 56), menuItems.length - 1);
     if (newIndex !== prevActiveIndexRef.current) {
       prevActiveIndexRef.current = newIndex;
@@ -284,10 +281,6 @@ const AppLayout = () => {
     ? (ezMenuOrder.map(p => menuItems.find(m => m.path === p)).filter(Boolean) as MenuItem[])
     : menuItems;
 
-  // Flip menu downward when button is near the top (not enough space above)
-  const spaceAbove = buttonPos ? (window.innerHeight - buttonPos.bottom - 64) : window.innerHeight;
-  menuFlipRef.current = spaceAbove < 420;
-
   const navigationItems = [
     { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
     { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
@@ -395,10 +388,9 @@ const AppLayout = () => {
           {/* Menu items — above button, bottom-to-top */}
           {menuOpen && (
             <div
-              className={`absolute flex ${menuFlipRef.current ? 'flex-col' : 'flex-col-reverse'} items-center gap-2`}
+              className="absolute flex flex-col-reverse items-center gap-2"
               style={{
-                // Vertical: open above or below depending on available space
-                ...(menuFlipRef.current ? { top: '76px' } : { bottom: '76px' }),
+                bottom: '76px',
                 // Horizontal: clamp so menu never clips screen edges
                 left: (() => {
                   const MENU_W = ezIconOnly ? 64 : 160;
@@ -418,7 +410,6 @@ const AppLayout = () => {
                 const iconEl = item.customIcon
                   ? item.customIcon(iconColor)
                   : item.icon ? <item.icon className={ezIconOnly ? 'w-5 h-5' : 'w-4 h-4'} style={{ color: iconColor }} /> : null;
-                const translateDir = menuFlipRef.current ? 'translateY(-16px)' : 'translateY(16px)';
                 return (
                   <button
                     key={item.path}
@@ -431,7 +422,7 @@ const AppLayout = () => {
                       boxShadow: isActive
                         ? '0 4px 20px rgba(150,71,53,0.4)'
                         : '0 4px 16px rgba(28,28,24,0.15)',
-                      transform: isActive ? 'scale(1.06)' : (menuVisible ? 'translateY(0) scale(1)' : `${translateDir} scale(0.9)`),
+                      transform: isActive ? 'scale(1.06)' : (menuVisible ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.9)'),
                       opacity: menuVisible ? 1 : 0,
                       transition: `transform 0.15s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background-color 0.1s ease`,
                     }}
