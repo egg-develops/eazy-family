@@ -368,7 +368,20 @@ const AppLayout = () => {
           {menuOpen && (
             <div
               className="absolute flex flex-col-reverse items-center gap-2"
-              style={{ bottom: '76px', left: '50%', transform: 'translateX(-50%)', pointerEvents: menuVisible ? 'auto' : 'none' }}
+              style={{
+                bottom: '76px',
+                // Clamp menu horizontally so it never clips the screen edge.
+                // Button container is at buttonPos.left; menu is 160px wide.
+                left: (() => {
+                  const MENU_W = 160;
+                  const PAD = 8;
+                  const btnLeft = buttonPos?.left ?? (window.innerWidth / 2 - 32);
+                  const ideal = btnLeft + 32 - MENU_W / 2;
+                  const clamped = Math.max(PAD, Math.min(window.innerWidth - MENU_W - PAD, ideal));
+                  return `${clamped - btnLeft}px`;
+                })(),
+                pointerEvents: menuVisible ? 'auto' : 'none',
+              }}
             >
               {menuItems.map((item, i) => {
                 const isActive = activeMenuIndex === i;
