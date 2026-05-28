@@ -706,8 +706,8 @@ const Settings = () => {
       {showPremiumSheet && (
         <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.4)' }}
           onClick={() => setShowPremiumSheet(false)}>
-          <div className="w-full rounded-t-3xl p-6 space-y-5"
-            style={{ background: CARD }}
+          <div className="w-full rounded-t-3xl p-6 space-y-5 overflow-y-auto"
+            style={{ background: CARD, maxHeight: '80vh' }}
             onClick={e => e.stopPropagation()}>
 
             {/* Handle */}
