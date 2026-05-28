@@ -7,7 +7,7 @@ import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
-import { configureRC, identifyRCUser, resetRCUser, getRCIsPremium } from '@/lib/revenuecat';
+import { configureRC, identifyRCUser, resetRCUser, getRCIsPremium, getRCIsTrial } from '@/lib/revenuecat';
 
 
 // Dev bypass - set to true to skip authentication
@@ -27,6 +27,7 @@ interface AuthContextType {
   session: Session | null;
   subscriptionTier: string | null;
   isPremium: boolean;
+  isTrial: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: unknown }>;
   signIn: (email: string, password: string) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState(true); // default true; native overrides via RC
+  const [isTrial, setIsTrial] = useState(true); // default trial; becomes false once RC confirms paid
   const [loading, setLoading] = useState(DEV_BYPASS_AUTH ? false : true);
   const navigate = useNavigate();
 
@@ -65,8 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchSubscriptionTier(user.id);
     }
     if (Capacitor.isNativePlatform()) {
-      const premium = await getRCIsPremium();
+      const [premium, trial] = await Promise.all([getRCIsPremium(), getRCIsTrial()]);
       setIsPremium(premium);
+      setIsTrial(trial);
     }
   };
 
@@ -93,8 +96,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Re-check RevenueCat entitlement so trial expirations that
             // occurred while the app was backgrounded are caught immediately.
             if (Capacitor.isNativePlatform()) {
-              const premium = await getRCIsPremium();
+              const [premium, trial] = await Promise.all([getRCIsPremium(), getRCIsTrial()]);
               setIsPremium(premium);
+              setIsTrial(trial);
             }
           } else {
             // Only sign out if we got a definitive null (not a network failure)
@@ -126,8 +130,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             if (Capacitor.isNativePlatform()) {
               await identifyRCUser(session.user.id);
-              const premium = await getRCIsPremium();
+              const [premium, trial] = await Promise.all([getRCIsPremium(), getRCIsTrial()]);
               setIsPremium(premium);
+              setIsTrial(trial);
             }
           }
           return;
@@ -144,7 +149,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             if (Capacitor.isNativePlatform()) {
               identifyRCUser(session.user.id).then(() =>
-                getRCIsPremium().then(premium => setIsPremium(premium))
+                Promise.all([getRCIsPremium(), getRCIsTrial()]).then(([premium, trial]) => {
+                  setIsPremium(premium);
+                  setIsTrial(trial);
+                })
               );
             }
           }
@@ -156,6 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (Capacitor.isNativePlatform()) {
               resetRCUser().catch(() => {});
               setIsPremium(false);
+              setIsTrial(true);
             }
           }
         }
@@ -251,16 +260,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      subscriptionTier, 
-      isPremium, 
-      signUp, 
-      signIn, 
-      signOut, 
+    <AuthContext.Provider value={{
+      user,
+      session,
+      subscriptionTier,
+      isPremium,
+      isTrial,
+      signUp,
+      signIn,
+      signOut,
       refreshSubscription,
-      loading 
+      loading
     }}>
       {children}
     </AuthContext.Provider>

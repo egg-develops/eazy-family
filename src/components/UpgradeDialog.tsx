@@ -34,7 +34,7 @@ interface UpgradeDialogProps {
 }
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
-  const { isPremium, refreshSubscription } = useAuth();
+  const { isPremium, isTrial, refreshSubscription } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
@@ -47,7 +47,8 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     }
   }, [open]);
 
-  if (isPremium) return <>{children}</>;
+  // Already paid (not a trial) — nothing to upgrade
+  if (isPremium && !isTrial) return <>{children}</>;
 
   const annualPkg = rcPackages.find(p =>
     p.packageType === 'ANNUAL' || p.identifier.toLowerCase().includes('annual') || p.identifier === 'yearly'

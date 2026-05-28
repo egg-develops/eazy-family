@@ -39,6 +39,21 @@ export async function getRCIsPremium(): Promise<boolean> {
   }
 }
 
+/** Returns true if the active entitlement is a free trial or introductory offer (not a paid period). */
+export async function getRCIsTrial(): Promise<boolean> {
+  if (!isNative) return true; // web has no Stripe yet — everyone is in "trial" state
+  try {
+    const Purchases = await getRC();
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    const entitlement = customerInfo.entitlements.active[ENTITLEMENT];
+    if (!entitlement) return false;
+    const pt = (entitlement as any).periodType as string | undefined;
+    return pt === 'TRIAL' || pt === 'INTRO' || pt === 'trial' || pt === 'intro';
+  } catch {
+    return true; // safe default: show "Trial" on error rather than "Active"
+  }
+}
+
 export interface RCPackage {
   identifier: string;
   packageType: string;

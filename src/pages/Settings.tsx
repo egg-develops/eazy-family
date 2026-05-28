@@ -108,7 +108,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { signOut, user, isPremium, refreshSubscription } = useAuth();
+  const { signOut, user, isPremium, isTrial, refreshSubscription } = useAuth();
   const { setTheme, isDark } = useTheme();
 
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
@@ -364,8 +364,8 @@ const Settings = () => {
               {/* Family Premium status — top of account card */}
               {isPremium ? (
                 <Row
-                  icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
-                  title="Family Premium — Active"
+                  icon={<Crown className="w-4 h-4" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />}
+                  title={isTrial ? 'Family Premium — Trial' : 'Family Premium — Active'}
                   right={<Arrow />}
                   onClick={() => setShowPremiumSheet(true)}
                 />
@@ -820,16 +820,38 @@ const Settings = () => {
 
             {/* Header */}
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#FFF3D0' }}>
-                <Crown className="w-5 h-5" style={{ color: '#FFC861' }} />
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: isTrial ? '#FFF3E0' : '#FFF3D0' }}>
+                <Crown className="w-5 h-5" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />
               </div>
               <div>
                 <p className="font-bold text-base" style={{ color: INK }}>Family Premium</p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                  Active
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={
+                  isTrial
+                    ? { background: '#FFF0E0', color: '#964735' }
+                    : { background: '#E8F5E9', color: '#2E7D32' }
+                }>
+                  {isTrial ? 'Free Trial' : 'Active'}
                 </span>
               </div>
             </div>
+
+            {/* Trial upgrade CTA */}
+            {isTrial && (
+              <div className="rounded-2xl p-4 space-y-3" style={{ background: 'linear-gradient(135deg, #FDF3EE 0%, #FFF8F3 100%)', border: '1px solid #EDCFB8' }}>
+                <p className="text-sm font-semibold" style={{ color: '#964735' }}>You're on a free trial</p>
+                <p className="text-xs leading-relaxed" style={{ color: '#7A5040' }}>
+                  Upgrade to keep full access after your trial ends — shared calendars, lists, AI assistant, rituals and more.
+                </p>
+                <UpgradeDialog>
+                  <button
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold text-white"
+                    style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+                  >
+                    Upgrade to Premium
+                  </button>
+                </UpgradeDialog>
+              </div>
+            )}
 
             {/* Features */}
             <div className="rounded-2xl divide-y" style={{ border: `1px solid ${DIVIDER}` }}>
