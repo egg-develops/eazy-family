@@ -28,6 +28,7 @@ import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { restoreRCPurchases } from "@/lib/revenuecat";
+import { Browser } from "@capacitor/browser";
 
 interface HomeConfig {
   greeting: string;
@@ -150,6 +151,7 @@ const Settings = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
+  const [showPremiumSheet, setShowPremiumSheet] = useState(false);
 
   const handleRestorePurchases = async () => {
     setRestoringPurchases(true);
@@ -343,6 +345,8 @@ const Settings = () => {
                 <Row
                   icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
                   title="Family Premium — Active"
+                  right={<Arrow />}
+                  onClick={() => setShowPremiumSheet(true)}
                 />
               ) : (
                 <div style={{ borderBottom: `1px solid ${DIVIDER}` }}>
@@ -697,6 +701,86 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Family Premium sheet */}
+      {showPremiumSheet && (
+        <div className="fixed inset-0 z-50 flex items-end" style={{ background: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setShowPremiumSheet(false)}>
+          <div className="w-full rounded-t-3xl p-6 space-y-5"
+            style={{ background: CARD }}
+            onClick={e => e.stopPropagation()}>
+
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full mx-auto" style={{ background: '#DAC1BB' }} />
+
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: '#FFF3D0' }}>
+                <Crown className="w-5 h-5" style={{ color: '#FFC861' }} />
+              </div>
+              <div>
+                <p className="font-bold text-base" style={{ color: INK }}>Family Premium</p>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#E8F5E9', color: '#2E7D32' }}>
+                  Active
+                </span>
+              </div>
+            </div>
+
+            {/* Features */}
+            <div className="rounded-2xl divide-y" style={{ border: `1px solid ${DIVIDER}` }}>
+              {[
+                'Unlimited family members',
+                'Eazy AI Assistant — unlimited',
+                'Shared lists & real-time sync',
+                'Outlook & Google Calendar sync',
+                'Private family messaging',
+              ].map(f => (
+                <div key={f} className="flex items-center gap-3 px-4 py-3">
+                  <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#964735' }} />
+                  <p className="text-sm" style={{ color: INK }}>{f}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Manage subscription */}
+            <button
+              onClick={() => {
+                const url = 'https://apps.apple.com/account/subscriptions';
+                if (Capacitor.isNativePlatform()) {
+                  Browser.open({ url });
+                } else {
+                  window.open(url, '_blank');
+                }
+              }}
+              className="w-full py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
+              style={{ background: BG, color: INK, border: `1px solid ${DIVIDER}` }}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Manage Subscription
+            </button>
+
+            {/* Links */}
+            <div className="flex justify-center gap-5">
+              <button
+                onClick={() => Browser.open({ url: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/' })}
+                className="text-xs" style={{ color: MUTED }}>
+                Terms of Use
+              </button>
+              <button
+                onClick={() => Browser.open({ url: 'https://eazy.family/privacy' })}
+                className="text-xs" style={{ color: MUTED }}>
+                Privacy Policy
+              </button>
+            </div>
+
+            <button onClick={() => setShowPremiumSheet(false)}
+              className="w-full py-2.5 text-sm font-medium rounded-2xl"
+              style={{ color: MUTED, background: BG }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
