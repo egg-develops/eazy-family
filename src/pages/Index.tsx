@@ -209,8 +209,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  if (loading) return <Navigate to="/auth" replace />;
-  if (user) return <Navigate to="/app" replace />;
+  if (!loading && user) return <Navigate to="/app" replace />;
 
   const sec: React.CSSProperties = { padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` };
   const max: React.CSSProperties = { maxWidth: 860, margin: "0 auto" };
