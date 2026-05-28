@@ -210,9 +210,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
                   <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
-                  <p className="text-[10px] mt-1 leading-snug" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Billed annually<br />CHF {ANNUAL_PRICE}/yr
-                  </p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Billed annually · CHF {ANNUAL_PRICE}/yr</p>
                 </button>
                 {/* Monthly */}
                 <button
@@ -228,6 +226,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
                   <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Billed monthly</p>
                 </button>
               </div>
               <button
