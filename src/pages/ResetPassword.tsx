@@ -23,12 +23,26 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase fires PASSWORD_RECOVERY when the page loads with the reset token in the URL hash
+    // Check URL for recovery type (PKCE flow uses query params, legacy uses hash)
+    const hash = window.location.hash;
+    const params = new URLSearchParams(window.location.search);
+    const isRecoveryUrl =
+      hash.includes('type=recovery') ||
+      params.get('type') === 'recovery';
+
+    // If the URL signals recovery, mark ready immediately without waiting for the event
+    if (isRecoveryUrl) {
+      setReady(true);
+      return;
+    }
+
+    // Otherwise wait for the PASSWORD_RECOVERY auth event (fired when Supabase
+    // processes the token — may fire before or after this effect runs)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true);
     });
 
-    // If the session is already established (hash already consumed), mark ready
+    // Fallback: if a session already exists (event fired before component mounted)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
