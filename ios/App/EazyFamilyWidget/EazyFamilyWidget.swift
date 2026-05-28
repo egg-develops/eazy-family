@@ -37,6 +37,23 @@ private func accent(for mode: WidgetDisplayMode) -> Color {
     case .tasks:     return BLUE
     case .reminders: return GOLD
     case .rituals:   return TC
+    case .journal:   return TC
+    }
+}
+
+// MARK: - EF Brandmark
+
+struct EFBrandmark: View {
+    var size: CGFloat = 32
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.28)
+                .fill(TC)
+                .frame(width: size, height: size)
+            Text("EF")
+                .font(.system(size: size * 0.38, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+        }
     }
 }
 
@@ -105,13 +122,17 @@ struct UnauthenticatedView: View {
 struct EmptyStateView: View {
     let mode: WidgetDisplayMode
     var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: modeIcon(mode))
-                .font(.system(size: 22))
-                .foregroundStyle(accent(for: mode).opacity(0.4))
-            Text("Nothing here yet")
-                .font(.system(size: 12))
-                .foregroundStyle(MUTED)
+        Link(destination: URL(string: mode.deepLink)!) {
+            VStack(spacing: 8) {
+                EFBrandmark(size: 40)
+                Text("Eazy.Family")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundStyle(TC)
+                Text(mode.emptyMessage)
+                    .font(.system(size: 11))
+                    .foregroundStyle(MUTED)
+                    .multilineTextAlignment(.center)
+            }
         }
     }
 }
@@ -125,12 +146,10 @@ struct SmallWidgetView: View {
     var body: some View {
         Link(destination: URL(string: data.mode.deepLink)!) {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(accent(for: data.mode))
-                        .frame(width: 6, height: 6)
+                HStack(spacing: 6) {
+                    EFBrandmark(size: 22)
                     Text(data.mode.label)
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
                         .textCase(.uppercase)
                         .tracking(0.5)
                         .foregroundStyle(MUTED)
@@ -196,21 +215,25 @@ struct MediumWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                HStack(spacing: 6) {
-                    Image(systemName: modeIcon(data.mode))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(accent(for: data.mode))
+            HStack(spacing: 10) {
+                EFBrandmark(size: 32)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Eazy.Family")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(TC)
                     Text(data.mode.label)
-                        .font(.system(size: 11, weight: .bold))
-                        .textCase(.uppercase)
-                        .tracking(0.5)
-                        .foregroundStyle(MUTED)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(INK)
                 }
                 Spacer()
-                Text(entry.date, style: .time)
-                    .font(.system(size: 10))
-                    .foregroundStyle(MUTED.opacity(0.5))
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(accent(for: data.mode).opacity(0.12))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: modeIcon(data.mode))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(accent(for: data.mode))
+                }
             }
             .padding(.bottom, 10)
 
@@ -283,21 +306,25 @@ struct LargeWidgetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
+            HStack(spacing: 12) {
+                EFBrandmark(size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Eazy.Family")
-                        .font(.system(size: 10, weight: .bold))
-                        .textCase(.uppercase)
-                        .tracking(0.8)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(TC)
                     Text(data.mode.label)
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(INK)
                 }
                 Spacer()
-                Image(systemName: modeIcon(data.mode))
-                    .font(.system(size: 20))
-                    .foregroundStyle(accent(for: data.mode).opacity(0.2))
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(accent(for: data.mode).opacity(0.12))
+                        .frame(width: 38, height: 38)
+                    Image(systemName: modeIcon(data.mode))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(accent(for: data.mode))
+                }
             }
             .padding(.bottom, 12)
 
@@ -394,6 +421,7 @@ func modeIcon(_ mode: WidgetDisplayMode) -> String {
     case .tasks:     return "checkmark.square"
     case .reminders: return "bell"
     case .rituals:   return "sparkles"
+    case .journal:   return "mic.fill"
     }
 }
 
@@ -415,4 +443,16 @@ func modeIcon(_ mode: WidgetDisplayMode) -> String {
     EazyFamilyWidget()
 } timeline: {
     EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .tasks), isAuthenticated: true)
+}
+
+#Preview("Medium – Journal", as: .systemMedium) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .journal), isAuthenticated: true)
+}
+
+#Preview("Small – Empty", as: .systemSmall) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: nil, isAuthenticated: true)
 }

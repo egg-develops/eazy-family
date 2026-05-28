@@ -14,6 +14,7 @@ enum WidgetDisplayMode: String, CaseIterable, Codable {
     case tasks     = "tasks"
     case reminders = "reminders"
     case rituals   = "rituals"
+    case journal   = "journal"
 
     var label: String {
         switch self {
@@ -22,6 +23,7 @@ enum WidgetDisplayMode: String, CaseIterable, Codable {
         case .tasks:     return "Upcoming Tasks"
         case .reminders: return "Reminders"
         case .rituals:   return "Rituals"
+        case .journal:   return "Journal"
         }
     }
 
@@ -32,6 +34,7 @@ enum WidgetDisplayMode: String, CaseIterable, Codable {
         case .tasks:     return "eazy-family://app/todos"
         case .reminders: return "eazy-family://app/calendar"
         case .rituals:   return "eazy-family://app/rituals"
+        case .journal:   return "eazy-family://app/rituals?voice=1"
         }
     }
 
@@ -42,6 +45,18 @@ enum WidgetDisplayMode: String, CaseIterable, Codable {
         case .tasks:     return "#6E8FE5"
         case .reminders: return "#B88A00"
         case .rituals:   return "#964735"
+        case .journal:   return "#964735"
+        }
+    }
+
+    var emptyMessage: String {
+        switch self {
+        case .events:    return "No events today"
+        case .shopping:  return "List is empty"
+        case .tasks:     return "All tasks done"
+        case .reminders: return "Nothing coming up"
+        case .rituals:   return "Start your day"
+        case .journal:   return "Tap to add a voice note"
         }
     }
 }
@@ -103,6 +118,11 @@ extension WidgetEntryData {
             items = [
                 WidgetItem(id: "1", title: "Call the dentist", subtitle: "Today", completed: false, deepLink: mode.deepLink),
                 WidgetItem(id: "2", title: "Renew car insurance", subtitle: "Tomorrow", completed: false, deepLink: mode.deepLink),
+            ]
+        case .journal:
+            items = [
+                WidgetItem(id: "1", title: "Grateful for the morning walk", subtitle: "Yesterday", completed: false, deepLink: mode.deepLink),
+                WidgetItem(id: "2", title: "Kids were amazing today", subtitle: "2 days ago", completed: false, deepLink: mode.deepLink),
             ]
         case .reminders:
             items = [

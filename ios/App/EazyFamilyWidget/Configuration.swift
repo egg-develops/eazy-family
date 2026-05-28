@@ -9,6 +9,7 @@ enum DisplayModeOption: String, AppEnum {
     case tasks     = "tasks"
     case reminders = "reminders"
     case rituals   = "rituals"
+    case journal   = "journal"
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Display"
     static var caseDisplayRepresentations: [DisplayModeOption: DisplayRepresentation] = [
@@ -17,6 +18,7 @@ enum DisplayModeOption: String, AppEnum {
         .tasks:     "Upcoming Tasks",
         .reminders: "Reminders",
         .rituals:   "Rituals",
+        .journal:   "EZ Voice Journal",
     ]
 
     var asModel: WidgetDisplayMode { WidgetDisplayMode(rawValue: rawValue)! }
