@@ -171,27 +171,92 @@ const WheelCol = ({ items, idx, setIdx, width }: { items: string[]; idx: number;
   );
 };
 
-const EZWheelPicker = ({
-  dateItems, hourItems, minItems, ampmItems,
-  dayIdx, setDayIdx, hourIdx, setHourIdx, minIdx, setMinIdx, ampmIdx, setAmPmIdx,
+const HOUR_ITEMS = ['12','1','2','3','4','5','6','7','8','9','10','11'];
+const MIN_ITEMS = Array.from({length:60},(_,i) => String(i).padStart(2,'0'));
+const AMPM_ITEMS = ['AM','PM'];
+
+const EZDateTimePicker = ({
+  date, onDateChange, timeStr, onTimeChange, allDay,
 }: {
-  dateItems: string[]; hourItems: string[]; minItems: string[]; ampmItems: string[];
-  dayIdx: number; setDayIdx: (i: number) => void;
-  hourIdx: number; setHourIdx: (i: number) => void;
-  minIdx: number; setMinIdx: (i: number) => void;
-  ampmIdx: number; setAmPmIdx: (i: number) => void;
-}) => (
-  <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative', background: 'hsl(var(--muted))', overflow: 'hidden' }}>
-    {/* Center selection highlight */}
-    <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
-    <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
-      <WheelCol items={dateItems} idx={dayIdx} setIdx={setDayIdx} width={110} />
-      <WheelCol items={hourItems} idx={hourIdx} setIdx={setHourIdx} width={48} />
-      <WheelCol items={minItems} idx={minIdx} setIdx={setMinIdx} width={48} />
-      <WheelCol items={ampmItems} idx={ampmIdx} setIdx={setAmPmIdx} width={48} />
+  date: Date;
+  onDateChange: (d: Date) => void;
+  timeStr: string;
+  onTimeChange: (t: string) => void;
+  allDay?: boolean;
+}) => {
+  const [viewMonth, setViewMonth] = useState(() => startOfMonth(date));
+  const parseTime = (t: string) => {
+    const [hStr, mStr] = t.split(':');
+    const hh = parseInt(hStr) || 9;
+    const mm = parseInt(mStr) || 0;
+    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+    return { hourIdx: h12 === 12 ? 0 : h12, minIdx: Math.min(mm, 59), ampmIdx: hh >= 12 ? 1 : 0 };
+  };
+  const init = parseTime(timeStr);
+  const [hourIdx, setHourIdx] = useState(init.hourIdx);
+  const [minIdx, setMinIdx] = useState(init.minIdx);
+  const [ampmIdx, setAmpmIdx] = useState(init.ampmIdx);
+  useEffect(() => {
+    const h12 = hourIdx === 0 ? 12 : hourIdx;
+    const ap = ampmIdx === 0 ? 'AM' : 'PM';
+    let h24 = h12;
+    if (ap === 'AM' && h12 === 12) h24 = 0;
+    if (ap === 'PM' && h12 !== 12) h24 = h12 + 12;
+    onTimeChange(`${String(h24).padStart(2,'0')}:${String(minIdx).padStart(2,'0')}`);
+  }, [hourIdx, minIdx, ampmIdx]);
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  return (
+    <div style={{ borderTop: '1px solid #F1EDE7', background: 'hsl(var(--muted))' }}>
+      <div className="flex items-center justify-between px-4 py-2">
+        <button type="button" onClick={() => setViewMonth(new Date(year, month - 1, 1))}
+          className="w-8 h-8 flex items-center justify-center rounded-full" style={{ color: '#964735' }}>
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{format(viewMonth, 'MMMM yyyy')}</span>
+        <button type="button" onClick={() => setViewMonth(new Date(year, month + 1, 1))}
+          className="w-8 h-8 flex items-center justify-center rounded-full" style={{ color: '#964735' }}>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="grid grid-cols-7 px-3 pb-1">
+        {['S','M','T','W','T','F','S'].map((d, i) => (
+          <div key={i} className="text-center text-[10px] font-semibold py-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 px-3 pb-3">
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const thisDate = new Date(year, month, day);
+          const isSelected = isSameDay(thisDate, date);
+          const todayMark = isToday(thisDate);
+          return (
+            <button key={day} type="button" onClick={() => onDateChange(new Date(year, month, day))}
+              className="flex items-center justify-center rounded-full mx-auto transition-all"
+              style={{ width: 30, height: 30, background: isSelected ? '#964735' : todayMark ? 'rgba(150,71,53,0.12)' : 'transparent',
+                color: isSelected ? '#fff' : todayMark ? '#964735' : 'hsl(var(--foreground))',
+                fontWeight: isSelected || todayMark ? 600 : 400, fontSize: 13 }}>
+              {day}
+            </button>
+          );
+        })}
+      </div>
+      {!allDay && (
+        <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
+            <WheelCol items={HOUR_ITEMS} idx={hourIdx} setIdx={setHourIdx} width={48} />
+            <WheelCol items={MIN_ITEMS} idx={minIdx} setIdx={setMinIdx} width={48} />
+            <WheelCol items={AMPM_ITEMS} idx={ampmIdx} setIdx={setAmpmIdx} width={48} />
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const Calendar = () => {
   const { t } = useTranslation();
@@ -377,14 +442,6 @@ const Calendar = () => {
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [eventNotes, setEventNotes] = useState('');
   const [eventReminder, setEventReminder] = useState('15min');
-  const [startDayIdx, setStartDayIdx] = useState(30);
-  const [startHourIdx, setStartHourIdx] = useState(8);
-  const [startMinIdx, setStartMinIdx] = useState(0);
-  const [startAmPmIdx, setStartAmPmIdx] = useState(0);
-  const [endDayIdx, setEndDayIdx] = useState(30);
-  const [endHourIdx, setEndHourIdx] = useState(9);
-  const [endMinIdx, setEndMinIdx] = useState(0);
-  const [endAmPmIdx, setEndAmPmIdx] = useState(0);
   const [eventAttendees, setEventAttendees] = useState<string[]>([]);
   const [eventColor, setEventColor] = useState('#964735');
   const [eventVisibleTo, setEventVisibleTo] = useState<'everyone' | 'parents' | 'me'>('everyone');
@@ -690,79 +747,19 @@ const Calendar = () => {
     ));
   };
 
-  // Generate 90-day range of date strings centered on today
-  const DATE_ITEMS = (() => {
-    const items: string[] = [];
-    const base = new Date(); base.setHours(0,0,0,0);
-    for (let d = -30; d < 60; d++) {
-      const dt = new Date(base); dt.setDate(base.getDate() + d);
-      items.push(format(dt, 'MMM d'));
-    }
-    return items;
-  })();
-  const HOUR_ITEMS = ['12','1','2','3','4','5','6','7','8','9','10','11'];
-  const MIN_ITEMS = Array.from({length:60},(_,i) => String(i).padStart(2,'0'));
-  const AMPM_ITEMS = ['AM','PM'];
-
-  const parsePicker = (date: Date, timeStr: string) => {
-    const today = new Date(); today.setHours(0,0,0,0);
-    const d = new Date(date); d.setHours(0,0,0,0);
-    const diff = Math.round((d.getTime()-today.getTime())/86400000);
-    const dayIdx = Math.max(0, Math.min(diff+30, 89));
-    const parts = timeStr.split(':');
-    const hh = parseInt(parts[0]||'9'); const mm = parseInt(parts[1]||'0');
-    const h12 = hh===0?12:hh>12?hh-12:hh;
-    const hourIdx = h12===12?0:h12;
-    return { dayIdx, hourIdx, minIdx: Math.min(mm,59), ampmIdx: hh>=12?1:0 };
-  };
-
-  const pickerToDateTime = (dayIdx: number, hourIdx: number, minIdx: number, ampmIdx: number): [Date, string] => {
-    const base = new Date(); base.setHours(0,0,0,0);
-    base.setDate(base.getDate()+dayIdx-30);
-    const h12 = hourIdx===0?12:hourIdx;
-    const ampm = ampmIdx===0?'AM':'PM';
-    let h24 = h12;
-    if (ampm==='AM'&&h12===12) h24=0;
-    if (ampm==='PM'&&h12!==12) h24=h12+12;
-    return [new Date(base), `${String(h24).padStart(2,'0')}:${String(minIdx).padStart(2,'0')}`];
-  };
-
-  useEffect(()=>{
+  // Bump end forward when start moves past it
+  useEffect(() => {
     if (!showStartPicker) return;
-    const {dayIdx,hourIdx,minIdx,ampmIdx} = parsePicker(eventStartDate,eventStartTime);
-    setStartDayIdx(dayIdx); setStartHourIdx(hourIdx); setStartMinIdx(minIdx); setStartAmPmIdx(ampmIdx);
-  },[showStartPicker]);
-
-  useEffect(()=>{
-    if (!showStartPicker) return;
-    const [d,t] = pickerToDateTime(startDayIdx,startHourIdx,startMinIdx,startAmPmIdx);
-    setEventStartDate(d); setEventStartTime(t);
-    // Bump end forward if it would be before (or equal to) the new start
-    const [startParts, endParts] = [t.split(':').map(Number), eventEndTime.split(':').map(Number)];
-    const startMins = d.getTime() + (startParts[0]*60+startParts[1])*60000;
-    const endD = new Date(eventEndDate); endD.setHours(0,0,0,0);
-    const endMins = endD.getTime() + (endParts[0]*60+endParts[1])*60000;
-    if (startMins >= endMins) {
-      const newEnd = new Date(startMins + 3600000); // +1 hour
-      const newEndDate = new Date(newEnd); newEndDate.setHours(0,0,0,0);
-      const eh = newEnd.getHours();
-      const em = newEnd.getMinutes();
-      setEventEndDate(newEndDate);
-      setEventEndTime(`${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`);
+    const [sh, sm] = eventStartTime.split(':').map(Number);
+    const startMs = new Date(eventStartDate).setHours(sh, sm, 0, 0);
+    const [eh, em] = eventEndTime.split(':').map(Number);
+    const endMs = new Date(eventEndDate).setHours(eh, em, 0, 0);
+    if (startMs >= endMs) {
+      const newEnd = new Date(startMs + 3600000);
+      setEventEndDate(new Date(newEnd.getFullYear(), newEnd.getMonth(), newEnd.getDate()));
+      setEventEndTime(`${String(newEnd.getHours()).padStart(2,'0')}:${String(newEnd.getMinutes()).padStart(2,'0')}`);
     }
-  },[startDayIdx,startHourIdx,startMinIdx,startAmPmIdx]);
-
-  useEffect(()=>{
-    if (!showEndPicker) return;
-    const {dayIdx,hourIdx,minIdx,ampmIdx} = parsePicker(eventEndDate,eventEndTime);
-    setEndDayIdx(dayIdx); setEndHourIdx(hourIdx); setEndMinIdx(minIdx); setEndAmPmIdx(ampmIdx);
-  },[showEndPicker]);
-
-  useEffect(()=>{
-    if (!showEndPicker) return;
-    const [d,t] = pickerToDateTime(endDayIdx,endHourIdx,endMinIdx,endAmPmIdx);
-    setEventEndDate(d); setEventEndTime(t);
-  },[endDayIdx,endHourIdx,endMinIdx,endAmPmIdx]);
+  }, [eventStartDate, eventStartTime]);
 
   const resetEventForm = () => {
     setEventTitle("");
@@ -1538,7 +1535,7 @@ const Calendar = () => {
             <div className="grid grid-cols-7">
               {days.map(day => {
                 const isCurrentMonth = day.getMonth() === selectedDate.getMonth();
-                const hasEvents = getItemsForDate(day).length > 0;
+                const dayItems = isCurrentMonth ? getItemsForDate(day) : [];
                 const isSelected = isSameDay(day, selectedDate);
                 const isTodayDate = isToday(day);
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
@@ -1559,8 +1556,15 @@ const Calendar = () => {
                     >
                       {format(day, 'd')}
                     </span>
-                    {hasEvents && (
-                      <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
+                    {dayItems.length > 0 && (
+                      <div className="flex gap-px mt-0.5 px-1 w-full justify-center">
+                        {dayItems.slice(0, 3).map((item, idx) => {
+                          const color = item.type === 'event'
+                            ? ((item as Event).tag && TAGS[(item as Event).tag!] ? TAGS[(item as Event).tag!].border : (item as Event).color || '#964735')
+                            : '#FFC861';
+                          return <div key={idx} className="h-1 rounded-full flex-1 max-w-[10px]" style={{ background: color }} />;
+                        })}
+                      </div>
                     )}
                   </button>
                 );
@@ -1649,16 +1653,23 @@ const Calendar = () => {
                 const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66', label: 'Event' };
                 return (
                   <div key={ev.id}
-                    className="flex gap-3 rounded-2xl p-4"
+                    className="flex gap-3 rounded-2xl overflow-hidden"
                     style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', cursor: ev.id.startsWith('apple-device-') ? 'default' : 'pointer' }}
                     onClick={() => !ev.id.startsWith('apple-device-') && handleEditItem(ev)}
                   >
+                    <div className="self-stretch flex-shrink-0" style={{ background: ev.color || '#964735', width: 5 }} />
+                    <div className="flex gap-3 flex-1 p-4">
                     <div className="text-right flex-shrink-0 w-12">
                       <span className="text-xs font-semibold whitespace-pre-line" style={{ color: ev.color || '#964735' }}>{timeStr}</span>
                     </div>
-                    <div className="w-px self-stretch" style={{ background: ev.color || '#964735', borderRadius: '1px' }} />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                      {ev.tag && (
+                        <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1"
+                          style={{ background: tagStyle.bg, color: tagStyle.dot }}>
+                          {ev.tag === 'custom' ? (ev.customTag || 'Custom') : tagStyle.label}
+                        </span>
+                      )}
                       {ev.location && <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.location}</p>}
                       {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Apple Calendar</p>}
                     </div>
@@ -1670,6 +1681,7 @@ const Calendar = () => {
                         <X className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
                       </button>
                     )}
+                    </div>
                   </div>
                 );
               })}
@@ -1950,12 +1962,10 @@ const Calendar = () => {
                     </div>
                   </button>
                   {showStartPicker && (
-                    <EZWheelPicker
-                      dateItems={DATE_ITEMS} hourItems={HOUR_ITEMS} minItems={MIN_ITEMS} ampmItems={AMPM_ITEMS}
-                      dayIdx={startDayIdx} setDayIdx={setStartDayIdx}
-                      hourIdx={startHourIdx} setHourIdx={setStartHourIdx}
-                      minIdx={startMinIdx} setMinIdx={setStartMinIdx}
-                      ampmIdx={startAmPmIdx} setAmPmIdx={setStartAmPmIdx}
+                    <EZDateTimePicker
+                      date={eventStartDate} onDateChange={setEventStartDate}
+                      timeStr={eventStartTime} onTimeChange={setEventStartTime}
+                      allDay={eventAllDay}
                     />
                   )}
                 </div>
@@ -1971,12 +1981,10 @@ const Calendar = () => {
                     </div>
                   </button>
                   {showEndPicker && (
-                    <EZWheelPicker
-                      dateItems={DATE_ITEMS} hourItems={HOUR_ITEMS} minItems={MIN_ITEMS} ampmItems={AMPM_ITEMS}
-                      dayIdx={endDayIdx} setDayIdx={setEndDayIdx}
-                      hourIdx={endHourIdx} setHourIdx={setEndHourIdx}
-                      minIdx={endMinIdx} setMinIdx={setEndMinIdx}
-                      ampmIdx={endAmPmIdx} setAmPmIdx={setEndAmPmIdx}
+                    <EZDateTimePicker
+                      date={eventEndDate} onDateChange={setEventEndDate}
+                      timeStr={eventEndTime} onTimeChange={setEventEndTime}
+                      allDay={eventAllDay}
                     />
                   )}
                 </div>
@@ -1993,6 +2001,7 @@ const Calendar = () => {
                     <option value="30min">{t('calendar.30minBefore')}</option>
                     <option value="1hour">{t('calendar.1hourBefore')}</option>
                     <option value="1day">{t('calendar.1dayBefore')}</option>
+                    <option value="1week">1 week before</option>
                   </select>
                 </div>
 
@@ -2031,7 +2040,7 @@ const Calendar = () => {
                 {/* Tags */}
                 <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Tag</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {Object.entries(TAGS).map(([key, tag]) => {
                       const isSelected = eventTag === key;
                       return (
@@ -2040,14 +2049,14 @@ const Calendar = () => {
                           if (!isSelected) setEventColor(tag.border);
                           setEventCustomTag('');
                         }}
-                          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                          className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                           style={{ background: isSelected ? tag.border : tag.bg, color: isSelected ? '#fff' : tag.dot, border: `1.5px solid ${tag.border}` }}>
                           {tag.label}
                         </button>
                       );
                     })}
                     <button onClick={() => { setEventTag('custom'); }}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                      className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                       style={{ background: eventTag === 'custom' ? '#555' : 'hsl(var(--muted))', color: eventTag === 'custom' ? '#fff' : 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border))' }}>
                       + Custom
                     </button>
@@ -2070,8 +2079,8 @@ const Calendar = () => {
                   <div className="flex gap-2 flex-wrap flex-1">
                     {['#964735', '#D97B66', '#FFC861', '#4CAF50', '#64A0F0', '#6E8FE5', '#BA1A1A', '#555555'].map(c => (
                       <button key={c} onClick={() => setEventColor(c)}
-                        className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center transition-transform"
-                        style={{ background: c, transform: eventColor === c ? 'scale(1.25)' : 'scale(1)', boxShadow: eventColor === c ? `0 0 0 2px #fff, 0 0 0 3.5px ${c}` : 'none' }}>
+                        className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-transform"
+                        style={{ background: c, transform: eventColor === c ? 'scale(1.3)' : 'scale(1)', boxShadow: eventColor === c ? `0 0 0 2px #fff, 0 0 0 3px ${c}` : 'none' }}>
                       </button>
                     ))}
                   </div>
@@ -2083,7 +2092,7 @@ const Calendar = () => {
                   <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
                     {([['everyone', 'Everyone'], ['parents', 'Parents'], ['me', 'Just me']] as const).map(([val, label]) => (
                       <button key={val} onClick={() => setEventVisibleTo(val)}
-                        className="px-3 py-1.5 text-xs font-semibold transition-all"
+                        className="px-2.5 py-1 text-[11px] font-semibold transition-all"
                         style={{ background: eventVisibleTo === val ? '#964735' : 'transparent', color: eventVisibleTo === val ? '#fff' : 'hsl(var(--muted-foreground))' }}>
                         {label}
                       </button>
@@ -2111,7 +2120,7 @@ const Calendar = () => {
                             onClick={() => setEventAttendees(prev =>
                               selected ? prev.filter(id => id !== m.user_id) : [...prev, m.user_id]
                             )}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                             style={{
                               background: selected ? '#964735' : 'hsl(var(--muted))',
                               color: selected ? '#fff' : 'hsl(var(--foreground))',

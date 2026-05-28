@@ -19,13 +19,15 @@ import {
 import {
   User, Mail, Share2, Lock, Globe, Sparkles, Database,
   Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
-  UserPlus, LogOut, X, Plus, Check, Trash2
+  UserPlus, LogOut, X, Plus, Check, Trash2, Crown, RotateCcw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateImageFile } from "@/lib/fileValidation";
 import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { restoreRCPurchases } from "@/lib/revenuecat";
 
 interface HomeConfig {
   greeting: string;
@@ -105,7 +107,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, isPremium, refreshSubscription } = useAuth();
   const { setTheme, isDark } = useTheme();
 
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
@@ -147,6 +149,24 @@ const Settings = () => {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [restoringPurchases, setRestoringPurchases] = useState(false);
+
+  const handleRestorePurchases = async () => {
+    setRestoringPurchases(true);
+    try {
+      const granted = await restoreRCPurchases();
+      if (granted) {
+        await refreshSubscription();
+        toast({ title: 'Purchases restored', description: 'Your subscription is active.' });
+      } else {
+        toast({ title: 'Nothing to restore', description: 'No active subscription found.' });
+      }
+    } catch {
+      toast({ title: 'Restore failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setRestoringPurchases(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -614,6 +634,63 @@ const Settings = () => {
             onClick={() => navigate('/privacy')}
           />
         </Card_>
+      </div>
+
+      {/* ── Family Plan / Subscription ── */}
+      <div className="space-y-2">
+        <SectionLabel>Family Plan</SectionLabel>
+        {isPremium ? (
+          <Card_>
+            <Row
+              icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
+              title="Family Plan — Active"
+              subtitle="Thank you for subscribing!"
+              last
+            />
+            {Capacitor.isNativePlatform() && (
+              <Row
+                icon={<RotateCcw className="w-4 h-4" style={{ color: MUTED }} />}
+                title="Restore Purchases"
+                right={restoringPurchases ? <span className="text-xs" style={{ color: MUTED }}>…</span> : <Arrow />}
+                last
+                onClick={handleRestorePurchases}
+              />
+            )}
+          </Card_>
+        ) : (
+          <Card_>
+            <div className="px-4 py-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3D0' }}>
+                  <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold" style={{ color: INK }}>Upgrade to Family Plan</p>
+                  <p className="text-xs" style={{ color: MUTED }}>Unlock unlimited members, AI, calendar sync & more</p>
+                </div>
+              </div>
+              <UpgradeDialog>
+                <button
+                  className="w-full py-3 rounded-xl text-sm font-bold text-white"
+                  style={{ background: '#964735' }}
+                >
+                  View Plans & Pricing
+                </button>
+              </UpgradeDialog>
+              {Capacitor.isNativePlatform() && (
+                <button
+                  onClick={handleRestorePurchases}
+                  disabled={restoringPurchases}
+                  className="w-full py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
+                  style={{ color: MUTED, background: 'hsl(var(--muted))' }}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  {restoringPurchases ? 'Restoring…' : 'Restore Purchases'}
+                </button>
+              )}
+            </div>
+          </Card_>
+        )}
       </div>
 
       {/* ── Sign Out ── */}

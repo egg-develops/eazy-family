@@ -1,14 +1,9 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, Crown, RotateCcw } from "lucide-react";
+import { Check, Crown, RotateCcw, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +13,21 @@ import { Capacitor } from "@capacitor/core";
 import { getRCOfferings, purchaseRCPackage, restoreRCPurchases, type RCPackage } from "@/lib/revenuecat";
 
 const isNative = Capacitor.isNativePlatform();
+
+const MONTHLY_PRICE = 5;
+const ANNUAL_PRICE = 49;
+const ANNUAL_MONTHLY = (ANNUAL_PRICE / 12).toFixed(2);
+const ANNUAL_SAVINGS = MONTHLY_PRICE * 12 - ANNUAL_PRICE;
+
+const features = [
+  "Unlimited family members",
+  "Eazy AI Assistant — unlimited",
+  "Shared lists & real-time sync",
+  "Outlook & Google Calendar sync",
+  "Private family messaging",
+  "Create & manage family groups",
+  "Priority support · No ads, ever",
+];
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
@@ -31,17 +41,13 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
-  const isNative = Capacitor.isNativePlatform();
-
   useEffect(() => {
     if (open && isNative) {
       getRCOfferings().then(pkgs => setRcPackages(pkgs));
     }
-  }, [open, isNative]);
+  }, [open]);
 
-  if (isPremium) {
-    return <>{children}</>;
-  }
+  if (isPremium) return <>{children}</>;
 
   const annualPkg = rcPackages.find(p =>
     p.packageType === 'ANNUAL' || p.identifier.toLowerCase().includes('annual') || p.identifier === 'yearly'
@@ -49,20 +55,20 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const monthlyPkg = rcPackages.find(p =>
     p.packageType === 'MONTHLY' || p.identifier.toLowerCase().includes('monthly')
   );
+  const activePkg = billingCycle === 'annual' ? annualPkg : monthlyPkg;
 
   const handleNativeUpgrade = async () => {
-    const pkg = billingCycle === 'annual' ? annualPkg : monthlyPkg;
-    if (!pkg) {
+    if (!activePkg) {
       toast({ title: "Not available", description: "Could not load offerings. Try again.", variant: "destructive" });
       return;
     }
     setIsLoading(true);
     try {
-      const granted = await purchaseRCPackage(pkg.identifier);
+      const granted = await purchaseRCPackage(activePkg.identifier);
       if (granted) {
         await refreshSubscription();
         setOpen(false);
-        toast({ title: "Welcome to Family Plan!", description: "Your subscription is now active." });
+        toast({ title: "Welcome to Family Plan!", description: "Your 14-day free trial has started." });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -115,190 +121,148 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     }
   };
 
-  const freeFeatures = [
-    "Up to 4 family members",
-    "Private family messaging",
-    "Calendar & reminders",
-    "Shopping & to-do lists with voice input",
-    "Eazy AI Assistant — 10 messages/month",
-    "Community browsing",
-  ];
-
-  const familyFeatures = [
-    "Unlimited family members",
-    "Eazy AI Assistant (unlimited)",
-    "Shared lists & real-time sync",
-    "Private family messaging",
-    "Create & manage groups",
-    "Outlook & Google Calendar sync",
-    "Priority support",
-    "No ads, ever",
-  ];
-
-  const monthlyPrice = 5;
-  const annualPrice = 49;
-  const annualMonthly = (annualPrice / 12).toFixed(2);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl">
-            <Crown className="h-6 w-6 text-primary" />
-            Upgrade to Family
-          </DialogTitle>
-          <DialogDescription className="text-left">Unlock all premium features</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-sm w-[92%] p-0 overflow-hidden max-h-[92vh] overflow-y-auto">
 
-        <div className="space-y-6 py-4">
-          {/* Free Plan */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground">Free Plan — What you have now</h3>
-            <div className="space-y-2">
-              {freeFeatures.map((feature) => (
-                <div key={feature} className="flex items-start gap-2 text-sm">
-                  <Check className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <span className="text-muted-foreground">{feature}</span>
-                </div>
-              ))}
-            </div>
+        {/* Hero */}
+        <div className="px-6 pt-7 pb-5 text-center" style={{ background: 'linear-gradient(160deg, #964735 0%, #D97B66 100%)' }}>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Crown className="h-6 w-6 text-white" />
+            <h2 className="text-xl font-bold text-white tracking-tight">Family Plan</h2>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+            <Sparkles className="h-3.5 w-3.5" />
+            14-day free trial
+          </div>
+          <p className="text-white/75 text-xs mt-2">No charge today. Cancel anytime.</p>
+        </div>
+
+        <div className="px-5 py-5 space-y-5">
+
+          {/* Features */}
+          <div className="space-y-2">
+            {features.map(f => (
+              <div key={f} className="flex items-start gap-2.5 text-sm">
+                <Check className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#964735' }} />
+                <span style={{ color: 'hsl(var(--foreground))' }}>{f}</span>
+              </div>
+            ))}
           </div>
 
-          {/* Family Plan */}
-          <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <Crown className="h-5 w-5 text-primary" />
-              Family Plan — Everything in Free, plus:
-            </h3>
-            <div className="space-y-2">
-              {familyFeatures.map((feature) => (
-                <div key={feature} className="flex items-start gap-2 text-sm">
-                  <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <span>{feature}</span>
-                </div>
-              ))}
-            </div>
+          {/* Pricing cards */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Annual */}
+            <button
+              onClick={() => setBillingCycle('annual')}
+              className="relative rounded-2xl p-3.5 text-left transition-all"
+              style={{
+                border: billingCycle === 'annual' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
+              }}
+            >
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#964735' }}>
+                  SAVE CHF {ANNUAL_SAVINGS}
+                </span>
+              </div>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
+              {isNative ? (
+                annualPkg ? (
+                  <>
+                    <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>{annualPkg.product.priceString}</p>
+                    <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per year</p>
+                  </>
+                ) : (
+                  <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Loading…</p>
+                )
+              ) : (
+                <>
+                  <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
+                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month · CHF {ANNUAL_PRICE}/yr</p>
+                </>
+              )}
+            </button>
+
+            {/* Monthly */}
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className="rounded-2xl p-3.5 text-left transition-all"
+              style={{
+                border: billingCycle === 'monthly' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
+              }}
+            >
+              <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
+              {isNative ? (
+                monthlyPkg ? (
+                  <>
+                    <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>{monthlyPkg.product.priceString}</p>
+                    <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
+                  </>
+                ) : (
+                  <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Loading…</p>
+                )
+              ) : (
+                <>
+                  <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
+                  <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
+                </>
+              )}
+            </button>
           </div>
 
-          {/* Billing / CTA */}
-          <div className="space-y-4 pt-4 border-t">
-            {/* Billing toggle — shared between native and web */}
-            <div className="flex rounded-xl border border-border overflow-hidden">
-              <button
-                onClick={() => setBillingCycle('monthly')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                  billingCycle === 'monthly'
-                    ? 'bg-primary text-white'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('annual')}
-                className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                  billingCycle === 'annual'
-                    ? 'bg-primary text-white'
-                    : 'bg-background text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                Annual
-              </button>
+          {/* CTA */}
+          <button
+            onClick={isNative ? handleNativeUpgrade : handleWebUpgrade}
+            disabled={isLoading || (isNative && !activePkg)}
+            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+          >
+            <Crown className="h-4 w-4" />
+            {isLoading ? "Processing…" : "Start Free Trial"}
+          </button>
+
+          {isNative && (
+            <button
+              onClick={handleRestore}
+              disabled={isLoading}
+              className="w-full py-2 text-xs flex items-center justify-center gap-1.5"
+              style={{ color: 'hsl(var(--muted-foreground))' }}
+            >
+              <RotateCcw className="h-3 w-3" />
+              Restore Purchases
+            </button>
+          )}
+
+          <button
+            onClick={() => setOpen(false)}
+            className="w-full py-1 text-sm"
+            style={{ color: 'hsl(var(--muted-foreground))' }}
+          >
+            Maybe Later
+          </button>
+
+          {/* Apple-required disclosures (iOS only) */}
+          {isNative && (
+            <div className="space-y-2 pt-1">
+              <p className="text-[10px] text-center leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                Free trial lasts 14 days. Payment charged to your Apple ID at confirmation of purchase after the trial period. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple ID Account Settings.
+              </p>
+              <div className="flex justify-center gap-4">
+                <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer"
+                  className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Terms of Use
+                </a>
+                <a href="https://eazy.family/privacy" target="_blank" rel="noopener noreferrer"
+                  className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Privacy Policy
+                </a>
+              </div>
             </div>
+          )}
 
-            {isNative ? (
-              /* iOS: RevenueCat purchase flow */
-              <>
-                <div className="text-center">
-                  {billingCycle === 'annual' && annualPkg ? (
-                    <div>
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
-                      </div>
-                      <p className="text-3xl font-bold">
-                        {annualPkg.product.priceString}
-                        <span className="text-lg text-muted-foreground font-normal">/year</span>
-                      </p>
-                    </div>
-                  ) : billingCycle === 'monthly' && monthlyPkg ? (
-                    <div>
-                      <p className="text-3xl font-bold">
-                        {monthlyPkg.product.priceString}
-                        <span className="text-lg text-muted-foreground font-normal">/month</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-2">Loading pricing…</p>
-                  )}
-                </div>
-
-                <Button
-                  className="w-full gradient-primary text-white border-0"
-                  size="lg"
-                  onClick={handleNativeUpgrade}
-                  disabled={isLoading || (!annualPkg && !monthlyPkg)}
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {isLoading ? "Processing…" : "Subscribe"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full text-muted-foreground text-xs"
-                  onClick={handleRestore}
-                  disabled={isLoading}
-                >
-                  <RotateCcw className="h-3 w-3 mr-1.5" />
-                  Restore Purchases
-                </Button>
-                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
-                  Maybe Later
-                </Button>
-              </>
-            ) : (
-              /* Web: Stripe checkout */
-              <>
-                <div className="text-center">
-                  {billingCycle === 'monthly' ? (
-                    <div>
-                      <p className="text-3xl font-bold">
-                        CHF {monthlyPrice}<span className="text-lg text-muted-foreground font-normal">/month</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">Cancel anytime</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Badge className="bg-grape-100 text-grape-700 border-0 text-xs">2 months free</Badge>
-                      </div>
-                      <p className="text-3xl font-bold">
-                        CHF {annualMonthly}<span className="text-lg text-muted-foreground font-normal">/month</span>
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        CHF {annualPrice} billed annually · Save CHF {monthlyPrice * 12 - annualPrice}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Button
-                  className="w-full gradient-primary text-white border-0"
-                  size="lg"
-                  onClick={handleWebUpgrade}
-                  disabled={isLoading}
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {isLoading
-                    ? "Loading..."
-                    : `Upgrade — CHF ${billingCycle === 'annual' ? annualPrice + '/year' : monthlyPrice + '/month'}`}
-                </Button>
-                <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setOpen(false)}>
-                  Maybe Later
-                </Button>
-              </>
-            )}
-          </div>
         </div>
       </DialogContent>
     </Dialog>
