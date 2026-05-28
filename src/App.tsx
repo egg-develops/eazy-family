@@ -15,6 +15,7 @@ import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
 import Onboarding from "./pages/Onboarding";
@@ -25,7 +26,6 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
 import Download from "./pages/Download";
-import Waitlist from "./pages/Waitlist";
 import NotFound from "./pages/NotFound";
 
 // Lazy load heavy pages — retry on chunk-load failure, then force reload
@@ -73,6 +73,7 @@ const App = () => (
 
               {/* Auth + Onboarding */}
               <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
+              <Route path="/auth/reset-password" element={<ErrorBoundary><ResetPassword /></ErrorBoundary>} />
               <Route path="/onboarding" element={<ErrorBoundary><Onboarding /></ErrorBoundary>} />
               
               {/* Logo splash after login/onboarding */}
@@ -84,7 +85,6 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/about" element={<About />} />
-              <Route path="/waitlist" element={<Waitlist />} />
               <Route path="/download" element={<Download />} />
               
               {/* Main App - User's custom theme */}
