@@ -321,6 +321,12 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     const result = await parseWithAI();
 
     if (result && result.title) {
+      // Guard: never let AI override shopping/task keywords with 'event'
+      const lower = latestTextRef.current.toLowerCase();
+      const isObviouslyShopping = /\b(shopping list|grocery list|groceries|to buy)\b/.test(lower) || /\b(buy|get|grab|pick up)\b/.test(lower);
+      const isObviouslyTask = /\b(task|todo|to-do|clean|wash|water|organis|fix|repair|mow|vacuum|call|email|book)\b/.test(lower);
+      if (result.type === 'event' && isObviouslyShopping) result.type = 'shopping';
+      if (result.type === 'event' && isObviouslyTask && !result.date && !result.time) result.type = 'task';
       if (result.type && !userLockedType) setType(result.type);
 
       // Post-process: if a date phrase is still present in the AI's title (e.g. "the 29th"),
@@ -368,8 +374,16 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       const correctedTime = correctedHour != null
         ? `${String(correctedHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
+      const rawLower = raw.toLowerCase();
+      const fallbackType: CaptureType = userLockedType ?? (
+        /\b(shopping list|grocery list|groceries|to buy)\b/.test(rawLower) || /\b(buy|get|grab|pick up)\b/.test(rawLower) ? 'shopping' :
+        /\b(remind|don't forget|remember)\b/.test(rawLower) ? 'reminder' :
+        /\b(feel|journal|today i|grateful|reflection)\b/.test(rawLower) ? 'journal' :
+        /\b(clean|wash|water|organis|fix|repair|mow|vacuum|call|email|book)\b/.test(rawLower) ? 'task' :
+        type
+      );
       setParsed({
-        type,
+        type: fallbackType,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
         date: fallbackDate, time: correctedTime, endTime: null,
         location: null, assignees: null, reminder: null,
