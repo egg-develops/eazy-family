@@ -48,6 +48,7 @@ export interface RCPackage {
     priceString: string;
     currencyCode: string;
     price: number;
+    productIdentifier: string; // App Store product ID for SubscriptionStoreView
   };
 }
 
@@ -66,6 +67,7 @@ export async function getRCOfferings(): Promise<RCPackage[]> {
         priceString: p.product.priceString,
         currencyCode: p.product.currencyCode,
         price: p.product.price,
+        productIdentifier: p.product.identifier,
       },
     }));
   } catch {
@@ -91,4 +93,16 @@ export async function restoreRCPurchases(): Promise<boolean> {
   const Purchases = await getRC();
   const { customerInfo } = await Purchases.restorePurchases();
   return ENTITLEMENT in customerInfo.entitlements.active;
+}
+
+// Presents Apple's native SubscriptionStoreView sheet.
+// Resolves when the sheet is dismissed (purchase or cancel).
+// Caller should then call getRCIsPremium() to check entitlement status.
+export async function presentSubscriptionStore(productIds: string[]): Promise<void> {
+  if (!isNative) return;
+  const { registerPlugin } = await import('@capacitor/core');
+  const SubscriptionPlugin = registerPlugin<{
+    present: (opts: { productIds: string[] }) => Promise<{ dismissed: boolean }>;
+  }>('SubscriptionPlugin');
+  await SubscriptionPlugin.present({ productIds });
 }

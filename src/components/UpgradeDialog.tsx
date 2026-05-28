@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
-import { getRCOfferings, purchaseRCPackage, restoreRCPurchases, type RCPackage } from "@/lib/revenuecat";
+import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, type RCPackage } from "@/lib/revenuecat";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -55,27 +55,27 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const monthlyPkg = rcPackages.find(p =>
     p.packageType === 'MONTHLY' || p.identifier.toLowerCase().includes('monthly')
   );
-  const activePkg = billingCycle === 'annual' ? annualPkg : monthlyPkg;
+
+  // Collect all App Store product IDs to pass to SubscriptionStoreView
+  const allProductIds = rcPackages
+    .map(p => p.product.productIdentifier)
+    .filter(Boolean);
 
   const handleNativeUpgrade = async () => {
-    if (!activePkg) {
+    if (allProductIds.length === 0) {
       toast({ title: "Not available", description: "Could not load offerings. Try again.", variant: "destructive" });
       return;
     }
     setIsLoading(true);
     try {
-      const granted = await purchaseRCPackage(activePkg.identifier);
-      if (granted) {
-        await refreshSubscription();
-        setOpen(false);
-        toast({ title: "Welcome to Family Plan!", description: "Your 14-day free trial has started." });
-      }
+      // Present Apple's native SubscriptionStoreView — handles purchase + all disclosures
+      await presentSubscriptionStore(allProductIds);
+      // Sheet dismissed — check if entitlement is now active
+      await refreshSubscription();
+      setOpen(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (!msg.includes('userCancelled')) {
-        logError("RC purchase error:", err);
-        toast({ title: "Purchase failed", description: "Please try again.", variant: "destructive" });
-      }
+      logError("SubscriptionStore error:", err);
+      toast({ title: "Purchase failed", description: "Please try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -151,89 +151,72 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             ))}
           </div>
 
-          {/* Pricing cards */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {/* Annual */}
-            <button
-              onClick={() => setBillingCycle('annual')}
-              className="relative rounded-2xl p-3.5 text-left transition-all"
-              style={{
-                border: billingCycle === 'annual' ? '2px solid #964735' : '2px solid hsl(var(--border))',
-                background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
-              }}
-            >
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#964735' }}>
-                  SAVE CHF {ANNUAL_SAVINGS}
-                </span>
-              </div>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
-              {isNative ? (
-                annualPkg ? (
-                  <>
-                    <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>{annualPkg.product.priceString}</p>
-                    <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per year</p>
-                  </>
-                ) : (
-                  <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Loading…</p>
-                )
-              ) : (
-                <>
+          {/* iOS: single CTA — Apple's SubscriptionStoreView handles pricing, trial info, T&C */}
+          {isNative ? (
+            <>
+              <button
+                onClick={handleNativeUpgrade}
+                disabled={isLoading || allProductIds.length === 0}
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+              >
+                <Crown className="h-4 w-4" />
+                {isLoading ? "Opening…" : allProductIds.length === 0 ? "Loading…" : "View Plans & Start Free Trial"}
+              </button>
+              <button
+                onClick={handleRestore}
+                disabled={isLoading}
+                className="w-full py-2 text-xs flex items-center justify-center gap-1.5"
+                style={{ color: 'hsl(var(--muted-foreground))' }}
+              >
+                <RotateCcw className="h-3 w-3" />
+                Restore Purchases
+              </button>
+            </>
+          ) : (
+            /* Web: Stripe — show pricing cards + CTA */
+            <>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => setBillingCycle('annual')}
+                  className="relative rounded-2xl p-3.5 text-left transition-all"
+                  style={{
+                    border: billingCycle === 'annual' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                    background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
+                  }}
+                >
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#964735' }}>
+                      SAVE CHF {ANNUAL_SAVINGS}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
                   <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
                   <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month · CHF {ANNUAL_PRICE}/yr</p>
-                </>
-              )}
-            </button>
-
-            {/* Monthly */}
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className="rounded-2xl p-3.5 text-left transition-all"
-              style={{
-                border: billingCycle === 'monthly' ? '2px solid #964735' : '2px solid hsl(var(--border))',
-                background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
-              }}
-            >
-              <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
-              {isNative ? (
-                monthlyPkg ? (
-                  <>
-                    <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>{monthlyPkg.product.priceString}</p>
-                    <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
-                  </>
-                ) : (
-                  <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Loading…</p>
-                )
-              ) : (
-                <>
+                </button>
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className="rounded-2xl p-3.5 text-left transition-all"
+                  style={{
+                    border: billingCycle === 'monthly' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                    background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
+                  }}
+                >
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
                   <p className="text-lg font-bold mt-0.5" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
                   <p className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground))' }}>per month</p>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* CTA */}
-          <button
-            onClick={isNative ? handleNativeUpgrade : handleWebUpgrade}
-            disabled={isLoading || (isNative && !activePkg)}
-            className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
-          >
-            <Crown className="h-4 w-4" />
-            {isLoading ? "Processing…" : "Start Free Trial"}
-          </button>
-
-          {isNative && (
-            <button
-              onClick={handleRestore}
-              disabled={isLoading}
-              className="w-full py-2 text-xs flex items-center justify-center gap-1.5"
-              style={{ color: 'hsl(var(--muted-foreground))' }}
-            >
-              <RotateCcw className="h-3 w-3" />
-              Restore Purchases
-            </button>
+                </button>
+              </div>
+              <button
+                onClick={handleWebUpgrade}
+                disabled={isLoading}
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+              >
+                <Crown className="h-4 w-4" />
+                {isLoading ? "Processing…" : "Start Free Trial"}
+              </button>
+            </>
           )}
 
           <button
@@ -243,25 +226,6 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           >
             Maybe Later
           </button>
-
-          {/* Apple-required disclosures (iOS only) */}
-          {isNative && (
-            <div className="space-y-2 pt-1">
-              <p className="text-[10px] text-center leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Free trial lasts 14 days. Payment charged to your Apple ID at confirmation of purchase after the trial period. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period. Manage or cancel in your Apple ID Account Settings.
-              </p>
-              <div className="flex justify-center gap-4">
-                <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer"
-                  className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Terms of Use
-                </a>
-                <a href="https://eazy.family/privacy" target="_blank" rel="noopener noreferrer"
-                  className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                  Privacy Policy
-                </a>
-              </div>
-            </div>
-          )}
 
         </div>
       </DialogContent>
