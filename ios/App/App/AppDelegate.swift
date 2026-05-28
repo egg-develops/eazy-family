@@ -19,7 +19,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     private func syncTokenFromWebView() {
-        guard let webView = findWebView(in: UIApplication.shared.windows.first?.rootViewController?.view) else {
+        let rootView = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first(where: { $0.isKeyWindow })?.rootViewController?.view
+        guard let webView = findWebView(in: rootView) else {
             print("⚠️ WidgetBridge: WKWebView not found")
             return
         }

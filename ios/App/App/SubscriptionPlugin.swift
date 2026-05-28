@@ -5,6 +5,7 @@ import SwiftUI
 
 // MARK: - SwiftUI wrapper
 
+@available(iOS 17.0, *)
 private struct EazySubscriptionView: View {
     let productIds: [String]
     let onDismiss: () -> Void
@@ -25,7 +26,7 @@ private struct EazySubscriptionView: View {
 
 // MARK: - Capacitor plugin
 
-/// Presents Apple's native SubscriptionStoreView sheet.
+/// Presents Apple's native SubscriptionStoreView sheet (iOS 17+).
 /// JS: SubscriptionPlugin.present({ productIds: ["com.eazy.family.annual", ...] })
 /// Resolves { dismissed: true } when the sheet closes (purchase or cancel).
 /// The caller should then refresh RevenueCat entitlements.
@@ -46,6 +47,11 @@ public class SubscriptionPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async { [weak self] in
             guard let rootVC = self?.bridge?.viewController else {
                 call.reject("No root view controller")
+                return
+            }
+
+            guard #available(iOS 17.0, *) else {
+                call.reject("SubscriptionStoreView requires iOS 17+")
                 return
             }
 
