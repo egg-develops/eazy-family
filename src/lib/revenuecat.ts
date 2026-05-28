@@ -54,6 +54,23 @@ export async function getRCIsTrial(): Promise<boolean> {
   }
 }
 
+/** Returns whole days remaining in the current trial, or null if not determinable. */
+export async function getRCTrialDaysLeft(): Promise<number | null> {
+  if (!isNative) return null;
+  try {
+    const Purchases = await getRC();
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    const entitlement = customerInfo.entitlements.active[ENTITLEMENT];
+    if (!entitlement) return null;
+    const millis = (entitlement as any).expirationDateMillis as number | null | undefined;
+    if (!millis) return null;
+    const days = Math.ceil((millis - Date.now()) / (1000 * 60 * 60 * 24));
+    return days > 0 ? days : 0;
+  } catch {
+    return null;
+  }
+}
+
 export interface RCPackage {
   identifier: string;
   packageType: string;

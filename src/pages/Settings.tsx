@@ -108,7 +108,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { signOut, user, isPremium, isTrial, refreshSubscription } = useAuth();
+  const { signOut, user, isPremium, isTrial, trialDaysLeft, refreshSubscription } = useAuth();
   const { setTheme, isDark } = useTheme();
 
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
@@ -366,6 +366,7 @@ const Settings = () => {
                 <Row
                   icon={<Crown className="w-4 h-4" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />}
                   title={isTrial ? 'Family Premium — Trial' : 'Family Premium — Active'}
+                  subtitle={isTrial && trialDaysLeft !== null ? trialDaysLeft === 1 ? 'Last day of trial' : trialDaysLeft === 0 ? 'Trial ends today' : `${trialDaysLeft} days remaining` : undefined}
                   right={<Arrow />}
                   onClick={() => setShowPremiumSheet(true)}
                 />
@@ -825,13 +826,20 @@ const Settings = () => {
               </div>
               <div>
                 <p className="font-bold text-base" style={{ color: INK }}>Family Premium</p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={
-                  isTrial
-                    ? { background: '#FFF0E0', color: '#964735' }
-                    : { background: '#E8F5E9', color: '#2E7D32' }
-                }>
-                  {isTrial ? 'Free Trial' : 'Active'}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={
+                    isTrial
+                      ? { background: '#FFF0E0', color: '#964735' }
+                      : { background: '#E8F5E9', color: '#2E7D32' }
+                  }>
+                    {isTrial ? 'Free Trial' : 'Active'}
+                  </span>
+                  {isTrial && trialDaysLeft !== null && (
+                    <span className="text-xs" style={{ color: trialDaysLeft <= 3 ? '#C4621A' : MUTED }}>
+                      {trialDaysLeft === 0 ? 'ends today' : trialDaysLeft === 1 ? '1 day left' : `${trialDaysLeft} days left`}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
