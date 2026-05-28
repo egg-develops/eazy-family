@@ -52,6 +52,12 @@ serve(async (req) => {
       .update({ stripe_customer_id: customerId })
       .eq("user_id", user.id);
 
+    const body = await req.json().catch(() => ({}));
+    const billingCycle = body.billing_cycle === 'annual' ? 'annual' : 'monthly';
+    const PRICE_MONTHLY = "price_1Tc8GgCo7UjVZgaggyCNlYsD";
+    const PRICE_ANNUAL  = "price_1Tc8GgCo7UjVZgagmngRi9gP";
+    const priceId = billingCycle === 'annual' ? PRICE_ANNUAL : PRICE_MONTHLY;
+
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
     // Check if this user was referred (apply coupon if so)
@@ -77,7 +83,7 @@ serve(async (req) => {
       customer: customerId,
       line_items: [
         {
-          price: "price_1SFWcRCo7UjVZgagNv4fs0o5",
+          price: priceId,
           quantity: 1,
         },
       ],
