@@ -29,6 +29,8 @@ class DataFetcher {
             return await fetchShopping(token: token, showCompleted: showCompleted, limit: itemCount)
         case .rituals:
             return await fetchRituals(token: token, limit: itemCount)
+        case .journal:
+            return await fetchJournal(token: token, limit: itemCount)
         }
     }
 
@@ -123,6 +125,37 @@ class DataFetcher {
         }
 
         return WidgetEntryData(items: items, mode: .rituals, fetchedAt: .now)
+    }
+
+    // MARK: - Journal (voice notes stored as tasks with type='journal')
+
+    private func fetchJournal(token: String, limit: Int) async -> WidgetEntryData? {
+        let urlString = "\(kSupabaseURL)/rest/v1/tasks?select=id,title,created_at&type=eq.journal&order=created_at.desc&limit=\(limit)"
+
+        guard let data = await get(urlString, token: token) else { return nil }
+
+        struct RawJournal: Decodable {
+            let id: String
+            let title: String
+            let created_at: String?
+        }
+        guard let rows = try? JSONDecoder().decode([RawJournal].self, from: data) else { return nil }
+
+        let relFormatter = RelativeDateTimeFormatter()
+        relFormatter.unitsStyle = .abbreviated
+
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let items: [WidgetItem] = rows.map { j in
+            var subtitle: String? = nil
+            if let createdStr = j.created_at, let created = fmt.date(from: createdStr) {
+                subtitle = relFormatter.localizedString(for: created, relativeTo: .now)
+            }
+            return WidgetItem(id: j.id, title: j.title, subtitle: subtitle, completed: false, deepLink: WidgetDisplayMode.journal.deepLink)
+        }
+
+        return WidgetEntryData(items: items, mode: .journal, fetchedAt: .now)
     }
 
     // MARK: - Network helper
