@@ -101,6 +101,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   };
 
   const handleWebUpgrade = async () => {
+    if (isNative) return; // iOS must never reach Stripe
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -131,13 +132,25 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         <div className="px-6 pt-7 pb-5 text-center" style={{ background: 'linear-gradient(160deg, #964735 0%, #D97B66 100%)' }}>
           <div className="flex items-center justify-center gap-2 mb-3">
             <Crown className="h-6 w-6 text-white" />
-            <h2 className="text-xl font-bold text-white tracking-tight">Family Plan</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">Family Premium</h2>
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
-            <Sparkles className="h-3.5 w-3.5" />
-            14-day free trial
-          </div>
-          <p className="text-white/75 text-xs mt-2">No charge today. Cancel anytime.</p>
+          {isTrial ? (
+            <>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                <Sparkles className="h-3.5 w-3.5" />
+                Keep your full access
+              </div>
+              <p className="text-white/75 text-xs mt-2">Upgrade before your trial ends. Cancel anytime.</p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
+                <Sparkles className="h-3.5 w-3.5" />
+                14-day free trial
+              </div>
+              <p className="text-white/75 text-xs mt-2">No charge today. Cancel anytime.</p>
+            </>
+          )}
         </div>
 
         <div className="px-5 py-5 space-y-5">
@@ -162,7 +175,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
                 <Crown className="h-4 w-4" />
-                {isLoading ? "Opening…" : allProductIds.length === 0 ? "Loading…" : "View Plans & Start Free Trial"}
+                {isLoading ? "Opening…" : allProductIds.length === 0 ? "Loading…" : "Upgrade to Premium"}
               </button>
               <button
                 onClick={handleRestore}
@@ -175,7 +188,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               </button>
             </>
           ) : (
-            /* Web: Stripe — show pricing cards + CTA */
+            /* Web: Stripe — show pricing cards + CTA (web only, never shown on iOS) */
             <>
               <div className="grid grid-cols-2 gap-2.5">
                 <button
@@ -215,7 +228,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
                 <Crown className="h-4 w-4" />
-                {isLoading ? "Processing…" : "Start Free Trial"}
+                {isLoading ? "Processing…" : "Upgrade to Premium"}
               </button>
             </>
           )}

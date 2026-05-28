@@ -72,7 +72,7 @@ serve(async (req) => {
       ? [{ coupon: referralCouponId }]
       : [];
 
-    // Create checkout session with 7-day trial
+    // Create checkout session with 14-day trial
     const sessionParams: any = {
       customer: customerId,
       line_items: [
@@ -83,7 +83,7 @@ serve(async (req) => {
       ],
       mode: "subscription",
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 14,
         metadata: {
           supabase_user_id: user.id,
           referral_id: referral?.id ?? "",
