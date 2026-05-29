@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { error as logError } from '@/lib/logger';
 import { z } from 'zod';
 import { Gift } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 const TC = '#964735';
 const TL = '#D97B66';
@@ -29,7 +30,13 @@ const authSchema = z.object({
 const Auth = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const [isSignUp, setIsSignUp] = useState(false);
+  // On native, default to sign-up — new installs are almost always new users.
+  // Returning users can tap "Already have an account" to switch to sign-in.
+  const hasExistingSession = !!localStorage.getItem('eazy-family-language') ||
+    !!localStorage.getItem('eazy-family-onboarding');
+  const [isSignUp, setIsSignUp] = useState(
+    Capacitor.isNativePlatform() && !hasExistingSession
+  );
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState('');
