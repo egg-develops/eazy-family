@@ -162,6 +162,12 @@ const Onboarding = () => {
 
   useEffect(() => { save(screen, state); }, [screen, state]);
 
+  // Keep the flag alive for the entire onboarding session so the
+  // authenticated-user redirect on line 201 never fires mid-flow.
+  useEffect(() => {
+    if (!user) localStorage.setItem('eazy-needs-onboarding', '1');
+  }, [user]);
+
   const go = useCallback((n: number, direction: 'fwd' | 'back' = 'fwd') => {
     setDir(direction);
     setAnimKey(k => k + 1);
@@ -281,6 +287,7 @@ const Onboarding = () => {
     };
     localStorage.setItem('eazy-family-onboarding', JSON.stringify(guestData));
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('eazy-needs-onboarding');
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
@@ -300,6 +307,7 @@ const Onboarding = () => {
       userInitials: 'GU',
     }));
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('eazy-needs-onboarding');
     try {
       await supabase.auth.signInAnonymously();
     } catch {
