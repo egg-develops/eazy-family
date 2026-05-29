@@ -578,8 +578,8 @@ const Settings = () => {
           ))}
           <Row
             icon={<div className="w-4 h-4 rounded-full" style={{ background: '#964735' }} />}
-            title="Icon only"
-            subtitle="Circular buttons, no labels"
+            title={t('settings.ez.iconOnly')}
+            subtitle={t('settings.ez.iconOnlySub')}
             last
             right={<Tog checked={ezIconOnly} onChange={v => {
               setEzIconOnly(v);

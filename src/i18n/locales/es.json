@@ -327,6 +327,10 @@
       "termsOfUse": "Términos de uso",
       "privacyPolicy": "Política de privacidad",
       "close": "Cerrar"
+    },
+    "ez": {
+      "iconOnly": "Solo iconos",
+      "iconOnlySub": "Botones circulares, sin etiquetas"
     }
   },
   "privacySettings": {

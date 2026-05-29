@@ -326,6 +326,10 @@
       "termsOfUse": "Nutzungsbedingungen",
       "privacyPolicy": "Datenschutzrichtlinie",
       "close": "Schließen"
+    },
+    "ez": {
+      "iconOnly": "Nur Icons",
+      "iconOnlySub": "Runde Schaltflächen, ohne Beschriftung"
     }
   },
   "privacySettings": {
