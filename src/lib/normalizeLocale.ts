@@ -121,6 +121,8 @@ export function normalizeCHDE(text: string, dbRules: DbDialectRule[] = []): stri
  * Used in EZCapture to decide whether to apply CH normalization.
  */
 export function isSwissGermanLocale(): boolean {
-  const lang = localStorage.getItem('eazy-family-language') || '';
-  return lang === 'de-CH';
+  const stored = localStorage.getItem('eazy-family-language');
+  if (stored) return stored === 'de-CH';
+  // No stored preference — activate for Swiss browser locales automatically
+  return (navigator.language || '').toLowerCase() === 'de-ch';
 }
