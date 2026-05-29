@@ -984,7 +984,7 @@ const AppHome = () => {
             style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
             aria-label="Dismiss"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-4 h-4" />
           </button>
 
           <div className="px-4 pt-4 pb-4 pr-12">

@@ -380,7 +380,7 @@ const PollCreator = ({
     <div className="mx-4 mb-3 rounded-2xl p-4 shadow-lg" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.createPoll')}</p>
-        <button onClick={onCancel}><X className="w-4 h-4" style={{ color: MUTED }} /></button>
+        <button onClick={onCancel} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'hsl(var(--muted))' }}><X className="w-4 h-4" style={{ color: MUTED }} /></button>
       </div>
       <input
         className="w-full text-sm rounded-xl px-3 py-2 mb-3 outline-none"
@@ -741,7 +741,13 @@ const FamilyAgenda = () => {
       >
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-full gap-3 text-center py-16">
-            <div className="text-4xl">💬</div>
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+              <path d="M32 28 Q32 21 38 21 L68 21 Q74 21 74 28 L74 50 Q74 57 68 57 L58 57 L54 63 L54 57 L38 57 Q32 57 32 50 Z" fill="#D97B66" opacity="0.2"/>
+              <path d="M6 18 Q6 10 13 10 L52 10 Q59 10 59 18 L59 46 Q59 54 52 54 L30 54 L20 64 L20 54 L13 54 Q6 54 6 46 Z" fill="#FDF3EE" stroke="#964735" strokeWidth="2.5"/>
+              <circle cx="20" cy="32" r="3.5" fill="#D97B66"/>
+              <circle cx="32" cy="32" r="3.5" fill="#964735"/>
+              <circle cx="44" cy="32" r="3.5" fill="#D97B66"/>
+            </svg>
             <p className="font-semibold" style={{ color: INK }}>{t('familyAgenda.emptyChannel')}</p>
             <p className="text-sm" style={{ color: MUTED, maxWidth: "240px" }}>
               {t('familyAgenda.emptyChannelDesc')}

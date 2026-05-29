@@ -136,7 +136,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
           style={{ background: 'hsl(var(--muted))', color: MUTED }}
           aria-label="Skip tour"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Icon panel */}
