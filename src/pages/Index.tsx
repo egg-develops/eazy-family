@@ -212,7 +212,10 @@ export default function Index() {
 
   if (Capacitor.isNativePlatform() && loading) return null;
   if (!loading && user) return <Navigate to="/app" replace />;
-  if (!loading && !user && Capacitor.isNativePlatform()) return <Navigate to="/auth" replace />;
+  if (!loading && !user && Capacitor.isNativePlatform()) {
+    const hasSignedInBefore = !!localStorage.getItem('eazy-has-signed-in');
+    return <Navigate to={hasSignedInBefore ? '/auth' : '/onboarding'} replace />;
+  }
 
   const sec: React.CSSProperties = { padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` };
   const max: React.CSSProperties = { maxWidth: 860, margin: "0 auto" };
