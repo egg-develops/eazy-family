@@ -64,15 +64,15 @@ serve(async (req) => {
 
     if (!profile) continue;
 
-    // Use the authoritative auth email — the profiles.email column can be
-    // stale, wrong, or set to the sender address on test accounts.
-    const SENDER_EMAIL = "hello@eazy.family";
+    // Use auth email as fallback if profiles.email is missing
     let recipientEmail = profile.email;
-    if (!recipientEmail || recipientEmail === SENDER_EMAIL) {
+    if (!recipientEmail) {
       const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
       recipientEmail = authUser?.user?.email ?? null;
     }
-    if (!recipientEmail || recipientEmail === SENDER_EMAIL) continue;
+    if (!recipientEmail) continue;
+
+    const SENDER_EMAIL = "hello@eazy.family";
 
     const [eventsRes, tasksRes, staleTasksRes, upcomingEventsRes] = await Promise.all([
       supabase
