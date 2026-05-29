@@ -30,12 +30,12 @@ const authSchema = z.object({
 const Auth = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  // On native, default to sign-up — new installs are almost always new users.
-  // Returning users can tap "Already have an account" to switch to sign-in.
-  const hasExistingSession = !!localStorage.getItem('eazy-family-language') ||
-    !!localStorage.getItem('eazy-family-onboarding');
+  // On native, default to sign-up for first-time installs, sign-in for returning users.
+  // eazy-has-signed-in is written on first successful sign-in and never cleared,
+  // so it survives sign-out (unlike language/onboarding which clearLocalPreferences removes).
+  const hasSignedInBefore = !!localStorage.getItem('eazy-has-signed-in');
   const [isSignUp, setIsSignUp] = useState(
-    Capacitor.isNativePlatform() && !hasExistingSession
+    Capacitor.isNativePlatform() && !hasSignedInBefore
   );
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);

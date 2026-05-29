@@ -148,6 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           fetchSubscriptionTier(session.user.id);
           if (event === 'SIGNED_IN') {
+            localStorage.setItem('eazy-has-signed-in', '1');
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
               syncWidgetToken(session.access_token, session.user.id);
@@ -237,7 +238,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: 'https://eazy.family/auth',
         data: {
           full_name: fullName,
         }
@@ -251,11 +252,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
     });
-    
+
     if (!error) {
+      localStorage.setItem('eazy-has-signed-in', '1');
       navigate('/app');
     }
-    
+
     return { error };
   };
 
@@ -263,7 +265,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     clearLocalPreferences();
     await supabase.auth.signOut();
     setSubscriptionTier(null);
-    navigate('/');
+    navigate(Capacitor.isNativePlatform() ? '/auth' : '/');
   };
 
   return (

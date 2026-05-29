@@ -210,6 +210,7 @@ export default function Index() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  if (Capacitor.isNativePlatform() && loading) return null;
   if (!loading && user) return <Navigate to="/app" replace />;
   if (!loading && !user && Capacitor.isNativePlatform()) return <Navigate to="/auth" replace />;
 
