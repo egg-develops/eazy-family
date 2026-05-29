@@ -315,7 +315,8 @@ const Settings = () => {
   const LANG_OPTIONS = [
     { value: 'en',    label: 'English (US)', abbr: 'EN',    flag: '🇺🇸' },
     { value: 'en-GB', label: 'English (UK)', abbr: 'EN-GB', flag: '🇬🇧' },
-    { value: 'de',    label: 'Deutsch',      abbr: 'DE',    flag: '🇩🇪' },
+    { value: 'de',    label: 'Deutsch',          abbr: 'DE',    flag: '🇩🇪' },
+    { value: 'de-CH', label: 'Deutsch (Schweiz)', abbr: 'DE-CH', flag: '🇨🇭' },
     { value: 'fr',    label: 'Français',     abbr: 'FR',    flag: '🇫🇷' },
     { value: 'it',    label: 'Italiano',     abbr: 'IT',    flag: '🇮🇹' },
     { value: 'es',    label: 'Español',      abbr: 'ES',    flag: '🇪🇸' },

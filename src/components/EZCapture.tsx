@@ -12,6 +12,7 @@ import * as chrono from "chrono-node";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
+import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 
 type Step = 'capture' | 'processing' | 'preview';
 
@@ -63,7 +64,7 @@ const AI_KEY: Record<CaptureType, string> = {
 const LOCALE_TO_LANG: Record<string, string> = {
   en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT',
   'en-US': 'en-US', 'en-GB': 'en-GB',
-  'de-DE': 'de-DE', 'de-CH': 'de-DE', 'de-AT': 'de-DE',
+  'de-DE': 'de-DE', 'de-CH': 'de-CH', 'de-AT': 'de-DE',
   'fr-FR': 'fr-FR', 'fr-CH': 'fr-FR', 'fr-BE': 'fr-FR',
   'it-IT': 'it-IT', 'it-CH': 'it-IT',
   'es-ES': 'es-ES', 'es-MX': 'es-MX', 'es-US': 'es-US',
@@ -71,8 +72,8 @@ const LOCALE_TO_LANG: Record<string, string> = {
 };
 
 const LANG_NAMES: Record<string, string> = {
-  en: 'English', de: 'German', fr: 'French',
-  it: 'Italian', es: 'Spanish', pt: 'Portuguese',
+  en: 'English', de: 'German', 'de-CH': 'Swiss German',
+  fr: 'French', it: 'Italian', es: 'Spanish', pt: 'Portuguese',
 };
 
 const getUserLocale = (): string => {
@@ -255,11 +256,15 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
       const today = format(new Date(), 'yyyy-MM-dd');
       const dayOfWeek = format(new Date(), 'EEEE');
+      const isSwissDE = isSwissGermanLocale();
       const userLanguage = getUserLanguageLabel();
+      const langHint = isSwissDE
+        ? `Swiss German (dialect pre-normalized to Standard German). Keep the title in German — do not translate to English.`
+        : `${userLanguage}. Parse date/time expressions correctly for this language. Keep the title in the user's language — do not translate to English.`;
 
       const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
 
-User's input language: ${userLanguage}. Parse date/time expressions correctly for this language. Keep the title in the user's language — do not translate to English.
+User's input language: ${langHint}
 
 TYPE CLASSIFICATION — pick exactly one:
 - "shopping": items to BUY for the family/shared list. Triggered by: "our shopping list", "the shopping list", "family list", "grocery list", or no possessive ("buy milk", "pick up bread").
@@ -292,7 +297,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: latestTextRef.current.trim() }],
+          messages: [{ role: 'user', content: isSwissGermanLocale() ? normalizeCHDE(latestTextRef.current.trim()) : latestTextRef.current.trim() }],
           systemPrompt: systemContext,
         }),
       });
@@ -331,11 +336,14 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     if (isListening) stopListening();
     setStep('processing');
 
+    const rawInput = latestTextRef.current.trim();
+    const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput) : rawInput;
+
     const result = await parseWithAI();
 
     if (result && result.title) {
       if (result.type) {
-        result.type = guardAIType(result.type, latestTextRef.current, result.date ?? null, result.time ?? null);
+        result.type = guardAIType(result.type, processText, result.date ?? null, result.time ?? null);
       }
       if (result.type && !userLockedType) setType(result.type);
 
@@ -356,9 +364,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       }
 
       setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
-      parseSnapshotRef.current = { rawInput: latestTextRef.current.trim(), aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
+      parseSnapshotRef.current = { rawInput, aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
     } else {
-      const raw = latestTextRef.current.trim();
+      const raw = processText;
       const chronoParsed = chrono.parse(raw, new Date())[0];
       const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
       const fallbackHour = chronoParsed?.start.get('hour');
@@ -688,7 +696,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 {/* "Did you mean?" */}
                 {(() => {
                   if (userLockedType || !parsed) return null;
-                  const suggested = classifyText(latestTextRef.current || text);
+                  const rawForClassify = latestTextRef.current || text;
+                  const suggested = classifyText(isSwissGermanLocale() ? normalizeCHDE(rawForClassify) : rawForClassify);
                   if (suggested === activeType) return null;
                   const suggestedMeta = TYPES.find(tp => tp.id === suggested);
                   if (!suggestedMeta) return null;

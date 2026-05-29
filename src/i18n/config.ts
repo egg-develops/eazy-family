@@ -12,6 +12,7 @@ function detectLng(): string {
   const stored = localStorage.getItem('eazy-family-language');
   if (stored) return stored;
   const nav = (navigator.language || '').toLowerCase();
+  if (nav === 'de-ch') return 'de-CH';
   if (nav.startsWith('de')) return 'de';
   if (nav.startsWith('fr')) return 'fr';
   if (nav.startsWith('it')) return 'it';
@@ -28,6 +29,7 @@ i18n
       en: { translation: en },
       'en-GB': { translation: { ...en, ...enGB } },
       de: { translation: de },
+      'de-CH': { translation: de },
       fr: { translation: fr },
       it: { translation: it },
       es: { translation: es },
