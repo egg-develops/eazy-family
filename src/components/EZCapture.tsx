@@ -142,6 +142,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [userLockedType, setUserLockedType] = useState<CaptureType | null>(defaultType ?? null);
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -405,7 +406,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
   handleParseAndPreviewRef.current = handleParseAndPreview;
 
   const handleConfirm = async () => {
-    if (!parsed) return;
+    if (!parsed || isSubmitting) return;
+    setIsSubmitting(true);
     haptic('medium');
     const entryType = parsed.type || type;
 
@@ -535,6 +537,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       }
     } catch {
       toast({ title: t('ezCapture.toastError'), variant: 'destructive' });
+      setIsSubmitting(false);
     }
   };
 
@@ -794,11 +797,12 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
               <div className="px-6 pb-6">
                 <button
                   onClick={handleConfirm}
-                  className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
                   style={{ background: '#964735', color: '#FFFFFF' }}
                 >
                   <Check className="w-4 h-4" />
-                  {t('ezCapture.confirmSave')}
+                  {isSubmitting ? '…' : t('ezCapture.confirmSave')}
                 </button>
               </div>
             </div>

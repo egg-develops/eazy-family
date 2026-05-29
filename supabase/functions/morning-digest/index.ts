@@ -64,6 +64,16 @@ serve(async (req) => {
 
     if (!profile) continue;
 
+    // Use the authoritative auth email — the profiles.email column can be
+    // stale, wrong, or set to the sender address on test accounts.
+    const SENDER_EMAIL = "hello@eazy.family";
+    let recipientEmail = profile.email;
+    if (!recipientEmail || recipientEmail === SENDER_EMAIL) {
+      const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
+      recipientEmail = authUser?.user?.email ?? null;
+    }
+    if (!recipientEmail || recipientEmail === SENDER_EMAIL) continue;
+
     const [eventsRes, tasksRes, staleTasksRes, upcomingEventsRes] = await Promise.all([
       supabase
         .from("events")
@@ -147,7 +157,7 @@ serve(async (req) => {
 
     // ── Email (SendGrid preferred, Brevo fallback) ────────────────────────
     const emailEnabled = isTruthy(data?.["eazy-morning-digest-email"]);
-    if (emailEnabled && profile.email) {
+    if (emailEnabled && recipientEmail) {
       const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
       const subject = `Good morning, ${firstName} ☀️ — Your family's day`;
 
@@ -159,8 +169,8 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            personalizations: [{ to: [{ email: profile.email, name: firstName }] }],
-            from: { email: "hello@eazy.family", name: "Eazy.Family" },
+            personalizations: [{ to: [{ email: recipientEmail, name: firstName }] }],
+            from: { email: SENDER_EMAIL, name: "Eazy.Family" },
             subject,
             content: [{ type: "text/html", value: html }],
           }),
@@ -169,7 +179,7 @@ serve(async (req) => {
           userSent = true;
         } else {
           const err = await sgRes.text();
-          console.error(`SendGrid error for ${profile.email}:`, err);
+          console.error(`SendGrid error for ${recipientEmail}:`, err);
           errors.push(`sendgrid: ${err}`);
         }
       } else if (BREVO_API_KEY) {
@@ -178,7 +188,7 @@ serve(async (req) => {
           headers: { "api-key": BREVO_API_KEY, "Content-Type": "application/json" },
           body: JSON.stringify({
             sender: { name: "Eazy.Family", email: "digest@eazy.family" },
-            to: [{ email: profile.email, name: firstName }],
+            to: [{ email: recipientEmail, name: firstName }],
             subject,
             htmlContent: html,
           }),
@@ -187,7 +197,7 @@ serve(async (req) => {
           userSent = true;
         } else {
           const err = await brevoRes.text();
-          console.error(`Brevo error for ${profile.email}:`, err);
+          console.error(`Brevo error for ${recipientEmail}:`, err);
           errors.push(`brevo: ${err}`);
         }
       }
