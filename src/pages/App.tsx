@@ -408,7 +408,7 @@ const AppLayout = () => {
                       transition: `transform 0.15s ease ${delay}ms, opacity 0.2s ease ${delay}ms, background-color 0.1s ease`,
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{iconEl}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, width: '20px' }}>{iconEl}</span>
                     {!ezIconOnly && <span style={{ flex: 1, textAlign: 'center' }}>{item.label}</span>}
                     {!ezIconOnly && <span style={{ width: '20px', flexShrink: 0 }} />}
                   </button>

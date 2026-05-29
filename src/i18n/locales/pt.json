@@ -326,7 +326,16 @@
       "manageSub": "Gerir assinatura",
       "termsOfUse": "Termos de uso",
       "privacyPolicy": "Política de privacidade",
-      "close": "Fechar"
+      "close": "Fechar",
+      "features": [
+        "Membros da família ilimitados",
+        "Calendários ilimitados — sincronize Google, Apple e Outlook",
+        "Listas privadas e compartilhadas ilimitadas para compras e tarefas",
+        "IA de voz completa — Botão EZ, o assistente da sua família",
+        "Camada de inteligência completa — conflitos, frequência de compras, escalada de tarefas",
+        "Rituais & Diário — seu espaço privado para reflexão",
+        "Morning Digest — diário & e-mail"
+      ]
     },
     "ez": {
       "iconOnly": "Somente ícones",

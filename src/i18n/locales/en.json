@@ -325,7 +325,16 @@
       "manageSub": "Manage Subscription",
       "termsOfUse": "Terms of Use",
       "privacyPolicy": "Privacy Policy",
-      "close": "Close"
+      "close": "Close",
+      "features": [
+        "Unlimited family members",
+        "Unlimited calendars — sync your Google, Apple, and Outlook",
+        "Unlimited private and shared lists for Shopping and Tasks",
+        "Full voice AI — EZ Button, your family's own assistant",
+        "Full intelligence layer — conflict detection, shopping frequency, task escalation",
+        "Rituals & Journal — your private space for reflection",
+        "Morning Digest — daily & email"
+      ]
     },
     "ez": {
       "iconOnly": "Icon only",

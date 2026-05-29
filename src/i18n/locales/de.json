@@ -325,7 +325,16 @@
       "manageSub": "Abonnement verwalten",
       "termsOfUse": "Nutzungsbedingungen",
       "privacyPolicy": "Datenschutzrichtlinie",
-      "close": "Schließen"
+      "close": "Schließen",
+      "features": [
+        "Unbegrenzte Familienmitglieder",
+        "Unbegrenzte Kalender — Google, Apple und Outlook synchronisieren",
+        "Unbegrenzte private und gemeinsame Listen für Einkäufe und Aufgaben",
+        "Vollständige KI-Sprachfunktion — EZ-Button, der Assistent Ihrer Familie",
+        "Vollständige Intelligenzebene — Konflikterkennung, Einkaufshäufigkeit, Aufgaben-Eskalierung",
+        "Rituale & Tagebuch — Ihr privater Raum zur Reflexion",
+        "Morning Digest — täglich & per E-Mail"
+      ]
     },
     "ez": {
       "iconOnly": "Nur Icons",
