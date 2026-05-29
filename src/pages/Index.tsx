@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "@/contexts/AuthContext";
 import { PublicNav } from "@/components/PublicNav";
+import { Capacitor } from "@capacitor/core";
 
 // Design tokens
 const T = {
@@ -210,6 +211,7 @@ export default function Index() {
   const { t } = useTranslation();
 
   if (!loading && user) return <Navigate to="/app" replace />;
+  if (!loading && !user && Capacitor.isNativePlatform()) return <Navigate to="/auth" replace />;
 
   const sec: React.CSSProperties = { padding: "72px 40px", borderBottom: `0.5px solid ${T.outline}` };
   const max: React.CSSProperties = { maxWidth: 860, margin: "0 auto" };
