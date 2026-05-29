@@ -27,6 +27,7 @@ import { validateImageFile } from "@/lib/fileValidation";
 import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { GuestUpgradeModal } from "@/components/GuestUpgradeModal";
 import { restoreRCPurchases } from "@/lib/revenuecat";
 import { Browser } from "@capacitor/browser";
 
@@ -115,7 +116,8 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { signOut, user, isPremium, isTrial, trialDaysLeft, refreshSubscription } = useAuth();
+  const { signOut, user, isPremium, isTrial, trialDaysLeft, refreshSubscription, isGuest } = useAuth();
+  const [guestFeature, setGuestFeature] = useState<string | null>(null);
   const { setTheme, isDark } = useTheme();
 
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
@@ -386,13 +388,13 @@ const Settings = () => {
                 icon={<UserPlus className="w-4 h-4" style={{ color: MUTED }} />}
                 title={t('settings.inviteFamily')}
                 right={<Arrow />}
-                onClick={() => navigate('/app/family')}
+                onClick={() => isGuest ? setGuestFeature('Invite Family') : navigate('/app/family')}
               />
               <Row
                 icon={<Share2 className="w-4 h-4" style={{ color: MUTED }} />}
                 title={t('settings.referFriends')}
                 right={<Arrow />}
-                onClick={handleReferFriends}
+                onClick={() => isGuest ? setGuestFeature('Refer a friend') : handleReferFriends()}
               />
               <Row
                 icon={<Trash2 className="w-4 h-4" style={{ color: '#C0392B' }} />}
@@ -463,7 +465,7 @@ const Settings = () => {
             <Row
               title={t('settings.alsoEmail')}
               subtitle={userEmail || 'Your account email'}
-              right={<Tog checked={morningDigestEmail} onChange={v => { setMorningDigestEmail(v); cloudSet('eazy-morning-digest-email', String(v)); }} />}
+              right={<Tog checked={morningDigestEmail} onChange={v => { if (isGuest) { setGuestFeature('Morning Digest email'); return; } setMorningDigestEmail(v); cloudSet('eazy-morning-digest-email', String(v)); }} />}
               last
             />
           )}
@@ -884,6 +886,9 @@ const Settings = () => {
         </div>
       )}
 
+      {guestFeature && (
+        <GuestUpgradeModal feature={guestFeature} onClose={() => setGuestFeature(null)} />
+      )}
     </div>
   );
 };

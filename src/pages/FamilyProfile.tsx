@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { GuestUpgradeModal } from "@/components/GuestUpgradeModal";
 import { error as logError } from "@/lib/logger";
 
 interface FamilyMember {
@@ -40,7 +41,7 @@ const FamilyProfile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -343,6 +344,15 @@ const FamilyProfile = () => {
       });
     }
   };
+
+  if (isGuest) {
+    return (
+      <GuestUpgradeModal
+        feature="Invite Family"
+        onClose={() => navigate('/app/settings')}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">

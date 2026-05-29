@@ -29,6 +29,7 @@ interface AuthContextType {
   isPremium: boolean;
   isTrial: boolean;
   trialDaysLeft: number | null;
+  isGuest: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: unknown }>;
   signIn: (email: string, password: string) => Promise<{ error: unknown }>;
   signOut: () => Promise<void>;
@@ -268,6 +269,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate(Capacitor.isNativePlatform() ? '/auth' : '/');
   };
 
+  const isGuest = !!user && !user.email;
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -276,6 +279,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isPremium,
       isTrial,
       trialDaysLeft,
+      isGuest,
       signUp,
       signIn,
       signOut,
