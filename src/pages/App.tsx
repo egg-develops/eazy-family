@@ -1137,10 +1137,11 @@ const AppHome = () => {
           );
         }
         return (
-          <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+          <div className="rounded-2xl p-4" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
             <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
-            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nothingScheduled')}</p>
-          </button>
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noEventsToday')}</p>
+            <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
+          </div>
         );
       })()}
 
@@ -1195,7 +1196,7 @@ const AppHome = () => {
             ) : (
               <div className="px-4 py-5 text-center">
                 <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noSharedEvents')}</p>
-                <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
+                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openFamilyPage')}</button>
               </div>
             )}
           </div>

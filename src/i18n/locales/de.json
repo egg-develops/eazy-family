@@ -305,7 +305,28 @@
     "deleteWarning": "Dadurch werden alle Ihre Daten dauerhaft gelöscht und können nicht rückgängig gemacht werden.",
     "cancel": "Abbrechen",
     "deleteEverything": "Ja, alles löschen",
-    "deleting": "Wird gelöscht…"
+    "deleting": "Wird gelöscht…",
+    "iOSAppOnly": "Nur iOS-App",
+    "premium": {
+      "trialTitle": "Family Premium — Testversion",
+      "activeTitle": "Family Premium — Aktiv",
+      "lastDay": "Letzter Testtag",
+      "endsToday": "Testversion endet heute",
+      "daysLeft": "Noch {{count}} Tage",
+      "upgradeTitle": "Auf Family Premium upgraden",
+      "upgradeDesc": "Unbegrenzte Mitglieder, KI, Kalendersync & mehr",
+      "upgradeBtn": "Auf Premium upgraden",
+      "onTrialTitle": "Du nutzt die kostenlose Testversion",
+      "onTrialDesc": "Upgrade, um nach der Testversion vollen Zugriff zu behalten — geteilte Kalender, Listen, KI-Assistent, Rituale und mehr.",
+      "freeTrial": "Testversion",
+      "active": "Aktiv",
+      "endingToday": "endet heute",
+      "oneDayLeft": "Noch 1 Tag",
+      "manageSub": "Abonnement verwalten",
+      "termsOfUse": "Nutzungsbedingungen",
+      "privacyPolicy": "Datenschutzrichtlinie",
+      "close": "Schließen"
+    }
   },
   "privacySettings": {
     "title": "Datenschutzeinstellungen",
@@ -361,7 +382,9 @@
     "addTaskBtn": "Aufgabe hinzufügen",
     "familyAgenda": "Familienagenda",
     "noSharedEvents": "Keine gemeinsamen Ereignisse in Kürze.",
-    "openCalendar": "Kalender öffnen"
+    "openCalendar": "Kalender öffnen",
+    "openFamilyPage": "Familienbereich öffnen",
+    "noEventsToday": "Keine Ereignisse heute"
   },
   "common": {
     "add": "Hinzufügen",
@@ -929,7 +952,10 @@
     "createPollBtn": "Umfrage erstellen",
     "votes": "Stimme",
     "votesPlural": "Stimmen",
-    "docLabel": "Dokument"
+    "docLabel": "Dokument",
+    "emptyTitle": "Familienagenda",
+    "emptyDesc": "Geteilte Familientermine und Aufgaben erscheinen hier.",
+    "openCalendar": "Kalender öffnen"
   },
   "website": {
     "nav": {

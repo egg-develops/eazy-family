@@ -306,7 +306,27 @@
     "deleteWarning": "This will permanently delete all your data and cannot be undone.",
     "cancel": "Cancel",
     "deleteEverything": "Yes, delete everything",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "premium": {
+      "trialTitle": "Family Premium — Trial",
+      "activeTitle": "Family Premium — Active",
+      "lastDay": "Last day of trial",
+      "endsToday": "Trial ends today",
+      "daysLeft": "{{count}} days remaining",
+      "upgradeTitle": "Upgrade to Family Premium",
+      "upgradeDesc": "Unlimited members, AI, calendar sync & more",
+      "upgradeBtn": "Upgrade to Premium",
+      "onTrialTitle": "You're on a free trial",
+      "onTrialDesc": "Upgrade to keep full access after your trial ends — shared calendars, lists, AI assistant, rituals and more.",
+      "freeTrial": "Free Trial",
+      "active": "Active",
+      "endingToday": "ends today",
+      "oneDayLeft": "1 day left",
+      "manageSub": "Manage Subscription",
+      "termsOfUse": "Terms of Use",
+      "privacyPolicy": "Privacy Policy",
+      "close": "Close"
+    }
   },
   "privacySettings": {
     "title": "Privacy Settings",
@@ -362,7 +382,9 @@
     "addTaskBtn": "Add Task",
     "familyAgenda": "Family Agenda",
     "noSharedEvents": "No shared events coming up.",
-    "openCalendar": "Open Calendar"
+    "openCalendar": "Open Calendar",
+    "openFamilyPage": "Open Family Page",
+    "noEventsToday": "No events today"
   },
   "common": {
     "add": "Add",
@@ -930,7 +952,10 @@
     "createPollBtn": "Create Poll",
     "votes": "vote",
     "votesPlural": "votes",
-    "docLabel": "Document"
+    "docLabel": "Document",
+    "emptyTitle": "Family Agenda",
+    "emptyDesc": "Shared Family events and tasks will be here.",
+    "openCalendar": "Open Calendar"
   },
   "website": {
     "nav": {

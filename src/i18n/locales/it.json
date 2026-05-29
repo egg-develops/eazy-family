@@ -305,7 +305,28 @@
     "deleteWarning": "Tutti i tuoi dati verranno eliminati definitivamente e non potranno essere ripristinati.",
     "cancel": "Annulla",
     "deleteEverything": "Sì, elimina tutto",
-    "deleting": "Eliminazione…"
+    "deleting": "Eliminazione…",
+    "iOSAppOnly": "Solo app iOS",
+    "premium": {
+      "trialTitle": "Family Premium — Prova",
+      "activeTitle": "Family Premium — Attivo",
+      "lastDay": "Ultimo giorno di prova",
+      "endsToday": "La prova termina oggi",
+      "daysLeft": "Ancora {{count}} giorni",
+      "upgradeTitle": "Passa a Family Premium",
+      "upgradeDesc": "Membri illimitati, IA, sync calendario e altro",
+      "upgradeBtn": "Passa a Premium",
+      "onTrialTitle": "Sei nel periodo di prova gratuito",
+      "onTrialDesc": "Passa al Premium per mantenere l'accesso completo dopo la prova — calendari condivisi, liste, assistente IA, rituali e altro.",
+      "freeTrial": "Prova gratuita",
+      "active": "Attivo",
+      "endingToday": "termina oggi",
+      "oneDayLeft": "1 giorno rimanente",
+      "manageSub": "Gestisci abbonamento",
+      "termsOfUse": "Termini di utilizzo",
+      "privacyPolicy": "Informativa sulla privacy",
+      "close": "Chiudi"
+    }
   },
   "privacySettings": {
     "title": "Impostazioni privacy",
@@ -361,7 +382,9 @@
     "addTaskBtn": "Aggiungi attività",
     "familyAgenda": "Agenda famiglia",
     "noSharedEvents": "Nessun evento condiviso in arrivo.",
-    "openCalendar": "Apri calendario"
+    "openCalendar": "Apri calendario",
+    "openFamilyPage": "Apri la pagina famiglia",
+    "noEventsToday": "Nessun evento oggi"
   },
   "common": {
     "add": "Aggiungi",
@@ -929,7 +952,10 @@
     "createPollBtn": "Crea sondaggio",
     "votes": "voto",
     "votesPlural": "voti",
-    "docLabel": "Documento"
+    "docLabel": "Documento",
+    "emptyTitle": "Agenda Famiglia",
+    "emptyDesc": "Gli eventi e i compiti familiari condivisi appariranno qui.",
+    "openCalendar": "Apri il calendario"
   },
   "website": {
     "nav": {

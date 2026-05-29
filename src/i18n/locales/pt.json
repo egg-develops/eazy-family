@@ -306,7 +306,28 @@
     "deleteWarning": "Todos os teus dados serão eliminados permanentemente e não pode ser desfeito.",
     "cancel": "Cancelar",
     "deleteEverything": "Sim, eliminar tudo",
-    "deleting": "A eliminar…"
+    "deleting": "A eliminar…",
+    "iOSAppOnly": "Apenas app iOS",
+    "premium": {
+      "trialTitle": "Family Premium — Teste",
+      "activeTitle": "Family Premium — Ativo",
+      "lastDay": "Último dia de teste",
+      "endsToday": "O teste termina hoje",
+      "daysLeft": "Ainda {{count}} dias",
+      "upgradeTitle": "Atualizar para Family Premium",
+      "upgradeDesc": "Membros ilimitados, IA, sincronização & mais",
+      "upgradeBtn": "Atualizar para Premium",
+      "onTrialTitle": "Você está no período de teste gratuito",
+      "onTrialDesc": "Atualize para manter o acesso completo após o teste — calendários compartilhados, listas, assistente IA, rituais e mais.",
+      "freeTrial": "Teste gratuito",
+      "active": "Ativo",
+      "endingToday": "termina hoje",
+      "oneDayLeft": "1 dia restante",
+      "manageSub": "Gerir assinatura",
+      "termsOfUse": "Termos de uso",
+      "privacyPolicy": "Política de privacidade",
+      "close": "Fechar"
+    }
   },
   "privacySettings": {
     "title": "Definições de privacidade",
@@ -359,7 +380,9 @@
     "noMessages": "Ainda sem mensagens — começa a conversa.",
     "openChannel": "Abrir canal",
     "noTasksYet": "Ainda sem tarefas.",
-    "addTaskBtn": "Adicionar tarefa"
+    "addTaskBtn": "Adicionar tarefa",
+    "openFamilyPage": "Abrir página da família",
+    "noEventsToday": "Sem eventos hoje"
   },
   "common": {
     "add": "Adicionar",
@@ -927,7 +950,10 @@
     "createPollBtn": "Criar sondagem",
     "votes": "voto",
     "votesPlural": "votos",
-    "docLabel": "Documento"
+    "docLabel": "Documento",
+    "emptyTitle": "Agenda Familiar",
+    "emptyDesc": "Eventos e tarefas familiares partilhadas aparecerão aqui.",
+    "openCalendar": "Abrir o calendário"
   },
   "website": {
     "nav": {

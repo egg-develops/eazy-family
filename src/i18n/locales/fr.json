@@ -305,7 +305,28 @@
     "deleteWarning": "Toutes vos données seront définitivement supprimées et cela ne peut pas être annulé.",
     "cancel": "Annuler",
     "deleteEverything": "Oui, tout supprimer",
-    "deleting": "Suppression…"
+    "deleting": "Suppression…",
+    "iOSAppOnly": "Application iOS uniquement",
+    "premium": {
+      "trialTitle": "Family Premium — Essai",
+      "activeTitle": "Family Premium — Actif",
+      "lastDay": "Dernier jour d'essai",
+      "endsToday": "L'essai se termine aujourd'hui",
+      "daysLeft": "Encore {{count}} jours",
+      "upgradeTitle": "Passer à Family Premium",
+      "upgradeDesc": "Membres illimités, IA, sync calendrier & plus",
+      "upgradeBtn": "Passer au Premium",
+      "onTrialTitle": "Vous utilisez l'essai gratuit",
+      "onTrialDesc": "Passez au Premium pour garder l'accès complet après l'essai — calendriers partagés, listes, assistant IA, rituels et plus.",
+      "freeTrial": "Essai gratuit",
+      "active": "Actif",
+      "endingToday": "se termine aujourd'hui",
+      "oneDayLeft": "1 jour restant",
+      "manageSub": "Gérer l'abonnement",
+      "termsOfUse": "Conditions d'utilisation",
+      "privacyPolicy": "Politique de confidentialité",
+      "close": "Fermer"
+    }
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",
@@ -361,7 +382,9 @@
     "addTaskBtn": "Ajouter une tâche",
     "familyAgenda": "Agenda familial",
     "noSharedEvents": "Aucun événement partagé à venir.",
-    "openCalendar": "Ouvrir le calendrier"
+    "openCalendar": "Ouvrir le calendrier",
+    "openFamilyPage": "Ouvrir la page famille",
+    "noEventsToday": "Pas d'événements aujourd'hui"
   },
   "common": {
     "add": "Ajouter",
@@ -929,7 +952,10 @@
     "createPollBtn": "Créer le sondage",
     "votes": "vote",
     "votesPlural": "votes",
-    "docLabel": "Document"
+    "docLabel": "Document",
+    "emptyTitle": "Agenda Famille",
+    "emptyDesc": "Les événements et tâches familiaux partagés apparaîtront ici.",
+    "openCalendar": "Ouvrir le calendrier"
   },
   "website": {
     "nav": {

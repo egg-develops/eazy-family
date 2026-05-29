@@ -215,17 +215,33 @@ const FamilyAgendaView = () => {
 
         {!loading && groups.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-            <div className="text-4xl">📅</div>
-            <p className="font-semibold" style={{ color: INK }}>Nothing coming up</p>
+            <svg width="88" height="88" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4" y="16" width="52" height="50" rx="9" fill="#FDF3EE" stroke="#964735" strokeWidth="2.5"/>
+              <rect x="4" y="16" width="52" height="17" rx="9" fill="#964735"/>
+              <rect x="4" y="26" width="52" height="7" fill="#964735"/>
+              <rect x="18" y="9" width="6" height="14" rx="3" fill="#D97B66"/>
+              <rect x="36" y="9" width="6" height="14" rx="3" fill="#D97B66"/>
+              <circle cx="18" cy="50" r="2.5" fill="#D97B66" opacity="0.6"/>
+              <circle cx="30" cy="50" r="2.5" fill="#D97B66" opacity="0.6"/>
+              <circle cx="42" cy="50" r="2.5" fill="#D97B66" opacity="0.6"/>
+              <circle cx="18" cy="60" r="2.5" fill="#964735" opacity="0.3"/>
+              <circle cx="30" cy="60" r="2.5" fill="#964735" opacity="0.55"/>
+              <circle cx="64" cy="60" r="20" fill="white" stroke="#EDCFB8" strokeWidth="1.5"/>
+              <path d="M54 55 L54 65 L70 71 L70 49 Z" fill="#964735"/>
+              <rect x="47" y="57" width="8" height="8" rx="2.5" fill="#D97B66"/>
+              <path d="M71 54 Q77 60 71 66" stroke="#D97B66" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+              <path d="M74 51 Q82 60 74 69" stroke="#D97B66" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.45"/>
+            </svg>
+            <p className="font-semibold" style={{ color: INK }}>{t('familyAgenda.emptyTitle')}</p>
             <p className="text-sm" style={{ color: MUTED, maxWidth: '220px' }}>
-              Shared events, tasks, and reminders will appear here.
+              {t('familyAgenda.emptyDesc')}
             </p>
             <button
               onClick={() => navigate('/app/calendar')}
               className="mt-2 text-sm font-semibold px-4 py-2 rounded-full"
               style={{ background: 'hsl(var(--muted))', color: TC }}
             >
-              Open Calendar
+              {t('familyAgenda.openCalendar')}
             </button>
           </div>
         )}

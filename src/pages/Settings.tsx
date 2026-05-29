@@ -68,12 +68,12 @@ const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
 
 const EZ_DEFAULTS = [
-  { path: '/app', label: 'Home' },
-  { path: '/app/calendar', label: 'Calendar' },
-  { path: '/app/family-agenda', label: 'Family' },
-  { path: '/app/lists', label: 'Lists' },
-  { path: '/app/rituals', label: 'Rituals' },
-  { path: '/app/settings', label: 'Settings' },
+  { path: '/app', labelKey: 'nav.home' },
+  { path: '/app/calendar', labelKey: 'nav.calendar' },
+  { path: '/app/family-agenda', labelKey: 'nav.family' },
+  { path: '/app/lists', labelKey: 'nav.lists' },
+  { path: '/app/rituals', labelKey: 'nav.rituals' },
+  { path: '/app/settings', labelKey: 'nav.settings' },
 ];
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
@@ -346,8 +346,8 @@ const Settings = () => {
               {isPremium ? (
                 <Row
                   icon={<Crown className="w-4 h-4" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />}
-                  title={isTrial ? 'Family Premium — Trial' : 'Family Premium — Active'}
-                  subtitle={isTrial && trialDaysLeft !== null ? trialDaysLeft === 1 ? 'Last day of trial' : trialDaysLeft === 0 ? 'Trial ends today' : `${trialDaysLeft} days remaining` : undefined}
+                  title={isTrial ? t('settings.premium.trialTitle') : t('settings.premium.activeTitle')}
+                  subtitle={isTrial && trialDaysLeft !== null ? trialDaysLeft === 1 ? t('settings.premium.lastDay') : trialDaysLeft === 0 ? t('settings.premium.endsToday') : t('settings.premium.daysLeft', { count: trialDaysLeft }) : undefined}
                   right={<Arrow />}
                   onClick={() => setShowPremiumSheet(true)}
                 />
@@ -359,14 +359,14 @@ const Settings = () => {
                         <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold" style={{ color: INK }}>Upgrade to Family Premium</p>
-                        <p className="text-xs" style={{ color: MUTED }}>Unlimited members, AI, calendar sync & more</p>
+                        <p className="text-sm font-semibold" style={{ color: INK }}>{t('settings.premium.upgradeTitle')}</p>
+                        <p className="text-xs" style={{ color: MUTED }}>{t('settings.premium.upgradeDesc')}</p>
                       </div>
                     </div>
                     <UpgradeDialog>
                       <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
                         <Crown className="w-4 h-4" />
-                        Upgrade to Premium
+                        {t('settings.premium.upgradeBtn')}
                       </button>
                     </UpgradeDialog>
                   </div>
@@ -523,9 +523,9 @@ const Settings = () => {
               }}
             >
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                <span className="text-sm font-bold" style={{ color: '#964735' }}>{item.label[0]}</span>
+                <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(item.labelKey)[0]}</span>
               </div>
-              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{item.label}</p>
+              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(item.labelKey)}</p>
               <div
                 className="p-1 touch-none"
                 style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
@@ -805,11 +805,11 @@ const Settings = () => {
                       ? { background: '#FFF0E0', color: '#964735' }
                       : { background: '#E8F5E9', color: '#2E7D32' }
                   }>
-                    {isTrial ? 'Free Trial' : 'Active'}
+                    {isTrial ? t('settings.premium.freeTrial') : t('settings.premium.active')}
                   </span>
                   {isTrial && trialDaysLeft !== null && (
                     <span className="text-xs" style={{ color: trialDaysLeft <= 3 ? '#C4621A' : MUTED }}>
-                      {trialDaysLeft === 0 ? 'ends today' : trialDaysLeft === 1 ? '1 day left' : `${trialDaysLeft} days left`}
+                      {trialDaysLeft === 0 ? t('settings.premium.endingToday') : trialDaysLeft === 1 ? t('settings.premium.oneDayLeft') : t('settings.premium.daysLeft', { count: trialDaysLeft })}
                     </span>
                   )}
                 </div>
@@ -819,16 +819,16 @@ const Settings = () => {
             {/* Trial upgrade CTA */}
             {isTrial && (
               <div className="rounded-2xl p-4 space-y-3" style={{ background: 'linear-gradient(135deg, #FDF3EE 0%, #FFF8F3 100%)', border: '1px solid #EDCFB8' }}>
-                <p className="text-sm font-semibold" style={{ color: '#964735' }}>You're on a free trial</p>
+                <p className="text-sm font-semibold" style={{ color: '#964735' }}>{t('settings.premium.onTrialTitle')}</p>
                 <p className="text-xs leading-relaxed" style={{ color: '#7A5040' }}>
-                  Upgrade to keep full access after your trial ends — shared calendars, lists, AI assistant, rituals and more.
+                  {t('settings.premium.onTrialDesc')}
                 </p>
                 <UpgradeDialog>
                   <button
                     className="w-full py-2.5 rounded-xl text-sm font-semibold text-white"
                     style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
                   >
-                    Upgrade to Premium
+                    {t('settings.premium.upgradeBtn')}
                   </button>
                 </UpgradeDialog>
               </div>
@@ -866,7 +866,7 @@ const Settings = () => {
               style={{ background: BG, color: INK, border: `1px solid ${BORDER}` }}
             >
               <ExternalLink className="w-4 h-4" />
-              Manage Subscription
+              {t('settings.premium.manageSub')}
             </button>
 
             {/* Links */}
@@ -874,19 +874,19 @@ const Settings = () => {
               <button
                 onClick={() => Browser.open({ url: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/' })}
                 className="text-xs" style={{ color: MUTED }}>
-                Terms of Use
+                {t('settings.premium.termsOfUse')}
               </button>
               <button
                 onClick={() => Browser.open({ url: 'https://eazy.family/privacy' })}
                 className="text-xs" style={{ color: MUTED }}>
-                Privacy Policy
+                {t('settings.premium.privacyPolicy')}
               </button>
             </div>
 
             <button onClick={() => setShowPremiumSheet(false)}
               className="w-full py-2.5 text-sm font-medium rounded-2xl"
               style={{ color: MUTED, background: BG }}>
-              Close
+              {t('settings.premium.close')}
             </button>
           </div>
         </div>
