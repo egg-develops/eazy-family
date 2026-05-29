@@ -6,11 +6,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import * as chrono from "chrono-node";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
+
 type Step = 'capture' | 'processing' | 'preview';
 
 interface EZCaptureProps {
@@ -37,14 +39,26 @@ const BORDER = 'hsl(var(--border))';
 const INK = 'hsl(var(--foreground))';
 const MUTED = 'hsl(var(--muted-foreground))';
 
-const TYPES: { id: CaptureType; label: string; icon: string }[] = [
-  { id: 'event',             label: 'Event',          icon: '📅' },
-  { id: 'task',              label: 'Task',            icon: '✓'  },
-  { id: 'shopping',          label: 'Shopping',        icon: '🛒' },
-  { id: 'shopping_personal', label: 'My List',         icon: '🛒' },
-  { id: 'reminder',          label: 'Reminder',        icon: '🔔' },
-  { id: 'journal',           label: 'Journal',         icon: '📝' },
+// Stable type definitions — labels resolved via t() at render time
+const TYPE_DEFS: { id: CaptureType; icon: string; labelKey: string }[] = [
+  { id: 'event',             icon: '📅', labelKey: 'ezCapture.typeEvent'    },
+  { id: 'task',              icon: '✓',  labelKey: 'ezCapture.typeTask'     },
+  { id: 'shopping',          icon: '🛒', labelKey: 'ezCapture.typeShopping' },
+  { id: 'shopping_personal', icon: '🛒', labelKey: 'ezCapture.typeMyList'   },
+  { id: 'reminder',          icon: '🔔', labelKey: 'ezCapture.typeReminder' },
+  { id: 'journal',           icon: '📝', labelKey: 'ezCapture.typeJournal'  },
 ];
+
+// Maps each CaptureType to its AI message translation key prefix
+const AI_KEY: Record<CaptureType, string> = {
+  event:             'aiEvent',
+  task:              'aiTask',
+  shopping:          'aiShopping',
+  shopping_personal: 'aiPersonal',
+  reminder:          'aiReminder',
+  ritual:            'aiRitual',
+  journal:           'aiJournal',
+};
 
 const LOCALE_TO_LANG: Record<string, string> = {
   en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT',
@@ -56,20 +70,21 @@ const LOCALE_TO_LANG: Record<string, string> = {
   'pt-PT': 'pt-PT', 'pt-BR': 'pt-BR',
 };
 
-const AI_MESSAGES: Record<CaptureType, (name: string) => string> = {
-  event:    (n) => n ? `I'll add this to your calendar, ${n}.` : "I'll add this to your calendar.",
-  task:     (n) => n ? `Got it, ${n}. Adding to your task list.` : "Got it. Adding to your task list.",
-  shopping:          (n) => n ? `On the family list, ${n}. Anything else?` : "On the family list. Anything else?",
-  shopping_personal: (n) => n ? `On your personal list, ${n}. Anything else?` : "On your personal list. Anything else?",
-  reminder: (n) => n ? `I'll make sure you don't forget, ${n}.` : "I'll make sure you don't forget.",
-  ritual:   (n) => n ? `Beautiful ritual, ${n}. I'll track this.` : "Beautiful ritual. I'll track this.",
-  journal:  (n) => n ? `Your thoughts are safe with me, ${n}.` : "Your thoughts are safe with me.",
+const LANG_NAMES: Record<string, string> = {
+  en: 'English', de: 'German', fr: 'French',
+  it: 'Italian', es: 'Spanish', pt: 'Portuguese',
 };
 
 const getUserLocale = (): string => {
   const saved = localStorage.getItem('i18nextLng') || navigator.language || 'en';
   const base = saved.split('-')[0];
   return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
+};
+
+const getUserLanguageLabel = (): string => {
+  const saved = localStorage.getItem('eazy-family-language') ||
+    (localStorage.getItem('i18nextLng') || 'en').split('-')[0];
+  return LANG_NAMES[saved] || 'English';
 };
 
 const cleanCaptureTitle = (raw: string): string => {
@@ -80,10 +95,8 @@ const cleanCaptureTitle = (raw: string): string => {
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
-    // Strip bare time like "4PM" or "4:30pm" at end (no "at" prefix)
     .replace(/\s+\d{1,2}(:\d{2})?\s*(am|pm)\s*$/i, '')
     .trim();
-  // Strip orphaned trailing prepositions — apply twice to catch chains like "for at"
   s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
   s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -102,6 +115,19 @@ const getUserFirstName = (): string => {
 };
 
 export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
+  const { t } = useTranslation();
+
+  // Resolve type labels at render time so they follow the active language
+  const TYPES = TYPE_DEFS.map(d => ({ ...d, label: t(d.labelKey) }));
+
+  // Returns the AI strip message for the current type and user name
+  const getAIMessage = (captureType: CaptureType): string => {
+    const key = AI_KEY[captureType] || 'aiEvent';
+    return userName
+      ? t(`ezCapture.${key}Greet`, { name: userName })
+      : t(`ezCapture.${key}`);
+  };
+
   const [text, setText] = useState('');
   const setTextTracked = (val: string | ((prev: string) => string)) => {
     setText(prev => {
@@ -111,7 +137,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     });
   };
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
-  // Tracks an explicit pill selection by the user — takes priority over AI classification
   const [userLockedType, setUserLockedType] = useState<CaptureType | null>(defaultType ?? null);
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
@@ -123,34 +148,27 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const speech = useSpeechRecognition();
   const isListening = speech.isListening;
   const isTranscribing = speech.isTranscribing;
-  const isSingleShot = speech.isSingleShot; // MediaRecorder path — no restart loop
+  const isSingleShot = speech.isSingleShot;
 
   useEffect(() => {
     haptic('medium');
     setTimeout(() => textareaRef.current?.focus(), 150);
   }, []);
 
-  // Auto-detect type from keywords as user types
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
     setType(classifyText(text));
   }, [text]);
 
   const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
-  // Always points to the latest handleParseAndPreview — avoids stale closure when
-  // called from onEnd (which may close over an older render's function reference).
   const handleParseAndPreviewRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   const shouldRestartRef = useRef(false);
   const consecutiveFailsRef = useRef(0);
   const [intendingToListen, setIntendingToListen] = useState(false);
-  // Tracks text present at the start of a speech session so partial results
-  // can be displayed with replace semantics (each partial is the full session transcript)
   const sessionBaseRef = useRef('');
   const latestTextRef = useRef('');
 
-  // Stop voice and clean up on unmount — prevents orphaned sessions from
-  // corrupting iOS audio state after the modal closes
   useEffect(() => {
     return () => {
       shouldRestartRef.current = false;
@@ -173,7 +191,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
     const run = () => {
       if (!shouldRestartRef.current) return;
-      // Snapshot current text so replace-semantics can layer the session transcript on top
       sessionBaseRef.current = latestTextRef.current.trim();
       speech.start({
         lang: getUserLocale(),
@@ -186,39 +203,35 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
           if (error === 'not-allowed') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: 'Microphone access denied', description: 'Allow microphone access in Settings.' });
+            toast({ title: t('ezCapture.micDenied'), description: t('ezCapture.micDeniedDesc') });
             return;
           }
           if (error === 'not-supported') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: 'Voice input not available on this device' });
+            toast({ title: t('ezCapture.voiceUnavailable') });
             return;
           }
           if (error === 'transcription-failed') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: 'Could not transcribe audio', description: 'Please try again.' });
+            toast({ title: t('ezCapture.transcriptionFailed'), description: t('ezCapture.transcriptionFailedDesc') });
             return;
           }
           consecutiveFailsRef.current++;
           if (consecutiveFailsRef.current >= 3) {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: 'Voice unavailable', description: 'Tap the mic to try again.' });
+            toast({ title: t('ezCapture.voiceError'), description: t('ezCapture.voiceErrorDesc') });
           }
         },
         onEnd: () => {
-          // Single-shot path (mobile web MediaRecorder): never restart — auto-parse instead.
-          // Continuous path (desktop Web Speech API / native): restart after each utterance,
-          // but not after the user explicitly tapped stop (shouldRestartRef=false).
           if (shouldRestartRef.current && !isSingleShot) {
             const delay = Capacitor.isNativePlatform() ? 700 : 300;
             setTimeout(run, delay);
           } else {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            // Auto-parse if we captured text — removes the manual "Create" tap
             if (latestTextRef.current.trim()) {
               setTimeout(() => handleParseAndPreviewRef.current?.(), 50);
             }
@@ -240,15 +253,18 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      // Bug fix: use local date, not UTC
       const today = format(new Date(), 'yyyy-MM-dd');
       const dayOfWeek = format(new Date(), 'EEEE');
+      const userLanguage = getUserLanguageLabel();
+
       const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
+
+User's input language: ${userLanguage}. Parse date/time expressions correctly for this language. Keep the title in the user's language — do not translate to English.
 
 TYPE CLASSIFICATION — pick exactly one:
 - "shopping": items to BUY for the family/shared list. Triggered by: "our shopping list", "the shopping list", "family list", "grocery list", or no possessive ("buy milk", "pick up bread").
 - "shopping_personal": items to BUY for YOUR OWN personal list. Triggered by: "my shopping list", "my list", "my groceries", "for me". Example: "add wine to my list" → shopping_personal.
-- "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
+- "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off — and their equivalents in ${userLanguage}. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
 - "event": time-specific appointment, meeting, or occurrence with a date/time.
 - "reminder": "remind me to X".
 - "ritual": habit, gratitude, or reflection entry.
@@ -256,13 +272,13 @@ TYPE CLASSIFICATION — pick exactly one:
 
 JSON fields:
 - type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book"), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule"), date/time phrases. Examples: "Add peanut butter to our shopping list" → title "peanut butter", type "shopping". "Add cottage cheese to my shopping list" → title "cottage cheese", type "shopping_personal". "Add clean the terrace and water the plants to my list" → title "Clean the terrace, Water the plants", type "task". "Remind me to call dentist tomorrow" → title "Call dentist", type "reminder". "Doctor appointment next Thursday at 4pm" → title "Doctor appointment", type "event". For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
-- date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals like "the 29th", "29th", "May 5th". Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed in the current month, otherwise the following month.
-- time: "HH:MM" 24h or null. "4 o'clock pm" → "16:00", "half past 3" → "15:30", "3pm" → "15:00".
+- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
+- date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals. Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed, otherwise the following month.
+- time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
 - assignees: array of first names or null
-- reminder: human-readable string like "1 week before" or null
+- reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
 
@@ -318,14 +334,11 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     const result = await parseWithAI();
 
     if (result && result.title) {
-      // Guard: never let AI override obvious keyword classifications
       if (result.type) {
         result.type = guardAIType(result.type, latestTextRef.current, result.date ?? null, result.time ?? null);
       }
       if (result.type && !userLockedType) setType(result.type);
 
-      // Post-process: if a date phrase is still present in the AI's title (e.g. "the 29th"),
-      // extract it via chrono and use it as the date (overriding a wrong AI date).
       let cleanedTitle = cleanCaptureTitle(result.title);
       let resolvedDate = result.date;
       const now = new Date();
@@ -345,7 +358,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
       parseSnapshotRef.current = { rawInput: latestTextRef.current.trim(), aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
     } else {
-      // Fallback: chrono-node extracts date/time; strip the matched date text from the title
       const raw = latestTextRef.current.trim();
       const chronoParsed = chrono.parse(raw, new Date())[0];
       const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
@@ -354,8 +366,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       const fallbackTime = fallbackHour != null
         ? `${String(fallbackHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
-      // Remove the date/time substring chrono matched so it doesn't end up in the title.
-      // Also strip orphaned time words (e.g. "pm" left after chrono pulls "at 4 o'clock").
       const withoutDate = chronoParsed
         ? (raw.slice(0, chronoParsed.index) + raw.slice(chronoParsed.index + chronoParsed.text.length))
             .replace(/\b(am|pm|a\.m\.|p\.m\.|o'?clock)\b/gi, '')
@@ -363,7 +373,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
             .trim()
         : raw;
 
-      // chrono misreads "X o'clock pm" as AM — fix up if original text had pm/p.m.
       const hasPM = /\b(pm|p\.m\.)\b/i.test(raw);
       const correctedHour = fallbackHour != null && hasPM && fallbackHour < 12 ? fallbackHour + 12 : fallbackHour;
       const correctedTime = correctedHour != null
@@ -382,8 +391,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     haptic('light');
   };
 
-  // Keep the ref current on every render so onEnd can call the latest version
-  // without capturing a stale closure from when startListening was defined.
   handleParseAndPreviewRef.current = handleParseAndPreview;
 
   const handleConfirm = async () => {
@@ -408,7 +415,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           const ed = new Date(`${parsed.date}T${parsed.endTime}`);
           if (ed > startDate) endDate = ed;
         }
-        // Push to Apple Calendar if sync is enabled (events only, not reminders)
         let appleCalendarId: string | undefined;
         if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
           appleCalendarId = (await createAppleEvent({
@@ -436,7 +442,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: entryType === 'reminder' ? 'Reminder set' : '✓ Added to Calendar' });
+        toast({ title: entryType === 'reminder' ? t('ezCapture.toastReminderSet') : t('ezCapture.toastCalendarAdded') });
         onClose(); navigate('/app/calendar');
 
       } else if (entryType === 'task') {
@@ -445,11 +451,14 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         const dueDate = parsed.date
           ? new Date(`${parsed.date}T${parsed.time ?? '00:00:00'}`).toISOString()
           : null;
-        await Promise.all(taskItems.map(t =>
-          supabase.from('tasks').insert({ title: t, type: 'task', user_id: user.id, completed: false, due_date: dueDate })
+        await Promise.all(taskItems.map(ti =>
+          supabase.from('tasks').insert({ title: ti, type: 'task', user_id: user.id, completed: false, due_date: dueDate })
         ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: taskItems.length > 1 ? `✓ ${taskItems.length} tasks added` : '✓ Task added' });
+        toast({ title: taskItems.length > 1
+          ? t('ezCapture.toastTasksAdded', { count: taskItems.length })
+          : t('ezCapture.toastTaskAdded')
+        });
         onClose(); navigate('/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
@@ -460,8 +469,11 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           supabase.from('tasks').insert({ title: item, type: dbType, user_id: user.id, completed: false })
         ));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        const listLabel = dbType === 'shopping_personal' ? 'personal list' : 'shopping list';
-        toast({ title: `✓ ${items.length} item${items.length > 1 ? 's' : ''} added to ${listLabel}` });
+        const listLabel = t(dbType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
+        toast({ title: items.length === 1
+          ? t('ezCapture.toastItemAdded', { list: listLabel })
+          : t('ezCapture.toastItemsAdded', { count: items.length, list: listLabel })
+        });
         onClose(); navigate('/app/lists?tab=shopping');
 
       } else if (entryType === 'ritual') {
@@ -475,7 +487,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         const ex = JSON.parse(localStorage.getItem('eazy-rituals') || '[]');
         localStorage.setItem('eazy-rituals', JSON.stringify([entry, ...ex]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: '✓ Ritual captured' });
+        toast({ title: t('ezCapture.toastRitualCaptured') });
         onClose(); navigate('/app/rituals');
 
       } else if (entryType === 'journal') {
@@ -489,11 +501,10 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...ex]));
         window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: '✓ Journal entry saved' });
+        toast({ title: t('ezCapture.toastJournalSaved') });
         onClose(); navigate('/app/rituals');
       }
 
-      // Fire-and-forget telemetry — never blocks or surfaces errors to the user
       if (parseSnapshotRef.current && session) {
         const snap = parseSnapshotRef.current;
         const final = parsed;
@@ -512,7 +523,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         }).then(() => {});
       }
     } catch {
-      toast({ title: 'Something went wrong', variant: 'destructive' });
+      toast({ title: t('ezCapture.toastError'), variant: 'destructive' });
     }
   };
 
@@ -527,13 +538,19 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
   const activeType = userLockedType || parsed?.type || type;
 
+  // Build textarea placeholder based on voice state
+  const placeholder = isTranscribing
+    ? t('ezCapture.placeholderTranscribing')
+    : isListening
+      ? (isSingleShot ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
+      : t('ezCapture.placeholder');
+
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col"
       style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
-      {/* Center card — stopPropagation only on the card itself, not the whole flex area */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div onClick={e => e.stopPropagation()} className="w-full max-w-sm">
 
@@ -541,8 +558,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           {step === 'capture' && (
             <div className="rounded-3xl p-6 space-y-5" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="text-center space-y-1">
-                <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>What's on your mind?</h2>
-                <p className="text-sm" style={{ color: MUTED }}>Capture thoughts — Schedule tasks</p>
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>{t('ezCapture.header')}</h2>
+                <p className="text-sm" style={{ color: MUTED }}>{t('ezCapture.subheader')}</p>
               </div>
 
               <div className="relative">
@@ -550,7 +567,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   ref={textareaRef}
                   value={text}
                   onChange={e => setTextTracked(e.target.value)}
-                  placeholder={isTranscribing ? "Transcribing…" : isListening ? (isSingleShot ? "Listening… stop speaking to auto-submit" : "Recording… tap mic to stop") : "Speak or type anything — event, task, note, reminder…"}
+                  placeholder={placeholder}
                   rows={4}
                   className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
                   style={{
@@ -562,7 +579,6 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   }}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
                 />
-                {/* Mic button — pulse when recording, spinner when transcribing */}
                 <div className="absolute bottom-3 right-3 w-7 h-7">
                   {(intendingToListen || isListening) && !isTranscribing && (
                     <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
@@ -581,24 +597,24 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 </div>
               </div>
 
-              {/* Type chips */}
+              {/* Type pills */}
               <div className="flex flex-wrap gap-1">
-                {TYPES.map(t => (
+                {TYPES.map(tp => (
                   <button
-                    key={t.id}
-                    onClick={() => { setType(t.id); setUserLockedType(t.id); }}
+                    key={tp.id}
+                    onClick={() => { setType(tp.id); setUserLockedType(tp.id); }}
                     className="flex items-center gap-0.5 rounded-full font-medium transition-all"
                     style={{
                       padding: '1px 8px',
                       fontSize: '11px',
                       lineHeight: '18px',
-                      background: type === t.id ? '#964735' : MUTED_BG,
-                      color: type === t.id ? '#FFFFFF' : MUTED,
-                      border: `1px solid ${type === t.id ? '#964735' : BORDER}`,
+                      background: type === tp.id ? '#964735' : MUTED_BG,
+                      color: type === tp.id ? '#FFFFFF' : MUTED,
+                      border: `1px solid ${type === tp.id ? '#964735' : BORDER}`,
                     }}
                   >
-                    <span style={{ fontSize: '10px' }}>{t.icon}</span>
-                    {t.label}
+                    <span style={{ fontSize: '10px' }}>{tp.icon}</span>
+                    {tp.label}
                   </button>
                 ))}
               </div>
@@ -609,7 +625,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   className="flex-1 py-2 rounded-full text-sm font-semibold"
                   style={{ background: MUTED_BG, color: MUTED, border: `1px solid ${BORDER}` }}
                 >
-                  Cancel
+                  {t('ezCapture.cancel')}
                 </button>
                 <button
                   onClick={handleParseAndPreview}
@@ -622,7 +638,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   }}
                 >
                   <Sparkles className="w-4 h-4" />
-                  Create
+                  {t('ezCapture.create')}
                 </button>
               </div>
             </div>
@@ -636,8 +652,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 <img src="/logo.png" alt="" className="absolute inset-0 m-auto w-8 h-8 object-contain" />
               </div>
               <div className="text-center space-y-1">
-                <p className="font-bold" style={{ color: INK }}>Parsing with AI…</p>
-                <p className="text-sm" style={{ color: MUTED }}>Understanding your intent</p>
+                <p className="font-bold" style={{ color: INK }}>{t('ezCapture.processingTitle')}</p>
+                <p className="text-sm" style={{ color: MUTED }}>{t('ezCapture.processingSubtitle')}</p>
               </div>
             </div>
           )}
@@ -654,27 +670,27 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   >
                     <ChevronLeft className="w-4 h-4" style={{ color: MUTED }} />
                   </button>
-                  <h2 className="font-bold text-lg" style={{ color: INK }}>Confirm</h2>
+                  <h2 className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.confirm')}</h2>
                 </div>
 
                 {/* Type badge */}
                 <div className="flex">
                   {(() => {
-                    const t = TYPES.find(t => t.id === activeType);
-                    return t ? (
+                    const tp = TYPES.find(tp => tp.id === activeType);
+                    return tp ? (
                       <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold" style={{ background: '#964735', color: '#FFFFFF' }}>
-                        <span style={{ fontSize: '12px' }}>{t.icon}</span> {t.label}
+                        <span style={{ fontSize: '12px' }}>{tp.icon}</span> {tp.label}
                       </span>
                     ) : null;
                   })()}
                 </div>
 
-                {/* "Did you mean?" — shown when AI type disagrees with keyword classifier and user hasn't locked */}
+                {/* "Did you mean?" */}
                 {(() => {
                   if (userLockedType || !parsed) return null;
                   const suggested = classifyText(latestTextRef.current || text);
                   if (suggested === activeType) return null;
-                  const suggestedMeta = TYPES.find(t => t.id === suggested);
+                  const suggestedMeta = TYPES.find(tp => tp.id === suggested);
                   if (!suggestedMeta) return null;
                   return (
                     <div
@@ -682,7 +698,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                       style={{ background: '#FEF3EE', border: '1px solid #F5C8B8' }}
                     >
                       <span style={{ color: '#7A6660' }}>
-                        Did you mean <span style={{ fontWeight: 600, color: '#964735' }}>{suggestedMeta.icon} {suggestedMeta.label}</span>?
+                        {t('ezCapture.didYouMean')} <span style={{ fontWeight: 600, color: '#964735' }}>{suggestedMeta.icon} {suggestedMeta.label}</span>?
                       </span>
                       <button
                         onClick={() => {
@@ -693,16 +709,15 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                         className="rounded-full px-2.5 py-1 font-semibold flex-shrink-0"
                         style={{ background: '#964735', color: '#fff', fontSize: '11px' }}
                       >
-                        Switch
+                        {t('ezCapture.switch')}
                       </button>
                     </div>
                   );
                 })()}
 
                 <div className="space-y-2">
-                  {/* Editable title — textarea so long names wrap rather than overflow */}
                   <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: MUTED }}>Title</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: MUTED }}>{t('ezCapture.fieldTitle')}</p>
                     <textarea
                       rows={2}
                       value={parsed.title}
@@ -712,10 +727,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                     />
                   </div>
 
-                  {/* Editable date + time — only for event/reminder */}
                   {(activeType === 'event' || activeType === 'reminder') && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: MUTED }}>When</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: MUTED }}>{t('ezCapture.fieldWhen')}</p>
                       <div className="flex gap-2">
                         <input
                           type="date"
@@ -737,28 +751,28 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
 
                   {parsed.location && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Location</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>{t('ezCapture.fieldLocation')}</p>
                       <p className="font-medium text-sm" style={{ color: INK }}>{parsed.location}</p>
                     </div>
                   )}
 
                   {parsed.assignees && parsed.assignees.length > 0 && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>With</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>{t('ezCapture.fieldWith')}</p>
                       <p className="font-medium text-sm" style={{ color: INK }}>{parsed.assignees.join(', ')}</p>
                     </div>
                   )}
 
                   {parsed.reminder && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Reminder</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>{t('ezCapture.fieldReminder')}</p>
                       <p className="font-medium text-sm" style={{ color: INK }}>{parsed.reminder}</p>
                     </div>
                   )}
 
                   {parsed.mood && (
                     <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
-                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>Mood</p>
+                      <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: MUTED }}>{t('ezCapture.fieldMood')}</p>
                       <p className="font-medium text-sm" style={{ color: INK }}>{parsed.mood}</p>
                     </div>
                   )}
@@ -772,7 +786,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                   style={{ background: '#964735', color: '#FFFFFF' }}
                 >
                   <Check className="w-4 h-4" />
-                  Confirm & Save
+                  {t('ezCapture.confirmSave')}
                 </button>
               </div>
             </div>
@@ -781,7 +795,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
         </div>
       </div>
 
-      {/* AI message strip above nav */}
+      {/* AI message strip */}
       <div onClick={e => e.stopPropagation()} className="px-4 pb-28">
         <div
           className="px-4 py-3 rounded-2xl flex items-center gap-3"
@@ -794,9 +808,9 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
             style={{ background: '#D97B66', padding: '3px' }}
           />
           <p className="text-sm" style={{ color: MUTED, fontStyle: 'italic' }}>
-            {step === 'capture' && `"${userName ? `Hey ${userName}, speak` : 'Speak'} or type anything — I'll figure out the rest."`}
-            {step === 'processing' && '"Reading between the lines…"'}
-            {step === 'preview' && parsed && `"${AI_MESSAGES[activeType](userName)}"`}
+            {step === 'capture' && `"${userName ? t('ezCapture.aiCaptureGreet', { name: userName }) : t('ezCapture.aiCapture')}"`}
+            {step === 'processing' && `"${t('ezCapture.aiProcessing')}"`}
+            {step === 'preview' && parsed && `"${getAIMessage(activeType)}"`}
           </p>
         </div>
       </div>
