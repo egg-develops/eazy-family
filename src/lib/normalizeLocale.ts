@@ -8,13 +8,25 @@
  *
  * Normalization is intentionally conservative — only well-established dialect
  * terms are mapped, never ambiguous short words that could cause false hits.
+ *
+ * Admin-curated rules from the dialect_normalizations table are applied on top
+ * of the hardcoded baseline via the optional dbRules parameter (supplied by
+ * dialectRulesCache.getDbRules() at call sites).
  */
+
+export interface DbDialectRule {
+  locale: string;
+  pattern: string;
+  replacement: string;
+  is_regex: boolean;
+  flags: string;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Swiss German → Standard German
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function normalizeCHDE(text: string): string {
+export function normalizeCHDE(text: string, dbRules: DbDialectRule[] = []): string {
   if (!text) return text;
 
   let s = text;
@@ -85,6 +97,21 @@ export function normalizeCHDE(text: string): string {
   s = s.replace(/\bVelos\b/g, 'Fahrräder');
   s = s.replace(/\bCoiffeur\b/g, 'Friseur');
   s = s.replace(/\bcoiffeur\b/g, 'Friseur');
+
+  // Apply admin-curated rules from the database on top of the hardcoded baseline
+  for (const rule of dbRules) {
+    if (rule.locale !== 'de-CH') continue;
+    try {
+      if (rule.is_regex) {
+        s = s.replace(new RegExp(rule.pattern, rule.flags || 'gi'), rule.replacement);
+      } else {
+        const escaped = rule.pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        s = s.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), rule.replacement);
+      }
+    } catch {
+      // Skip malformed regex patterns silently
+    }
+  }
 
   return s.trim();
 }

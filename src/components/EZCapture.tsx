@@ -13,6 +13,7 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
+import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
 
 type Step = 'capture' | 'processing' | 'preview';
 
@@ -154,11 +155,13 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   useEffect(() => {
     haptic('medium');
     setTimeout(() => textareaRef.current?.focus(), 150);
+    if (isSwissGermanLocale()) warmDialectCache();
   }, []);
 
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
-    setType(classifyText(text));
+    const t = isSwissGermanLocale() ? normalizeCHDE(text, getDbRules()) : text;
+    setType(classifyText(t));
   }, [text]);
 
   const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
@@ -297,7 +300,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: [{ role: 'user', content: isSwissGermanLocale() ? normalizeCHDE(latestTextRef.current.trim()) : latestTextRef.current.trim() }],
+          messages: [{ role: 'user', content: isSwissGermanLocale() ? normalizeCHDE(latestTextRef.current.trim(), getDbRules()) : latestTextRef.current.trim() }],
           systemPrompt: systemContext,
         }),
       });
@@ -337,7 +340,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     setStep('processing');
 
     const rawInput = latestTextRef.current.trim();
-    const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput) : rawInput;
+    const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput, getDbRules()) : rawInput;
 
     const result = await parseWithAI();
 
@@ -697,7 +700,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
                 {(() => {
                   if (userLockedType || !parsed) return null;
                   const rawForClassify = latestTextRef.current || text;
-                  const suggested = classifyText(isSwissGermanLocale() ? normalizeCHDE(rawForClassify) : rawForClassify);
+                  const suggested = classifyText(isSwissGermanLocale() ? normalizeCHDE(rawForClassify, getDbRules()) : rawForClassify);
                   if (suggested === activeType) return null;
                   const suggestedMeta = TYPES.find(tp => tp.id === suggested);
                   if (!suggestedMeta) return null;
