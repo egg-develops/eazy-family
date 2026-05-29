@@ -9,10 +9,8 @@ import {
   Settings,
   Calendar,
   MapPin,
-  ShoppingCart,
   Home,
   Search,
-  CheckSquare,
   Menu,
   CloudSun,
   X,
@@ -46,11 +44,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
-import { EazyAssistant } from "@/components/EazyAssistant";
 import { TextShimmer } from "@/components/ui/text-shimmer";
 import { Checkbox } from "@/components/ui/checkbox";
-import { WeatherWidget } from "@/components/WeatherWidget";
-import { NavLink } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { validateImageFile } from "@/lib/fileValidation";
@@ -281,15 +276,6 @@ const AppLayout = () => {
     ? (ezMenuOrder.map(p => menuItems.find(m => m.path === p)).filter(Boolean) as MenuItem[])
     : menuItems;
 
-  const navigationItems = [
-    { id: "home", label: t('nav.home'), icon: Home, path: "/app" },
-    { id: "calendar", label: t('nav.calendar'), icon: Calendar, path: "/app/calendar" },
-    { id: "todos", label: t('nav.todos'), icon: CheckSquare, path: "/app/todos" },
-    { id: "shopping", label: t('nav.shopping'), icon: ShoppingCart, path: "/app/shopping" },
-    { id: "rituals", label: t('nav.rituals'), icon: Home, path: "/app/rituals" },
-    { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
-  ];
-
   useEffect(() => {
     try {
       const onboardingData = localStorage.getItem('eazy-family-onboarding');
@@ -337,21 +323,16 @@ const AppLayout = () => {
         <div className="flex items-center justify-center px-4 h-14 max-w-7xl mx-auto">
           {/* Center: page title */}
           <h1 className="font-bold text-2xl" style={{ color: 'hsl(var(--foreground))' }}>
-            {isHomePath ? appTitle : (() => {
-              const allNav = [
+            {isHomePath ? appTitle : (
+              [
                 { path: '/app/calendar', label: t('nav.calendar') },
                 { path: '/app/lists', label: t('nav.lists') },
                 { path: '/app/family', label: t('nav.family') },
                 { path: '/app/rituals', label: t('nav.rituals') },
                 { path: '/app/settings', label: t('nav.settings') },
-                { path: '/app/family-agenda', label: t('nav.family') },
-                { path: '/app/family-channel', label: t('nav.family') },
-                { path: '/app/messaging', label: 'Messages' },
-                { path: '/app/events', label: t('nav.events') },
-                { path: '/app/community', label: t('nav.community') },
-              ];
-              return allNav.find(n => currentPath.startsWith(n.path))?.label ?? 'Eazy.Family';
-            })()}
+                { path: '/app/help', label: t('nav.help') },
+              ].find(n => currentPath.startsWith(n.path))?.label ?? 'Eazy.Family'
+            )}
           </h1>
         </div>
       </header>
@@ -537,33 +518,48 @@ const HomeWeatherInline = ({
   const [temp, setTemp] = useState<number | null>(null);
 
   useEffect(() => {
+    const CACHE_KEY = 'eazy-weather-cache';
+    const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+    const applyData = (data: any) => {
+      const current = data.current_condition?.[0];
+      if (!current) return;
+      const nowTemp = Math.round(parseFloat(current.temp_C));
+      const nowEmoji = getWeatherEmoji(parseInt(current.weatherCode, 10));
+      setTemp(nowTemp);
+      setEmoji(nowEmoji);
+      const currentHour = new Date().getHours();
+      const mapHourly = (arr: any[], offset = 0): HourlySlot[] =>
+        (arr || []).map((h: any) => ({
+          hour: Math.floor(parseInt(h.time, 10) / 100) + offset,
+          emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
+          temp: Math.round(parseFloat(h.tempC)),
+        }));
+      const todaySlots = mapHourly(data.weather?.[0]?.hourly).filter((s: HourlySlot) => s.hour > currentHour);
+      const tomorrowSlots = mapHourly(data.weather?.[1]?.hourly, 24);
+      onHourly([{ hour: currentHour, emoji: nowEmoji, temp: nowTemp }, ...[...todaySlots, ...tomorrowSlots].slice(0, 5)]);
+    };
+
     const fetchWeather = async (query: string) => {
       try {
         const res = await fetch(`https://wttr.in/${encodeURIComponent(query)}?format=j1`);
         if (!res.ok) return;
         const data = await res.json();
-        const current = data.current_condition?.[0];
-        if (!current) return;
-        const nowTemp = Math.round(parseFloat(current.temp_C));
-        const nowEmoji = getWeatherEmoji(parseInt(current.weatherCode, 10));
-        setTemp(nowTemp);
-        setEmoji(nowEmoji);
-
-        const currentHour = new Date().getHours();
-        const mapHourly = (arr: any[], offset = 0): HourlySlot[] =>
-          (arr || []).map((h: any) => ({
-            hour: Math.floor(parseInt(h.time, 10) / 100) + offset,
-            emoji: getWeatherEmoji(parseInt(h.weatherCode, 10)),
-            temp: Math.round(parseFloat(h.tempC)),
-          }));
-        const todaySlots = mapHourly(data.weather?.[0]?.hourly).filter(s => s.hour > currentHour);
-        const tomorrowSlots = mapHourly(data.weather?.[1]?.hourly, 24);
-        const futureSlots = [...todaySlots, ...tomorrowSlots].slice(0, 5);
-        onHourly([{ hour: currentHour, emoji: nowEmoji, temp: nowTemp }, ...futureSlots]);
+        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+        applyData(data);
       } catch { /* silent */ }
     };
 
     const load = async () => {
+      // Return cached result if fresh (avoids re-fetch on every home navigation)
+      try {
+        const cached = sessionStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { data, ts } = JSON.parse(cached);
+          if (Date.now() - ts < CACHE_TTL) { applyData(data); return; }
+        }
+      } catch {}
+
       // Try stored location first
       try {
         const saved = localStorage.getItem('weather-locations');

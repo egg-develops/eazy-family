@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -61,13 +61,20 @@ interface FamilyMember {
 const TC = 'hsl(var(--primary))';
 const CARD = 'hsl(var(--card))';
 const BORDER = 'hsl(var(--border))';
-const DIVIDER = 'hsl(var(--border))';
 const MUTED = 'hsl(var(--muted-foreground))';
 const INK = 'hsl(var(--foreground))';
 const BG = '#F7F3ED';
 const SAGE = '#44664F';
 const SAGE_BG = '#EEF4F0';
-const SAGE_BORDER = '#C8DDD0';
+
+const EZ_DEFAULTS = [
+  { path: '/app', label: 'Home' },
+  { path: '/app/calendar', label: 'Calendar' },
+  { path: '/app/family-agenda', label: 'Family' },
+  { path: '/app/lists', label: 'Lists' },
+  { path: '/app/rituals', label: 'Rituals' },
+  { path: '/app/settings', label: 'Settings' },
+];
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-xs font-semibold uppercase tracking-wide px-1 mb-1.5" style={{ color: MUTED }}>{children}</p>
@@ -83,7 +90,7 @@ const Row = ({ icon, title, subtitle, right, last, onClick }: {
 }) => (
   <div
     className={`flex items-center gap-3 px-4 py-3.5 ${onClick ? 'cursor-pointer active:bg-gray-50' : ''}`}
-    style={{ borderBottom: last ? 'none' : `1px solid ${DIVIDER}` }}
+    style={{ borderBottom: last ? 'none' : `1px solid ${BORDER}` }}
     onClick={onClick}
   >
     {icon && <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>{icon}</div>}
@@ -129,9 +136,8 @@ const Settings = () => {
 
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
-  const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [displayName, setDisplayName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [userEmail, setUserEmail] = useState(() => user?.email || '');
 
   // AI & Privacy
   const [aiSuggestions, setAiSuggestions] = useState(() => localStorage.getItem('eazy-ai-suggestions') !== 'false');
@@ -154,14 +160,6 @@ const Settings = () => {
   const [showPremiumSheet, setShowPremiumSheet] = useState(false);
 
   // EZ Button prefs
-  const EZ_DEFAULTS = [
-    { path: '/app', label: 'Home' },
-    { path: '/app/calendar', label: 'Calendar' },
-    { path: '/app/family-agenda', label: 'Family' },
-    { path: '/app/lists', label: 'Lists' },
-    { path: '/app/rituals', label: 'Rituals' },
-    { path: '/app/settings', label: 'Settings' },
-  ];
   const [ezMenuOrder, setEzMenuOrder] = useState<string[]>(() => {
     try { const s = localStorage.getItem('eazy-ez-menu-order'); if (s) return JSON.parse(s); } catch {}
     return EZ_DEFAULTS.map(i => i.path);
@@ -193,8 +191,6 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
-    // user is already in context — skip supabase.auth.getUser() round-trip
-    setUserEmail(user.email || '');
     supabase.from('profiles').select('display_name, home_config').eq('user_id', user.id).single()
       .then(({ data }) => {
         if (data) {
@@ -209,8 +205,7 @@ const Settings = () => {
           }
         }
       })
-      .catch(e => logError('Settings fetch:', e))
-      .finally(() => setLoadingSubscription(false));
+      .catch(e => logError('Settings fetch:', e));
   }, [user]);
 
 
@@ -346,22 +341,8 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.account.title')}</SectionLabel>
         <Card_>
-          {loadingSubscription ? (
-            /* Skeleton — same height as the 5 rows so there's no layout shift */
-            <div className="px-4 py-3 space-y-3.5 animate-pulse">
-              {[100, 140, 120, 110, 90].map((w, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex-shrink-0" style={{ background: DIVIDER }} />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="h-3 rounded-full" style={{ background: DIVIDER, width: w }} />
-                    <div className="h-2.5 rounded-full" style={{ background: DIVIDER, width: w * 0.6 }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              {/* Family Premium status — top of account card */}
+          <>
+            {/* Family Premium status — top of account card */}
               {isPremium ? (
                 <Row
                   icon={<Crown className="w-4 h-4" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />}
@@ -371,7 +352,7 @@ const Settings = () => {
                   onClick={() => setShowPremiumSheet(true)}
                 />
               ) : (
-                <div style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+                <div style={{ borderBottom: `1px solid ${BORDER}` }}>
                   <div className="px-4 py-3.5 space-y-2.5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3D0' }}>
@@ -420,8 +401,7 @@ const Settings = () => {
                 last
                 onClick={() => setShowDeleteConfirm(true)}
               />
-            </>
-          )}
+          </>
         </Card_>
       </div>
 
@@ -510,11 +490,11 @@ const Settings = () => {
               <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" style={{ color: '#C4AEA8', transform: langOpen ? 'rotate(90deg)' : 'none' }} />
             </div>
             {langOpen && (
-              <div className="border-t" style={{ borderColor: DIVIDER }}>
+              <div className="border-t" style={{ borderColor: BORDER }}>
                 {LANG_OPTIONS.map((l, i) => (
                   <button key={l.value} onClick={() => handleLanguageChange(l.value)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left"
-                    style={{ borderBottom: i < LANG_OPTIONS.length - 1 ? `1px solid ${DIVIDER}` : 'none', background: language === l.value ? SAGE_BG : 'transparent' }}>
+                    style={{ borderBottom: i < LANG_OPTIONS.length - 1 ? `1px solid ${BORDER}` : 'none', background: language === l.value ? SAGE_BG : 'transparent' }}>
                     <span className="text-base">{l.flag}</span>
                     <span className="flex-1 text-sm font-medium" style={{ color: INK }}>{l.label}</span>
                     {language === l.value && <Check className="w-4 h-4" style={{ color: SAGE }} />}
@@ -536,7 +516,7 @@ const Settings = () => {
               ref={el => { ezItemRefs.current[i] = el; }}
               className="flex items-center gap-3 px-4 py-3.5"
               style={{
-                borderBottom: `1px solid ${DIVIDER}`,
+                borderBottom: `1px solid ${BORDER}`,
                 background: ezDragOver === i && ezDragIndex !== i ? '#FDF3EE' : 'transparent',
                 opacity: ezDragIndex === i ? 0.35 : 1,
                 transition: 'background 0.1s, opacity 0.1s',
@@ -614,7 +594,7 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.homepageModules')}</SectionLabel>
         <Card_>
-          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+          <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.homeTitle')}</p>
             </div>
@@ -643,7 +623,7 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.profileGallery')}</SectionLabel>
         <Card_>
-          <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+          <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
             {homeConfig.iconImage
               ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               : <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style={{ background: '#D97B66' }}>
@@ -700,7 +680,7 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.aiPrivacy')}</SectionLabel>
         <Card_>
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
             <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('settings.aiDescription')}</p>
           </div>
           <Row
@@ -709,7 +689,7 @@ const Settings = () => {
             subtitle={t('settings.proactiveReminders')}
             right={<Tog checked={aiSuggestions} onChange={v => { setAiSuggestions(v); localStorage.setItem('eazy-ai-suggestions', String(v)); }} />}
           />
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${DIVIDER}` }}>
+          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
                 <Lock className="w-4 h-4" style={{ color: MUTED }} />
@@ -717,7 +697,7 @@ const Settings = () => {
               <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.privacyLevel')}</p>
             </div>
             <div className="relative mt-1 mb-4">
-              <div className="w-full h-1.5 rounded-full" style={{ background: DIVIDER }}>
+              <div className="w-full h-1.5 rounded-full" style={{ background: BORDER }}>
                 <div className="h-1.5 rounded-full" style={{ background: TC, width: privacyLevel === 0 ? '0%' : privacyLevel === 1 ? '50%' : '100%', transition: 'width 0.2s' }} />
               </div>
               <div className="flex justify-between mt-1 -mx-1">
@@ -855,7 +835,7 @@ const Settings = () => {
             )}
 
             {/* Features */}
-            <div className="rounded-2xl divide-y" style={{ border: `1px solid ${DIVIDER}` }}>
+            <div className="rounded-2xl divide-y" style={{ border: `1px solid ${BORDER}` }}>
               {[
                 'Unlimited family members',
                 'Unlimited calendars — sync your Google, Apple, and Outlook',
@@ -883,7 +863,7 @@ const Settings = () => {
                 }
               }}
               className="w-full py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
-              style={{ background: BG, color: INK, border: `1px solid ${DIVIDER}` }}
+              style={{ background: BG, color: INK, border: `1px solid ${BORDER}` }}
             >
               <ExternalLink className="w-4 h-4" />
               Manage Subscription

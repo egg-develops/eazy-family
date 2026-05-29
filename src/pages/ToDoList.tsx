@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptic";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { error as logError } from "@/lib/logger";
 import { z } from "zod";
 import { VoiceShoppingAssistant } from "@/components/VoiceShoppingAssistant";
 
@@ -114,7 +115,7 @@ const ToDoList = () => {
       if (error) throw error;
       setTasks((data || []) as Task[]);
     } catch (error) {
-      console.error('Error loading tasks:', error);
+      logError('Error loading tasks:', error);
       toast({
         title: t('todos.errorLoading'),
         description: t('todos.errorLoadingDesc'),
@@ -158,7 +159,7 @@ const ToDoList = () => {
       if (error) throw error;
       setFamilyMembers(data || []);
     } catch (error) {
-      console.error('Error loading family members:', error);
+      logError('Error loading family members:', error);
     } finally {
       setLoadingMembers(false);
     }
@@ -177,7 +178,7 @@ const ToDoList = () => {
       await supabase.from('tasks').update({ assigned_to: userId }).eq('id', taskId);
       setAssigningItemId(null);
     } catch (e) {
-      console.error(e);
+      logError(e);
       toast({ title: t('todos.couldNotAddItem'), variant: 'destructive' });
     }
   };
@@ -223,7 +224,7 @@ const ToDoList = () => {
       setNewListItemTitle("");
       setAddingToListId(null);
     } catch (e) {
-      console.error(e);
+      logError(e);
       toast({ title: t('todos.couldNotAddItem'), variant: 'destructive' });
     }
   };
@@ -303,7 +304,7 @@ const ToDoList = () => {
         description: `${items.length} ${activeTab === "task" ? t('todos.tasksAddedSimple') : t('todos.itemsAddedSimple')}`,
       });
     } catch (error) {
-      console.error('Error adding voice items:', error);
+      logError('Error adding voice items:', error);
       toast({
         title: t('common.error'),
         description: t('todos.errorLoadingDesc'),
@@ -340,7 +341,7 @@ const ToDoList = () => {
         .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        logError('Supabase error:', error);
         throw error;
       }
 
@@ -359,7 +360,7 @@ const ToDoList = () => {
         description: `"${newTaskTitle}" ${activeTab === "shared" ? 'shared with your family' : t('todos.addedToList')}.`,
       });
     } catch (error) {
-      console.error('Error adding task:', error);
+      logError('Error adding task:', error);
       const errorMsg = (error as any)?.message || t('todos.errorLoadingDesc');
       toast({
         title: t('common.error'),
@@ -387,7 +388,7 @@ const ToDoList = () => {
         haptic('success');
       }
     } catch (error) {
-      console.error('Error toggling task:', error);
+      logError('Error toggling task:', error);
       toast({
         title: t('common.error'),
         description: t('todos.errorUpdating'),
@@ -410,7 +411,7 @@ const ToDoList = () => {
         description: t('todos.taskDeletedDesc'),
       });
     } catch (error) {
-      console.error('Error deleting task:', error);
+      logError('Error deleting task:', error);
       toast({
         title: t('common.error'),
         description: t('todos.errorDeleting'),
@@ -944,7 +945,7 @@ const InlineFamilyInvite = ({ onMemberAdded }: { onMemberAdded: () => void }) =>
       if (error) throw error;
       setFamilyId(data?.family_id || null);
     } catch (error) {
-      console.error("Error loading family ID:", error);
+      logError("Error loading family ID:", error);
     }
   };
 
