@@ -201,7 +201,7 @@ const Onboarding = () => {
   if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
 
   const progress = progressFor(screen);
-  const showBack = screen >= 2;
+  const showBack = screen >= 1;
 
   // ── Slide animation style ──────────────────────────────────────────────────
   const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9
@@ -439,7 +439,7 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
         </h1>
         <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Choose your language</p>
       </div>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {LANGUAGES.map(lang => (
           <button
             key={lang.code}
@@ -457,7 +457,6 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
           >
             <span style={{ fontSize: 24 }}>{lang.flag}</span>
             <span style={{ fontSize: 16, fontWeight: 500, color: T.ink }}>{lang.native}</span>
-            <span style={{ fontSize: 13, color: T.faint, marginLeft: 'auto' }}>{lang.label}</span>
           </button>
         ))}
       </div>
@@ -528,7 +527,7 @@ const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next:
       <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
         How does your family currently manage its week?
       </h2>
-      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Be honest. We've heard it all.</p>
+      <div style={{ marginBottom: 28 }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {APPROACHES.map(a => (
           <OptionCard key={a.value} emoji={a.emoji} label={a.label} selected={state.currentApproach === a.value} onClick={() => select(a.value)} />
@@ -679,8 +678,8 @@ const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () =
 
 // ── SCREEN 8 — Features overview ──────────────────────────────────────────────
 const FEATURES = [
-  { emoji: '🗓', text: 'Every calendar synced — Google, Apple, Outlook' },
-  { emoji: '🛒', text: 'Shared tasks, shopping lists, and voice input' },
+  { emoji: '🎤', text: 'Private voice-powered AI assistant for every feature' },
+  { emoji: '🛒', text: 'Shared tasks and shopping lists' },
   { emoji: '🌅', text: 'Morning Digest — daily briefing for your family' },
   { emoji: '⚡', text: 'Instant conflict detection and smart suggestions' },
   { emoji: '👨‍👩‍👧', text: 'Invite your whole family — always in sync' },
