@@ -174,6 +174,19 @@ const Onboarding = () => {
   const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
     setState(prev => ({ ...prev, [k]: v }));
 
+  // Auto-skip account screen if user already signed up via Auth page
+  useEffect(() => {
+    if (screen !== 9 || !user) return;
+    const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+    localStorage.setItem('eazy-family-onboarding', JSON.stringify({
+      userName: name,
+      language: state.language,
+      userInitials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
+    }));
+    localStorage.removeItem(STORAGE_KEY);
+    go(10, 'fwd');
+  }, [screen, user]);
+
   // Splash animation sequence
   useEffect(() => {
     if (screen !== 1) return;
@@ -185,7 +198,7 @@ const Onboarding = () => {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, [screen]);
 
-  if (!authLoading && user) return <Navigate to="/app" replace />;
+  if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
 
   const progress = progressFor(screen);
   const showBack = screen >= 2;
@@ -300,6 +313,7 @@ const Onboarding = () => {
       cloudSet('eazy-family-location', locationInput || state.location);
     }
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('eazy-needs-onboarding');
     navigate('/app');
   };
 

@@ -171,7 +171,8 @@ const Auth = () => {
           toast({ title: t('auth.error'), description: msg || t('auth.somethingWrong'), variant: "destructive" });
         }
       } else if (isSignUp) {
-        toast({ title: t('common.success'), description: t('auth.signUpSuccess') });
+        localStorage.setItem('eazy-needs-onboarding', '1');
+        navigate('/onboarding');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
