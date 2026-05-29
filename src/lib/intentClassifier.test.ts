@@ -54,12 +54,18 @@ describe('classifyText – ritual', () => {
 // ── classifyText – task ──────────────────────────────────────────────────────
 
 describe('classifyText – task', () => {
-  it('clean',             () => expect(classifyText('clean the kitchen')).toBe('task'));
-  it('wash',              () => expect(classifyText('wash the car')).toBe('task'));
-  it('call',              () => expect(classifyText('call the dentist')).toBe('task'));
-  it('fix',               () => expect(classifyText('fix the leaky tap')).toBe('task'));
-  it('mow',               () => expect(classifyText('mow the lawn')).toBe('task'));
-  it('email',             () => expect(classifyText('email the school')).toBe('task'));
+  it('clean',                     () => expect(classifyText('clean the kitchen')).toBe('task'));
+  it('clean out (compound)',       () => expect(classifyText('clean out basement')).toBe('task'));
+  it('clear',                     () => expect(classifyText('clear the garage')).toBe('task'));
+  it('sort',                      () => expect(classifyText('sort through the mail')).toBe('task'));
+  it('declutter',                 () => expect(classifyText('declutter the closet')).toBe('task'));
+  it('wash',                      () => expect(classifyText('wash the car')).toBe('task'));
+  it('call',                      () => expect(classifyText('call the dentist')).toBe('task'));
+  it('fix',                       () => expect(classifyText('fix the leaky tap')).toBe('task'));
+  it('mow',                       () => expect(classifyText('mow the lawn')).toBe('task'));
+  it('email',                     () => expect(classifyText('email the school')).toBe('task'));
+  it('pack',                      () => expect(classifyText('pack for the trip')).toBe('task'));
+  it('unpack',                    () => expect(classifyText('unpack the boxes')).toBe('task'));
   // "my list" with a task verb should still be task, not shopping_personal
   it('"add to my list" with task verb → task', () =>
     expect(classifyText('add clean the terrace to my list')).toBe('task'));
@@ -98,8 +104,14 @@ describe('guardAIType – standard overrides', () => {
   it('AI says event, task text, no date/time → task', () =>
     expect(guardAIType('event', 'clean the bathroom', null, null)).toBe('task'));
 
-  it('AI says event, task text, has date → keep event', () =>
-    expect(guardAIType('event', 'clean the bathroom', '2026-06-01', null)).toBe('event'));
+  it('AI says event, task text, has date but no time → task (date = due_date)', () =>
+    expect(guardAIType('event', 'clean the bathroom', '2026-06-01', null)).toBe('task'));
+
+  it('AI says event, task text, has time → keep event', () =>
+    expect(guardAIType('event', 'clean the bathroom', '2026-06-01', '10:00')).toBe('event'));
+
+  it('"clean out basement" + AI date but no time → task (regression)', () =>
+    expect(guardAIType('event', 'clean out basement', '2026-06-15', null)).toBe('task'));
 });
 
 describe('guardAIType – passes through correct AI results', () => {

@@ -12,7 +12,7 @@ function isPersonalScope(lower: string): boolean {
   return MY_LIST.test(lower) && !OUR_LIST.test(lower);
 }
 
-const TASK_VERBS = /\b(clean|wash|water|organis|organiz|tidy|fix|repair|mow|vacuum|sweep|mop|call|email|book|return|drop off|finish|complete|task|todo|to-do)\b/;
+const TASK_VERBS = /\b(clean|clear|sort|declutter|organis|organiz|tidy|pack|unpack|fix|repair|mow|vacuum|sweep|mop|wash|water|call|email|book|return|drop off|finish|complete|task|todo|to-do)\b/;
 
 /**
  * Keyword-based intent classifier — deterministic fallback used when the AI
@@ -46,9 +46,7 @@ export function classifyText(text: string): CaptureType {
 
   if (/\b(ritual|habit|morning|evening routine|daily)\b/.test(lower)) return 'ritual';
 
-  if (
-    /\b(task|todo|to-do|clean|wash|water|organis|organiz|tidy|fix|repair|mow|vacuum|sweep|mop|call|email|book|return|drop off|finish|complete)\b/.test(lower)
-  ) return 'task';
+  if (TASK_VERBS.test(lower)) return 'task';
 
   if (
     /\b(tomorrow|today|next|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d+(am|pm)|at \d|o'clock)\b/.test(lower) ||
@@ -73,13 +71,14 @@ export function guardAIType(
     /\b(shopping list|grocery list|groceries|to buy)\b/.test(lower) ||
     BUY_VERBS.test(lower) ||
     ADD_TO_LIST.test(lower);
-  const isObviouslyTask =
-    /\b(clean|wash|water|organis|fix|repair|mow|vacuum|call|email|book)\b/.test(lower);
+  const isObviouslyTask = TASK_VERBS.test(lower);
 
   if ((aiType === 'event' || aiType === 'shopping') && isObviouslyShopping) {
     return isPersonalScope(lower) ? 'shopping_personal' : 'shopping';
   }
-  if (aiType === 'event' && isObviouslyTask && !aiDate && !aiTime) return 'task';
+  // A task verb overrides "event" even when AI adds a date (date → due_date).
+  // Only a specific time (e.g. "at 3pm") is strong enough to keep it as event.
+  if (aiType === 'event' && isObviouslyTask && !aiTime) return 'task';
   // Upgrade shopping → shopping_personal when keyword guard detects personal scope
   if (aiType === 'shopping' && isPersonalScope(lower)) return 'shopping_personal';
   return aiType;
