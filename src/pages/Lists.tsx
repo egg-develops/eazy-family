@@ -54,6 +54,8 @@ interface FamilyMember {
   full_name: string | null;
   email: string | null;
   role: string;
+  photo?: string | null;
+  displayName?: string | null;
 }
 
 type MainTab = 'tasks' | 'shopping';
@@ -111,6 +113,7 @@ const Lists = () => {
   const [newAssignees, setNewAssignees] = useState<string[]>([]);
   const [newListVisibleTo, setNewListVisibleTo] = useState<string>('family');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
   // ── Shopping state ────────────────────────────────────────────────────────────
   const [newShoppingItem, setNewShoppingItem] = useState('');
@@ -150,12 +153,21 @@ const Lists = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from('family_members').select('family_id').eq('user_id', user.id).eq('is_active', true).maybeSingle()
-      .then(({ data: mine }) => {
+      .then(async ({ data: mine }) => {
         if (!mine?.family_id) return;
         setUserFamilyId(mine.family_id);
-        supabase.from('family_members').select('id, user_id, full_name, email, role')
-          .eq('family_id', mine.family_id).eq('is_active', true)
-          .then(({ data }) => setFamilyMembers(data || []));
+        const { data: members } = await supabase.from('family_members')
+          .select('id, user_id, full_name, email, role')
+          .eq('family_id', mine.family_id).eq('is_active', true);
+        if (!members?.length) return;
+        const { data: profiles } = await supabase.from('profiles')
+          .select('user_id, display_name, home_config')
+          .in('user_id', members.map(m => m.user_id));
+        setFamilyMembers(members.map(m => {
+          const p = profiles?.find(pr => pr.user_id === m.user_id);
+          const hc = p?.home_config as { iconImage?: string } | null;
+          return { ...m, photo: hc?.iconImage ?? null, displayName: p?.display_name ?? null };
+        }));
       });
   }, [user]);
 
@@ -166,7 +178,13 @@ const Lists = () => {
   const toggleItem = async (id: string) => {
     const item = items.find(i => i.id === id);
     if (!item) return;
-    haptic('light');
+    if (!item.completed) {
+      haptic('medium');
+      setCompletingId(id);
+      setTimeout(() => setCompletingId(null), 650);
+    } else {
+      haptic('light');
+    }
     setItems(prev => prev.map(i => i.id === id ? { ...i, completed: !i.completed } : i));
     const { error } = await supabase.from('tasks').update({ completed: !item.completed }).eq('id', id);
     if (error) {
@@ -448,16 +466,26 @@ const Lists = () => {
                       <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #EBE8E2' }}>
                         {catTasks.map((task, i) => {
                           const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
+                          const isCompleting = completingId === task.id;
                           return (
                             <div key={task.id}
                               className="flex items-center gap-3 px-4 py-3"
                               style={{ background: CARD, borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}
                             >
                               <button onClick={() => toggleItem(task.id)}
-                                className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all appearance-none p-0"
-                                style={{ border: task.completed ? 'none' : '1.5px solid #DAC1BB', background: task.completed ? ACCENT : 'transparent' }}
+                                className="flex-shrink-0 rounded-full flex items-center justify-center appearance-none p-0"
+                                style={{
+                                  width: isCompleting ? '22px' : '16px',
+                                  height: isCompleting ? '22px' : '16px',
+                                  flexShrink: 0,
+                                  border: (task.completed || isCompleting) ? 'none' : '1.5px solid #DAC1BB',
+                                  background: isCompleting ? '#8FB399' : task.completed ? ACCENT : 'transparent',
+                                  transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                }}
                               >
-                                {task.completed && <Check className="w-2.5 h-2.5 text-white" />}
+                                {(task.completed || isCompleting) && (
+                                  <Check className={isCompleting ? "w-3.5 h-3.5 text-white" : "w-2.5 h-2.5 text-white"} />
+                                )}
                               </button>
                               <div className="flex-1 min-w-0">
                                 {editingItemId === task.id ? (
@@ -595,14 +623,24 @@ const Lists = () => {
                                     {item.title}
                                   </span>
                                 )}
-                                {/* Multi-assignee avatars */}
-                                <div className="flex items-center gap-1 flex-shrink-0">
+                                {/* Multi-assignee pills */}
+                                <div className="flex items-center gap-1 flex-shrink-0 flex-wrap">
                                   {(item.assigned_to_users ?? []).slice(0, 3).map(uid => {
                                     const m = familyMembers.find(fm => fm.user_id === uid);
+                                    const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
                                     return (
-                                      <span key={uid} className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0"
-                                        style={{ background: ACCENT }} title={m?.full_name || 'Member'}>
-                                        {(m?.full_name || '?').charAt(0).toUpperCase()}
+                                      <span key={uid}
+                                        className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold flex-shrink-0"
+                                        style={{ background: '#EEF4F0', color: '#44664F' }}
+                                        title={m?.full_name || name}
+                                      >
+                                        {m?.photo
+                                          ? <img src={m.photo} className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                          : <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0" style={{ background: '#8FB399' }}>
+                                              {name.charAt(0).toUpperCase()}
+                                            </span>
+                                        }
+                                        {name}
                                       </span>
                                     );
                                   })}

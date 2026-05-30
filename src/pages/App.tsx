@@ -20,7 +20,8 @@ import {
   ImagePlus,
   AlertTriangle,
   Clock,
-  Users
+  Users,
+  CheckSquare
 } from "lucide-react";
 import { useConflictDetection } from "@/hooks/useConflictDetection";
 import { useStaleTaskDetection } from "@/hooks/useStaleTaskDetection";
@@ -270,7 +271,7 @@ const AppLayout = () => {
     { label: t('nav.home'), icon: Home, path: '/app' },
     { label: t('nav.calendar'), icon: Calendar, path: '/app/calendar' },
     { label: t('nav.family'), icon: Users, path: '/app/family-agenda' },
-    { label: t('nav.lists'), customIcon: (c) => <CartCheckIcon color={c} />, path: '/app/lists' },
+    { label: t('nav.lists'), icon: CheckSquare, path: '/app/lists' },
     { label: t('nav.rituals'), customIcon: (c) => <JournalIcon color={c} />, path: '/app/rituals' },
     { label: t('nav.settings'), icon: Settings, path: '/app/settings' },
   ];
