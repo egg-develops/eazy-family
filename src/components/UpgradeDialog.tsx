@@ -174,12 +174,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             <>
               <button
                 onClick={handleNativeUpgrade}
-                disabled={isLoading || allProductIds.length === 0}
+                disabled={isLoading}
                 className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
                 <Crown className="h-4 w-4" />
-                {isLoading ? "Opening…" : allProductIds.length === 0 ? "Loading…" : "Upgrade to Premium"}
+                {isLoading ? "Opening…" : "Upgrade to Premium"}
               </button>
               <button
                 onClick={handleRestore}
