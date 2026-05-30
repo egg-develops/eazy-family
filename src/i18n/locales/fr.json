@@ -930,7 +930,14 @@
     "sendInvitation": "Envoyer l'invitation",
     "validationError": "Erreur de validation",
     "failedToSendInvitation": "Échec de l'envoi de l'invitation",
-    "couldNotAddItem": "Impossible d'ajouter l'élément. Veuillez réessayer."
+    "couldNotAddItem": "Impossible d'ajouter l'élément. Veuillez réessayer.",
+    "me": "Moi",
+    "all": "Tous",
+    "visibleTo": "Visible pour",
+    "everyone": "Tout le monde",
+    "parentsOnly": "Parents uniquement",
+    "assignTo": "Assigner à",
+    "newList": "Nouvelle liste"
   },
   "shopping": {
     "title": "Courses",

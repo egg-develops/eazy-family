@@ -930,7 +930,14 @@
     "sendInvitation": "Send Invitation",
     "validationError": "Validation Error",
     "failedToSendInvitation": "Failed to send invitation",
-    "couldNotAddItem": "Could not add item. Please try again."
+    "couldNotAddItem": "Could not add item. Please try again.",
+    "me": "Me",
+    "all": "All",
+    "visibleTo": "Visible to",
+    "everyone": "Everyone",
+    "parentsOnly": "Parents only",
+    "assignTo": "Assign to",
+    "newList": "New List"
   },
   "shopping": {
     "title": "Shopping",

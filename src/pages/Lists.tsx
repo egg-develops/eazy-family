@@ -552,20 +552,55 @@ const Lists = () => {
                   className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
                   style={{ background: ACCENT, color: '#fff' }}
                 >
-                  {t('todos.newList', 'New List')}
+                  {t('todos.newList')}
                 </button>
               </div>
 
               {/* Assignee filter strip */}
               {familyMembers.length > 0 && (
                 <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                  {[{ id: 'all', label: 'All' }, { id: 'me', label: 'Me' }, ...familyMembers.filter(m => m.user_id !== user?.id).map(m => ({ id: m.user_id, label: (m.displayName || m.full_name || m.email || 'Member').split(' ')[0] }))].map(f => (
-                    <button key={f.id} onClick={() => setAssigneeFilter(f.id)}
-                      className="flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
-                      style={{ background: assigneeFilter === f.id ? ACCENT : MUTEDBG, color: assigneeFilter === f.id ? '#fff' : MUTED }}>
-                      {f.label}
-                    </button>
-                  ))}
+                  {/* All */}
+                  <button onClick={() => setAssigneeFilter('all')}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                    style={{ background: assigneeFilter === 'all' ? ACCENT : MUTEDBG, color: assigneeFilter === 'all' ? '#fff' : MUTED }}>
+                    {t('todos.all')}
+                  </button>
+                  {/* Me — with own photo */}
+                  {(() => {
+                    const me = familyMembers.find(m => m.user_id === user?.id);
+                    const sel = assigneeFilter === 'me';
+                    return (
+                      <button onClick={() => setAssigneeFilter('me')}
+                        className="flex items-center gap-1.5 flex-shrink-0 rounded-full text-[11px] font-semibold transition-all"
+                        style={{ background: sel ? ACCENT : '#EEF4F0', color: sel ? '#fff' : '#44664F', padding: '4px 10px 4px 4px' }}>
+                        {me?.photo
+                          ? <img src={me.photo} className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          : <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0" style={{ background: sel ? 'rgba(255,255,255,0.3)' : '#8FB399' }}>
+                              {(me?.displayName || user?.email || 'M').charAt(0).toUpperCase()}
+                            </span>
+                        }
+                        {t('todos.me')}
+                      </button>
+                    );
+                  })()}
+                  {/* Other members */}
+                  {familyMembers.filter(m => m.user_id !== user?.id).map(m => {
+                    const name = (m.displayName || m.full_name || 'Member').split(' ')[0];
+                    const sel = assigneeFilter === m.user_id;
+                    return (
+                      <button key={m.user_id} onClick={() => setAssigneeFilter(m.user_id)}
+                        className="flex items-center gap-1.5 flex-shrink-0 rounded-full text-[11px] font-semibold transition-all"
+                        style={{ background: sel ? ACCENT : '#EEF4F0', color: sel ? '#fff' : '#44664F', padding: '4px 10px 4px 4px' }}>
+                        {m.photo
+                          ? <img src={m.photo} className="w-5 h-5 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          : <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold flex-shrink-0" style={{ background: sel ? 'rgba(255,255,255,0.3)' : '#8FB399' }}>
+                              {name.charAt(0).toUpperCase()}
+                            </span>
+                        }
+                        {name}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -689,18 +724,27 @@ const Lists = () => {
                                 </button>
                               </div>
                               {isAssigning && (
-                                <div className="ml-12 mb-2 px-4 flex flex-wrap gap-1.5">
-                                  {[{ user_id: user?.id ?? '', full_name: 'Me', id: 'self', email: null, role: 'parent' }, ...familyMembers].map(m => {
-                                    const isSelected = (item.assigned_to_users ?? []).includes(m.user_id);
-                                    return (
-                                      <button key={m.user_id} onClick={() => toggleAssignUser(item.id, m.user_id)}
-                                        className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
-                                        style={{ background: isSelected ? ACCENT : MUTEDBG, color: isSelected ? '#fff' : INK }}>
-                                        {isSelected && <span>✓</span>}
-                                        {m.full_name || m.email || 'Member'}
-                                      </button>
-                                    );
-                                  })}
+                                <div className="ml-4 mb-2 px-4 flex flex-wrap gap-1.5">
+                                  {(() => {
+                                    const myData = familyMembers.find(fm => fm.user_id === user?.id);
+                                    const others = familyMembers.filter(m => m.user_id !== user?.id);
+                                    return [{ user_id: user?.id ?? '', photo: myData?.photo, name: t('todos.me') }, ...others.map(m => ({ user_id: m.user_id, photo: m.photo, name: (m.displayName || m.full_name || 'Member').split(' ')[0] }))].map(m => {
+                                      const sel = (item.assigned_to_users ?? []).includes(m.user_id);
+                                      return (
+                                        <button key={m.user_id} onClick={() => toggleAssignUser(item.id, m.user_id)}
+                                          className="flex items-center gap-1 rounded-full text-xs font-semibold transition-all"
+                                          style={{ background: sel ? ACCENT : '#EEF4F0', color: sel ? '#fff' : '#44664F', padding: '4px 10px 4px 4px' }}>
+                                          {m.photo
+                                            ? <img src={m.photo} className="w-4 h-4 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                            : <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0" style={{ background: sel ? 'rgba(255,255,255,0.3)' : '#8FB399' }}>
+                                                {m.name.charAt(0).toUpperCase()}
+                                              </span>
+                                          }
+                                          {m.name}
+                                        </button>
+                                      );
+                                    });
+                                  })()}
                                 </div>
                               )}
                             </div>
@@ -708,7 +752,7 @@ const Lists = () => {
                         })}
 
                         {addingToListId === list.id ? (
-                          <div className="flex gap-2 px-4 py-2.5" style={{ borderTop: `1px solid ${BORDER}` }}>
+                          <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderTop: `1px solid ${BORDER}` }}>
                             <input
                               autoFocus
                               placeholder={t('todos.itemNamePlaceholder')}
@@ -718,13 +762,19 @@ const Lists = () => {
                                 if (e.key === 'Enter') addToList(list.id);
                                 if (e.key === 'Escape') { setAddingToListId(null); setNewListItemTitle(''); }
                               }}
-                              className="flex-1 h-9 rounded-lg px-3 text-sm outline-none"
+                              className="flex-1 min-w-0 h-9 rounded-lg px-3 text-sm outline-none"
                               style={{ background: MUTEDBG, border: `1px solid ${BORDER}`, color: INK }}
                             />
-                            <Button size="sm" onClick={() => addToList(list.id)}>{t('todos.add')}</Button>
-                            <Button size="sm" variant="ghost" onClick={() => { setAddingToListId(null); setNewListItemTitle(''); }}>
-                              {t('todos.cancel')}
-                            </Button>
+                            <button onClick={() => addToList(list.id)}
+                              className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center"
+                              style={{ background: ACCENT }}>
+                              <Check className="w-4 h-4 text-white" />
+                            </button>
+                            <button onClick={() => { setAddingToListId(null); setNewListItemTitle(''); }}
+                              className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center"
+                              style={{ background: MUTEDBG }}>
+                              <X className="w-4 h-4" style={{ color: MUTED }} />
+                            </button>
                           </div>
                         ) : (
                           <button
@@ -910,49 +960,45 @@ const Lists = () => {
             {scope === 'shared' && (
               <>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Visible to</Label>
+                  <Label className="text-sm font-medium">{t('todos.visibleTo')}</Label>
                   <div className="flex gap-2">
                     {(['family', 'parents'] as const).map(v => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setNewListVisibleTo(v)}
+                      <button key={v} type="button" onClick={() => setNewListVisibleTo(v)}
                         className="flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors"
-                        style={{
-                          background: newListVisibleTo === v ? ACCENT : MUTEDBG,
-                          color: newListVisibleTo === v ? '#fff' : MUTED,
-                          borderColor: newListVisibleTo === v ? ACCENT : 'transparent',
-                        }}
-                      >
-                        {v === 'family' ? 'Everyone' : 'Parents only'}
+                        style={{ background: newListVisibleTo === v ? ACCENT : MUTEDBG, color: newListVisibleTo === v ? '#fff' : MUTED, borderColor: newListVisibleTo === v ? ACCENT : 'transparent' }}>
+                        {v === 'family' ? t('todos.everyone') : t('todos.parentsOnly')}
                       </button>
                     ))}
                   </div>
                 </div>
                 {familyMembers.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Assign to</Label>
+                    <Label className="text-sm font-medium">{t('todos.assignTo')}</Label>
                     <div className="flex flex-wrap gap-2">
-                      {[{ user_id: user?.id ?? '', full_name: 'Me' }, ...familyMembers].map(m => {
-                        const uid = m.user_id;
-                        const name = (m.full_name || 'Member').split(' ')[0];
-                        const selected = newAssignees.includes(uid);
-                        return (
-                          <button
-                            key={uid}
-                            type="button"
-                            onClick={() => setNewAssignees(prev => selected ? prev.filter(id => id !== uid) : [...prev, uid])}
-                            className="px-3 py-1 rounded-full text-sm font-medium border transition-colors"
-                            style={{
-                              background: selected ? ACCENT : MUTEDBG,
-                              color: selected ? '#fff' : MUTED,
-                              borderColor: selected ? ACCENT : 'transparent',
-                            }}
-                          >
-                            {name}
-                          </button>
-                        );
-                      })}
+                      {(() => {
+                        const myData = familyMembers.find(fm => fm.user_id === user?.id);
+                        const others = familyMembers.filter(m => m.user_id !== user?.id);
+                        return [{ user_id: user?.id ?? '', photo: myData?.photo, displayName: myData?.displayName, isSelf: true }, ...others.map(m => ({ ...m, isSelf: false }))].map(m => {
+                          const uid = m.user_id;
+                          const name = (m as any).isSelf ? t('todos.me') : ((m as FamilyMember).displayName || (m as FamilyMember).full_name || 'Member').split(' ')[0];
+                          const photo = (m as any).photo as string | null | undefined;
+                          const selected = newAssignees.includes(uid);
+                          return (
+                            <button key={uid} type="button"
+                              onClick={() => setNewAssignees(prev => selected ? prev.filter(id => id !== uid) : [...prev, uid])}
+                              className="flex items-center gap-1.5 rounded-full text-sm font-semibold transition-all"
+                              style={{ background: selected ? ACCENT : '#EEF4F0', color: selected ? '#fff' : '#44664F', padding: '6px 14px 6px 6px' }}>
+                              {photo
+                                ? <img src={photo} className="w-6 h-6 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                : <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0" style={{ background: selected ? 'rgba(255,255,255,0.3)' : '#8FB399' }}>
+                                    {name.charAt(0).toUpperCase()}
+                                  </span>
+                              }
+                              {name}
+                            </button>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
                 )}

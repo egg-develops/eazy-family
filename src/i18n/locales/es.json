@@ -928,7 +928,14 @@
     "sendInvitation": "Enviar invitación",
     "validationError": "Error de validación",
     "failedToSendInvitation": "No se pudo enviar la invitación",
-    "couldNotAddItem": "No se pudo añadir el elemento. Inténtalo de nuevo."
+    "couldNotAddItem": "No se pudo añadir el elemento. Inténtalo de nuevo.",
+    "me": "Yo",
+    "all": "Todos",
+    "visibleTo": "Visible para",
+    "everyone": "Todos",
+    "parentsOnly": "Solo padres",
+    "assignTo": "Asignar a",
+    "newList": "Nueva lista"
   },
   "shopping": {
     "title": "Compras",

@@ -930,7 +930,14 @@
     "sendInvitation": "Einladung senden",
     "validationError": "Validierungsfehler",
     "failedToSendInvitation": "Einladung konnte nicht gesendet werden",
-    "couldNotAddItem": "Eintrag konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
+    "couldNotAddItem": "Eintrag konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut.",
+    "me": "Ich",
+    "all": "Alle",
+    "visibleTo": "Sichtbar für",
+    "everyone": "Alle",
+    "parentsOnly": "Nur Eltern",
+    "assignTo": "Zuweisen an",
+    "newList": "Neue Liste"
   },
   "shopping": {
     "title": "Einkaufen",

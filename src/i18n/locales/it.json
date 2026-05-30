@@ -930,7 +930,14 @@
     "sendInvitation": "Invia invito",
     "validationError": "Errore di validazione",
     "failedToSendInvitation": "Invio dell'invito fallito",
-    "couldNotAddItem": "Impossibile aggiungere l'elemento. Riprova."
+    "couldNotAddItem": "Impossibile aggiungere l'elemento. Riprova.",
+    "me": "Io",
+    "all": "Tutti",
+    "visibleTo": "Visibile a",
+    "everyone": "Tutti",
+    "parentsOnly": "Solo genitori",
+    "assignTo": "Assegna a",
+    "newList": "Nuova lista"
   },
   "shopping": {
     "title": "Spesa",
