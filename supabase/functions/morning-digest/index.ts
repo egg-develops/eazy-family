@@ -136,6 +136,11 @@ function getLang(raw: unknown): Lang {
   return (['en','de','fr','it','es','pt'] as Lang[]).includes(s as Lang) ? (s as Lang) : 'en';
 }
 
+// ── Batch config ──────────────────────────────────────────────────────────────
+// Each invocation processes one batch then self-invokes for the next.
+// 75 users × ~3s each (DB + Anthropic + email) ≈ 225s, well within 400s limit.
+const BATCH_SIZE = 75;
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
@@ -143,6 +148,13 @@ serve(async (req) => {
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
+
+  // offset is 0 on the first (cron) call, incremented by self-invocation
+  let offset = 0;
+  try {
+    const body = await req.json().catch(() => ({}));
+    offset = Number(body?.offset ?? 0) || 0;
+  } catch { /* first call has no body */ }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -178,14 +190,28 @@ serve(async (req) => {
 
   const isTruthy = (v: unknown) => v === true || v === "true";
 
-  const digestUsers = (prefRows ?? []).filter(
+  const allDigestUsers = (prefRows ?? []).filter(
     (row) => isTruthy(row.data?.["eazy-morning-digest"])
   );
 
-  if (digestUsers.length === 0) {
+  if (allDigestUsers.length === 0) {
     return new Response(JSON.stringify({ sent: 0, reason: "no opt-ins" }), {
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // Slice this batch
+  const digestUsers = allDigestUsers.slice(offset, offset + BATCH_SIZE);
+  const hasMore = offset + BATCH_SIZE < allDigestUsers.length;
+
+  // Fire next batch before processing so the cron response isn't blocked
+  if (hasMore) {
+    const functionUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/morning-digest`;
+    fetch(functionUrl, {
+      method: "POST",
+      headers: { "Authorization": authHeader, "Content-Type": "application/json" },
+      body: JSON.stringify({ offset: offset + BATCH_SIZE }),
+    }).catch(() => { /* best-effort */ });
   }
 
   let sent = 0;
@@ -347,7 +373,11 @@ serve(async (req) => {
     if (userSent) sent++;
   }
 
-  return new Response(JSON.stringify({ sent, errors: errors.length ? errors : undefined }), {
+  return new Response(JSON.stringify({
+    sent,
+    batch: { offset, size: digestUsers.length, hasMore },
+    errors: errors.length ? errors : undefined,
+  }), {
     headers: { "Content-Type": "application/json" },
   });
 });
