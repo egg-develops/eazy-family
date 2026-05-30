@@ -42,16 +42,6 @@ private func accent(for mode: WidgetDisplayMode) -> Color {
 }
 
 private extension WidgetDisplayMode {
-    var statLabel: String {
-        switch self {
-        case .events:    return "event(s)"
-        case .shopping:  return "item(s)"
-        case .tasks:     return "task(s)"
-        case .reminders: return "reminder(s)"
-        case .rituals:   return "ritual(s)"
-        case .journal:   return "entr(y/ies)"
-        }
-    }
     var shortStatLabel: String {
         switch self {
         case .events:    return "events"
@@ -106,112 +96,36 @@ struct EazyWidgetView: View {
     }
 }
 
-// MARK: - Brand panel (left column — medium & large)
+// MARK: - App icon (replaces the old BrandPanel — looks like a real iOS home-screen icon)
 
-struct BrandPanel: View {
-    let mode: WidgetDisplayMode
-    let itemCount: Int
-    let updatedAt: Date
-    var compact: Bool = false   // true = medium, false = large
-
-    private let grad = LinearGradient(
-        colors: [Color(hex: "#964735"), Color(hex: "#B85840")],
-        startPoint: .top,
-        endPoint: .bottom
-    )
+struct AppIconView: View {
+    var size: CGFloat = 44
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            grad
-            VStack(alignment: .leading, spacing: 0) {
-
-                // Logo mark
-                ZStack {
-                    RoundedRectangle(cornerRadius: compact ? 7 : 9)
-                        .fill(Color.white.opacity(0.18))
-                        .frame(width: compact ? 32 : 38, height: compact ? 32 : 38)
-                    Text("EF")
-                        .font(.system(size: compact ? 12 : 14, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-
-                Spacer()
-
-                // Wordmark
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Eazy")
-                        .font(.system(size: compact ? 14 : 16, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text("Family")
-                        .font(.system(size: compact ? 14 : 16, weight: .black, design: .rounded))
-                        .foregroundStyle(Color.white.opacity(0.5))
-                }
-
-                if !compact {
-                    Spacer().frame(height: 10)
-
-                    // Item count stat
-                    if itemCount > 0 {
-                        Text("\(itemCount)")
-                            .font(.system(size: 22, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text(mode.shortStatLabel)
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.7))
-                            .padding(.bottom, 8)
-                    }
-
-                    // Updated time
-                    Text(updatedAt.formatted(date: .omitted, time: .shortened))
-                        .font(.system(size: 8))
-                        .foregroundStyle(Color.white.opacity(0.45))
-                } else {
-                    // Compact: just a small count pill
-                    if itemCount > 0 {
-                        Spacer().frame(height: 6)
-                        Text("\(itemCount) \(mode.shortStatLabel)")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(Color.white.opacity(0.75))
-                    }
-                }
-            }
-            .padding(compact ? 10 : 12)
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.224)
+                .fill(LinearGradient(
+                    colors: [Color(hex: "#964735"), Color(hex: "#C06848")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .frame(width: size, height: size)
+            Text("EF")
+                .font(.system(size: size * 0.30, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
         }
     }
 }
 
-// MARK: - Small brand strip (top bar for small widget)
+// MARK: - Thin hairline divider
 
-struct SmallBrandStrip: View {
-    let mode: WidgetDisplayMode
-
-    private let grad = LinearGradient(
-        colors: [Color(hex: "#964735"), Color(hex: "#C06848")],
-        startPoint: .leading,
-        endPoint: .trailing
-    )
-
+private struct Hairline: View {
+    var indent: CGFloat = 0
     var body: some View {
-        ZStack {
-            grad
-            HStack(spacing: 6) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 5)
-                        .fill(Color.white.opacity(0.2))
-                        .frame(width: 22, height: 22)
-                    Text("EF")
-                        .font(.system(size: 8, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                Text(mode.label)
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(Color.white.opacity(0.9))
-                    .lineLimit(1)
-                Spacer()
-            }
-            .padding(.horizontal, 10)
-        }
-        .frame(height: 34)
+        Rectangle()
+            .fill(BORDER.opacity(0.45))
+            .frame(height: 0.5)
+            .padding(.leading, indent)
     }
 }
 
@@ -220,33 +134,37 @@ struct SmallBrandStrip: View {
 struct UnauthenticatedView: View {
     var body: some View {
         Link(destination: URL(string: "eazy-family://app")!) {
-            VStack(spacing: 8) {
-                Image(systemName: "lock.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(TC)
+            VStack(spacing: 12) {
+                AppIconView(size: 44)
                 Text("Open Eazy.Family\nto sign in")
                     .font(.system(size: 12, weight: .medium))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(MUTED)
             }
-            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
 
-// MARK: - Empty state
+// MARK: - Empty state (authenticated, no data loaded)
 
 struct EmptyStateView: View {
     let mode: WidgetDisplayMode
     var body: some View {
         Link(destination: URL(string: mode.deepLink)!) {
             VStack(spacing: 0) {
-                SmallBrandStrip(mode: mode)
+                HStack(spacing: 10) {
+                    AppIconView(size: 36)
+                    Text(mode.label)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(INK)
+                    Spacer()
+                }
                 Spacer()
                 VStack(spacing: 6) {
-                    Image(systemName: "checkmark.circle.fill")
+                    Image(systemName: modeIcon(mode))
                         .font(.system(size: 26))
-                        .foregroundStyle(TC.opacity(0.25))
+                        .foregroundStyle(accent(for: mode).opacity(0.22))
                     Text(mode.emptyMessage)
                         .font(.system(size: 11))
                         .foregroundStyle(MUTED)
@@ -254,11 +172,12 @@ struct EmptyStateView: View {
                 }
                 Spacer()
             }
+            .padding(12)
         }
     }
 }
 
-// MARK: - Small widget (brand strip top + items)
+// MARK: - Small widget
 
 struct SmallWidgetView: View {
     let data: WidgetEntryData
@@ -266,40 +185,52 @@ struct SmallWidgetView: View {
 
     var body: some View {
         Link(destination: URL(string: data.mode.deepLink)!) {
-            VStack(spacing: 0) {
-                SmallBrandStrip(mode: data.mode)
+            VStack(alignment: .leading, spacing: 0) {
 
-                VStack(alignment: .leading, spacing: 0) {
-                    if data.items.isEmpty {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Text("All clear ✓")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(MUTED)
-                            Spacer()
-                        }
-                        Spacer()
-                    } else {
-                        VStack(alignment: .leading, spacing: 5) {
-                            ForEach(data.items.prefix(3)) { item in
-                                SmallItemRow(item: item, mode: data.mode)
-                            }
-                        }
-                        .padding(.top, 10)
-                        .padding(.horizontal, 12)
-
-                        if data.items.count > 3 {
-                            Text("+\(data.items.count - 3) more")
-                                .font(.system(size: 9))
-                                .foregroundStyle(accent(for: data.mode))
-                                .padding(.horizontal, 12)
-                                .padding(.top, 4)
-                        }
-                        Spacer(minLength: 0)
+                // Header: icon + mode label
+                HStack(spacing: 8) {
+                    AppIconView(size: 34)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(data.mode.label)
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(INK)
+                            .lineLimit(1)
+                        Text(data.items.isEmpty ? "All clear" : "\(data.items.count) \(data.mode.shortStatLabel)")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(MUTED)
                     }
                 }
+
+                Hairline()
+                    .padding(.top, 8)
+                    .padding(.bottom, 7)
+
+                if data.items.isEmpty {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("All clear ✓")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(MUTED)
+                        Spacer()
+                    }
+                    Spacer()
+                } else {
+                    VStack(alignment: .leading, spacing: 5) {
+                        ForEach(data.items.prefix(3)) { item in
+                            SmallItemRow(item: item, mode: data.mode)
+                        }
+                    }
+                    if data.items.count > 3 {
+                        Text("+\(data.items.count - 3) more")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(accent(for: data.mode))
+                            .padding(.top, 4)
+                    }
+                    Spacer(minLength: 0)
+                }
             }
+            .padding(12)
         }
     }
 }
@@ -316,11 +247,11 @@ struct SmallItemRow: View {
                     .foregroundStyle(item.completed ? accent(for: mode) : BORDER)
             } else {
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(accent(for: mode))
+                    .fill(item.completed ? MUTED.opacity(0.35) : accent(for: mode))
                     .frame(width: 3, height: 13)
             }
             Text(item.title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(item.completed ? MUTED : INK)
                 .strikethrough(item.completed)
                 .lineLimit(1)
@@ -328,62 +259,70 @@ struct SmallItemRow: View {
     }
 }
 
-// MARK: - Medium widget (brand panel left + content right)
+// MARK: - Medium widget
 
 struct MediumWidgetView: View {
     let data: WidgetEntryData
     let entry: EazyEntry
 
     var body: some View {
-        HStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
 
-            // Left: brand panel
-            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: true)
-                .frame(width: 96)
-
-            // Divider
-            Rectangle()
-                .fill(BORDER.opacity(0.5))
-                .frame(width: 0.5)
-
-            // Right: content
-            VStack(alignment: .leading, spacing: 0) {
-                Text(data.mode.label)
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .textCase(.uppercase)
-                    .tracking(0.4)
+            // Header: icon + title + date pill
+            HStack(spacing: 10) {
+                AppIconView(size: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(data.mode.label)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(INK)
+                    Text(data.items.isEmpty ? "Nothing here yet" : "\(data.items.count) \(data.mode.shortStatLabel)")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(MUTED)
+                }
+                Spacer()
+                // Date pill — top-right accent element
+                Text(entry.date, format: .dateTime.day().month(.abbreviated))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(accent(for: data.mode))
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(accent(for: data.mode).opacity(0.12))
+                    .clipShape(Capsule())
+            }
 
-                if data.items.isEmpty {
+            Hairline()
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+
+            if data.items.isEmpty {
+                Spacer()
+                HStack {
                     Spacer()
                     Text(data.mode.emptyMessage)
                         .font(.system(size: 12))
                         .foregroundStyle(MUTED)
                     Spacer()
-                } else {
-                    VStack(spacing: 0) {
-                        ForEach(Array(data.items.prefix(4).enumerated()), id: \.element.id) { idx, item in
-                            MediumItemRow(item: item, mode: data.mode)
-                            if idx < min(data.items.count, 4) - 1 {
-                                Divider()
-                                    .background(BORDER.opacity(0.4))
-                                    .padding(.leading, 18)
-                            }
+                }
+                Spacer()
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(data.items.prefix(4).enumerated()), id: \.element.id) { idx, item in
+                        MediumItemRow(item: item, mode: data.mode)
+                        if idx < min(data.items.count, 4) - 1 {
+                            Hairline(indent: 20)
                         }
                     }
-                    if data.items.count > 4 {
-                        Text("+\(data.items.count - 4) more")
-                            .font(.system(size: 9))
-                            .foregroundStyle(accent(for: data.mode))
-                            .padding(.top, 4)
-                    }
-                    Spacer(minLength: 0)
                 }
+                if data.items.count > 4 {
+                    Text("+\(data.items.count - 4) more")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(accent(for: data.mode))
+                        .padding(.top, 4)
+                }
+                Spacer(minLength: 0)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(14)
         .widgetURL(URL(string: data.mode.deepLink))
     }
 }
@@ -412,84 +351,84 @@ struct MediumItemRow: View {
                 Spacer()
                 if let sub = item.subtitle {
                     Text(sub)
-                        .font(.system(size: 10))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(accent(for: mode))
                 }
             }
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
         }
     }
 }
 
-// MARK: - Large widget (brand panel left + content right)
+// MARK: - Large widget
 
 struct LargeWidgetView: View {
     let data: WidgetEntryData
     let entry: EazyEntry
 
     var body: some View {
-        HStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
 
-            // Left: brand panel (wider + shows count + time)
-            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: false)
-                .frame(width: 104)
-
-            // Divider
-            Rectangle()
-                .fill(BORDER.opacity(0.5))
-                .frame(width: 0.5)
-
-            // Right: content
-            VStack(alignment: .leading, spacing: 0) {
-                Text(data.mode.label)
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .textCase(.uppercase)
-                    .tracking(0.4)
-                    .foregroundStyle(accent(for: data.mode))
-                    .padding(.bottom, 10)
-
-                Divider()
-                    .background(BORDER.opacity(0.6))
-                    .padding(.bottom, 4)
-
-                if data.items.isEmpty {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 6) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(accent(for: data.mode).opacity(0.25))
-                            Text(data.mode.emptyMessage)
-                                .font(.system(size: 13))
-                                .foregroundStyle(MUTED)
-                        }
-                        Spacer()
-                    }
-                    Spacer()
-                } else {
-                    VStack(spacing: 0) {
-                        ForEach(Array(data.items.prefix(8).enumerated()), id: \.element.id) { idx, item in
-                            LargeItemRow(item: item, mode: data.mode)
-                            if idx < min(data.items.count, 8) - 1 {
-                                Divider()
-                                    .background(BORDER.opacity(0.35))
-                                    .padding(.leading, 24)
-                            }
-                        }
-                    }
-                    if data.items.count > 8 {
-                        Text("+\(data.items.count - 8) more")
-                            .font(.system(size: 10))
-                            .foregroundStyle(accent(for: data.mode))
-                            .padding(.top, 6)
-                    }
-                    Spacer(minLength: 0)
+            // Header: icon + title + weekday/date top-right
+            HStack(spacing: 12) {
+                AppIconView(size: 50)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(data.mode.label)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(INK)
+                    Text(data.items.isEmpty ? "Nothing here yet" : "\(data.items.count) \(data.mode.shortStatLabel)")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(MUTED)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(entry.date, format: .dateTime.weekday(.wide))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(accent(for: data.mode))
+                    Text(entry.date, format: .dateTime.day().month(.abbreviated))
+                        .font(.system(size: 11))
+                        .foregroundStyle(MUTED)
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Hairline()
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+
+            if data.items.isEmpty {
+                Spacer()
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        Image(systemName: modeIcon(data.mode))
+                            .font(.system(size: 34))
+                            .foregroundStyle(accent(for: data.mode).opacity(0.2))
+                        Text(data.mode.emptyMessage)
+                            .font(.system(size: 13))
+                            .foregroundStyle(MUTED)
+                    }
+                    Spacer()
+                }
+                Spacer()
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(data.items.prefix(8).enumerated()), id: \.element.id) { idx, item in
+                        LargeItemRow(item: item, mode: data.mode)
+                        if idx < min(data.items.count, 8) - 1 {
+                            Hairline(indent: 24)
+                        }
+                    }
+                }
+                if data.items.count > 8 {
+                    Text("+\(data.items.count - 8) more")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(accent(for: data.mode))
+                        .padding(.top, 6)
+                }
+                Spacer(minLength: 0)
+            }
         }
+        .padding(16)
         .widgetURL(URL(string: data.mode.deepLink))
     }
 }
@@ -529,96 +468,100 @@ struct LargeItemRow: View {
     }
 }
 
-// MARK: - Extra Large widget (iPad — brand panel left + two content columns right)
+// MARK: - Extra Large widget (iPad — two-column content)
 
 struct ExtraLargeWidgetView: View {
     let data: WidgetEntryData
     let entry: EazyEntry
 
-    // Split items into two columns
-    private var leftItems: [WidgetItem]  { Array(data.items.prefix(8).enumerated().filter { $0.offset % 2 == 0 }.map { $0.element }) }
-    private var rightItems: [WidgetItem] { Array(data.items.prefix(8).enumerated().filter { $0.offset % 2 != 0 }.map { $0.element }) }
+    private var leftItems: [WidgetItem]  { Array(data.items.prefix(10).enumerated().filter { $0.offset % 2 == 0 }.map { $0.element }) }
+    private var rightItems: [WidgetItem] { Array(data.items.prefix(10).enumerated().filter { $0.offset % 2 != 0 }.map { $0.element }) }
 
     var body: some View {
-        HStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
 
-            // Left: brand panel
-            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: false)
-                .frame(width: 120)
-
-            Rectangle()
-                .fill(BORDER.opacity(0.5))
-                .frame(width: 0.5)
-
-            // Right: two-column content grid
-            VStack(alignment: .leading, spacing: 0) {
-                Text(data.mode.label)
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .textCase(.uppercase)
-                    .tracking(0.4)
-                    .foregroundStyle(accent(for: data.mode))
-                    .padding(.bottom, 10)
-
-                Divider().background(BORDER.opacity(0.6)).padding(.bottom, 6)
-
-                if data.items.isEmpty {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        VStack(spacing: 8) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 34))
-                                .foregroundStyle(accent(for: data.mode).opacity(0.25))
-                            Text(data.mode.emptyMessage)
-                                .font(.system(size: 14))
-                                .foregroundStyle(MUTED)
-                        }
-                        Spacer()
-                    }
-                    Spacer()
-                } else {
-                    HStack(alignment: .top, spacing: 0) {
-                        // Column A
-                        VStack(spacing: 0) {
-                            ForEach(Array(leftItems.enumerated()), id: \.element.id) { idx, item in
-                                LargeItemRow(item: item, mode: data.mode)
-                                if idx < leftItems.count - 1 {
-                                    Divider().background(BORDER.opacity(0.3)).padding(.leading, 22)
-                                }
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .frame(maxWidth: .infinity)
-
-                        Rectangle()
-                            .fill(BORDER.opacity(0.3))
-                            .frame(width: 0.5)
-                            .padding(.horizontal, 8)
-
-                        // Column B
-                        VStack(spacing: 0) {
-                            ForEach(Array(rightItems.enumerated()), id: \.element.id) { idx, item in
-                                LargeItemRow(item: item, mode: data.mode)
-                                if idx < rightItems.count - 1 {
-                                    Divider().background(BORDER.opacity(0.3)).padding(.leading, 22)
-                                }
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
-
-                    if data.items.count > 8 {
-                        Text("+\(data.items.count - 8) more")
-                            .font(.system(size: 10))
-                            .foregroundStyle(accent(for: data.mode))
-                            .padding(.top, 6)
-                    }
+            // Header
+            HStack(spacing: 14) {
+                AppIconView(size: 56)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(data.mode.label)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(INK)
+                    Text(data.items.isEmpty ? "Nothing here yet" : "\(data.items.count) \(data.mode.shortStatLabel)")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(MUTED)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(entry.date, format: .dateTime.weekday(.wide))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(accent(for: data.mode))
+                    Text(entry.date, format: .dateTime.day().month(.wide))
+                        .font(.system(size: 12))
+                        .foregroundStyle(MUTED)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Hairline()
+                .padding(.top, 14)
+                .padding(.bottom, 10)
+
+            if data.items.isEmpty {
+                Spacer()
+                HStack {
+                    Spacer()
+                    VStack(spacing: 10) {
+                        Image(systemName: modeIcon(data.mode))
+                            .font(.system(size: 42))
+                            .foregroundStyle(accent(for: data.mode).opacity(0.2))
+                        Text(data.mode.emptyMessage)
+                            .font(.system(size: 15))
+                            .foregroundStyle(MUTED)
+                    }
+                    Spacer()
+                }
+                Spacer()
+            } else {
+                HStack(alignment: .top, spacing: 0) {
+                    // Left column
+                    VStack(spacing: 0) {
+                        ForEach(Array(leftItems.enumerated()), id: \.element.id) { idx, item in
+                            LargeItemRow(item: item, mode: data.mode)
+                            if idx < leftItems.count - 1 {
+                                Hairline(indent: 24)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Rectangle()
+                        .fill(BORDER.opacity(0.4))
+                        .frame(width: 0.5)
+                        .padding(.horizontal, 10)
+
+                    // Right column
+                    VStack(spacing: 0) {
+                        ForEach(Array(rightItems.enumerated()), id: \.element.id) { idx, item in
+                            LargeItemRow(item: item, mode: data.mode)
+                            if idx < rightItems.count - 1 {
+                                Hairline(indent: 24)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
+                if data.items.count > 10 {
+                    Text("+\(data.items.count - 10) more")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(accent(for: data.mode))
+                        .padding(.top, 6)
+                }
+            }
         }
+        .padding(18)
         .widgetURL(URL(string: data.mode.deepLink))
     }
 }
