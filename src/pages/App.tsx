@@ -417,28 +417,6 @@ const AppLayout = () => {
             </div>
           )}
 
-          {isDragMode && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '74px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'rgba(28,20,18,0.82)',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 500,
-                borderRadius: '9999px',
-                padding: '5px 12px',
-                whiteSpace: 'nowrap',
-                pointerEvents: 'none',
-                animation: 'ez-drag-label 0.18s ease both',
-              }}
-            >
-              Drag to move
-            </div>
-          )}
-
           <button
             ref={ezButtonRef}
             data-tutorial="orb"
@@ -454,22 +432,17 @@ const AppLayout = () => {
               height: '64px',
               background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)',
               boxShadow: isDragMode
-                ? '0 0 0 10px rgba(150,71,53,0.18), 0 12px 36px rgba(150,71,53,0.65)'
+                ? '0 0 0 8px rgba(150,71,53,0.2), 0 12px 32px rgba(150,71,53,0.6)'
                 : menuOpen
                   ? '0 0 0 6px rgba(150,71,53,0.25), 0 8px 24px rgba(150,71,53,0.5)'
                   : '0 0 0 6px rgba(122,158,175,0.25), 0 8px 24px rgba(150,71,53,0.4)',
-              transform: isDragMode ? 'scale(1.15)' : undefined,
+              transform: isDragMode ? 'scale(1.12)' : undefined,
               transition: isDragMode ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease',
               touchAction: 'none',
               WebkitUserSelect: 'none',
             }}
           >
-            <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)', opacity: isDragMode ? 0.7 : 1, transition: 'opacity 0.15s' }} />
-            {isDragMode && (
-              <svg style={{ position: 'absolute', width: 22, height: 22, opacity: 0.9, animation: 'ez-drag-label 0.18s ease both' }} viewBox="0 0 24 24" fill="none">
-                <path d="M12 3v18M3 12h18M7 7l-4 5 4 5M17 7l4 5-4 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
+            <img src="/logo.png" alt="EZ" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
           </button>
         </div>
       </div>
