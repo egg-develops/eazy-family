@@ -954,26 +954,6 @@ STYLE:
         </div>
       </div>
 
-      {/* AI message strip */}
-      <div onClick={e => e.stopPropagation()} className="px-4 pb-28">
-        <div
-          className="px-4 py-3 rounded-2xl flex items-center gap-3"
-          style={{ background: CARD, border: `1px solid ${BORDER}` }}
-        >
-          <img
-            src="/logo.png"
-            alt=""
-            className="w-8 h-8 rounded-full flex-shrink-0 object-contain"
-            style={{ background: '#D97B66', padding: '3px' }}
-          />
-          <p className="text-sm" style={{ color: MUTED, fontStyle: 'italic' }}>
-            {step === 'capture' && `"${userName ? t('ezCapture.aiCaptureGreet', { name: userName }) : t('ezCapture.aiCapture')}"`}
-            {step === 'guide' && `"${t('ezCapture.aiGuide')}"`}
-            {step === 'processing' && `"${t('ezCapture.aiProcessing')}"`}
-            {step === 'preview' && parsed && `"${getAIMessage(activeType)}"`}
-          </p>
-        </div>
-      </div>
     </div>
   );
 };
