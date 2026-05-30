@@ -1414,7 +1414,7 @@
   },
   "ezCapture": {
     "header": "¿Qué tienes en mente?",
-    Habla o escribe — yo me encargo del resto,
+    "subheader": "Habla o escribe — yo me encargo del resto",
     "placeholder": "Habla o escribe — evento, tarea, nota, recordatorio…",
     "placeholderListening": "Grabando… toca el micro para detener",
     "placeholderListeningSingleShot": "Escuchando… envío automático al terminar",

@@ -1418,7 +1418,7 @@
   },
   "ezCapture": {
     "header": "Cosa hai in mente?",
-    Parla o scrivi — ci penso io,
+    "subheader": "Parla o scrivi — ci penso io",
     "placeholder": "Parla o digita — evento, attività, nota, promemoria…",
     "placeholderListening": "Registrazione… tocca il microfono per fermare",
     "placeholderListeningSingleShot": "In ascolto… invio automatico dopo aver parlato",

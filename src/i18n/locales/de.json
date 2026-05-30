@@ -1418,7 +1418,7 @@
   },
   "ezCapture": {
     "header": "Was liegt dir auf dem Herzen?",
-    Sprechen oder Tippen — ich kümmere mich um den Rest,
+    "subheader": "Sprechen oder Tippen — ich kümmere mich um den Rest",
     "placeholder": "Sprich oder tippe — Termin, Aufgabe, Notiz, Erinnerung…",
     "placeholderListening": "Aufnahme… Mikrofon antippen zum Stoppen",
     "placeholderListeningSingleShot": "Höre zu… nach dem Sprechen wird automatisch gesendet",
