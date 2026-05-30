@@ -1,6 +1,142 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
+// ── Language support ──────────────────────────────────────────────────────────
+type Lang = 'en' | 'de' | 'fr' | 'it' | 'es' | 'pt';
+
+const LOCALE_MAP: Record<Lang, string> = {
+  en: 'en-GB', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT',
+};
+
+const UI: Record<Lang, {
+  greeting: string; subline: string; scheduleLabel: string; tasksLabel: string;
+  stuckLabel: string; stuckHint: string; noEvents: string; noTasks: string;
+  conflicts: string; overlap: string; quietMoment: string; quietBody: string;
+  openApp: string; manageDigest: string; privacy: string; subject: (name: string) => string;
+  allDay: string;
+}> = {
+  en: {
+    greeting: 'Good morning',
+    subline: 'Morning Digest',
+    scheduleLabel: "Today's Schedule",
+    tasksLabel: 'Open Tasks',
+    stuckLabel: 'Stuck Tasks',
+    stuckHint: "These haven't moved in a week. Worth a delegate or drop?",
+    noEvents: 'Nothing scheduled — enjoy the breathing room.',
+    noTasks: "Nothing open — you're ahead of it.",
+    conflicts: 'Schedule Conflict',
+    overlap: 'overlaps',
+    quietMoment: 'A quiet moment:',
+    quietBody: "The small things — a hug, a shared meal, five minutes without a screen — those are the ones they'll remember. Whatever today holds, you're already giving them that.",
+    openApp: 'Open Eazy.Family →',
+    manageDigest: 'Manage digest',
+    privacy: 'Privacy',
+    subject: (n) => `Good morning, ${n} ☀️ — Your family's day`,
+    allDay: 'All day',
+  },
+  de: {
+    greeting: 'Guten Morgen',
+    subline: 'Morgen-Digest',
+    scheduleLabel: 'Heutiger Tagesplan',
+    tasksLabel: 'Offene Aufgaben',
+    stuckLabel: 'Liegengebliebene Aufgaben',
+    stuckHint: 'Diese wurden seit einer Woche nicht angerührt. Delegieren oder streichen?',
+    noEvents: 'Nichts geplant — genieß die Ruhe.',
+    noTasks: 'Nichts offen — du bist bestens vorbereitet.',
+    conflicts: 'Terminkonflikt',
+    overlap: 'überschneidet sich mit',
+    quietMoment: 'Ein stiller Moment:',
+    quietBody: 'Die kleinen Dinge — eine Umarmung, ein gemeinsames Essen, fünf Minuten ohne Bildschirm — das sind die Momente, an die sie sich erinnern werden. Was auch immer heute kommt, du gibst ihnen das bereits.',
+    openApp: 'Eazy.Family öffnen →',
+    manageDigest: 'Digest verwalten',
+    privacy: 'Datenschutz',
+    subject: (n) => `Guten Morgen, ${n} ☀️ — Der Familientag`,
+    allDay: 'Ganztägig',
+  },
+  fr: {
+    greeting: 'Bonjour',
+    subline: 'Digest du matin',
+    scheduleLabel: "Programme d'aujourd'hui",
+    tasksLabel: 'Tâches ouvertes',
+    stuckLabel: 'Tâches bloquées',
+    stuckHint: "Ces tâches n'ont pas bougé depuis une semaine. À déléguer ou abandonner ?",
+    noEvents: 'Rien de prévu — profite de cette liberté.',
+    noTasks: "Rien en cours — tu as de l'avance.",
+    conflicts: 'Conflit de planning',
+    overlap: 'chevauche',
+    quietMoment: 'Un moment de calme :',
+    quietBody: "Les petites choses — un câlin, un repas partagé, cinq minutes sans écran — ce sont celles dont ils se souviendront. Quoi que la journée apporte, tu leur donnes déjà ça.",
+    openApp: 'Ouvrir Eazy.Family →',
+    manageDigest: 'Gérer le digest',
+    privacy: 'Confidentialité',
+    subject: (n) => `Bonjour, ${n} ☀️ — La journée de ta famille`,
+    allDay: 'Toute la journée',
+  },
+  it: {
+    greeting: 'Buongiorno',
+    subline: 'Digest mattutino',
+    scheduleLabel: 'Programma di oggi',
+    tasksLabel: 'Attività aperte',
+    stuckLabel: 'Attività bloccate',
+    stuckHint: "Queste non sono state toccate da una settimana. Vale la pena delegarle o eliminarle?",
+    noEvents: 'Niente in programma — goditi lo spazio.',
+    noTasks: "Niente in sospeso — sei avanti.",
+    conflicts: 'Conflitto di orario',
+    overlap: 'si sovrappone a',
+    quietMoment: 'Un momento di quiete:',
+    quietBody: "Le piccole cose — un abbraccio, un pasto condiviso, cinque minuti senza schermo — sono quelle che ricorderanno. Qualunque cosa accada oggi, stai già dando loro questo.",
+    openApp: 'Apri Eazy.Family →',
+    manageDigest: 'Gestisci il digest',
+    privacy: 'Privacy',
+    subject: (n) => `Buongiorno, ${n} ☀️ — La giornata della tua famiglia`,
+    allDay: 'Tutto il giorno',
+  },
+  es: {
+    greeting: 'Buenos días',
+    subline: 'Resumen matutino',
+    scheduleLabel: 'Agenda de hoy',
+    tasksLabel: 'Tareas abiertas',
+    stuckLabel: 'Tareas atascadas',
+    stuckHint: 'Estas no se han movido en una semana. ¿Vale la pena delegarlas o eliminarlas?',
+    noEvents: 'Nada programado — disfruta del espacio.',
+    noTasks: 'Nada pendiente — vas por delante.',
+    conflicts: 'Conflicto de horario',
+    overlap: 'se superpone con',
+    quietMoment: 'Un momento tranquilo:',
+    quietBody: "Las pequeñas cosas — un abrazo, una comida compartida, cinco minutos sin pantalla — son las que recordarán. Pase lo que pase hoy, ya les estás dando eso.",
+    openApp: 'Abrir Eazy.Family →',
+    manageDigest: 'Gestionar resumen',
+    privacy: 'Privacidad',
+    subject: (n) => `Buenos días, ${n} ☀️ — El día de tu familia`,
+    allDay: 'Todo el día',
+  },
+  pt: {
+    greeting: 'Bom dia',
+    subline: 'Digest matinal',
+    scheduleLabel: 'Programa de hoje',
+    tasksLabel: 'Tarefas abertas',
+    stuckLabel: 'Tarefas paradas',
+    stuckHint: 'Estas não foram tocadas há uma semana. Vale a pena delegar ou eliminar?',
+    noEvents: 'Nada agendado — aproveita o espaço.',
+    noTasks: 'Nada em aberto — estás adiantado.',
+    conflicts: 'Conflito de horário',
+    overlap: 'sobrepõe-se a',
+    quietMoment: 'Um momento tranquilo:',
+    quietBody: "As pequenas coisas — um abraço, uma refeição partilhada, cinco minutos sem ecrã — são as que vão lembrar. Independentemente do que hoje traga, já lhes estás a dar isso.",
+    openApp: 'Abrir Eazy.Family →',
+    manageDigest: 'Gerir digest',
+    privacy: 'Privacidade',
+    subject: (n) => `Bom dia, ${n} ☀️ — O dia da tua família`,
+    allDay: 'Dia inteiro',
+  },
+};
+
+function getLang(raw: unknown): Lang {
+  const s = String(raw ?? '').split('-')[0].toLowerCase();
+  return (['en','de','fr','it','es','pt'] as Lang[]).includes(s as Lang) ? (s as Lang) : 'en';
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
 serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   const cronSecret = Deno.env.get("CRON_SECRET");
@@ -56,6 +192,10 @@ serve(async (req) => {
   const errors: string[] = [];
 
   for (const { user_id, data } of digestUsers) {
+    const lang = getLang(data?.["eazy-family-language"]);
+    const ui = UI[lang];
+    const locale = LOCALE_MAP[lang];
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("email, full_name")
@@ -64,7 +204,6 @@ serve(async (req) => {
 
     if (!profile) continue;
 
-    // Use auth email as fallback if profiles.email is missing
     let recipientEmail = profile.email;
     if (!recipientEmail) {
       const { data: authUser } = await supabase.auth.admin.getUserById(user_id);
@@ -119,7 +258,7 @@ serve(async (req) => {
     const conflicts = detectConflicts(upcomingEvents as EvtRow[]);
 
     const firstName = profile.full_name?.split(" ")[0] || "there";
-    const dayLabel = zurichNow.toLocaleDateString("en-CH", {
+    const dayLabel = zurichNow.toLocaleDateString(locale, {
       weekday: "long", month: "long", day: "numeric", timeZone: "Europe/Zurich",
     });
 
@@ -133,6 +272,8 @@ serve(async (req) => {
         openTasks,
         staleTasks,
         conflicts,
+        lang,
+        locale,
       });
     }
 
@@ -140,7 +281,7 @@ serve(async (req) => {
 
     // ── Telegram ──────────────────────────────────────────────────────────
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
-      const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
+      const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale });
       const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,8 +299,8 @@ serve(async (req) => {
     // ── Email (SendGrid preferred, Brevo fallback) ────────────────────────
     const emailEnabled = isTruthy(data?.["eazy-morning-digest-email"]);
     if (emailEnabled && recipientEmail) {
-      const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative });
-      const subject = `Good morning, ${firstName} ☀️ — Your family's day`;
+      const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale });
+      const subject = ui.subject(firstName);
 
       if (SENDGRID_API_KEY) {
         const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
@@ -211,15 +352,16 @@ serve(async (req) => {
   });
 });
 
+// ── Utilities ─────────────────────────────────────────────────────────────────
 function getZurichOffsetMs(date: Date): number {
   const utcStr = date.toLocaleString("en-US", { timeZone: "UTC" });
   const zurichStr = date.toLocaleString("en-US", { timeZone: "Europe/Zurich" });
   return new Date(zurichStr).getTime() - new Date(utcStr).getTime();
 }
 
-function formatEventTime(isoStr: string, allDay: boolean): string {
-  if (allDay) return "All day";
-  return new Date(isoStr).toLocaleTimeString("en-CH", {
+function formatEventTime(isoStr: string, allDay: boolean, locale: string, allDayLabel: string): string {
+  if (allDay) return allDayLabel;
+  return new Date(isoStr).toLocaleTimeString(locale, {
     hour: "2-digit", minute: "2-digit", timeZone: "Europe/Zurich",
   });
 }
@@ -232,7 +374,6 @@ function detectConflicts(events: Array<{ title: string; start_date: string; end_
     start: new Date(e.start_date),
     end: e.end_date ? new Date(e.end_date) : new Date(new Date(e.start_date).getTime() + 3600000),
   }));
-
   const found: ConflictPair[] = [];
   for (let i = 0; i < normalized.length; i++) {
     for (let j = i + 1; j < normalized.length; j++) {
@@ -255,17 +396,23 @@ async function generateAINarrative(ctx: {
   openTasks: Array<{ title: string; due_date?: string | null }>;
   staleTasks: Array<{ title: string; updated_at: string }>;
   conflicts: ConflictPair[];
+  lang: Lang;
+  locale: string;
 }): Promise<string> {
-  const { apiKey, firstName, dayLabel, todayEvents, openTasks, staleTasks, conflicts } = ctx;
+  const { apiKey, firstName, dayLabel, todayEvents, openTasks, staleTasks, conflicts, lang, locale } = ctx;
 
   const context = [
     `Family member: ${firstName}`,
     `Date: ${dayLabel}`,
-    `Today's events (${todayEvents.length}): ${todayEvents.map(e => `${e.title} at ${formatEventTime(e.start_date, e.all_day)}${e.location ? ` @ ${e.location}` : ''}`).join(', ') || 'none'}`,
+    `Today's events (${todayEvents.length}): ${todayEvents.map(e => `${e.title} at ${formatEventTime(e.start_date, e.all_day, locale, 'all day')}${e.location ? ` @ ${e.location}` : ''}`).join(', ') || 'none'}`,
     `Open tasks (${openTasks.length}): ${openTasks.slice(0, 5).map(t => t.title).join(', ') || 'none'}`,
     staleTasks.length > 0 ? `Stale tasks (untouched 7+ days): ${staleTasks.map(t => t.title).join(', ')}` : '',
     conflicts.length > 0 ? `Schedule conflicts: ${conflicts.map(c => `"${c.titleA}" overlaps "${c.titleB}"`).join(', ')}` : '',
   ].filter(Boolean).join('\n');
+
+  const langNames: Record<Lang, string> = {
+    en: 'English', de: 'German', fr: 'French', it: 'Italian', es: 'Spanish', pt: 'Portuguese',
+  };
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -280,7 +427,7 @@ async function generateAINarrative(ctx: {
         max_tokens: 200,
         messages: [{
           role: "user",
-          content: `You are a warm, concise family assistant writing a single paragraph (2-3 sentences max) morning message for ${firstName}. Be encouraging, specific to their actual schedule, and flag any conflicts or stale tasks gently. No lists, no headers — just a natural, human paragraph.\n\n${context}`,
+          content: `You are a warm, concise family assistant writing a single paragraph (2-3 sentences max) morning message for ${firstName}. Be encouraging, specific to their actual schedule, and flag any conflicts or stale tasks gently. No lists, no headers — just a natural, human paragraph. Write entirely in ${langNames[lang]}.\n\n${context}`,
         }],
       }),
     });
@@ -293,6 +440,7 @@ async function generateAINarrative(ctx: {
   }
 }
 
+// ── Telegram builder ──────────────────────────────────────────────────────────
 function buildTelegramMessage(ctx: {
   firstName: string;
   dayLabel: string;
@@ -301,11 +449,13 @@ function buildTelegramMessage(ctx: {
   staleTasks: Array<{ title: string; updated_at: string }>;
   conflicts: ConflictPair[];
   aiNarrative: string;
+  ui: typeof UI[Lang];
+  locale: string;
 }): string {
-  const { firstName, dayLabel, todayEvents, tasks, staleTasks, conflicts, aiNarrative } = ctx;
+  const { firstName, dayLabel, todayEvents, tasks, staleTasks, conflicts, aiNarrative, ui, locale } = ctx;
   const lines: string[] = [];
 
-  lines.push(`☀️ <b>Good morning, ${firstName}!</b>`);
+  lines.push(`☀️ <b>${ui.greeting}, ${firstName}!</b>`);
   lines.push(`<i>${dayLabel}</i>`);
 
   if (aiNarrative) {
@@ -315,28 +465,28 @@ function buildTelegramMessage(ctx: {
 
   if (conflicts.length > 0) {
     lines.push('');
-    lines.push(`⚠️ <b>Schedule Conflict${conflicts.length > 1 ? 's' : ''}</b>`);
+    lines.push(`⚠️ <b>${ui.conflicts}${conflicts.length > 1 ? 's' : ''}</b>`);
     for (const c of conflicts) {
-      lines.push(`  · <b>${c.titleA}</b> overlaps <b>${c.titleB}</b>`);
+      lines.push(`  · <b>${c.titleA}</b> ${ui.overlap} <b>${c.titleB}</b>`);
     }
   }
 
   lines.push('');
-  lines.push('📅 <b>Today\'s Schedule</b>');
+  lines.push(`📅 <b>${ui.scheduleLabel}</b>`);
   if (todayEvents.length === 0) {
-    lines.push('  Nothing scheduled — enjoy the breathing room.');
+    lines.push(`  ${ui.noEvents}`);
   } else {
     for (const e of todayEvents) {
-      const time = formatEventTime(e.start_date, e.all_day);
+      const time = formatEventTime(e.start_date, e.all_day, locale, ui.allDay);
       const loc = e.location ? ` · 📍 ${e.location}` : '';
       lines.push(`  ${time}  <b>${e.title}</b>${loc}`);
     }
   }
 
   lines.push('');
-  lines.push('✅ <b>Open Tasks</b>');
+  lines.push(`✅ <b>${ui.tasksLabel}</b>`);
   if (tasks.length === 0) {
-    lines.push("  Nothing open — you're ahead of it.");
+    lines.push(`  ${ui.noTasks}`);
   } else {
     for (const t of tasks) {
       lines.push(`  · ${t.title}`);
@@ -345,19 +495,20 @@ function buildTelegramMessage(ctx: {
 
   if (staleTasks.length > 0) {
     lines.push('');
-    lines.push('⏳ <b>Stuck Tasks</b> <i>(untouched 7+ days)</i>');
+    lines.push(`⏳ <b>${ui.stuckLabel}</b>`);
     for (const t of staleTasks) {
       lines.push(`  · ${t.title}`);
     }
-    lines.push('  <i>Worth a delegate or drop?</i>');
+    lines.push(`  <i>${ui.stuckHint}</i>`);
   }
 
   lines.push('');
-  lines.push('<a href="https://eazy.family/app">Open Eazy.Family →</a>');
+  lines.push(`<a href="https://eazy.family/app">${ui.openApp}</a>`);
 
   return lines.join('\n');
 }
 
+// ── Email builder ─────────────────────────────────────────────────────────────
 function buildDigestEmail(ctx: {
   firstName: string;
   dayLabel: string;
@@ -366,16 +517,18 @@ function buildDigestEmail(ctx: {
   staleTasks: Array<{ title: string; updated_at: string }>;
   conflicts: ConflictPair[];
   aiNarrative: string;
+  ui: typeof UI[Lang];
+  locale: string;
 }): string {
-  const { firstName, dayLabel, events, tasks, staleTasks, conflicts, aiNarrative } = ctx;
+  const { firstName, dayLabel, events, tasks, staleTasks, conflicts, aiNarrative, ui, locale } = ctx;
 
   const eventsHtml =
     events.length === 0
-      ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">Nothing scheduled — enjoy the breathing room.</p>`
+      ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">${ui.noEvents}</p>`
       : events.map(e => `
         <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
           <div style="width:52px;flex-shrink:0;text-align:right;color:#964735;font-size:12px;font-weight:600;padding-top:2px;line-height:1.4">
-            ${formatEventTime(e.start_date, e.all_day)}
+            ${formatEventTime(e.start_date, e.all_day, locale, ui.allDay)}
           </div>
           <div style="flex:1;border-left:2px solid #DAC1BB;padding-left:12px">
             <div style="color:#1C1C18;font-size:14px;font-weight:600;line-height:1.4">${e.title}</div>
@@ -385,7 +538,7 @@ function buildDigestEmail(ctx: {
 
   const tasksHtml =
     tasks.length === 0
-      ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">Nothing open — you're ahead of it.</p>`
+      ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">${ui.noTasks}</p>`
       : tasks.map(t => `
         <div style="display:flex;align-items:center;margin-bottom:10px">
           <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DAC1BB;flex-shrink:0;background:#FAF7F3;margin-right:12px"></div>
@@ -396,12 +549,12 @@ function buildDigestEmail(ctx: {
     <div style="background:#FFF8F0;border:1px solid #EDCFB8;border-radius:16px;padding:16px 20px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <span style="font-size:14px">⚠️</span>
-        <span style="color:#C4621A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Schedule Conflict${conflicts.length > 1 ? 's' : ''}</span>
+        <span style="color:#C4621A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.conflicts}${conflicts.length > 1 ? 's' : ''}</span>
       </div>
       ${conflicts.map(c => `
         <div style="margin-bottom:6px">
           <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleA}</span>
-          <span style="color:#C4621A;font-size:13px"> overlaps </span>
+          <span style="color:#C4621A;font-size:13px"> ${ui.overlap} </span>
           <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleB}</span>
         </div>`).join("")}
     </div>`;
@@ -409,35 +562,34 @@ function buildDigestEmail(ctx: {
   const staleHtml = staleTasks.length === 0 ? "" : `
     <div style="background:#F9F6F2;border:1px solid #DAC1BB;border-radius:16px;padding:16px 20px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <span style="color:#7A6660;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">⏳ Stuck Tasks</span>
+        <span style="color:#7A6660;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">⏳ ${ui.stuckLabel}</span>
       </div>
       ${staleTasks.map(t => `<div style="color:#7A6660;font-size:13px;margin-bottom:4px">· ${t.title}</div>`).join("")}
-      <p style="color:#7A6660;font-size:12px;margin:8px 0 0;font-style:italic">These haven't moved in a week. Worth a delegate or drop?</p>
+      <p style="color:#7A6660;font-size:12px;margin:8px 0 0;font-style:italic">${ui.stuckHint}</p>
     </div>`;
 
   const aiBlock = aiNarrative ? `
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px 24px 20px;margin-bottom:12px">
-      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">Good morning, ${firstName} ☀️</h1>
+      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${firstName} ☀️</h1>
       <p style="color:#7A6660;font-size:14px;line-height:1.7;margin:0">${aiNarrative}</p>
     </div>` : `
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px 24px 20px;margin-bottom:12px">
-      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">Good morning, ${firstName} ☀️</h1>
-      <p style="color:#7A6660;font-size:14px;line-height:1.6;margin:0">Here's what your family has on today. You're already doing something wonderful — you showed up.</p>
+      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${firstName} ☀️</h1>
     </div>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${LOCALE_MAP[getLangFromUI(ui)].split('-')[0]}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Morning Digest</title>
+  <title>${ui.subline}</title>
 </head>
 <body style="margin:0;padding:0;background:#F7F3ED;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px 48px">
 
     <div style="text-align:center;margin-bottom:28px">
       <img src="https://eazy.family/logo.png" alt="Eazy.Family" style="width:44px;height:44px;border-radius:12px">
-      <p style="color:#7A6660;font-size:12px;margin:8px 0 0;letter-spacing:0.04em;text-transform:uppercase">Morning Digest · ${dayLabel}</p>
+      <p style="color:#7A6660;font-size:12px;margin:8px 0 0;letter-spacing:0.04em;text-transform:uppercase">${ui.subline} · ${dayLabel}</p>
     </div>
 
     ${aiBlock}
@@ -447,7 +599,7 @@ function buildDigestEmail(ctx: {
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
       <div style="display:flex;align-items:center;margin-bottom:16px">
         <div style="width:8px;height:8px;border-radius:50%;background:#964735;flex-shrink:0;margin-right:10px"></div>
-        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Today's Schedule</span>
+        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.scheduleLabel}</span>
       </div>
       ${eventsHtml}
     </div>
@@ -455,31 +607,39 @@ function buildDigestEmail(ctx: {
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
       <div style="display:flex;align-items:center;margin-bottom:16px">
         <div style="width:8px;height:8px;border-radius:50%;background:#44664F;flex-shrink:0;margin-right:10px"></div>
-        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Open Tasks</span>
+        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.tasksLabel}</span>
       </div>
       ${tasksHtml}
     </div>
 
     <div style="background:#EEF4F0;border:1px solid #C8DDD0;border-radius:20px;padding:20px;margin-bottom:24px">
       <p style="color:#44664F;font-size:13px;line-height:1.7;margin:0">
-        <strong style="color:#2D4F38">A quiet moment:</strong> The small things — a hug, a shared meal, five minutes without a screen — those are the ones they'll remember. Whatever today holds, you're already giving them that.
+        <strong style="color:#2D4F38">${ui.quietMoment}</strong> ${ui.quietBody}
       </p>
     </div>
 
     <div style="text-align:center;margin-bottom:28px">
       <a href="https://eazy.family/app" style="display:inline-block;background:linear-gradient(135deg,#964735,#D97B66);color:#ffffff;font-weight:600;font-size:14px;padding:14px 32px;border-radius:12px;text-decoration:none;letter-spacing:0.01em">
-        Open Eazy.Family →
+        ${ui.openApp}
       </a>
     </div>
 
     <p style="color:#DAC1BB;font-size:11px;text-align:center;margin:0;line-height:1.6">
       © ${new Date().getFullYear()} Eazy.Family &nbsp;·&nbsp;
-      <a href="https://eazy.family/app/settings" style="color:#DAC1BB;text-decoration:none">Manage digest</a>
+      <a href="https://eazy.family/app/settings" style="color:#DAC1BB;text-decoration:none">${ui.manageDigest}</a>
       &nbsp;·&nbsp;
-      <a href="https://eazy.family/privacy" style="color:#DAC1BB;text-decoration:none">Privacy</a>
+      <a href="https://eazy.family/privacy" style="color:#DAC1BB;text-decoration:none">${ui.privacy}</a>
     </p>
 
   </div>
 </body>
 </html>`;
+}
+
+// Helper to get lang code from a UI object (for html lang attribute)
+function getLangFromUI(ui: typeof UI[Lang]): Lang {
+  for (const [k, v] of Object.entries(UI)) {
+    if (v === ui) return k as Lang;
+  }
+  return 'en';
 }
