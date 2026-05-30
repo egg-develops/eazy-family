@@ -446,12 +446,15 @@
         "Full intelligence layer — conflict detection, shopping frequency, task escalation",
         "Rituals & Journal — your private space for reflection",
         "Morning Digest — daily & email"
-      ]
+      ],
+      "upgradeToKeepAccess": "Upgrade to keep access",
+      "startFreeTrial": "Start your 14-day free trial"
     },
     "ez": {
       "iconOnly": "Icon only",
       "iconOnlySub": "Circular buttons, no labels"
-    }
+    },
+    "profileName": "Profile Name"
   },
   "privacySettings": {
     "title": "Privacy Settings",

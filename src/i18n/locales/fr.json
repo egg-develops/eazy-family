@@ -446,12 +446,15 @@
         "Couche d'intelligence complète — conflits, fréquence d'achat, escalade des tâches",
         "Rituels & Journal — votre espace privé pour la réflexion",
         "Morning Digest — quotidien & par e-mail"
-      ]
+      ],
+      "upgradeToKeepAccess": "Mettre à niveau pour conserver l'accès",
+      "startFreeTrial": "Commencer l'essai gratuit de 14 jours"
     },
     "ez": {
       "iconOnly": "Icônes uniquement",
       "iconOnlySub": "Boutons circulaires, sans étiquettes"
-    }
+    },
+    "profileName": "Nom de profil"
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",

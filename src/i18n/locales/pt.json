@@ -447,12 +447,15 @@
         "Camada de inteligência completa — conflitos, frequência de compras, escalada de tarefas",
         "Rituais & Diário — seu espaço privado para reflexão",
         "Morning Digest — diário & e-mail"
-      ]
+      ],
+      "upgradeToKeepAccess": "Atualiza para manter o acesso",
+      "startFreeTrial": "Inicia o teu período de avaliação de 14 dias"
     },
     "ez": {
       "iconOnly": "Somente ícones",
       "iconOnlySub": "Botões circulares, sem rótulos"
-    }
+    },
+    "profileName": "Nome do perfil"
   },
   "privacySettings": {
     "title": "Definições de privacidade",

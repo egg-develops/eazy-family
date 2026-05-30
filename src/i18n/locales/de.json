@@ -446,12 +446,15 @@
         "Vollständige Intelligenzebene — Konflikterkennung, Einkaufshäufigkeit, Aufgaben-Eskalierung",
         "Rituale & Tagebuch — Ihr privater Raum zur Reflexion",
         "Morning Digest — täglich & per E-Mail"
-      ]
+      ],
+      "upgradeToKeepAccess": "Upgrade, um den Zugang zu behalten",
+      "startFreeTrial": "14-tägige kostenlose Testversion starten"
     },
     "ez": {
       "iconOnly": "Nur Icons",
       "iconOnlySub": "Runde Schaltflächen, ohne Beschriftung"
-    }
+    },
+    "profileName": "Profilname"
   },
   "privacySettings": {
     "title": "Datenschutzeinstellungen",

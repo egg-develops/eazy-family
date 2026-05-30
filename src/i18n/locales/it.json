@@ -446,12 +446,15 @@
         "Livello intelligenza completo — conflitti, frequenza acquisti, escalation attività",
         "Rituali & Diario — il tuo spazio privato per la riflessione",
         "Morning Digest — quotidiano & e-mail"
-      ]
+      ],
+      "upgradeToKeepAccess": "Aggiorna per mantenere l'accesso",
+      "startFreeTrial": "Inizia la prova gratuita di 14 giorni"
     },
     "ez": {
       "iconOnly": "Solo icone",
       "iconOnlySub": "Pulsanti circolari, senza etichette"
-    }
+    },
+    "profileName": "Nome profilo"
   },
   "privacySettings": {
     "title": "Impostazioni privacy",

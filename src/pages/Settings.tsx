@@ -139,6 +139,8 @@ const Settings = () => {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
   const [userEmail, setUserEmail] = useState(() => user?.email || '');
 
   // AI & Privacy
@@ -285,6 +287,15 @@ const Settings = () => {
     } finally { setDeletingAccount(false); setShowDeleteConfirm(false); }
   };
 
+  const saveDisplayName = async (name: string) => {
+    if (!user) return;
+    const trimmed = name.trim();
+    setDisplayName(trimmed);
+    try {
+      await supabase.from('profiles').update({ display_name: trimmed }).eq('user_id', user.id);
+    } catch (e) { logError('saveDisplayName:', e); }
+  };
+
   const handleFileUpload = async (file: File, type: 'profile' | 'header') => {
     const v = validateImageFile(file);
     if (!v.valid) { toast({ title: 'Invalid file', description: v.error, variant: 'destructive' }); return; }
@@ -344,35 +355,26 @@ const Settings = () => {
         <SectionLabel>{t('settings.account.title')}</SectionLabel>
         <Card_>
           <>
-            {/* Family Premium status — top of account card */}
+            {/* Family Premium — single row for all subscription states */}
               {isPremium ? (
                 <Row
                   icon={<Crown className="w-4 h-4" style={{ color: isTrial ? '#D97B66' : '#FFC861' }} />}
                   title={isTrial ? t('settings.premium.trialTitle') : t('settings.premium.activeTitle')}
-                  subtitle={isTrial && trialDaysLeft !== null ? trialDaysLeft === 1 ? t('settings.premium.lastDay') : trialDaysLeft === 0 ? t('settings.premium.endsToday') : t('settings.premium.daysLeft', { count: trialDaysLeft }) : undefined}
+                  subtitle={isTrial ? t('settings.premium.upgradeToKeepAccess') : t('settings.premium.active')}
                   right={<Arrow />}
                   onClick={() => setShowPremiumSheet(true)}
                 />
               ) : (
-                <div style={{ borderBottom: `1px solid ${BORDER}` }}>
-                  <div className="px-4 py-3.5 space-y-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF3D0' }}>
-                        <Crown className="w-4 h-4" style={{ color: '#FFC861' }} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold" style={{ color: INK }}>{t('settings.premium.upgradeTitle')}</p>
-                        <p className="text-xs" style={{ color: MUTED }}>{t('settings.premium.upgradeDesc')}</p>
-                      </div>
-                    </div>
-                    <UpgradeDialog>
-                      <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}>
-                        <Crown className="w-4 h-4" />
-                        {t('settings.premium.upgradeBtn')}
-                      </button>
-                    </UpgradeDialog>
-                  </div>
-                </div>
+                <UpgradeDialog>
+                  <button className="w-full text-left">
+                    <Row
+                      icon={<Crown className="w-4 h-4" style={{ color: '#FFC861' }} />}
+                      title="Family Premium"
+                      subtitle={t('settings.premium.startFreeTrial')}
+                      right={<Arrow />}
+                    />
+                  </button>
+                </UpgradeDialog>
               )}
               <Row
                 icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
@@ -625,6 +627,51 @@ const Settings = () => {
       <div className="space-y-2">
         <SectionLabel>{t('settings.profileGallery')}</SectionLabel>
         <Card_>
+          {/* Profile Name */}
+          <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
+              <User className="w-5 h-5" style={{ color: MUTED }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.profileName')}</p>
+              {editingName ? (
+                <input
+                  autoFocus
+                  value={nameDraft}
+                  onChange={e => setNameDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { saveDisplayName(nameDraft); setEditingName(false); }
+                    if (e.key === 'Escape') setEditingName(false);
+                  }}
+                  className="text-xs outline-none bg-transparent border-b w-full mt-0.5"
+                  style={{ color: TC, borderColor: TC }}
+                  maxLength={32}
+                  placeholder={user?.email?.split('@')[0] || 'Your name'}
+                />
+              ) : (
+                <p className="text-xs mt-0.5" style={{ color: MUTED }}>
+                  {displayName || user?.email?.split('@')[0] || ''}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => {
+                if (editingName) {
+                  saveDisplayName(nameDraft);
+                  setEditingName(false);
+                } else {
+                  setNameDraft(displayName || user?.email?.split('@')[0] || '');
+                  setEditingName(true);
+                }
+              }}
+              className="text-sm font-semibold flex-shrink-0"
+              style={{ color: TC }}
+            >
+              {editingName ? t('settings.save') : t('settings.change')}
+            </button>
+          </div>
+
+          {/* Profile Photo */}
           <div className="px-4 py-3.5 flex items-center gap-3" style={{ borderBottom: `1px solid ${BORDER}` }}>
             {homeConfig.iconImage
               ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />

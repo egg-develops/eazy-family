@@ -447,12 +447,15 @@
         "Capa de inteligencia completa — conflictos, frecuencia de compras, escalada de tareas",
         "Rituales & Diario — tu espacio privado para la reflexión",
         "Morning Digest — diario & por correo"
-      ]
+      ],
+      "upgradeToKeepAccess": "Actualiza para mantener el acceso",
+      "startFreeTrial": "Inicia tu prueba gratuita de 14 días"
     },
     "ez": {
       "iconOnly": "Solo iconos",
       "iconOnlySub": "Botones circulares, sin etiquetas"
-    }
+    },
+    "profileName": "Nombre de perfil"
   },
   "privacySettings": {
     "title": "Configuración de privacidad",
