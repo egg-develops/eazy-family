@@ -145,7 +145,6 @@ const Settings = () => {
 
   // AI & Privacy
   const [aiSuggestions, setAiSuggestions] = useState(() => localStorage.getItem('eazy-ai-suggestions') !== 'false');
-  const [privacyLevel, setPrivacyLevel] = useState<0|1|2>(() => { const v = parseInt(localStorage.getItem('eazy-privacy-level') || '1'); return (v as 0|1|2); });
   const [dataUsage, setDataUsage] = useState(() => localStorage.getItem('eazy-data-usage') !== 'false');
 
   // Notifications
@@ -722,41 +721,16 @@ const Settings = () => {
         </Card_>
       </div>
 
-      {/* ── AI & Privacy ── */}
+      {/* ── EZ-AI ── */}
       <div className="space-y-2">
-        <SectionLabel>{t('settings.aiPrivacy')}</SectionLabel>
+        <SectionLabel>EZ-AI</SectionLabel>
         <Card_>
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
-            <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('settings.aiDescription')}</p>
-          </div>
           <Row
             icon={<Sparkles className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.intelligentSuggestions')}
             subtitle={t('settings.proactiveReminders')}
             right={<Tog checked={aiSuggestions} onChange={v => { setAiSuggestions(v); localStorage.setItem('eazy-ai-suggestions', String(v)); }} />}
           />
-          <div className="px-4 py-3.5" style={{ borderBottom: `1px solid ${BORDER}` }}>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                <Lock className="w-4 h-4" style={{ color: MUTED }} />
-              </div>
-              <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.privacyLevel')}</p>
-            </div>
-            <div className="relative mt-1 mb-4">
-              <div className="w-full h-1.5 rounded-full" style={{ background: BORDER }}>
-                <div className="h-1.5 rounded-full" style={{ background: TC, width: privacyLevel === 0 ? '0%' : privacyLevel === 1 ? '50%' : '100%', transition: 'width 0.2s' }} />
-              </div>
-              <div className="flex justify-between mt-1 -mx-1">
-                {([t('settings.privacyPrivate'), t('settings.privacyFamily'), t('settings.privacyFull')] as const).map((label, i) => (
-                  <button key={i} onClick={() => { setPrivacyLevel(i as 0|1|2); localStorage.setItem('eazy-privacy-level', String(i)); }}
-                    className="flex flex-col items-center gap-1">
-                    <div className="w-3 h-3 rounded-full border-2 transition-all" style={{ background: privacyLevel >= i ? TC : CARD, borderColor: privacyLevel >= i ? TC : BORDER }} />
-                    <span className="text-xs" style={{ color: privacyLevel === i ? TC : MUTED, fontWeight: privacyLevel === i ? 600 : 400 }}>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
           <Row
             icon={<Database className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.dataUsage')}
