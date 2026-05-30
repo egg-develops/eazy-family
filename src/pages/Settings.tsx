@@ -292,7 +292,9 @@ const Settings = () => {
     const trimmed = name.trim();
     setDisplayName(trimmed);
     try {
-      await supabase.from('profiles').update({ display_name: trimmed }).eq('user_id', user.id);
+      const { error } = await supabase.from('profiles')
+        .upsert({ user_id: user.id, display_name: trimmed }, { onConflict: 'user_id' });
+      if (error) logError('saveDisplayName:', error);
     } catch (e) { logError('saveDisplayName:', e); }
   };
 

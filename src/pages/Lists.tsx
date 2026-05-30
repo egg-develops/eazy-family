@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   CheckSquare, Users, Plus, Check, Trash2, X,
-  Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw,
+  Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw, Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -114,6 +114,8 @@ const Lists = () => {
   const [newListVisibleTo, setNewListVisibleTo] = useState<string>('family');
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [completingId, setCompletingId] = useState<string | null>(null);
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [editingListTitle, setEditingListTitle] = useState('');
 
   // ── Shopping state ────────────────────────────────────────────────────────────
   const [newShoppingItem, setNewShoppingItem] = useState('');
@@ -233,6 +235,14 @@ const Lists = () => {
   };
 
   const cancelEdit = () => { setEditingItemId(null); setEditingTitle(''); };
+
+  const commitListRename = async (id: string) => {
+    const trimmed = editingListTitle.trim();
+    setEditingListId(null);
+    if (!trimmed) return;
+    setItems(prev => prev.map(i => i.id === id ? { ...i, title: trimmed } : i));
+    await supabase.from('tasks').update({ title: trimmed }).eq('id', id);
+  };
 
   const addTask = async () => {
     if (!newTitle.trim() || !user) return;
@@ -549,7 +559,7 @@ const Lists = () => {
               {/* Assignee filter strip */}
               {familyMembers.length > 0 && (
                 <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                  {[{ id: 'all', label: 'All' }, { id: 'me', label: 'Me' }, ...familyMembers.map(m => ({ id: m.user_id, label: (m.full_name || m.email || 'Member').split(' ')[0] }))].map(f => (
+                  {[{ id: 'all', label: 'All' }, { id: 'me', label: 'Me' }, ...familyMembers.filter(m => m.user_id !== user?.id).map(m => ({ id: m.user_id, label: (m.displayName || m.full_name || m.email || 'Member').split(' ')[0] }))].map(f => (
                     <button key={f.id} onClick={() => setAssigneeFilter(f.id)}
                       className="flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
                       style={{ background: assigneeFilter === f.id ? ACCENT : MUTEDBG, color: assigneeFilter === f.id ? '#fff' : MUTED }}>
@@ -573,13 +583,27 @@ const Lists = () => {
                 const doneCount = listItems.filter(i => i.completed).length;
                 return (
                   <div key={list.id} className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}`, background: CARD }}>
-                    <div className="flex items-center gap-3 p-4 cursor-pointer" onClick={() => toggleList(list.id)}>
+                    <div className="flex items-center gap-3 p-4 cursor-pointer" onClick={() => { if (editingListId !== list.id) toggleList(list.id); }}>
                       {isExpanded
                         ? <ChevronDown className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />
                         : <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: MUTED }} />}
                       <ClipboardList className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT }} />
                       <div className="flex-1 min-w-0 space-y-1">
-                        <p className="font-semibold text-sm truncate" style={{ color: INK }}>{list.title}</p>
+                        {editingListId === list.id ? (
+                          <input
+                            autoFocus
+                            value={editingListTitle}
+                            onChange={e => setEditingListTitle(e.target.value)}
+                            onBlur={() => commitListRename(list.id)}
+                            onKeyDown={e => { if (e.key === 'Enter') commitListRename(list.id); if (e.key === 'Escape') setEditingListId(null); }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full text-sm font-semibold outline-none bg-transparent border-b"
+                            style={{ color: ACCENT, borderColor: ACCENT }}
+                            maxLength={60}
+                          />
+                        ) : (
+                          <p className="font-semibold text-sm truncate" style={{ color: INK }}>{list.title}</p>
+                        )}
                         <div className="flex items-center gap-2">
                           <p className="text-xs" style={{ color: MUTED }}>
                             {listItems.length === 0 ? t('todos.noItemsYet') : `${doneCount}/${listItems.length} ${t('todos.doneCount')}`}
@@ -591,6 +615,9 @@ const Lists = () => {
                           )}
                         </div>
                       </div>
+                      <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
+                        <Pencil className="w-3.5 h-3.5" style={{ color: MUTED }} />
+                      </button>
                       <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
                         <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                       </button>
@@ -617,12 +644,16 @@ const Lists = () => {
                                   />
                                 ) : (
                                   <span
-                                    className="flex-1 text-sm cursor-text"
+                                    className="flex-1 text-sm"
                                     style={{ color: item.completed ? MUTED : INK, textDecoration: item.completed ? 'line-through' : 'none' }}
-                                    onClick={() => !item.completed && startEditing(item)}
                                   >
                                     {item.title}
                                   </span>
+                                )}
+                                {!item.completed && editingItemId !== item.id && (
+                                  <button onClick={() => startEditing(item)} className="opacity-30 hover:opacity-80 transition-opacity p-0.5 flex-shrink-0">
+                                    <Pencil className="w-3 h-3" style={{ color: MUTED }} />
+                                  </button>
                                 )}
                                 {/* Multi-assignee pills */}
                                 <div className="flex items-center gap-1 flex-shrink-0 flex-wrap">
