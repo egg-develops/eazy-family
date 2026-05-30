@@ -354,6 +354,8 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setGuideAnswer(t('ezCapture.guideSignInRequired')); setGuideStreaming(false); return; }
 
+      supabase.from('guide_queries').insert({ user_id: session.user.id, question }).then(() => {});
+
       const userLanguage = getUserLanguageLabel();
       const systemPrompt = `You are Eazy, the in-app assistant for eazy.family. Answer questions about the app accurately in ${userLanguage}. Only describe features that exist — never invent UI elements.
 
