@@ -1466,6 +1466,15 @@
     "transcriptionFailed": "Audio konnte nicht transkribiert werden",
     "transcriptionFailedDesc": "Bitte erneut versuchen.",
     "voiceError": "Sprache nicht verfügbar",
-    "voiceErrorDesc": "Mikrofon antippen um es erneut zu versuchen."
+    "voiceErrorDesc": "Mikrofon antippen um es erneut zu versuchen.",
+    "placeholderGuide": "Termin, Aufgabe oder Einkauf… oder frag 'Wie synchronisiere ich meinen Kalender?'",
+    "guideTitle": "Eazy Guide",
+    "guideQuestion": "Deine Frage",
+    "guideLooking": "Suche die Antwort…",
+    "guideAskAnother": "Weitere Frage",
+    "guideGotIt": "Verstanden",
+    "guideSignInRequired": "Bitte melde dich an, um den Guide zu nutzen.",
+    "guideError": "Entschuldigung, ich konnte gerade keine Antwort finden. Bitte versuche es erneut.",
+    "aiGuide": "Frag mich alles über die App — ich helfe gerne."
   }
 }

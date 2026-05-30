@@ -1466,6 +1466,15 @@
     "transcriptionFailed": "Impossibile trascrivere l'audio",
     "transcriptionFailedDesc": "Per favore riprova.",
     "voiceError": "Voce non disponibile",
-    "voiceErrorDesc": "Tocca il microfono per riprovare."
+    "voiceErrorDesc": "Tocca il microfono per riprovare.",
+    "placeholderGuide": "Evento, attività o spesa… o chiedi 'Come sincronizzo il calendario?'",
+    "guideTitle": "Guida Eazy",
+    "guideQuestion": "La tua domanda",
+    "guideLooking": "Sto cercando…",
+    "guideAskAnother": "Altra domanda",
+    "guideGotIt": "Capito",
+    "guideSignInRequired": "Accedi per usare la guida.",
+    "guideError": "Spiacente, non ho trovato una risposta. Riprova.",
+    "aiGuide": "Chiedimi qualsiasi cosa sull'app — sono qui per aiutarti."
   }
 }

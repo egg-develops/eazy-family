@@ -15,7 +15,7 @@ import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassif
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
 
-type Step = 'capture' | 'processing' | 'preview';
+type Step = 'capture' | 'processing' | 'preview' | 'guide';
 
 interface EZCaptureProps {
   onClose: () => void;
@@ -129,6 +129,10 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
       ? t(`ezCapture.${key}Greet`, { name: userName })
       : t(`ezCapture.${key}`);
   };
+
+  const [guideQuestion, setGuideQuestion] = useState('');
+  const [guideAnswer, setGuideAnswer] = useState('');
+  const [guideStreaming, setGuideStreaming] = useState(false);
 
   const [text, setText] = useState('');
   const setTextTracked = (val: string | ((prev: string) => string)) => {
@@ -334,13 +338,91 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     }
   };
 
+  const isHelpQuery = (input: string): boolean => {
+    const s = input.trim().toLowerCase();
+    return /^(how|what|where|why|when|can i|can you|do i|does|is there|which|tell me|explain|help|show me|what's|what is|how do|how can|how to)\b/.test(s)
+      || (s.includes('?') && s.length > 8);
+  };
+
+  const fetchGuideAnswer = async (question: string) => {
+    setGuideQuestion(question);
+    setGuideAnswer('');
+    setGuideStreaming(true);
+    setStep('guide');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setGuideAnswer(t('ezCapture.guideSignInRequired')); setGuideStreaming(false); return; }
+
+      const userLanguage = getUserLanguageLabel();
+      const systemPrompt = `You are Eazy, the friendly in-app assistant for eazy.family — a family organisation app. Answer the user's question about the app concisely in ${userLanguage}.
+
+EAZY.FAMILY FEATURES:
+- EZ Button: The floating Orbe button at the bottom. Tap to open voice/text capture for events, tasks, shopping, reminders, journal entries.
+- Voice capture: Tap the mic inside EZ Capture, speak your item, it's parsed and confirmed before saving.
+- Calendar: Day/week/month view of all family events. Add via EZ button or the + button.
+- Calendar Sync: Connect Google Calendar, Apple Calendar, or Outlook in Settings → Calendar Sync. Tap Connect, sign in, and events appear automatically.
+- Tasks: Add tasks by voice ("clean the terrace") or text. Appears in Lists → Tasks. Assign to family members.
+- Shopping: Shared family shopping list and personal "My List". Add by saying "add milk" or "add wine to my list". View in Lists → Shopping.
+- Morning Digest: Daily email with your family's schedule, top priority, and shopping highlights. Toggle in Settings → Morning Digest. Requires an account.
+- Rituals: Log daily habits, gratitude, and reflections in the Rituals tab.
+- Family Invite: Add your partner or family members via Settings → Invite Family. They share your calendar, tasks, and shopping.
+- Language: Change in Settings → Language. All onboarding screens and the app are available in English, German, French, Italian, Spanish, and Portuguese.
+- Subscription: 14-day free trial — full access to all AI features. Cancel anytime. Restore a purchase via the paywall screen.
+- Guest mode: Tap "Continue without account" during onboarding to explore without signing up. Some features (family sync, Morning Digest) require an account.
+- EZ guide: You can ask any question about the app by typing it in the EZ button. I'll answer here.
+
+STYLE RULES:
+- 2-4 sentences maximum. Be warm and direct.
+- No markdown (no asterisks, no headers, no bullet points).
+- If the question is unrelated to eazy.family, say you can only help with the app.
+- Respond in ${userLanguage}.`;
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: question }], systemPrompt }),
+      });
+
+      if (!response.ok || !response.body) throw new Error('no response');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split('\n')) {
+          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const content = data.choices?.[0]?.delta?.content;
+              if (content) setGuideAnswer(prev => prev + content);
+            } catch {}
+          }
+        }
+      }
+    } catch {
+      setGuideAnswer(t('ezCapture.guideError'));
+    } finally {
+      setGuideStreaming(false);
+    }
+  };
+
   const handleParseAndPreview = async () => {
     if (!latestTextRef.current.trim()) return;
     haptic('medium');
     if (isListening) stopListening();
-    setStep('processing');
 
     const rawInput = latestTextRef.current.trim();
+    if (isHelpQuery(rawInput)) {
+      await fetchGuideAnswer(rawInput);
+      return;
+    }
+
+    setStep('processing');
+
     const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput, getDbRules()) : rawInput;
 
     const result = await parseWithAI();
@@ -557,7 +639,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
     ? t('ezCapture.placeholderTranscribing')
     : isListening
       ? (isSingleShot ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
-      : t('ezCapture.placeholder');
+      : t('ezCapture.placeholderGuide');
 
   return (
     <div
@@ -565,6 +647,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
       style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
+      <style>{`@keyframes ez-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div onClick={e => e.stopPropagation()} className="w-full max-w-sm">
 
@@ -808,6 +891,64 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
             </div>
           )}
 
+          {/* ── GUIDE STEP ── */}
+          {step === 'guide' && (
+            <div className="rounded-3xl overflow-hidden" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+              <div className="px-6 pt-6 pb-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setStep('capture'); setText(''); latestTextRef.current = ''; }}
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: MUTED_BG }}
+                  >
+                    <ChevronLeft className="w-4 h-4" style={{ color: MUTED }} />
+                  </button>
+                  <h2 className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.guideTitle')}</h2>
+                </div>
+
+                <div className="p-3 rounded-2xl" style={{ background: MUTED_BG }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: MUTED }}>{t('ezCapture.guideQuestion')}</p>
+                  <p className="text-sm font-medium" style={{ color: INK }}>{guideQuestion}</p>
+                </div>
+
+                <div style={{ minHeight: 80 }}>
+                  {!guideAnswer && guideStreaming && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#964735', borderTopColor: 'transparent' }} />
+                      <span className="text-sm" style={{ color: MUTED }}>{t('ezCapture.guideLooking')}</span>
+                    </div>
+                  )}
+                  {guideAnswer && (
+                    <p className="text-sm leading-relaxed" style={{ color: INK }}>
+                      {guideAnswer}
+                      {guideStreaming && (
+                        <span style={{ display: 'inline-block', width: 2, height: '0.9em', background: '#964735', marginLeft: 2, verticalAlign: 'text-bottom', animation: 'ez-blink 0.8s step-end infinite' }} />
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-6 pb-6 flex gap-2">
+                <button
+                  onClick={() => { setStep('capture'); setText(''); latestTextRef.current = ''; }}
+                  className="flex-1 py-2 rounded-full text-sm font-semibold"
+                  style={{ background: MUTED_BG, color: MUTED, border: `1px solid ${BORDER}` }}
+                >
+                  {t('ezCapture.guideAskAnother')}
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 py-2 rounded-full text-sm font-semibold flex items-center justify-center gap-1.5"
+                  style={{ background: '#964735', color: '#FFFFFF' }}
+                >
+                  <Check className="w-4 h-4" />
+                  {t('ezCapture.guideGotIt')}
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
@@ -825,6 +966,7 @@ Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
           />
           <p className="text-sm" style={{ color: MUTED, fontStyle: 'italic' }}>
             {step === 'capture' && `"${userName ? t('ezCapture.aiCaptureGreet', { name: userName }) : t('ezCapture.aiCapture')}"`}
+            {step === 'guide' && `"${t('ezCapture.aiGuide')}"`}
             {step === 'processing' && `"${t('ezCapture.aiProcessing')}"`}
             {step === 'preview' && parsed && `"${getAIMessage(activeType)}"`}
           </p>

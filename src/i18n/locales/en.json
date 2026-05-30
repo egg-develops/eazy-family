@@ -1466,6 +1466,15 @@
     "transcriptionFailed": "Could not transcribe audio",
     "transcriptionFailedDesc": "Please try again.",
     "voiceError": "Voice unavailable",
-    "voiceErrorDesc": "Tap the mic to try again."
+    "voiceErrorDesc": "Tap the mic to try again.",
+    "placeholderGuide": "Add event, task, or shopping… or ask 'How do I sync my calendar?'",
+    "guideTitle": "Eazy Guide",
+    "guideQuestion": "Your question",
+    "guideLooking": "Looking that up…",
+    "guideAskAnother": "Ask another",
+    "guideGotIt": "Got it",
+    "guideSignInRequired": "Please sign in to use the guide.",
+    "guideError": "Sorry, I couldn't get an answer right now. Please try again.",
+    "aiGuide": "Ask me anything about the app — I'm here to help."
   }
 }
