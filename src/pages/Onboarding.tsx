@@ -9,6 +9,7 @@ import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/ap
 import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
 import { DigestMock } from '@/components/onboarding/DigestMock';
 import i18n from '@/i18n/config';
+import { useTranslation } from 'react-i18next';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -28,7 +29,7 @@ const LORA = "'Lora', 'Georgia', serif";
 const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
-// 0:language 1:splash 2:pain-setup 3:family 4:pain-point 5:voice 6:digest 7:summary 8:paywall 9:account 10:location
+// 0:language 2:pain-setup 3:family 4:pain-point 5:voice 6:digest 7:summary 8:paywall 9:account 10:location
 const TOTAL_PROGRESS_SCREENS = 8; // screens 2-9
 const progressFor = (screen: number) =>
   screen >= 2 && screen <= 9 ? (screen - 1) / TOTAL_PROGRESS_SCREENS : null;
@@ -157,8 +158,7 @@ const Onboarding = () => {
   // Location
   const [locationInput, setLocationInput] = useState('');
 
-  // Splash entrance
-  const [splashPhase, setSplashPhase] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => { save(screen, state); }, [screen, state]);
 
@@ -175,7 +175,7 @@ const Onboarding = () => {
   }, []);
 
   const next = useCallback(() => go(screen + 1, 'fwd'), [screen, go]);
-  const back = useCallback(() => go(screen - 1, 'back'), [screen, go]);
+  const back = useCallback(() => go(screen === 2 ? 0 : screen - 1, 'back'), [screen, go]);
 
   const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
     setState(prev => ({ ...prev, [k]: v }));
@@ -193,24 +193,14 @@ const Onboarding = () => {
     go(10, 'fwd');
   }, [screen, user]);
 
-  // Splash animation sequence
-  useEffect(() => {
-    if (screen !== 1) return;
-    setSplashPhase(0);
-    const t1 = setTimeout(() => setSplashPhase(1), 100);  // Orbe scales in
-    const t2 = setTimeout(() => setSplashPhase(2), 900);  // wordmark fades
-    const t3 = setTimeout(() => setSplashPhase(3), 1600); // copy fades
-    const t4 = setTimeout(() => setSplashPhase(4), 2400); // CTA fades
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
-  }, [screen]);
 
   if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
 
   const progress = progressFor(screen);
-  const showBack = screen >= 1;
+  const showBack = screen >= 2;
 
   // ── Slide animation style ──────────────────────────────────────────────────
-  const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9
+  const slideAnim = screen === 0 || screen === 5 || screen === 9
     ? 'ob-fade'
     : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
 
@@ -219,25 +209,25 @@ const Onboarding = () => {
     const cards: { emoji: string; headline: string; body: string }[] = [];
 
     if (state.mainPainPoint === 'scheduling') {
-      cards.push({ emoji: '🗓', headline: 'One calendar for your whole family', body: 'Google, Apple, and Outlook — synced into a single view. Conflicts flagged before they happen.' });
+      cards.push({ emoji: '🗓', headline: t('onboarding.summaryScreen.schedulingHeadline'), body: t('onboarding.summaryScreen.schedulingBody') });
     } else if (state.mainPainPoint === 'shopping') {
-      cards.push({ emoji: '🛒', headline: 'One list, everywhere', body: 'Updated by voice, organised by category, visible to every family member in real time.' });
+      cards.push({ emoji: '🛒', headline: t('onboarding.summaryScreen.shoppingHeadline'), body: t('onboarding.summaryScreen.shoppingBody') });
     } else if (state.mainPainPoint === 'tasks') {
-      cards.push({ emoji: '✅', headline: 'Tasks that actually get done', body: 'Assign, track, and close tasks as a family. Nothing stays stuck in someone\'s head.' });
+      cards.push({ emoji: '✅', headline: t('onboarding.summaryScreen.tasksHeadline'), body: t('onboarding.summaryScreen.tasksBody') });
     } else if (state.mainPainPoint === 'overview') {
-      cards.push({ emoji: '🌅', headline: 'Your week, clear before coffee', body: 'A Morning Digest every day — schedule, one priority, shopping, and a family win.' });
+      cards.push({ emoji: '🌅', headline: t('onboarding.summaryScreen.overviewHeadline'), body: t('onboarding.summaryScreen.overviewBody') });
     } else {
-      cards.push({ emoji: '✨', headline: 'Your family, organised', body: 'Calendar, tasks, shopping, and a daily briefing — all in one place, built for your family.' });
+      cards.push({ emoji: '✨', headline: t('onboarding.summaryScreen.defaultHeadline'), body: t('onboarding.summaryScreen.defaultBody') });
     }
 
     if (state.familySize !== 'just-me') {
-      cards.push({ emoji: '👨‍👩‍👧', headline: 'Everyone in sync', body: 'Invite your partner or family in one tap. Everyone sees the same plan, in real time.' });
+      cards.push({ emoji: '👨‍👩‍👧', headline: t('onboarding.summaryScreen.syncHeadline'), body: t('onboarding.summaryScreen.syncBody') });
     }
 
     if (state.voiceFrequency !== 'rarely') {
-      cards.push({ emoji: '🎤', headline: 'Just say it', body: '"Add milk to the shopping list" · "Dentist Thursday at 10" · Done. No typing needed.' });
+      cards.push({ emoji: '🎤', headline: t('onboarding.summaryScreen.voiceHeadline'), body: t('onboarding.summaryScreen.voiceBody') });
     } else {
-      cards.push({ emoji: '⚡', headline: 'Fast when you need it', body: 'Add anything in seconds — by voice or by text. Your family stays updated either way.' });
+      cards.push({ emoji: '⚡', headline: t('onboarding.summaryScreen.fastHeadline'), body: t('onboarding.summaryScreen.fastBody') });
     }
 
     return cards.slice(0, 3);
@@ -388,8 +378,7 @@ const Onboarding = () => {
           animation: `${slideAnim} 0.32s ease-out both`,
         }}
       >
-        {screen === 0 && <LanguageScreen state={state} set={set} next={next} />}
-        {screen === 1 && <SplashScreen splashPhase={splashPhase} next={next} />}
+        {screen === 0 && <LanguageScreen state={state} set={set} next={() => go(2, 'fwd')} />}
         {screen === 2 && <PainSetupScreen state={state} set={set} next={next} />}
         {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
         {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
@@ -472,68 +461,20 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
   );
 };
 
-// ── SCREEN 1 — Splash ─────────────────────────────────────────────────────────
-const SplashScreen = ({ splashPhase, next }: { splashPhase: number; next: () => void }) => (
-  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '80px 32px 52px' }}>
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28, width: '100%' }}>
-      <div style={{
-        transform: splashPhase >= 1 ? 'scale(1)' : 'scale(0.5)',
-        opacity: splashPhase >= 1 ? 1 : 0,
-        transition: 'transform 0.7s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s ease',
-      }}>
-        <OrbeMorphic size={160} />
-      </div>
-
-      <div style={{
-        opacity: splashPhase >= 2 ? 1 : 0,
-        transform: splashPhase >= 2 ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'opacity 0.6s ease, transform 0.6s ease',
-        textAlign: 'center',
-      }}>
-        <p style={{ fontFamily: LORA, fontStyle: 'italic', fontSize: 15, color: T.primary, margin: '0 0 4px' }}>eazy.family</p>
-      </div>
-
-      <div style={{
-        opacity: splashPhase >= 3 ? 1 : 0,
-        transform: splashPhase >= 3 ? 'translateY(0)' : 'translateY(12px)',
-        transition: 'opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s',
-        textAlign: 'center',
-        maxWidth: 320,
-      }}>
-        <h1 style={{ fontFamily: LORA, fontSize: 28, fontWeight: 400, color: T.ink, lineHeight: 1.25, margin: '0 0 12px', letterSpacing: '-0.01em' }}>
-          "The family group chat<br />is not a plan."
-        </h1>
-        <p style={{ fontSize: 15, color: T.faint, margin: 0, lineHeight: 1.5, fontWeight: 300 }}>
-          And synced calendars won't solve it.
-        </p>
-      </div>
-    </div>
-
-    <div style={{
-      width: '100%',
-      opacity: splashPhase >= 4 ? 1 : 0,
-      transform: splashPhase >= 4 ? 'translateY(0)' : 'translateY(16px)',
-      transition: 'opacity 0.5s ease, transform 0.5s ease',
-    }}>
-      <PrimaryBtn label="Let's fix that →" onClick={next} />
-    </div>
-  </div>
-);
-
 // ── SCREEN 2 — Pain Setup ─────────────────────────────────────────────────────
-const APPROACHES = [
-  { value: 'chat', label: 'Group chat and good intentions', emoji: '📱' },
-  { value: 'calendars', label: 'A mix of different calendars', emoji: '📅' },
-  { value: 'notes', label: 'Notes apps and sticky notes', emoji: '📝' },
-  { value: 'wing', label: 'Honestly? We wing it', emoji: '🤷' },
-];
-
 const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const { t } = useTranslation();
+  const APPROACHES = [
+    { value: 'chat', label: t('onboarding.painSetup.chat'), emoji: '📱' },
+    { value: 'calendars', label: t('onboarding.painSetup.calendars'), emoji: '📅' },
+    { value: 'notes', label: t('onboarding.painSetup.notes'), emoji: '📝' },
+    { value: 'wing', label: t('onboarding.painSetup.wing'), emoji: '🤷' },
+  ];
   const select = (v: string) => { set('currentApproach', v); setTimeout(next, 320); };
   return (
     <div style={{ padding: '28px 24px 40px' }}>
       <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        How does your family currently manage its week?
+        {t('onboarding.painSetup.title')}
       </h2>
       <div style={{ marginBottom: 28 }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -546,22 +487,22 @@ const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next:
 };
 
 // ── SCREEN 3 — Family Size ─────────────────────────────────────────────────────
-const FAMILY_SIZES = [
-  { value: 'just-me', label: 'Just me for now', emoji: '🙋' },
-  { value: 'partner', label: 'Me and my partner', emoji: '👫' },
-  { value: 'kids', label: 'Me, my partner, and our kids', emoji: '👨‍👩‍👧‍👦' },
-  { value: 'extended', label: 'Extended family too', emoji: '👨‍👩‍👧‍👦' },
-  { value: 'caretakers', label: 'We have caretakers', emoji: '🤝' },
-];
-
 const FamilySizeScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const { t } = useTranslation();
+  const FAMILY_SIZES = [
+    { value: 'just-me', label: t('onboarding.familySize.justMe'), emoji: '🙋' },
+    { value: 'partner', label: t('onboarding.familySize.partner'), emoji: '👫' },
+    { value: 'kids', label: t('onboarding.familySize.kids'), emoji: '👨‍👩‍👧‍👦' },
+    { value: 'extended', label: t('onboarding.familySize.extended'), emoji: '👨‍👩‍👧‍👦' },
+    { value: 'caretakers', label: t('onboarding.familySize.caretakers'), emoji: '🤝' },
+  ];
   const select = (v: string) => { set('familySize', v); setTimeout(next, 320); };
   return (
     <div style={{ padding: '28px 24px 40px' }}>
       <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        Who else needs to be in sync?
+        {t('onboarding.familySize.title')}
       </h2>
-      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Eazy works best as a family.</p>
+      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>{t('onboarding.familySize.sub')}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {FAMILY_SIZES.map(f => (
           <OptionCard key={f.value} emoji={f.emoji} label={f.label} selected={state.familySize === f.value} onClick={() => select(f.value)} />
@@ -572,22 +513,22 @@ const FamilySizeScreen = ({ state, set, next }: { state: OBState; set: any; next
 };
 
 // ── SCREEN 4 — Pain Point ─────────────────────────────────────────────────────
-const PAIN_POINTS = [
-  { value: 'scheduling', label: 'Scheduling clashes', sub: 'Someone always misses something', emoji: '🗓' },
-  { value: 'shopping', label: 'Shopping chaos', sub: 'The list lives in three places', emoji: '🛒' },
-  { value: 'tasks', label: 'Tasks that don\'t get done', sub: 'Stuck in everyone\'s head', emoji: '✅' },
-  { value: 'overview', label: 'No overview of the week', sub: 'Sunday planning takes too long', emoji: '🌅' },
-  { value: 'unsure', label: 'Not fully sure', sub: 'Just knowing we could be more organised', emoji: '🤔' },
-];
-
 const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const { t } = useTranslation();
+  const PAIN_POINTS = [
+    { value: 'scheduling', label: t('onboarding.painPoint.schedulingLabel'), sub: t('onboarding.painPoint.schedulingSub'), emoji: '🗓' },
+    { value: 'shopping', label: t('onboarding.painPoint.shoppingLabel'), sub: t('onboarding.painPoint.shoppingSub'), emoji: '🛒' },
+    { value: 'tasks', label: t('onboarding.painPoint.tasksLabel'), sub: t('onboarding.painPoint.tasksSub'), emoji: '✅' },
+    { value: 'overview', label: t('onboarding.painPoint.overviewLabel'), sub: t('onboarding.painPoint.overviewSub'), emoji: '🌅' },
+    { value: 'unsure', label: t('onboarding.painPoint.unsureLabel'), sub: t('onboarding.painPoint.unsureSub'), emoji: '🤔' },
+  ];
   const select = (v: string) => { set('mainPainPoint', v); setTimeout(next, 320); };
   return (
     <div style={{ padding: '28px 24px 40px' }}>
       <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        What causes the most friction in your family's week?
+        {t('onboarding.painPoint.title')}
       </h2>
-      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>Pick your biggest one.</p>
+      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>{t('onboarding.painPoint.sub')}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {PAIN_POINTS.map(p => (
           <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={state.mainPainPoint === p.value} onClick={() => select(p.value)} />
@@ -598,138 +539,147 @@ const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next:
 };
 
 // ── SCREEN 5 — Voice Demo ─────────────────────────────────────────────────────
-const VOICE_FREQ = [
-  { value: 'always', label: 'All the time — hands are always full' },
-  { value: 'sometimes', label: 'Sometimes — when it\'s faster' },
-  { value: 'rarely', label: 'Rarely — I prefer typing' },
-  { value: 'try', label: 'I\'d need to try it first' },
-];
+const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const { t } = useTranslation();
+  const VOICE_FREQ = [
+    { value: 'always', label: t('onboarding.voiceDemo.always') },
+    { value: 'sometimes', label: t('onboarding.voiceDemo.sometimes') },
+    { value: 'rarely', label: t('onboarding.voiceDemo.rarely') },
+    { value: 'try', label: t('onboarding.voiceDemo.try') },
+  ];
+  return (
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+          {t('onboarding.voiceDemo.title')}
+        </h2>
+      </div>
 
-const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => (
-  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-    <div>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        How often would you use voice to manage your day?
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Be honest — Eazy works either way.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {VOICE_FREQ.map(f => (
+          <OptionCard key={f.value} label={f.label} selected={state.voiceFrequency === f.value} onClick={() => set('voiceFrequency', f.value)} />
+        ))}
+      </div>
+
+      <div>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, marginBottom: 12 }}>
+          {t('onboarding.voiceDemo.seeIt')}
+        </p>
+        <VoiceDemo language={state.language || 'en'} />
+      </div>
+
+      <PrimaryBtn label={t('onboarding.voiceDemo.cta')} onClick={next} disabled={!state.voiceFrequency} />
     </div>
-
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {VOICE_FREQ.map(f => (
-        <OptionCard key={f.value} label={f.label} selected={state.voiceFrequency === f.value} onClick={() => set('voiceFrequency', f.value)} />
-      ))}
-    </div>
-
-    <div>
-      <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, marginBottom: 12 }}>
-        See it in action
-      </p>
-      <VoiceDemo language={state.language || 'en'} />
-    </div>
-
-    <PrimaryBtn label="Continue →" onClick={next} disabled={!state.voiceFrequency} />
-  </div>
-);
+  );
+};
 
 // ── SCREEN 6 — Morning Digest ─────────────────────────────────────────────────
-const DigestScreen = ({ state, next }: { state: OBState; next: () => void }) => (
-  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-    <div>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        What if it was always this easy?
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>
-        A quiet briefing, daily or weekly. Just for your family.
-      </p>
+const DigestScreen = ({ state, next }: { state: OBState; next: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+          {t('onboarding.digestScreen.title')}
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>
+          {t('onboarding.digestScreen.sub')}
+        </p>
+      </div>
+      <DigestMock language={state.language || 'en'} />
+      <PrimaryBtn label={t('onboarding.digestScreen.cta')} onClick={next} />
     </div>
-    <DigestMock language={state.language || 'en'} />
-    <PrimaryBtn label="I want that →" onClick={next} />
-  </div>
-);
+  );
+};
 
 // ── SCREEN 7 — Summary ────────────────────────────────────────────────────────
-const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () => void }) => (
-  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-    <div>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        Here's what Eazy.Family will do for you.
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Based on what you've told us.</p>
-    </div>
+const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+          {t('onboarding.summaryScreen.title')}
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.summaryScreen.sub')}</p>
+      </div>
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {summaryCards.map((card, i) => (
-        <div
-          key={card.headline}
-          style={{
-            background: T.card, borderRadius: 18, padding: '18px 20px',
-            border: `1px solid ${T.outline}`,
-            boxShadow: '0 2px 12px rgba(28,20,18,0.06)',
-            animation: `ob-card-in 0.4s ease both`,
-            animationDelay: `${i * 0.15}s`,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-            <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
-            <div>
-              <p style={{ margin: '0 0 5px', fontSize: 15, fontWeight: 600, color: T.ink }}>{card.headline}</p>
-              <p style={{ margin: 0, fontSize: 13, color: T.faint, lineHeight: 1.5 }}>{card.body}</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {summaryCards.map((card, i) => (
+          <div
+            key={card.headline}
+            style={{
+              background: T.card, borderRadius: 18, padding: '18px 20px',
+              border: `1px solid ${T.outline}`,
+              boxShadow: '0 2px 12px rgba(28,20,18,0.06)',
+              animation: `ob-card-in 0.4s ease both`,
+              animationDelay: `${i * 0.15}s`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
+              <div>
+                <p style={{ margin: '0 0 5px', fontSize: 15, fontWeight: 600, color: T.ink }}>{card.headline}</p>
+                <p style={{ margin: 0, fontSize: 13, color: T.faint, lineHeight: 1.5 }}>{card.body}</p>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
 
-    <PrimaryBtn label="This is exactly what I need →" onClick={next} />
-  </div>
-);
+      <PrimaryBtn label={t('onboarding.summaryScreen.cta')} onClick={next} />
+    </div>
+  );
+};
 
 // ── SCREEN 8 — Features overview ──────────────────────────────────────────────
-const FEATURES = [
-  { emoji: '🎤', text: 'Private voice-powered AI assistant for every feature' },
-  { emoji: '🛒', text: 'Shared tasks and shopping lists' },
-  { emoji: '🌅', text: 'Morning Digest — daily briefing for your family' },
-  { emoji: '⚡', text: 'Instant conflict detection and smart suggestions' },
-  { emoji: '👨‍👩‍👧', text: 'Invite your whole family — always in sync' },
-];
+const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => {
+  const { t } = useTranslation();
+  const FEATURES = [
+    { emoji: '🎤', text: t('onboarding.paywall.voiceFeature') },
+    { emoji: '🛒', text: t('onboarding.paywall.listsFeature') },
+    { emoji: '🌅', text: t('onboarding.paywall.digestFeature') },
+    { emoji: '⚡', text: t('onboarding.paywall.conflictsFeature') },
+    { emoji: '👨‍👩‍👧', text: t('onboarding.paywall.familyFeature') },
+  ];
+  return (
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ textAlign: 'center' }}>
+        <OrbeMorphic size={80} />
+        <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginTop: 16, marginBottom: 8, lineHeight: 1.2 }}>
+          {t('onboarding.paywall.title')}
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0, lineHeight: 1.5 }}>
+          {t('onboarding.paywall.trialSub')}
+        </p>
+      </div>
 
-const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => (
-  <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-    <div style={{ textAlign: 'center' }}>
-      <OrbeMorphic size={80} />
-      <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginTop: 16, marginBottom: 8, lineHeight: 1.2 }}>
-        Everything your family needs.
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, margin: 0, lineHeight: 1.5 }}>
-        14-day free trial · Full access · Cancel anytime
-      </p>
-    </div>
+      {/* Feature list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {FEATURES.map(f => (
+          <div key={f.text} style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            background: T.card, borderRadius: 16, padding: '14px 16px',
+            border: `1px solid ${T.outline}`,
+          }}>
+            <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{f.emoji}</span>
+            <span style={{ fontSize: 14, color: T.inkV, lineHeight: 1.4 }}>{f.text}</span>
+          </div>
+        ))}
+      </div>
 
-    {/* Feature list */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {FEATURES.map(f => (
-        <div key={f.text} style={{
-          display: 'flex', alignItems: 'center', gap: 14,
-          background: T.card, borderRadius: 16, padding: '14px 16px',
-          border: `1px solid ${T.outline}`,
-        }}>
-          <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{f.emoji}</span>
-          <span style={{ fontSize: 14, color: T.inkV, lineHeight: 1.4 }}>{f.text}</span>
-        </div>
-      ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <PrimaryBtn label={t('onboarding.paywall.cta')} onClick={next} />
+        <a
+          href="/auth"
+          style={{ textAlign: 'center', fontSize: 13, color: T.faint, padding: '4px 0', textDecoration: 'none', fontFamily: SANS }}
+        >
+          {t('onboarding.paywall.alreadyHave')} <span style={{ color: T.primary, fontWeight: 500 }}>{t('onboarding.paywall.signIn')}</span>
+        </a>
+      </div>
     </div>
-
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <PrimaryBtn label="Get started →" onClick={next} />
-      <a
-        href="/auth"
-        style={{ textAlign: 'center', fontSize: 13, color: T.faint, padding: '4px 0', textDecoration: 'none', fontFamily: SANS }}
-      >
-        Already have an account? <span style={{ color: T.primary, fontWeight: 500 }}>Sign in</span>
-      </a>
-    </div>
-  </div>
-);
+  );
+};
 
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
@@ -762,26 +712,28 @@ const AccountScreen = ({
     boxSizing: 'border-box',
   };
 
+  const { t } = useTranslation();
+
   return (
     <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 22 }}>
       <div>
         <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.2 }}>
-          Create your family space.
+          {t('onboarding.accountScreen.title')}
         </h2>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>You're 60 seconds from being organised.</p>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.accountScreen.sub')}</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <input style={inputStyle} placeholder="Your first name" value={name} onChange={e => setName(e.target.value)} autoComplete="given-name" />
-        <input style={inputStyle} placeholder="Email address" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
-        <input style={inputStyle} placeholder="Password (min. 8 characters)" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" />
+        <input style={inputStyle} placeholder={t('onboarding.accountScreen.namePlaceholder')} value={name} onChange={e => setName(e.target.value)} autoComplete="given-name" />
+        <input style={inputStyle} placeholder={t('onboarding.accountScreen.emailPlaceholder')} type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+        <input style={inputStyle} placeholder={t('onboarding.accountScreen.passwordPlaceholder')} type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" />
       </div>
 
       {error && <p style={{ fontSize: 13, color: '#BA1A1A', margin: 0 }}>{error}</p>}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <PrimaryBtn
-          label={loading ? 'Creating your space…' : 'Continue →'}
+          label={loading ? t('onboarding.accountScreen.creating') : t('onboarding.accountScreen.cta')}
           onClick={onSubmit}
           disabled={loading || !name.trim() || !email.trim() || password.length < 8}
         />
@@ -826,7 +778,7 @@ const AccountScreen = ({
           }}
         >
           <svg width="16" height="16" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49.1 191.4-49.1zM553.5 54.4c-21.2 23.7-58.6 42.8-91.3 42.8-3.9 0-7.7-.4-11.6-1-1.3-3.5-1.9-7.1-1.9-10.6 0-24.4 10.7-50.5 30.4-68.7 26.4-24.4 68-42.8 105-44.1 1.3 4.2 1.9 8.4 1.9 13.5 0 24.4-9.7 49.1-32.5 68.1z"/></svg>
-          Continue with Apple
+          {t('onboarding.accountScreen.withApple')}
         </button>
 
         {/* Google sign in */}
@@ -849,13 +801,13 @@ const AccountScreen = ({
           }}
         >
           <svg width="16" height="16" viewBox="0 0 488 512"><path fill="#4285F4" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
-          Continue with Google
+          {t('onboarding.accountScreen.withGoogle')}
         </button>
       </div>
 
       <p style={{ fontSize: 13, color: T.faint, textAlign: 'center', margin: 0 }}>
-        Already have an account?{' '}
-        <a href="/auth" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>Sign in</a>
+        {t('onboarding.accountScreen.alreadyHave')}{' '}
+        <a href="/auth" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>{t('onboarding.accountScreen.signIn')}</a>
       </p>
 
       <button
@@ -863,7 +815,7 @@ const AccountScreen = ({
         disabled={skipDisabled}
         style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: skipDisabled ? 'default' : 'pointer', padding: '4px 0', textDecoration: 'underline', fontFamily: SANS, opacity: skipDisabled ? 0.6 : 1 }}
       >
-        {skipDisabled ? 'Please wait…' : 'Continue without account →'}
+        {skipDisabled ? t('onboarding.accountScreen.pleaseWait') : t('onboarding.accountScreen.skipAccount')}
       </button>
     </div>
   );
@@ -877,6 +829,7 @@ const LocationInviteScreen = ({
 }: {
   location: string; setLocation: (v: string) => void; onFinish: () => void;
 }) => {
+  const { t } = useTranslation();
   const [inviteInput, setInviteInput] = useState('');
   const [inviteSent, setInviteSent] = useState(false);
   const [showOther, setShowOther] = useState(false);
@@ -909,16 +862,16 @@ const LocationInviteScreen = ({
 
     <div>
       <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25, textAlign: 'center' }}>
-        Invite your family.
+        {t('onboarding.locationInvite.title')}
       </h2>
       <p style={{ fontSize: 14, color: T.faint, margin: 0, textAlign: 'center' }}>
-        Eazy works best when everyone's connected.
+        {t('onboarding.locationInvite.sub')}
       </p>
     </div>
 
     {/* Location */}
     <div>
-      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Your country (optional)</p>
+      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>{t('onboarding.locationInvite.countryLabel')}</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {LOCATIONS.map(loc => {
           const isOther = loc === 'Other';
@@ -946,7 +899,7 @@ const LocationInviteScreen = ({
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {loc}
+              {isOther ? t('onboarding.locationInvite.other') : loc}
             </button>
           );
         })}
@@ -954,7 +907,7 @@ const LocationInviteScreen = ({
       {showOther && (
         <input
           autoFocus
-          placeholder="Enter your country"
+          placeholder={t('onboarding.locationInvite.otherPlaceholder')}
           value={location}
           onChange={e => setLocation(e.target.value)}
           style={{
@@ -968,12 +921,12 @@ const LocationInviteScreen = ({
 
     {/* Invite */}
     <div>
-      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>Invite by email or phone</p>
+      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>{t('onboarding.locationInvite.inviteTitle')}</p>
       <div style={{ display: 'flex', gap: 10 }}>
         <input
           value={inviteInput}
           onChange={e => setInviteInput(e.target.value)}
-          placeholder="Email or phone number"
+          placeholder={t('onboarding.locationInvite.invitePlaceholder')}
           onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
           style={{
             flex: 1, height: 48, padding: '0 14px', borderRadius: 12,
@@ -992,18 +945,18 @@ const LocationInviteScreen = ({
             transition: 'background 0.15s',
           }}
         >
-          {inviteSent ? 'Sent ✓' : 'Send →'}
+          {inviteSent ? t('onboarding.locationInvite.inviteSent') : t('onboarding.locationInvite.inviteBtn')}
         </button>
       </div>
     </div>
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-      <PrimaryBtn label="Go to my family space →" onClick={onFinish} />
+      <PrimaryBtn label={t('onboarding.locationInvite.finish')} onClick={onFinish} />
       <button
         onClick={onFinish}
         style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
       >
-        I'll do this later
+        {t('onboarding.locationInvite.skipInvite', 'I\'ll do this later')}
       </button>
     </div>
   </div>

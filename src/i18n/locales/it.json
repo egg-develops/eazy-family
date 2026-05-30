@@ -37,7 +37,119 @@
     "next": "Avanti",
     "back": "Indietro",
     "getStarted": "Inizia!",
-    "skip": "Salta"
+    "skip": "Salta",
+    "splash": {
+      "tagline": "\"La chat di gruppo familiare non è un piano.\"",
+      "sub": "E i calendari sincronizzati non risolveranno il problema.",
+      "cta": "Risolviamolo →"
+    },
+    "painSetup": {
+      "title": "Come gestisce attualmente la tua famiglia la settimana?",
+      "chat": "Chat di gruppo e buone intenzioni",
+      "calendars": "Un mix di calendari diversi",
+      "notes": "App di note e post-it",
+      "wing": "Onestamente? Improvvisiamo"
+    },
+    "familySize": {
+      "title": "Chi altro deve essere sincronizzato?",
+      "sub": "Eazy funziona meglio in famiglia.",
+      "justMe": "Solo io per ora",
+      "partner": "Io e il mio partner",
+      "kids": "Io, il mio partner e i nostri figli",
+      "extended": "Anche la famiglia allargata",
+      "caretakers": "Abbiamo dei caregiver"
+    },
+    "painPoint": {
+      "title": "Cosa causa più attrito nella settimana della tua famiglia?",
+      "sub": "Scegli il tuo problema principale.",
+      "schedulingLabel": "Sovrapposizioni di agenda",
+      "schedulingSub": "Qualcuno manca sempre qualcosa",
+      "shoppingLabel": "Caos della spesa",
+      "shoppingSub": "La lista vive in tre posti diversi",
+      "tasksLabel": "Compiti che non vengono fatti",
+      "tasksSub": "Bloccati nella testa di tutti",
+      "overviewLabel": "Nessuna visione d'insieme della settimana",
+      "overviewSub": "La pianificazione domenicale richiede troppo tempo",
+      "unsureLabel": "Non del tutto sicuro/a",
+      "unsureSub": "Solo sapere che potremmo essere più organizzati"
+    },
+    "voiceDemo": {
+      "title": "Con quale frequenza useresti la voce per gestire la tua giornata?",
+      "sub": "Sii onesto/a — Eazy funziona in entrambi i modi.",
+      "seeIt": "Vedi in azione",
+      "cta": "Continua →",
+      "always": "Sempre — le mani sono sempre occupate",
+      "sometimes": "A volte — quando è più veloce",
+      "rarely": "Raramente — preferisco digitare",
+      "try": "Dovrei prima provarlo"
+    },
+    "digestScreen": {
+      "title": "E se fosse sempre così facile?",
+      "sub": "Un briefing tranquillo, giornaliero o settimanale. Solo per la tua famiglia.",
+      "cta": "Lo voglio →"
+    },
+    "summaryScreen": {
+      "title": "Ecco cosa farà Eazy.Family per te.",
+      "sub": "Basato su quello che ci hai detto.",
+      "cta": "È esattamente quello di cui ho bisogno →",
+      "schedulingHeadline": "Un calendario per tutta la famiglia",
+      "schedulingBody": "Google, Apple e Outlook — sincronizzati in un'unica vista. I conflitti vengono segnalati prima che accadano.",
+      "shoppingHeadline": "Una lista, ovunque",
+      "shoppingBody": "Aggiornata con la voce, organizzata per categoria, visibile a tutti i membri della famiglia in tempo reale.",
+      "tasksHeadline": "Compiti che vengono davvero svolti",
+      "tasksBody": "Assegna, monitora e chiudi i compiti in famiglia. Niente rimane bloccato nella testa di qualcuno.",
+      "overviewHeadline": "La tua settimana, chiara prima del caffè",
+      "overviewBody": "Un Morning Digest ogni giorno — agenda, una priorità, spesa e una vittoria familiare.",
+      "defaultHeadline": "La tua famiglia, organizzata",
+      "defaultBody": "Calendario, compiti, spesa e un briefing quotidiano — tutto in un unico posto, per la tua famiglia.",
+      "syncHeadline": "Tutti sincronizzati",
+      "syncBody": "Invita il tuo partner o la famiglia con un tap. Tutti vedono lo stesso piano, in tempo reale.",
+      "voiceHeadline": "Dillo e basta",
+      "voiceBody": "\"Aggiungi latte alla lista\" · \"Dentista giovedì alle 10\" · Fatto. Nessuna digitazione necessaria.",
+      "fastHeadline": "Veloce quando ne hai bisogno",
+      "fastBody": "Aggiungi qualsiasi cosa in secondi — con la voce o con il testo. La tua famiglia rimane sempre aggiornata."
+    },
+    "paywall": {
+      "title": "Tutto ciò di cui la tua famiglia ha bisogno.",
+      "trialSub": "14 giorni di prova gratuita · Accesso completo · Cancella quando vuoi",
+      "cta": "Inizia →",
+      "alreadyHave": "Hai già un account?",
+      "signIn": "Accedi",
+      "voiceFeature": "Assistente AI vocale privato per ogni funzione",
+      "listsFeature": "Attività e liste della spesa condivise",
+      "digestFeature": "Morning Digest — briefing quotidiano per la tua famiglia",
+      "conflictsFeature": "Rilevamento istantaneo dei conflitti e suggerimenti intelligenti",
+      "familyFeature": "Invita tutta la tua famiglia — sempre sincronizzata"
+    },
+    "accountScreen": {
+      "title": "Crea il tuo spazio familiare.",
+      "sub": "Sei a 60 secondi dall'essere organizzato/a.",
+      "namePlaceholder": "Il tuo nome",
+      "emailPlaceholder": "Indirizzo email",
+      "passwordPlaceholder": "Password (min. 8 caratteri)",
+      "creating": "Creazione del tuo spazio…",
+      "cta": "Continua →",
+      "withApple": "Continua con Apple",
+      "withGoogle": "Continua con Google",
+      "alreadyHave": "Hai già un account?",
+      "signIn": "Accedi",
+      "skipAccount": "Continua senza account →",
+      "pleaseWait": "Attendere prego…"
+    },
+    "locationInvite": {
+      "title": "Invita la tua famiglia.",
+      "sub": "Eazy funziona meglio quando tutti sono connessi.",
+      "countryLabel": "Il tuo paese (opzionale)",
+      "inviteTitle": "Invita qualcuno",
+      "invitePlaceholder": "Email o telefono",
+      "inviteBtn": "Invita",
+      "inviteSent": "Invito inviato!",
+      "inviteAnother": "Invita un altro",
+      "finish": "Andiamo →",
+      "other": "Altro",
+      "otherPlaceholder": "Inserisci il tuo paese",
+      "skipInvite": "Lo farò più tardi"
+    }
   },
   "app": {
     "name": "Eazy.Family",
