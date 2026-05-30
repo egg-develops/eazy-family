@@ -96,8 +96,8 @@ serve(async (req) => {
           referrer_user_id: referral?.referrer_user_id ?? "",
         },
       },
-      success_url: `${origin}/app`,
-      cancel_url: `${origin}/app/community`,
+      success_url: `${origin}/app/settings?upgraded=1`,
+      cancel_url: `${origin}/app/settings`,
     };
     if (discounts.length > 0) {
       sessionParams.discounts = discounts;

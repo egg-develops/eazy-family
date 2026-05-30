@@ -34,7 +34,6 @@ export function AppSidebar() {
     { id: "todos", label: "To-Do's", icon: CheckSquare, path: "/app/todos" },
     { id: "events", label: t('nav.events'), icon: MapPin, path: "/app/events" },
     
-    { id: "community", label: t('nav.community'), icon: Users, path: "/app/community" },
     { id: "settings", label: t('nav.settings'), icon: Settings, path: "/app/settings" },
   ]
 
