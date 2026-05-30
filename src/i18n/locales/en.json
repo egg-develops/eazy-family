@@ -454,7 +454,8 @@
       "iconOnly": "Icon only",
       "iconOnlySub": "Circular buttons, no labels"
     },
-    "profileName": "Profile Name"
+    "profileName": "Profile Name",
+    "save": "Save"
   },
   "privacySettings": {
     "title": "Privacy Settings",

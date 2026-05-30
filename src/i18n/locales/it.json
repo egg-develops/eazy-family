@@ -454,7 +454,8 @@
       "iconOnly": "Solo icone",
       "iconOnlySub": "Pulsanti circolari, senza etichette"
     },
-    "profileName": "Nome profilo"
+    "profileName": "Nome profilo",
+    "save": "Salva"
   },
   "privacySettings": {
     "title": "Impostazioni privacy",

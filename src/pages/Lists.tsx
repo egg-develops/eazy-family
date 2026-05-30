@@ -310,14 +310,15 @@ const Lists = () => {
   const taskItems = items.filter(i => {
     if (i.type !== 'task') return false;
     if (searchQuery && !i.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    const justCompleted = i.id === completingId;
     if (timeTab === 'today') {
-      if (i.completed) return false;
+      if (i.completed && !justCompleted) return false;
       if (!i.due_date) return true;
       const d = new Date(i.due_date); d.setHours(0, 0, 0, 0);
       return d <= tomorrowDate;
     }
     if (timeTab === 'upcoming') {
-      if (i.completed || !i.due_date) return false;
+      if ((i.completed && !justCompleted) || !i.due_date) return false;
       const d = new Date(i.due_date); d.setHours(0, 0, 0, 0);
       return d >= tomorrowDate;
     }

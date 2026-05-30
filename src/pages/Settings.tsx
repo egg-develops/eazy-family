@@ -632,19 +632,20 @@ const Settings = () => {
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
               <User className="w-5 h-5" style={{ color: MUTED }} />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" onClick={() => { if (!editingName) { setNameDraft(displayName || user?.email?.split('@')[0] || ''); setEditingName(true); } }}>
               <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.profileName')}</p>
               {editingName ? (
                 <input
                   autoFocus
                   value={nameDraft}
                   onChange={e => setNameDraft(e.target.value)}
+                  onBlur={() => { saveDisplayName(nameDraft); setEditingName(false); }}
                   onKeyDown={e => {
                     if (e.key === 'Enter') { saveDisplayName(nameDraft); setEditingName(false); }
                     if (e.key === 'Escape') setEditingName(false);
                   }}
-                  className="text-xs outline-none bg-transparent border-b w-full mt-0.5"
-                  style={{ color: TC, borderColor: TC }}
+                  className="text-xs outline-none bg-transparent w-full mt-0.5"
+                  style={{ color: TC }}
                   maxLength={32}
                   placeholder={user?.email?.split('@')[0] || 'Your name'}
                 />
@@ -654,21 +655,15 @@ const Settings = () => {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => {
-                if (editingName) {
-                  saveDisplayName(nameDraft);
-                  setEditingName(false);
-                } else {
-                  setNameDraft(displayName || user?.email?.split('@')[0] || '');
-                  setEditingName(true);
-                }
-              }}
-              className="text-sm font-semibold flex-shrink-0"
-              style={{ color: TC }}
-            >
-              {editingName ? t('settings.save') : t('settings.change')}
-            </button>
+            {!editingName && (
+              <button
+                onClick={() => { setNameDraft(displayName || user?.email?.split('@')[0] || ''); setEditingName(true); }}
+                className="text-sm font-semibold flex-shrink-0"
+                style={{ color: TC }}
+              >
+                {t('settings.change')}
+              </button>
+            )}
           </div>
 
           {/* Profile Photo */}

@@ -454,7 +454,8 @@
       "iconOnly": "Nur Icons",
       "iconOnlySub": "Runde Schaltflächen, ohne Beschriftung"
     },
-    "profileName": "Profilname"
+    "profileName": "Profilname",
+    "save": "Speichern"
   },
   "privacySettings": {
     "title": "Datenschutzeinstellungen",

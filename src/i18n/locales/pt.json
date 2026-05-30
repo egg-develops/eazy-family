@@ -455,7 +455,8 @@
       "iconOnly": "Somente ícones",
       "iconOnlySub": "Botões circulares, sem rótulos"
     },
-    "profileName": "Nome do perfil"
+    "profileName": "Nome do perfil",
+    "save": "Guardar"
   },
   "privacySettings": {
     "title": "Definições de privacidade",
