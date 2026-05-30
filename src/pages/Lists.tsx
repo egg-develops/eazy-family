@@ -529,8 +529,8 @@ const Lists = () => {
                                   );
                                 })()}
                               </div>
-                              <button onClick={() => deleteItem(task.id)} className="opacity-40 hover:opacity-100 transition-opacity p-1">
-                                <Trash2 className="w-3.5 h-3.5" style={{ color: MUTED }} />
+                              <button onClick={() => deleteItem(task.id)} className="opacity-40 hover:opacity-100 transition-opacity p-0.5">
+                                <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                               </button>
                             </div>
                           );
@@ -650,12 +650,14 @@ const Lists = () => {
                           )}
                         </div>
                       </div>
-                      <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
-                        <Pencil className="w-3.5 h-3.5" style={{ color: MUTED }} />
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
-                        <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
-                      </button>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                          <Pencil className="w-4 h-4" style={{ color: MUTED }} />
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                          <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
+                        </button>
+                      </div>
                     </div>
 
                     {isExpanded && (
@@ -719,8 +721,8 @@ const Lists = () => {
                                     +
                                   </button>
                                 </div>
-                                <button onClick={() => deleteItem(item.id)} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
-                                  <Trash2 className="w-3 h-3" style={{ color: MUTED }} />
+                                <button onClick={() => deleteItem(item.id)} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                                  <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                                 </button>
                               </div>
                               {isAssigning && (
