@@ -41,18 +41,25 @@ private func accent(for mode: WidgetDisplayMode) -> Color {
     }
 }
 
-// MARK: - EF Brandmark
-
-struct EFBrandmark: View {
-    var size: CGFloat = 32
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.28)
-                .fill(TC)
-                .frame(width: size, height: size)
-            Text("EF")
-                .font(.system(size: size * 0.38, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
+private extension WidgetDisplayMode {
+    var statLabel: String {
+        switch self {
+        case .events:    return "event(s)"
+        case .shopping:  return "item(s)"
+        case .tasks:     return "task(s)"
+        case .reminders: return "reminder(s)"
+        case .rituals:   return "ritual(s)"
+        case .journal:   return "entr(y/ies)"
+        }
+    }
+    var shortStatLabel: String {
+        switch self {
+        case .events:    return "events"
+        case .shopping:  return "items"
+        case .tasks:     return "tasks"
+        case .reminders: return "reminders"
+        case .rituals:   return "rituals"
+        case .journal:   return "entries"
         }
     }
 }
@@ -73,7 +80,7 @@ struct EazyFamilyWidget: Widget {
         }
         .configurationDisplayName("Eazy.Family")
         .description("Your family's calendar, tasks, and shopping — always one glance away.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
     }
 }
 
@@ -88,13 +95,123 @@ struct EazyWidgetView: View {
             UnauthenticatedView()
         } else if let data = entry.data {
             switch family {
-            case .systemSmall:  SmallWidgetView(data: data, entry: entry)
-            case .systemMedium: MediumWidgetView(data: data, entry: entry)
-            default:            LargeWidgetView(data: data, entry: entry)
+            case .systemSmall:      SmallWidgetView(data: data, entry: entry)
+            case .systemMedium:     MediumWidgetView(data: data, entry: entry)
+            case .systemExtraLarge: ExtraLargeWidgetView(data: data, entry: entry)
+            default:                LargeWidgetView(data: data, entry: entry)
             }
         } else {
             EmptyStateView(mode: entry.configuration.displayMode.asModel)
         }
+    }
+}
+
+// MARK: - Brand panel (left column — medium & large)
+
+struct BrandPanel: View {
+    let mode: WidgetDisplayMode
+    let itemCount: Int
+    let updatedAt: Date
+    var compact: Bool = false   // true = medium, false = large
+
+    private let grad = LinearGradient(
+        colors: [Color(hex: "#964735"), Color(hex: "#B85840")],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            grad
+            VStack(alignment: .leading, spacing: 0) {
+
+                // Logo mark
+                ZStack {
+                    RoundedRectangle(cornerRadius: compact ? 7 : 9)
+                        .fill(Color.white.opacity(0.18))
+                        .frame(width: compact ? 32 : 38, height: compact ? 32 : 38)
+                    Text("EF")
+                        .font(.system(size: compact ? 12 : 14, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                // Wordmark
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Eazy")
+                        .font(.system(size: compact ? 14 : 16, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("Family")
+                        .font(.system(size: compact ? 14 : 16, weight: .black, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                }
+
+                if !compact {
+                    Spacer().frame(height: 10)
+
+                    // Item count stat
+                    if itemCount > 0 {
+                        Text("\(itemCount)")
+                            .font(.system(size: 22, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(mode.shortStatLabel)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(0.7))
+                            .padding(.bottom, 8)
+                    }
+
+                    // Updated time
+                    Text(updatedAt.formatted(date: .omitted, time: .shortened))
+                        .font(.system(size: 8))
+                        .foregroundStyle(Color.white.opacity(0.45))
+                } else {
+                    // Compact: just a small count pill
+                    if itemCount > 0 {
+                        Spacer().frame(height: 6)
+                        Text("\(itemCount) \(mode.shortStatLabel)")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Color.white.opacity(0.75))
+                    }
+                }
+            }
+            .padding(compact ? 10 : 12)
+        }
+    }
+}
+
+// MARK: - Small brand strip (top bar for small widget)
+
+struct SmallBrandStrip: View {
+    let mode: WidgetDisplayMode
+
+    private let grad = LinearGradient(
+        colors: [Color(hex: "#964735"), Color(hex: "#C06848")],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+
+    var body: some View {
+        ZStack {
+            grad
+            HStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.white.opacity(0.2))
+                        .frame(width: 22, height: 22)
+                    Text("EF")
+                        .font(.system(size: 8, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                Text(mode.label)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.9))
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+        }
+        .frame(height: 34)
     }
 }
 
@@ -123,21 +240,25 @@ struct EmptyStateView: View {
     let mode: WidgetDisplayMode
     var body: some View {
         Link(destination: URL(string: mode.deepLink)!) {
-            VStack(spacing: 8) {
-                EFBrandmark(size: 40)
-                Text("Eazy.Family")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(TC)
-                Text(mode.emptyMessage)
-                    .font(.system(size: 11))
-                    .foregroundStyle(MUTED)
-                    .multilineTextAlignment(.center)
+            VStack(spacing: 0) {
+                SmallBrandStrip(mode: mode)
+                Spacer()
+                VStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 26))
+                        .foregroundStyle(TC.opacity(0.25))
+                    Text(mode.emptyMessage)
+                        .font(.system(size: 11))
+                        .foregroundStyle(MUTED)
+                        .multilineTextAlignment(.center)
+                }
+                Spacer()
             }
         }
     }
 }
 
-// MARK: - Small widget (up to 3 items)
+// MARK: - Small widget (brand strip top + items)
 
 struct SmallWidgetView: View {
     let data: WidgetEntryData
@@ -145,40 +266,40 @@ struct SmallWidgetView: View {
 
     var body: some View {
         Link(destination: URL(string: data.mode.deepLink)!) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 6) {
-                    EFBrandmark(size: 22)
-                    Text(data.mode.label)
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
-                        .textCase(.uppercase)
-                        .tracking(0.5)
-                        .foregroundStyle(MUTED)
-                    Spacer()
-                }
-                .padding(.bottom, 8)
+            VStack(spacing: 0) {
+                SmallBrandStrip(mode: data.mode)
 
-                if data.items.isEmpty {
-                    Text("All clear ✓")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(MUTED)
-                } else {
-                    VStack(alignment: .leading, spacing: 5) {
-                        ForEach(data.items.prefix(3)) { item in
-                            SmallItemRow(item: item, mode: data.mode)
+                VStack(alignment: .leading, spacing: 0) {
+                    if data.items.isEmpty {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text("All clear ✓")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(MUTED)
+                            Spacer()
                         }
+                        Spacer()
+                    } else {
+                        VStack(alignment: .leading, spacing: 5) {
+                            ForEach(data.items.prefix(3)) { item in
+                                SmallItemRow(item: item, mode: data.mode)
+                            }
+                        }
+                        .padding(.top, 10)
+                        .padding(.horizontal, 12)
+
+                        if data.items.count > 3 {
+                            Text("+\(data.items.count - 3) more")
+                                .font(.system(size: 9))
+                                .foregroundStyle(accent(for: data.mode))
+                                .padding(.horizontal, 12)
+                                .padding(.top, 4)
+                        }
+                        Spacer(minLength: 0)
                     }
                 }
-
-                Spacer(minLength: 0)
-
-                if data.items.count > 3 {
-                    Text("+\(data.items.count - 3) more")
-                        .font(.system(size: 9))
-                        .foregroundStyle(accent(for: data.mode))
-                        .padding(.top, 4)
-                }
             }
-            .padding(14)
         }
     }
 }
@@ -207,60 +328,62 @@ struct SmallItemRow: View {
     }
 }
 
-// MARK: - Medium widget (up to 5 items)
+// MARK: - Medium widget (brand panel left + content right)
 
 struct MediumWidgetView: View {
     let data: WidgetEntryData
     let entry: EazyEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                EFBrandmark(size: 32)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Eazy.Family")
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
-                        .foregroundStyle(TC)
-                    Text(data.mode.label)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(INK)
-                }
-                Spacer()
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(accent(for: data.mode).opacity(0.12))
-                        .frame(width: 30, height: 30)
-                    Image(systemName: modeIcon(data.mode))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(accent(for: data.mode))
-                }
-            }
-            .padding(.bottom, 10)
+        HStack(spacing: 0) {
 
-            if data.items.isEmpty {
-                Spacer()
-                HStack {
+            // Left: brand panel
+            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: true)
+                .frame(width: 96)
+
+            // Divider
+            Rectangle()
+                .fill(BORDER.opacity(0.5))
+                .frame(width: 0.5)
+
+            // Right: content
+            VStack(alignment: .leading, spacing: 0) {
+                Text(data.mode.label)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .textCase(.uppercase)
+                    .tracking(0.4)
+                    .foregroundStyle(accent(for: data.mode))
+                    .padding(.bottom, 8)
+
+                if data.items.isEmpty {
                     Spacer()
-                    Text("Nothing on the list ✓")
-                        .font(.system(size: 13))
+                    Text(data.mode.emptyMessage)
+                        .font(.system(size: 12))
                         .foregroundStyle(MUTED)
                     Spacer()
-                }
-                Spacer()
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(data.items.prefix(5).enumerated()), id: \.element.id) { idx, item in
-                        MediumItemRow(item: item, mode: data.mode)
-                        if idx < min(data.items.count, 5) - 1 {
-                            Divider()
-                                .background(BORDER.opacity(0.5))
-                                .padding(.leading, 20)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Array(data.items.prefix(4).enumerated()), id: \.element.id) { idx, item in
+                            MediumItemRow(item: item, mode: data.mode)
+                            if idx < min(data.items.count, 4) - 1 {
+                                Divider()
+                                    .background(BORDER.opacity(0.4))
+                                    .padding(.leading, 18)
+                            }
                         }
                     }
+                    if data.items.count > 4 {
+                        Text("+\(data.items.count - 4) more")
+                            .font(.system(size: 9))
+                            .foregroundStyle(accent(for: data.mode))
+                            .padding(.top, 4)
+                    }
+                    Spacer(minLength: 0)
                 }
             }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(14)
         .widgetURL(URL(string: data.mode.deepLink))
     }
 }
@@ -282,14 +405,14 @@ struct MediumItemRow: View {
                         .frame(width: 3, height: 16)
                 }
                 Text(item.title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(item.completed ? MUTED : INK)
                     .strikethrough(item.completed)
                     .lineLimit(1)
                 Spacer()
                 if let sub = item.subtitle {
                     Text(sub)
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundStyle(accent(for: mode))
                 }
             }
@@ -298,81 +421,75 @@ struct MediumItemRow: View {
     }
 }
 
-// MARK: - Large widget (up to 10 items)
+// MARK: - Large widget (brand panel left + content right)
 
 struct LargeWidgetView: View {
     let data: WidgetEntryData
     let entry: EazyEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
-                EFBrandmark(size: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Eazy.Family")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(TC)
-                    Text(data.mode.label)
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(INK)
-                }
-                Spacer()
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(accent(for: data.mode).opacity(0.12))
-                        .frame(width: 38, height: 38)
-                    Image(systemName: modeIcon(data.mode))
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(accent(for: data.mode))
-                }
-            }
-            .padding(.bottom, 12)
+        HStack(spacing: 0) {
 
-            Divider().background(BORDER)
+            // Left: brand panel (wider + shows count + time)
+            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: false)
+                .frame(width: 104)
 
-            if data.items.isEmpty {
-                Spacer()
-                HStack {
+            // Divider
+            Rectangle()
+                .fill(BORDER.opacity(0.5))
+                .frame(width: 0.5)
+
+            // Right: content
+            VStack(alignment: .leading, spacing: 0) {
+                Text(data.mode.label)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .textCase(.uppercase)
+                    .tracking(0.4)
+                    .foregroundStyle(accent(for: data.mode))
+                    .padding(.bottom, 10)
+
+                Divider()
+                    .background(BORDER.opacity(0.6))
+                    .padding(.bottom, 4)
+
+                if data.items.isEmpty {
                     Spacer()
-                    VStack(spacing: 6) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 30))
-                            .foregroundStyle(accent(for: data.mode).opacity(0.3))
-                        Text("All clear for now")
-                            .font(.system(size: 14))
-                            .foregroundStyle(MUTED)
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 6) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(accent(for: data.mode).opacity(0.25))
+                            Text(data.mode.emptyMessage)
+                                .font(.system(size: 13))
+                                .foregroundStyle(MUTED)
+                        }
+                        Spacer()
                     }
                     Spacer()
-                }
-                Spacer()
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(data.items.prefix(10).enumerated()), id: \.element.id) { idx, item in
-                        LargeItemRow(item: item, mode: data.mode)
-                        if idx < min(data.items.count, 10) - 1 {
-                            Divider()
-                                .background(BORDER.opacity(0.4))
-                                .padding(.leading, 28)
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Array(data.items.prefix(8).enumerated()), id: \.element.id) { idx, item in
+                            LargeItemRow(item: item, mode: data.mode)
+                            if idx < min(data.items.count, 8) - 1 {
+                                Divider()
+                                    .background(BORDER.opacity(0.35))
+                                    .padding(.leading, 24)
+                            }
                         }
                     }
+                    if data.items.count > 8 {
+                        Text("+\(data.items.count - 8) more")
+                            .font(.system(size: 10))
+                            .foregroundStyle(accent(for: data.mode))
+                            .padding(.top, 6)
+                    }
+                    Spacer(minLength: 0)
                 }
             }
-
-            Spacer(minLength: 0)
-
-            Divider().background(BORDER).padding(.top, 8)
-            HStack {
-                Text("Updated " + entry.date.formatted(date: .omitted, time: .shortened))
-                    .font(.system(size: 10))
-                    .foregroundStyle(MUTED.opacity(0.6))
-                Spacer()
-                Text("\(data.items.count) item\(data.items.count == 1 ? "" : "s")")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(accent(for: data.mode))
-            }
-            .padding(.top, 6)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(16)
         .widgetURL(URL(string: data.mode.deepLink))
     }
 }
@@ -386,29 +503,123 @@ struct LargeItemRow: View {
             HStack(spacing: 10) {
                 if mode == .rituals || mode == .shopping {
                     Image(systemName: item.completed ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 16))
+                        .font(.system(size: 15))
                         .foregroundStyle(item.completed ? accent(for: mode) : BORDER)
                 } else {
                     RoundedRectangle(cornerRadius: 2)
                         .fill(item.completed ? MUTED.opacity(0.3) : accent(for: mode))
-                        .frame(width: 3, height: 20)
+                        .frame(width: 3, height: 18)
                 }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(item.title)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(item.completed ? MUTED : INK)
                         .strikethrough(item.completed)
-                        .lineLimit(2)
+                        .lineLimit(1)
                     if let sub = item.subtitle {
                         Text(sub)
-                            .font(.system(size: 11))
+                            .font(.system(size: 10))
                             .foregroundStyle(accent(for: mode))
                     }
                 }
                 Spacer()
             }
-            .padding(.vertical, 7)
+            .padding(.vertical, 6)
         }
+    }
+}
+
+// MARK: - Extra Large widget (iPad — brand panel left + two content columns right)
+
+struct ExtraLargeWidgetView: View {
+    let data: WidgetEntryData
+    let entry: EazyEntry
+
+    // Split items into two columns
+    private var leftItems: [WidgetItem]  { Array(data.items.prefix(8).enumerated().filter { $0.offset % 2 == 0 }.map { $0.element }) }
+    private var rightItems: [WidgetItem] { Array(data.items.prefix(8).enumerated().filter { $0.offset % 2 != 0 }.map { $0.element }) }
+
+    var body: some View {
+        HStack(spacing: 0) {
+
+            // Left: brand panel
+            BrandPanel(mode: data.mode, itemCount: data.items.count, updatedAt: entry.date, compact: false)
+                .frame(width: 120)
+
+            Rectangle()
+                .fill(BORDER.opacity(0.5))
+                .frame(width: 0.5)
+
+            // Right: two-column content grid
+            VStack(alignment: .leading, spacing: 0) {
+                Text(data.mode.label)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .textCase(.uppercase)
+                    .tracking(0.4)
+                    .foregroundStyle(accent(for: data.mode))
+                    .padding(.bottom, 10)
+
+                Divider().background(BORDER.opacity(0.6)).padding(.bottom, 6)
+
+                if data.items.isEmpty {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        VStack(spacing: 8) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 34))
+                                .foregroundStyle(accent(for: data.mode).opacity(0.25))
+                            Text(data.mode.emptyMessage)
+                                .font(.system(size: 14))
+                                .foregroundStyle(MUTED)
+                        }
+                        Spacer()
+                    }
+                    Spacer()
+                } else {
+                    HStack(alignment: .top, spacing: 0) {
+                        // Column A
+                        VStack(spacing: 0) {
+                            ForEach(Array(leftItems.enumerated()), id: \.element.id) { idx, item in
+                                LargeItemRow(item: item, mode: data.mode)
+                                if idx < leftItems.count - 1 {
+                                    Divider().background(BORDER.opacity(0.3)).padding(.leading, 22)
+                                }
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        Rectangle()
+                            .fill(BORDER.opacity(0.3))
+                            .frame(width: 0.5)
+                            .padding(.horizontal, 8)
+
+                        // Column B
+                        VStack(spacing: 0) {
+                            ForEach(Array(rightItems.enumerated()), id: \.element.id) { idx, item in
+                                LargeItemRow(item: item, mode: data.mode)
+                                if idx < rightItems.count - 1 {
+                                    Divider().background(BORDER.opacity(0.3)).padding(.leading, 22)
+                                }
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    if data.items.count > 8 {
+                        Text("+\(data.items.count - 8) more")
+                            .font(.system(size: 10))
+                            .foregroundStyle(accent(for: data.mode))
+                            .padding(.top, 6)
+                    }
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .widgetURL(URL(string: data.mode.deepLink))
     }
 }
 
@@ -433,6 +644,12 @@ func modeIcon(_ mode: WidgetDisplayMode) -> String {
     EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .events), isAuthenticated: true)
 }
 
+#Preview("Medium – Calendar", as: .systemMedium) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .events), isAuthenticated: true)
+}
+
 #Preview("Medium – Shopping", as: .systemMedium) {
     EazyFamilyWidget()
 } timeline: {
@@ -445,14 +662,20 @@ func modeIcon(_ mode: WidgetDisplayMode) -> String {
     EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .tasks), isAuthenticated: true)
 }
 
-#Preview("Medium – Journal", as: .systemMedium) {
-    EazyFamilyWidget()
-} timeline: {
-    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .journal), isAuthenticated: true)
-}
-
 #Preview("Small – Empty", as: .systemSmall) {
     EazyFamilyWidget()
 } timeline: {
     EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: nil, isAuthenticated: true)
+}
+
+#Preview("Medium – Empty", as: .systemMedium) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: nil, isAuthenticated: true)
+}
+
+#Preview("Extra Large – Events", as: .systemExtraLarge) {
+    EazyFamilyWidget()
+} timeline: {
+    EazyEntry(date: .now, configuration: EazyWidgetIntent(), data: .placeholder(mode: .events), isAuthenticated: true)
 }
