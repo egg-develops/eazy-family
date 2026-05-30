@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { pickRitualEmoji } from "@/lib/intelligence";
-import { Mic, Plus, X, Trash2 } from "lucide-react";
+import { Mic, Plus, X, Trash2, Send } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { cloudSet } from "@/lib/preferencesSync";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
@@ -40,6 +41,7 @@ const getJournalSettings = () => {
 
 const Rituals = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [rituals, setRituals] = useState<Ritual[]>(() => {
     try {
@@ -49,9 +51,10 @@ const Rituals = () => {
     return DEFAULT_RITUALS;
   });
   const [completedRituals, setCompletedRituals] = useState<Set<string>>(new Set());
+  const [journalDraft, setJournalDraft] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [voiceText, setVoiceText] = useState('');
   const [editMode, setEditMode] = useState(false);
+  const journalRef = useRef<HTMLTextAreaElement>(null);
   const [newRitualTitle, setNewRitualTitle] = useState('');
   const [showAllJournal, setShowAllJournal] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
@@ -78,6 +81,16 @@ const Rituals = () => {
     const stored = localStorage.getItem('eazy-journal-entries');
     setEntries(stored ? JSON.parse(stored) : []);
   };
+
+  // Pre-fill journal composer when redirected from EZ Button
+  useEffect(() => {
+    const prefill = searchParams.get('journal');
+    if (prefill) {
+      setJournalDraft(decodeURIComponent(prefill));
+      setSearchParams({}, { replace: true });
+      setTimeout(() => journalRef.current?.focus(), 100);
+    }
+  }, []);
 
   useEffect(() => {
     reloadEntries();
@@ -162,28 +175,26 @@ const Rituals = () => {
   const startListening = () => {
     capturedRef.current = '';
     savedRef.current = false;
-    setVoiceText('');
     setIsListening(true);
     haptic('light');
     speech.start({
       lang: 'en-US',
       onResult: (transcript) => {
         capturedRef.current = transcript;
-        setVoiceText(transcript);
+        setJournalDraft(transcript);
       },
       onEnd: () => {
         setIsListening(false);
-        setVoiceText('');
         if (!savedRef.current && capturedRef.current.trim()) {
           savedRef.current = true;
           saveEntry(capturedRef.current);
+          setJournalDraft('');
         }
         capturedRef.current = '';
         savedRef.current = false;
       },
       onError: () => {
         setIsListening(false);
-        setVoiceText('');
         capturedRef.current = '';
         savedRef.current = false;
       },
@@ -196,8 +207,14 @@ const Rituals = () => {
     const updated = [entry, ...entries];
     setEntries(updated);
     localStorage.setItem('eazy-journal-entries', JSON.stringify(updated));
-    setVoiceText('');
     haptic('light');
+  };
+
+  const submitDraft = () => {
+    if (!journalDraft.trim()) return;
+    saveEntry(journalDraft);
+    setJournalDraft('');
+    journalRef.current?.blur();
   };
 
   const deleteEntry = (id: string) => {
@@ -279,44 +296,6 @@ const Rituals = () => {
 
       <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#B5A09A' }}>{t('rituals.privateSpace')}</p>
 
-      {/* Voice Journal — compact bar */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: TC }}>
-        <div className="px-5 py-4 flex items-center gap-4">
-          {/* Mic button with ping ring when active */}
-          <div className="relative flex-shrink-0 w-11 h-11">
-            {(isListening || speech.isTranscribing) && (
-              <span
-                className="absolute inset-0 rounded-full animate-ping"
-                style={{ background: 'rgba(255,255,255,0.35)' }}
-              />
-            )}
-            <button
-              onClick={isListening ? stopListening : startListening}
-              disabled={speech.isTranscribing}
-              className="relative w-11 h-11 rounded-full flex items-center justify-center transition-all"
-              style={{ background: (isListening || speech.isTranscribing) ? TL : 'rgba(255,255,255,0.2)' }}
-            >
-              {speech.isTranscribing
-                ? <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                : <Mic className="w-5 h-5 text-white" />
-              }
-            </button>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-white">
-              {speech.isTranscribing ? 'Processing…' : isListening ? t('rituals.tapToStop') : t('rituals.voiceJournal')}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {speech.isTranscribing
-                ? 'Transcribing your entry…'
-                : isListening
-                  ? (voiceText || t('rituals.listening'))
-                  : t('rituals.tapMicToRecord')}
-            </p>
-          </div>
-        </div>
-      </div>
 
       {/* Daily Rituals */}
       <div>
@@ -484,6 +463,50 @@ const Rituals = () => {
             )}
           </div>
 
+          {/* Inline journal composer */}
+          <div className="mb-3 rounded-2xl overflow-hidden" style={{ border: `1px solid ${isListening ? TC : BORDER}`, background: 'hsl(var(--card))', transition: 'border-color 0.2s' }}>
+            <textarea
+              ref={journalRef}
+              value={journalDraft}
+              onChange={e => setJournalDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitDraft(); }}
+              placeholder={isListening ? t('rituals.listening') : t('rituals.whatsOnYourMind')}
+              rows={journalDraft ? 3 : 2}
+              className="w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm outline-none"
+              style={{ color: 'hsl(var(--foreground))', caretColor: TC }}
+            />
+            <div className="flex items-center justify-between px-3 pb-3">
+              {/* Mic button */}
+              <div className="relative w-8 h-8">
+                {(isListening || speech.isTranscribing) && (
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: `${TC}40` }} />
+                )}
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={speech.isTranscribing}
+                  className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                  style={{ background: isListening ? TC : 'hsl(var(--muted))' }}
+                >
+                  {speech.isTranscribing
+                    ? <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: TC, borderTopColor: 'transparent' }} />
+                    : <Mic className="w-3.5 h-3.5" style={{ color: isListening ? 'white' : MUTED }} />
+                  }
+                </button>
+              </div>
+              {/* Send button — only when there's text */}
+              {journalDraft.trim() && (
+                <button
+                  onClick={submitDraft}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-opacity"
+                  style={{ background: TC }}
+                >
+                  <Send className="w-3 h-3" />
+                  {t('settings.save')}
+                </button>
+              )}
+            </div>
+          </div>
+
           {entries.length > 0 ? (
             <div className="space-y-2">
               {displayedEntries.map(entry => (
@@ -526,10 +549,7 @@ const Rituals = () => {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl p-5 text-center" style={{ background: 'hsl(var(--muted))', border: `1px dashed ${BORDER}` }}>
-              <p className="text-sm font-medium" style={{ color: MUTED }}>{t('rituals.whatsOnYourMind')}</p>
-              <p className="text-xs mt-1" style={{ color: '#B5A09A' }}>{t('rituals.useVoiceHint')}</p>
-            </div>
+            <p className="text-xs text-center py-2" style={{ color: MUTED }}>{t('rituals.whatsOnYourMind')}</p>
           )}
         </div>
       )}

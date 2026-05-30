@@ -48,7 +48,6 @@ const TYPE_DEFS: { id: CaptureType; icon: string; labelKey: string }[] = [
   { id: 'shopping',          icon: '🛒', labelKey: 'ezCapture.typeShopping' },
   { id: 'shopping_personal', icon: '🛒', labelKey: 'ezCapture.typeMyList'   },
   { id: 'reminder',          icon: '🔔', labelKey: 'ezCapture.typeReminder' },
-  { id: 'journal',           icon: '📝', labelKey: 'ezCapture.typeJournal'  },
 ];
 
 // Maps each CaptureType to its AI message translation key prefix
@@ -597,18 +596,10 @@ STYLE:
         onClose(); navigate('/app/rituals');
 
       } else if (entryType === 'journal') {
-        const entry = {
-          id: crypto.randomUUID(),
-          text: parsed.title + (parsed.notes ? `\n\n${parsed.notes}` : ''),
-          date: new Date().toISOString(),
-          mood: parsed.mood || undefined,
-        };
-        const ex = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
-        localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...ex]));
-        window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: t('ezCapture.toastJournalSaved') });
-        onClose(); navigate('/app/rituals');
+        const text = parsed.title + (parsed.notes ? `\n\n${parsed.notes}` : '');
+        haptic('light');
+        onClose();
+        navigate(`/app/rituals?journal=${encodeURIComponent(text)}`);
       }
 
       if (parseSnapshotRef.current && session) {
