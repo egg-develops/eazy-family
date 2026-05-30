@@ -106,6 +106,7 @@ const AppLayout = () => {
     currentPointerYRef.current = e.clientY;
     currentPointerXRef.current = e.clientX;
     swipeStartYRef.current = e.clientY;
+    haptic('tap');
     try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
     // Long hold → enter drag mode
     longPressTimer.current = setTimeout(() => {
@@ -175,21 +176,24 @@ const AppLayout = () => {
         haptic('light');
       } else {
         // Long press, no move → EZ Capture
-        haptic('medium');
+        haptic('capture');
         setEzOpen(true);
       }
       return;
     }
 
     if (isSwipeMenuRef.current) {
-      if (activeMenuIndex >= 0) navigate(orderedMenuItems[activeMenuIndex].path);
+      if (activeMenuIndex >= 0) {
+        haptic('tap');
+        navigate(orderedMenuItems[activeMenuIndex].path);
+      }
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
       isSwipeMenuRef.current = false;
     } else {
       // Tap → EZ Capture
-      haptic('medium');
+      haptic('capture');
       setEzOpen(true);
     }
   };
@@ -415,6 +419,37 @@ const AppLayout = () => {
                 );
               })}
             </div>
+          )}
+
+          {/* Compass arrows — visible only in drag mode, outside the halo */}
+          {isDragMode && (
+            <>
+              {[
+                { deg: 0,   x: '50%',  y: '-46px', tx: '-50%', ty: '0'    },
+                { deg: 180, x: '50%',  y: 'auto',  tx: '-50%', ty: '0',  bottom: '-46px' },
+                { deg: 270, x: '-46px',y: '50%',   tx: '0',    ty: '-50%' },
+                { deg: 90,  x: 'auto', y: '50%',   tx: '0',    ty: '-50%', right: '-46px' },
+              ].map(({ deg, x, y, tx, ty, bottom, right }, i) => (
+                <div
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    left: right ? undefined : x,
+                    right: right ?? undefined,
+                    top: bottom ? undefined : y,
+                    bottom: bottom ?? undefined,
+                    transform: `translate(${tx}, ${ty}) rotate(${deg}deg)`,
+                    opacity: 0.72,
+                    animation: 'ez-compass-in 0.2s ease both',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
+                    <path d="M2 8L7 2L12 8" stroke="#964735" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              ))}
+            </>
           )}
 
           <button

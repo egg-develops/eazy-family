@@ -1,6 +1,6 @@
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
-type HapticStyle = 'light' | 'medium' | 'success' | 'error' | 'tap';
+type HapticStyle = 'light' | 'tap' | 'medium' | 'heavy' | 'capture' | 'success' | 'error';
 
 export const haptic = async (style: HapticStyle = 'light') => {
   try {
@@ -11,6 +11,15 @@ export const haptic = async (style: HapticStyle = 'light') => {
         break;
       case 'medium':
         await Haptics.impact({ style: ImpactStyle.Medium });
+        break;
+      case 'heavy':
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        break;
+      case 'capture':
+        // Distinct double-pulse for opening EZ Capture
+        await Haptics.impact({ style: ImpactStyle.Medium });
+        await new Promise(r => setTimeout(r, 80));
+        await Haptics.impact({ style: ImpactStyle.Light });
         break;
       case 'success':
         await Haptics.notification({ type: NotificationType.Success });

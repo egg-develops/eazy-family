@@ -88,6 +88,8 @@ img {
   border: 1px solid hsl(var(--border)) !important;
 }
 
+@keyframes ez-compass-in { from { opacity: 0; } to { opacity: 0.72; } }
+
 /* Active state while sliding — brown with white text */
 .ez-menu-pill-active {
   background-color: #964735 !important;
