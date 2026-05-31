@@ -180,7 +180,10 @@ const Onboarding = () => {
   const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
     setState(prev => ({ ...prev, [k]: v }));
 
-  // Auto-skip account screen if user already signed up via Auth page
+  // When user becomes authenticated on the account screen (either via Google OAuth
+  // or because they were pre-authenticated from the Auth page), save their profile
+  // and exit onboarding. This useEffect fires after React has flushed state so
+  // ProtectedRoute will see user!=null when we navigate.
   useEffect(() => {
     if (screen !== 9 || !user) return;
     const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
@@ -190,7 +193,8 @@ const Onboarding = () => {
       userInitials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
     }));
     localStorage.removeItem(STORAGE_KEY);
-    go(10, 'fwd');
+    localStorage.removeItem('eazy-needs-onboarding');
+    navigate('/app', { replace: true });
   }, [screen, user]);
 
 

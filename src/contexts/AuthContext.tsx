@@ -233,9 +233,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (isRecovery) {
           navigate('/auth/reset-password', { replace: true });
-        } else if (url.includes('code=') || url.includes('access_token')) {
-          navigate('/app', { replace: true });
         }
+        // No explicit navigate for OAuth success — let onAuthStateChange update user
+        // state first, then Onboarding/Auth components redirect naturally (avoids
+        // ProtectedRoute seeing stale user=null before React flushes the state update)
       };
 
       // Warm-start: app already running when deep link fires
