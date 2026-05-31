@@ -200,18 +200,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Handle OAuth deep-link callback on native (capacitor://localhost/app#access_token=...)
+    // Handle OAuth deep-link callback on native
     let urlListener: { remove: () => void } | null = null;
     let stateListener: { remove: () => void } | null = null;
     if (Capacitor.isNativePlatform()) {
-      CapApp.addListener('appUrlOpen', async ({ url }) => {
+
+      const handleDeepLink = async (url: string) => {
         if (url.includes('access_token') || url.includes('code=')) {
           await supabase.auth.getSessionFromUrl({ url, storeSession: true });
           if (url.includes('type=recovery')) {
             navigate('/auth/reset-password', { replace: true });
           }
         }
-      }).then(h => { urlListener = h; });
+      };
+
+      // Warm-start: app already running when deep link fires
+      CapApp.addListener('appUrlOpen', ({ url }) => handleDeepLink(url))
+        .then(h => { urlListener = h; });
+
+      // Cold-start: app was killed and launched directly from the deep link intent
+      CapApp.getLaunchUrl().then(result => {
+        if (result?.url) handleDeepLink(result.url);
+      });
 
       // Refresh session when app returns to foreground after being killed/suspended —
       // WKWebView doesn't always fire visibilitychange reliably on iPadOS
