@@ -207,6 +207,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       CapApp.addListener('appUrlOpen', async ({ url }) => {
         if (url.includes('access_token') || url.includes('code=')) {
           await supabase.auth.getSessionFromUrl({ url, storeSession: true });
+          if (url.includes('type=recovery')) {
+            navigate('/auth/reset-password', { replace: true });
+          }
         }
       }).then(h => { urlListener = h; });
 

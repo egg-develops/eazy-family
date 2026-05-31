@@ -111,9 +111,10 @@ const Auth = () => {
     if (!email.trim()) { toast({ title: t('auth.emailFirst'), variant: "destructive" }); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://eazy.family/auth/reset-password',
-      });
+      const redirectTo = Capacitor.isNativePlatform()
+        ? 'eazy-family://auth/reset-password'
+        : 'https://eazy.family/auth/reset-password';
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
       if (error) throw error;
       setResetSent(true);
     } catch (err: any) {
