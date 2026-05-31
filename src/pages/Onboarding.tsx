@@ -785,7 +785,7 @@ const AccountScreen = ({
         <button
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
-              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app`, skipBrowserRedirect: true } });
+              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'eazy-family://app', skipBrowserRedirect: true } });
               if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
               if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
             } else {

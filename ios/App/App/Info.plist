@@ -67,5 +67,16 @@
 	<string>Eazy Family uses your location to suggest relevant family activities and events near you.</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>Eazy Family sends reminders for family events, tasks, and daily digests.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>eazy.family.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>eazy-family</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
