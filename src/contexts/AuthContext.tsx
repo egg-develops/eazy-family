@@ -206,11 +206,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (Capacitor.isNativePlatform()) {
 
       const handleDeepLink = async (url: string) => {
-        if (url.includes('access_token') || url.includes('code=')) {
-          await supabase.auth.getSessionFromUrl({ url, storeSession: true });
-          if (url.includes('type=recovery')) {
-            navigate('/auth/reset-password', { replace: true });
+        const isRecovery = url.includes('type=recovery');
+
+        if (url.includes('code=')) {
+          // PKCE flow: exchange the auth code for a session
+          try {
+            const code = new URL(url).searchParams.get('code');
+            if (code) await supabase.auth.exchangeCodeForSession(code);
+          } catch (e) {
+            logError('OAuth deep link exchange failed', e);
           }
+        } else if (url.includes('access_token')) {
+          // Implicit flow fallback: parse tokens from hash fragment
+          try {
+            const hash = url.split('#')[1] ?? '';
+            const params = new URLSearchParams(hash);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token });
+            }
+          } catch (e) {
+            logError('OAuth implicit session restore failed', e);
+          }
+        }
+
+        if (isRecovery) {
+          navigate('/auth/reset-password', { replace: true });
+        } else if (url.includes('code=') || url.includes('access_token')) {
+          navigate('/app', { replace: true });
         }
       };
 
