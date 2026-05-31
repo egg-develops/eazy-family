@@ -44,20 +44,22 @@
       "cta": "Let's fix that →"
     },
     "painSetup": {
-      "title": "How does your family currently manage its week?",
+      "title": "How does your family manage the week?",
       "chat": "Group chat and good intentions",
       "calendars": "A mix of different calendars",
       "notes": "Notes apps and sticky notes",
-      "wing": "Honestly? We wing it"
+      "wing": "Just take it one day at a time",
+      "meeting": "A weekly meeting",
+      "cta": "Continue"
     },
     "familySize": {
-      "title": "Who else needs to be in sync?",
+      "title": "Who all needs to be in sync?",
       "sub": "Eazy works best as a family.",
       "justMe": "Just me for now",
       "partner": "Me and my partner",
       "kids": "Me, my partner, and our kids",
       "extended": "Extended family too",
-      "caretakers": "We have caretakers"
+      "caretakers": "We also have caretakers"
     },
     "painPoint": {
       "title": "What causes the most friction in your family's week?",
@@ -110,16 +112,17 @@
       "fastBody": "Add anything in seconds — by voice or by text. Your family stays updated either way."
     },
     "paywall": {
-      "title": "Everything your family needs.",
+      "title": "Okay, we have everything your family needs",
       "trialSub": "14-day free trial · Full access · Cancel anytime",
-      "cta": "Get started →",
+      "cta": "Get Started",
       "alreadyHave": "Already have an account?",
       "signIn": "Sign in",
       "voiceFeature": "Private voice-powered AI assistant for every feature",
-      "listsFeature": "Shared tasks and shopping lists",
-      "digestFeature": "Morning Digest — daily briefing for your family",
-      "conflictsFeature": "Instant conflict detection and smart suggestions",
-      "familyFeature": "Invite your whole family — always in sync"
+      "listsFeature": "Shared tasks, and shopping lists",
+      "digestFeature": "Smart suggestions, conflict detection",
+      "conflictsFeature": "Unlimited synced calendars",
+      "familyFeature": "Unlimited family members",
+      "syncFeature": "Your family always in sync. Life a little easier."
     },
     "accountScreen": {
       "title": "Create your family space.",

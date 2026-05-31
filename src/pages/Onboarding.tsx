@@ -7,7 +7,6 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
-import { DigestMock } from '@/components/onboarding/DigestMock';
 import i18n from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
 
@@ -29,22 +28,24 @@ const LORA = "'Lora', 'Georgia', serif";
 const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
-// 0:language 2:pain-setup 3:family 4:pain-point 5:voice 6:digest 7:summary 8:paywall 9:account 10:location
-const TOTAL_PROGRESS_SCREENS = 8; // screens 2-9
-const progressFor = (screen: number) =>
-  screen >= 2 && screen <= 9 ? (screen - 1) / TOTAL_PROGRESS_SCREENS : null;
+// 0:language 2:pain-setup 3:family 4:pain-point 5:voice 8:features 9:account 10:location
+const SCREEN_ORDER = [2, 3, 4, 5, 8, 9];
+const progressFor = (screen: number) => {
+  const idx = SCREEN_ORDER.indexOf(screen);
+  return idx >= 0 ? (idx + 1) / SCREEN_ORDER.length : null;
+};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 interface OBState {
   language: string;
-  currentApproach: string;
+  currentApproach: string[];
   familySize: string;
   mainPainPoint: string;
   voiceFrequency: string;
   location: string;
 }
 
-const EMPTY: OBState = { language: '', currentApproach: '', familySize: '', mainPainPoint: '', voiceFrequency: '', location: '' };
+const EMPTY: OBState = { language: '', currentApproach: [], familySize: '', mainPainPoint: '', voiceFrequency: '', location: '' };
 
 const STORAGE_KEY = 'eazy-onboarding-v2';
 
@@ -175,7 +176,11 @@ const Onboarding = () => {
   }, []);
 
   const next = useCallback(() => go(screen + 1, 'fwd'), [screen, go]);
-  const back = useCallback(() => go(screen === 2 ? 0 : screen - 1, 'back'), [screen, go]);
+  const back = useCallback(() => {
+    if (screen === 2) go(0, 'back');
+    else if (screen === 8) go(5, 'back');
+    else go(screen - 1, 'back');
+  }, [screen, go]);
 
   const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
     setState(prev => ({ ...prev, [k]: v }));
@@ -208,34 +213,6 @@ const Onboarding = () => {
     ? 'ob-fade'
     : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
 
-  // ── Personalised summary cards ─────────────────────────────────────────────
-  const summaryCards = (() => {
-    const cards: { emoji: string; headline: string; body: string }[] = [];
-
-    if (state.mainPainPoint === 'scheduling') {
-      cards.push({ emoji: '🗓', headline: t('onboarding.summaryScreen.schedulingHeadline'), body: t('onboarding.summaryScreen.schedulingBody') });
-    } else if (state.mainPainPoint === 'shopping') {
-      cards.push({ emoji: '🛒', headline: t('onboarding.summaryScreen.shoppingHeadline'), body: t('onboarding.summaryScreen.shoppingBody') });
-    } else if (state.mainPainPoint === 'tasks') {
-      cards.push({ emoji: '✅', headline: t('onboarding.summaryScreen.tasksHeadline'), body: t('onboarding.summaryScreen.tasksBody') });
-    } else if (state.mainPainPoint === 'overview') {
-      cards.push({ emoji: '🌅', headline: t('onboarding.summaryScreen.overviewHeadline'), body: t('onboarding.summaryScreen.overviewBody') });
-    } else {
-      cards.push({ emoji: '✨', headline: t('onboarding.summaryScreen.defaultHeadline'), body: t('onboarding.summaryScreen.defaultBody') });
-    }
-
-    if (state.familySize !== 'just-me') {
-      cards.push({ emoji: '👨‍👩‍👧', headline: t('onboarding.summaryScreen.syncHeadline'), body: t('onboarding.summaryScreen.syncBody') });
-    }
-
-    if (state.voiceFrequency !== 'rarely') {
-      cards.push({ emoji: '🎤', headline: t('onboarding.summaryScreen.voiceHeadline'), body: t('onboarding.summaryScreen.voiceBody') });
-    } else {
-      cards.push({ emoji: '⚡', headline: t('onboarding.summaryScreen.fastHeadline'), body: t('onboarding.summaryScreen.fastBody') });
-    }
-
-    return cards.slice(0, 3);
-  })();
 
   // ── Account creation ───────────────────────────────────────────────────────
   const handleSignUp = async () => {
@@ -386,10 +363,8 @@ const Onboarding = () => {
         {screen === 2 && <PainSetupScreen state={state} set={set} next={next} />}
         {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
         {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
-        {screen === 5 && <VoiceDemoScreen state={state} set={set} next={next} />}
-        {screen === 6 && <DigestScreen state={state} next={next} />}
-        {screen === 7 && <SummaryScreen summaryCards={summaryCards} next={next} />}
-        {screen === 8 && <PaywallScreen next={next} back={back} onRestore={handleRestorePurchase} />}
+        {screen === 5 && <VoiceDemoScreen state={state} set={set} next={() => go(8, 'fwd')} />}
+        {screen === 8 && <FeaturesScreen next={next} back={back} onRestore={handleRestorePurchase} />}
         {screen === 9 && (
           <AccountScreen
             name={authName} setName={setAuthName}
@@ -434,9 +409,9 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px' }}>
       <div style={{ marginBottom: 32, textAlign: 'center' }}>
-        <OrbeMorphic size={80} />
-        <h1 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, fontStyle: 'italic', color: T.ink, marginTop: 20, marginBottom: 6 }}>
-          eazy.family
+        <OrbeMorphic size={160} />
+        <h1 style={{ fontFamily: LORA, fontSize: 36, fontWeight: 400, fontStyle: 'italic', color: T.ink, marginTop: 24, marginBottom: 6 }}>
+          eazy<span style={{ color: T.primary }}>.</span>family
         </h1>
         <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Choose your language</p>
       </div>
@@ -468,24 +443,32 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
 // ── SCREEN 2 — Pain Setup ─────────────────────────────────────────────────────
 const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
   const { t } = useTranslation();
+  // Reversed order as requested
   const APPROACHES = [
-    { value: 'chat', label: t('onboarding.painSetup.chat'), emoji: '📱' },
-    { value: 'calendars', label: t('onboarding.painSetup.calendars'), emoji: '📅' },
-    { value: 'notes', label: t('onboarding.painSetup.notes'), emoji: '📝' },
-    { value: 'wing', label: t('onboarding.painSetup.wing'), emoji: '🤷' },
+    { value: 'wing',     label: t('onboarding.painSetup.wing'),     emoji: '🤷' },
+    { value: 'meeting',  label: t('onboarding.painSetup.meeting'),   emoji: '📅' },
+    { value: 'notes',    label: t('onboarding.painSetup.notes'),     emoji: '📝' },
+    { value: 'calendars',label: t('onboarding.painSetup.calendars'), emoji: '🗓' },
+    { value: 'chat',     label: t('onboarding.painSetup.chat'),      emoji: '📱' },
   ];
-  const select = (v: string) => { set('currentApproach', v); setTimeout(next, 320); };
+  const selected: string[] = state.currentApproach || [];
+  const toggle = (v: string) => {
+    const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
+    set('currentApproach', next);
+  };
   return (
-    <div style={{ padding: '28px 24px 40px' }}>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        {t('onboarding.painSetup.title')}
-      </h2>
-      <div style={{ marginBottom: 28 }} />
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 0, lineHeight: 1.25 }}>
+          {t('onboarding.painSetup.title')}
+        </h2>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {APPROACHES.map(a => (
-          <OptionCard key={a.value} emoji={a.emoji} label={a.label} selected={state.currentApproach === a.value} onClick={() => select(a.value)} />
+          <OptionCard key={a.value} emoji={a.emoji} label={a.label} selected={selected.includes(a.value)} onClick={() => toggle(a.value)} multiSelect />
         ))}
       </div>
+      <PrimaryBtn label={t('onboarding.painSetup.cta', 'Continue')} onClick={next} disabled={selected.length === 0} />
     </div>
   );
 };
@@ -494,11 +477,11 @@ const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next:
 const FamilySizeScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
   const { t } = useTranslation();
   const FAMILY_SIZES = [
-    { value: 'just-me', label: t('onboarding.familySize.justMe'), emoji: '🙋' },
-    { value: 'partner', label: t('onboarding.familySize.partner'), emoji: '👫' },
-    { value: 'kids', label: t('onboarding.familySize.kids'), emoji: '👨‍👩‍👧‍👦' },
-    { value: 'extended', label: t('onboarding.familySize.extended'), emoji: '👨‍👩‍👧‍👦' },
-    { value: 'caretakers', label: t('onboarding.familySize.caretakers'), emoji: '🤝' },
+    { value: 'just-me',    label: t('onboarding.familySize.justMe'),    emoji: '🙋' },
+    { value: 'partner',    label: t('onboarding.familySize.partner'),    emoji: '👫' },
+    { value: 'kids',       label: t('onboarding.familySize.kids'),       emoji: '👨‍👩‍👧‍👦' },
+    { value: 'extended',   label: t('onboarding.familySize.extended'),   emoji: '🏡' },
+    { value: 'caretakers', label: 'We also have caretakers',             emoji: '🤝' },
   ];
   const select = (v: string) => { set('familySize', v); setTimeout(next, 320); };
   return (
@@ -577,89 +560,26 @@ const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next:
   );
 };
 
-// ── SCREEN 6 — Morning Digest ─────────────────────────────────────────────────
-const DigestScreen = ({ state, next }: { state: OBState; next: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-          {t('onboarding.digestScreen.title')}
-        </h2>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>
-          {t('onboarding.digestScreen.sub')}
-        </p>
-      </div>
-      <DigestMock language={state.language || 'en'} />
-      <PrimaryBtn label={t('onboarding.digestScreen.cta')} onClick={next} />
-    </div>
-  );
-};
-
-// ── SCREEN 7 — Summary ────────────────────────────────────────────────────────
-const SummaryScreen = ({ summaryCards, next }: { summaryCards: any[]; next: () => void }) => {
-  const { t } = useTranslation();
-  return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-          {t('onboarding.summaryScreen.title')}
-        </h2>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.summaryScreen.sub')}</p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {summaryCards.map((card, i) => (
-          <div
-            key={card.headline}
-            style={{
-              background: T.card, borderRadius: 18, padding: '18px 20px',
-              border: `1px solid ${T.outline}`,
-              boxShadow: '0 2px 12px rgba(28,20,18,0.06)',
-              animation: `ob-card-in 0.4s ease both`,
-              animationDelay: `${i * 0.15}s`,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-              <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{card.emoji}</span>
-              <div>
-                <p style={{ margin: '0 0 5px', fontSize: 15, fontWeight: 600, color: T.ink }}>{card.headline}</p>
-                <p style={{ margin: 0, fontSize: 13, color: T.faint, lineHeight: 1.5 }}>{card.body}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <PrimaryBtn label={t('onboarding.summaryScreen.cta')} onClick={next} />
-    </div>
-  );
-};
-
-// ── SCREEN 8 — Features overview ──────────────────────────────────────────────
-const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => {
-  const { t } = useTranslation();
+// ── SCREEN 8 — Features (final slide before account) ─────────────────────────
+const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => {
   const FEATURES = [
-    { emoji: '🎤', text: t('onboarding.paywall.voiceFeature') },
-    { emoji: '🛒', text: t('onboarding.paywall.listsFeature') },
-    { emoji: '🌅', text: t('onboarding.paywall.digestFeature') },
-    { emoji: '⚡', text: t('onboarding.paywall.conflictsFeature') },
-    { emoji: '👨‍👩‍👧', text: t('onboarding.paywall.familyFeature') },
+    { emoji: '🎤', text: 'Private voice-powered AI assistant for every feature' },
+    { emoji: '👨‍👩‍👧', text: 'Unlimited family members' },
+    { emoji: '🗓', text: 'Unlimited synced calendars' },
+    { emoji: '🛒', text: 'Shared tasks, and shopping lists' },
+    { emoji: '⚡', text: 'Smart suggestions, conflict detection' },
+    { emoji: '✨', text: 'Your family always in sync. Life a little easier.' },
   ];
   return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ textAlign: 'center' }}>
-        <OrbeMorphic size={80} />
-        <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginTop: 16, marginBottom: 8, lineHeight: 1.2 }}>
-          {t('onboarding.paywall.title')}
+    <div style={{ padding: '32px 24px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginBottom: 0, lineHeight: 1.25 }}>
+          Okay, we have everything<br />your family needs
         </h2>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0, lineHeight: 1.5 }}>
-          {t('onboarding.paywall.trialSub')}
-        </p>
       </div>
 
       {/* Feature list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {FEATURES.map(f => (
           <div key={f.text} style={{
             display: 'flex', alignItems: 'center', gap: 14,
@@ -673,13 +593,14 @@ const PaywallScreen = ({ next, back, onRestore }: { next: () => void; back: () =
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <PrimaryBtn label={t('onboarding.paywall.cta')} onClick={next} />
-        <a
-          href="/auth"
-          style={{ textAlign: 'center', fontSize: 13, color: T.faint, padding: '4px 0', textDecoration: 'none', fontFamily: SANS }}
-        >
-          {t('onboarding.paywall.alreadyHave')} <span style={{ color: T.primary, fontWeight: 500 }}>{t('onboarding.paywall.signIn')}</span>
-        </a>
+        <PrimaryBtn label="Get Started" onClick={next} />
+        <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0, lineHeight: 1.5 }}>
+          14-day free trial · Full access · Cancel anytime
+        </p>
+        <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0 }}>
+          Already have an account?{' '}
+          <a href="/auth" style={{ color: T.primary, fontWeight: 500, textDecoration: 'none' }}>Sign in.</a>
+        </p>
       </div>
     </div>
   );

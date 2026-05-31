@@ -1,7 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -11,9 +10,20 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
   ].filter(Boolean),
+  // Auto-discovery deadlocks on this project's dep graph.
+  // noDiscovery skips the scan; only packages listed in include are pre-bundled.
+  optimizeDeps: {
+    noDiscovery: true,
+    include: [
+      // React (CJS — must be pre-bundled for ESM interop)
+      'react',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'react-dom',
+      'react-dom/client',
+    ],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

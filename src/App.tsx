@@ -71,8 +71,8 @@ const App = () => (
               <Route path="/auth/reset-password" element={<ErrorBoundary><ResetPassword /></ErrorBoundary>} />
               <Route path="/onboarding" element={<ErrorBoundary><Onboarding /></ErrorBoundary>} />
               
-              {/* Logo splash after login/onboarding */}
-              <Route path="/splash" element={<ProtectedRoute><Splash /></ProtectedRoute>} />
+              {/* Welcome splash — shown to new users before onboarding */}
+              <Route path="/splash" element={<Splash />} />
 
               {/* Other Pages - Default theme */}
               <Route path="/accept-invite" element={<AcceptInvite />} />

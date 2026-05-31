@@ -1,41 +1,169 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+
+const BG    = "#F7F3ED";
+const INK   = "#1C1C18";
+const MUTED = "#7A6660";
+const TC    = "#964735";
+const SANS  = "'DM Sans', system-ui, sans-serif";
 
 const Splash = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => navigate("/app", { replace: true }), 2000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    const t = setTimeout(() => setVisible(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleStart = () => {
+    navigate(user ? "/app" : "/onboarding", { replace: true });
+  };
 
   return (
     <div
-      className="animate-splash-exit fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: "#F7F3ED" }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        background: BG, overflow: "hidden",
+        fontFamily: SANS,
+        padding: "40px 28px",
+      }}
     >
-      {/* Soft ambient glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #DAC1BB, transparent 70%)" }} />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-15"
-          style={{ background: "radial-gradient(circle, #D97B66, transparent 70%)" }} />
+      {/* ── Orbe motion graphic ── */}
+      <div
+        style={{
+          position: "relative",
+          width: 280, height: 280,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "scale(1)" : "scale(0.82)",
+          transition: "opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <div style={{
+          position: "absolute", inset: 0, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(218,193,187,0.18) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }} />
+        <div className="orbe-halo-outer" style={{
+          position: "absolute", width: "90%", height: "90%", borderRadius: "50%",
+          border: "0.5px solid rgba(218,193,187,0.35)",
+          boxShadow: "0 0 56px rgba(218,193,187,0.22), 0 0 100px rgba(218,193,187,0.08)",
+        }} />
+        <div className="orbe-halo-mid" style={{
+          position: "absolute", width: "72%", height: "72%", borderRadius: "50%",
+          border: "1px solid rgba(150,71,53,0.22)",
+          boxShadow: "0 0 28px rgba(150,71,53,0.10), inset 0 0 20px rgba(253,249,243,0.08)",
+          backdropFilter: "blur(1px)",
+        }} />
+        <div className="orbe-halo-inner" style={{
+          position: "absolute", width: "56%", height: "56%", borderRadius: "50%",
+          border: "1.5px solid rgba(150,71,53,0.30)",
+          boxShadow: "0 0 36px rgba(150,71,53,0.14), 0 0 72px rgba(218,193,187,0.16)",
+          backdropFilter: "blur(2px)",
+        }} />
+        <div className="orbe-circle-left" style={{
+          position: "absolute", width: "40%", height: "40%", borderRadius: "50%",
+          background: "radial-gradient(circle at 38% 38%, #ECA07A, #964735)",
+          opacity: 0.86,
+          boxShadow: "0 10px 52px rgba(150,71,53,0.32)",
+        }} />
+        <div className="orbe-circle-right" style={{
+          position: "absolute", width: "40%", height: "40%", borderRadius: "50%",
+          background: "radial-gradient(circle at 62% 38%, #6B9A79, #44664F)",
+          opacity: 0.82,
+          boxShadow: "0 10px 52px rgba(68,102,79,0.26)",
+        }} />
       </div>
 
-      <img
-        src="/logo.png"
-        alt="Eazy.Family"
-        className="w-32 h-32 object-contain animate-logo-pop relative z-10"
-        style={{ filter: "drop-shadow(0 4px 24px rgb(150 71 53 / 0.25))" }}
-      />
-      <p className="mt-5 font-serif text-2xl font-light tracking-tight animate-splash-text relative z-10"
-        style={{ color: "#1C1C18" }}>
-        eazy<span style={{ color: "#964735" }}>.</span>family
-      </p>
-      <p className="mt-1 text-sm animate-splash-text relative z-10"
-        style={{ color: "#7A6660" }}>
-        Your daily family app
-      </p>
+      {/* ── Text ── */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: 40,
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(14px)",
+          transition: "opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s",
+        }}
+      >
+        <p style={{
+          fontFamily: SANS,
+          fontSize: 13,
+          letterSpacing: "0.05em",
+          color: MUTED,
+          margin: "0 0 6px",
+          textTransform: "uppercase",
+        }}>
+          Welcome to
+        </p>
+
+        <h1 style={{
+          fontFamily: "'Lora', 'Georgia', serif",
+          fontSize: 40,
+          fontWeight: 400,
+          color: INK,
+          margin: "0 0 14px",
+          lineHeight: 1.1,
+          letterSpacing: "-0.01em",
+        }}>
+          eazy<span style={{ color: TC }}>.</span>family
+        </h1>
+
+        <p style={{
+          fontFamily: SANS,
+          fontSize: 16,
+          color: INK,
+          margin: "0 0 10px",
+          fontWeight: 500,
+          lineHeight: 1.4,
+        }}>
+          The smart app for day-to-day family life
+        </p>
+
+        <p style={{
+          fontFamily: SANS,
+          fontSize: 14,
+          color: MUTED,
+          lineHeight: 1.65,
+          maxWidth: 260,
+          margin: "0 auto 36px",
+        }}>
+          Answer a few questions to<br />customize your experience
+        </p>
+
+        {/* ── CTA ── */}
+        <button
+          onClick={handleStart}
+          style={{
+            padding: "15px 40px",
+            borderRadius: 9999,
+            border: "none",
+            background: TC,
+            color: "#fff",
+            fontFamily: SANS,
+            fontSize: 16,
+            fontWeight: 500,
+            cursor: "pointer",
+            letterSpacing: "0.01em",
+            boxShadow: "0 4px 20px rgba(150,71,53,0.30)",
+            transition: "transform 0.1s ease, box-shadow 0.1s ease",
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.02)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 24px rgba(150,71,53,0.36)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 20px rgba(150,71,53,0.30)";
+          }}
+        >
+          Let's get started
+        </button>
+      </div>
     </div>
   );
 };
