@@ -29,7 +29,7 @@ const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
 // 0:language 2:pain-setup 3:family 4:pain-point 5:voice 8:features 9:account 10:location
-const SCREEN_ORDER = [2, 3, 4, 5, 8, 9];
+const SCREEN_ORDER = [2, 3, 4, 5, 8, 9]; // screens that show progress bar
 const progressFor = (screen: number) => {
   const idx = SCREEN_ORDER.indexOf(screen);
   return idx >= 0 ? (idx + 1) / SCREEN_ORDER.length : null;
@@ -40,12 +40,12 @@ interface OBState {
   language: string;
   currentApproach: string[];
   familySize: string;
-  mainPainPoint: string;
+  mainPainPoint: string[];
   voiceFrequency: string;
   location: string;
 }
 
-const EMPTY: OBState = { language: '', currentApproach: [], familySize: '', mainPainPoint: '', voiceFrequency: '', location: '' };
+const EMPTY: OBState = { language: '', currentApproach: [], familySize: '', mainPainPoint: [], voiceFrequency: '', location: '' };
 
 const STORAGE_KEY = 'eazy-onboarding-v2';
 
@@ -177,7 +177,8 @@ const Onboarding = () => {
 
   const next = useCallback(() => go(screen + 1, 'fwd'), [screen, go]);
   const back = useCallback(() => {
-    if (screen === 2) go(0, 'back');
+    if (screen === 2) go(1, 'back');
+    else if (screen === 1) go(0, 'back');
     else if (screen === 8) go(5, 'back');
     else go(screen - 1, 'back');
   }, [screen, go]);
@@ -209,7 +210,7 @@ const Onboarding = () => {
   const showBack = screen >= 2;
 
   // ── Slide animation style ──────────────────────────────────────────────────
-  const slideAnim = screen === 0 || screen === 5 || screen === 9
+  const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9
     ? 'ob-fade'
     : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
 
@@ -359,7 +360,8 @@ const Onboarding = () => {
           animation: `${slideAnim} 0.32s ease-out both`,
         }}
       >
-        {screen === 0 && <LanguageScreen state={state} set={set} next={() => go(2, 'fwd')} />}
+        {screen === 0 && <WelcomeScreen next={() => go(1, 'fwd')} />}
+        {screen === 1 && <LanguageScreen state={state} set={set} next={() => go(2, 'fwd')} />}
         {screen === 2 && <PainSetupScreen state={state} set={set} next={next} />}
         {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
         {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
@@ -387,7 +389,40 @@ const Onboarding = () => {
   );
 };
 
-// ── SCREEN 0 — Language ───────────────────────────────────────────────────────
+// ── SCREEN 0 — Welcome ───────────────────────────────────────────────────────
+const WelcomeScreen = ({ next }: { next: () => void }) => (
+  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
+    <div style={{ animation: 'ob-scale-in 0.7s cubic-bezier(0.16,1,0.3,1) both' }}>
+      <OrbeMorphic size={200} />
+    </div>
+    <div style={{ marginTop: 36, animation: 'ob-fade 0.6s ease 0.3s both' }}>
+      <p style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, margin: '0 0 8px' }}>Welcome to</p>
+      <h1 style={{ fontFamily: LORA, fontSize: 40, fontWeight: 400, color: T.ink, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.01em' }}>
+        eazy<span style={{ color: T.primary }}>.</span>family
+      </h1>
+      <p style={{ fontSize: 16, color: T.ink, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.4 }}>
+        The smart app for day-to-day family life
+      </p>
+      <p style={{ fontSize: 14, color: T.faint, margin: '0 0 40px', lineHeight: 1.6, maxWidth: 280 }}>
+        Answer a few questions to customize your experience
+      </p>
+      <button
+        onClick={next}
+        style={{
+          padding: '15px 40px', borderRadius: 9999, border: 'none',
+          background: T.primary, color: '#fff', fontFamily: SANS,
+          fontSize: 16, fontWeight: 500, cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(150,71,53,0.30)',
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        Let's get started
+      </button>
+    </div>
+  </div>
+);
+
+// ── SCREEN 1 — Language ───────────────────────────────────────────────────────
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English', flag: '🇬🇧' },
   { code: 'de', label: 'German', native: 'Deutsch', flag: '🇩🇪' },
@@ -509,18 +544,25 @@ const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next:
     { value: 'overview', label: t('onboarding.painPoint.overviewLabel'), sub: t('onboarding.painPoint.overviewSub'), emoji: '🌅' },
     { value: 'unsure', label: t('onboarding.painPoint.unsureLabel'), sub: t('onboarding.painPoint.unsureSub'), emoji: '🤔' },
   ];
-  const select = (v: string) => { set('mainPainPoint', v); setTimeout(next, 320); };
+  const selected: string[] = state.mainPainPoint || [];
+  const toggle = (v: string) => {
+    const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
+    set('mainPainPoint', next);
+  };
   return (
-    <div style={{ padding: '28px 24px 40px' }}>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        {t('onboarding.painPoint.title')}
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>{t('onboarding.painPoint.sub')}</p>
+    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
+          {t('onboarding.painPoint.title')}
+        </h2>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.painPoint.sub')}</p>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {PAIN_POINTS.map(p => (
-          <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={state.mainPainPoint === p.value} onClick={() => select(p.value)} />
+          <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={selected.includes(p.value)} onClick={() => toggle(p.value)} multiSelect />
         ))}
       </div>
+      <PrimaryBtn label="Continue" onClick={next} disabled={selected.length === 0} />
     </div>
   );
 };
