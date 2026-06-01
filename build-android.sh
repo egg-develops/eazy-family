@@ -6,7 +6,7 @@ GRADLE_FILE="/Users/hq/eazy-family/android/app/build.gradle"
 # Extract versionCode — match only lines that END with a plain integer
 # (avoids corrupting expressions like Integer.parseInt(...) on the same line)
 CURRENT=$(grep -E 'versionCode [0-9]+$' "$GRADLE_FILE" | grep -oE '[0-9]+$')
-NEXT=$((CURRENT + 1))
+NEXT=$((CURRENT + 10))
 
 # Replace only "versionCode <digits>" at end of line — safe anchor
 sed -i '' -E "s/(versionCode )[0-9]+$/\1$NEXT/" "$GRADLE_FILE"
