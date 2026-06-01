@@ -84,11 +84,21 @@ export interface RCPackage {
   };
 }
 
+const timeout = <T>(ms: number): Promise<T> =>
+  new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`RC timeout after ${ms}ms`)), ms)
+  );
+
 export async function getRCOfferings(): Promise<RCPackage[]> {
   if (!isNative) return [];
   try {
     const Purchases = await getRC();
-    const { current } = await Purchases.getOfferings();
+    // Race against a 10s timeout — Purchases.getOfferings() can hang indefinitely
+    // on certain OS versions (observed on iPadOS 26) if the SDK is not fully ready.
+    const { current } = await Promise.race([
+      Purchases.getOfferings(),
+      timeout<Awaited<ReturnType<typeof Purchases.getOfferings>>>(10_000),
+    ]);
     if (!current) return [];
     return current.availablePackages.map(p => ({
       identifier: p.identifier,
@@ -102,7 +112,9 @@ export async function getRCOfferings(): Promise<RCPackage[]> {
         productIdentifier: p.product.identifier,
       },
     }));
-  } catch {
+  } catch (err) {
+    // Log exact error so it appears in Xcode console for next test run
+    console.error('[RevenueCat] getRCOfferings failed:', err);
     return [];
   }
 }

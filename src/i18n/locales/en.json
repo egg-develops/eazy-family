@@ -848,7 +848,8 @@
     "billedAnnually": "Billed annually",
     "billedMonthly": "Billed monthly",
     "perMonth": "/month",
-    "retryLoad": "Tap to retry"
+    "retryLoad": "Tap to retry",
+    "offeringsErrorHint": "Unable to load plans. Check your connection and try again."
   },
   "family": {
     "title": "Family Profile",

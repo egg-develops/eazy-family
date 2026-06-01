@@ -845,7 +845,8 @@
     "billedAnnually": "Jährliche Abrechnung",
     "billedMonthly": "Monatliche Abrechnung",
     "perMonth": "/Monat",
-    "retryLoad": "Zum Wiederholen tippen"
+    "retryLoad": "Zum Wiederholen tippen",
+    "offeringsErrorHint": "Pläne konnten nicht geladen werden. Verbindung prüfen und erneut versuchen."
   },
   "family": {
     "title": "Familienprofil",

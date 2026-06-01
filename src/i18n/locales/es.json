@@ -847,7 +847,8 @@
     "billedAnnually": "Facturado anualmente",
     "billedMonthly": "Facturado mensualmente",
     "perMonth": "/mes",
-    "retryLoad": "Toca para reintentar"
+    "retryLoad": "Toca para reintentar",
+    "offeringsErrorHint": "No se pueden cargar los planes. Comprueba tu conexión e inténtalo de nuevo."
   },
   "family": {
     "title": "Perfil familiar",

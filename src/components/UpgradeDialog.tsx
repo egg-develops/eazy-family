@@ -219,6 +219,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 {nativeCtaLabel()}
               </button>
 
+              {offeringsError && !isLoadingOfferings && (
+                <p className="text-center text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {t('upgrade.offeringsErrorHint')}
+                </p>
+              )}
+
               <button
                 onClick={handleRestore}
                 disabled={isLoading}

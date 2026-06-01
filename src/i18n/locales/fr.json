@@ -845,7 +845,8 @@
     "billedAnnually": "Facturé annuellement",
     "billedMonthly": "Facturé mensuellement",
     "perMonth": "/mois",
-    "retryLoad": "Appuyer pour réessayer"
+    "retryLoad": "Appuyer pour réessayer",
+    "offeringsErrorHint": "Impossible de charger les offres. Vérifiez votre connexion et réessayez."
   },
   "family": {
     "title": "Profil familial",
