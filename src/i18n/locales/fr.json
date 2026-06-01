@@ -830,7 +830,22 @@
     "restoreFailed": "Restauration échouée",
     "authRequired": "Authentification requise",
     "signInToUpgrade": "Veuillez vous connecter pour passer à la version supérieure.",
-    "failedCheckout": "Impossible de démarrer le paiement. Veuillez réessayer."
+    "failedCheckout": "Impossible de démarrer le paiement. Veuillez réessayer.",
+    "opening": "Ouverture…",
+    "processing": "Traitement…",
+    "upgradeToPremium": "Passer à Premium",
+    "restorePurchases": "Restaurer les achats",
+    "maybeLater": "Peut-être plus tard",
+    "trialEndsSoon": "Passez à la version supérieure avant la fin de votre essai. Annulez à tout moment.",
+    "trialSub14": "Essai gratuit de 14 jours",
+    "noChargeToday": "Aucun frais aujourd'hui. Annulez à tout moment.",
+    "loadingOfferings": "Chargement des offres…",
+    "annual": "Annuel",
+    "monthly": "Mensuel",
+    "billedAnnually": "Facturé annuellement",
+    "billedMonthly": "Facturé mensuellement",
+    "perMonth": "/mois",
+    "retryLoad": "Appuyer pour réessayer"
   },
   "family": {
     "title": "Profil familial",

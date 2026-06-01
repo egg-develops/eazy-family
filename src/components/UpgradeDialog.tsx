@@ -3,8 +3,8 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Check, Crown, RotateCcw, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Check, Crown, RotateCcw, Sparkles, Loader2, RefreshCw } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,15 +20,8 @@ const ANNUAL_PRICE = 49;
 const ANNUAL_MONTHLY = (ANNUAL_PRICE / 12).toFixed(2);
 const ANNUAL_SAVINGS = MONTHLY_PRICE * 12 - ANNUAL_PRICE;
 
-const features = [
-  "Unlimited family members",
-  "Unlimited calendars — sync your Google, Apple, and Outlook",
-  "Unlimited private and shared lists for Shopping and Tasks",
-  "Full voice AI — EZ Button, your family's own assistant",
-  "Full intelligence layer — conflict detection, shopping frequency, task escalation",
-  "Rituals & Journal — your private space for reflection",
-  "Morning Digest — daily & email",
-];
+// Safety timeout — if the native purchase sheet never resolves, unblock the UI
+const PURCHASE_TIMEOUT_MS = 60_000;
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
@@ -40,75 +33,97 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
+  const [isLoadingOfferings, setIsLoadingOfferings] = useState(false);
+  const [offeringsError, setOfferingsError] = useState(false);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (open && isNative) {
-      getRCOfferings().then(pkgs => setRcPackages(pkgs));
+  const fetchOfferings = useCallback(async () => {
+    if (!isNative) return;
+    setIsLoadingOfferings(true);
+    setOfferingsError(false);
+    try {
+      const pkgs = await getRCOfferings();
+      if (!pkgs || pkgs.length === 0) throw new Error('No offerings returned');
+      setRcPackages(pkgs);
+    } catch (err) {
+      logError('getRCOfferings failed:', err);
+      setOfferingsError(true);
+      setRcPackages([]);
+    } finally {
+      setIsLoadingOfferings(false);
     }
-  }, [open]);
+  }, []);
+
+  useEffect(() => {
+    if (open) fetchOfferings();
+  }, [open, fetchOfferings]);
 
   // Already paid (not a trial) — nothing to upgrade
   if (isPremium && !isTrial) return <>{children}</>;
 
-  const annualPkg = rcPackages.find(p =>
-    p.packageType === 'ANNUAL' || p.identifier.toLowerCase().includes('annual') || p.identifier === 'yearly'
-  );
-  const monthlyPkg = rcPackages.find(p =>
-    p.packageType === 'MONTHLY' || p.identifier.toLowerCase().includes('monthly')
-  );
-
-  // Collect all App Store product IDs to pass to SubscriptionStoreView
   const allProductIds = rcPackages
     .map(p => p.product.productIdentifier)
     .filter(Boolean);
 
   const handleNativeUpgrade = async () => {
-    if (allProductIds.length === 0) {
-      toast({ title: t('upgrade.notAvailable'), description: t('upgrade.couldNotLoadOfferings'), variant: "destructive" });
+    if (isLoadingOfferings) return;
+
+    if (offeringsError || allProductIds.length === 0) {
+      // Retry fetch instead of dead-ending with an error
+      await fetchOfferings();
       return;
     }
+
     setIsLoading(true);
+
+    // Safety net — never leave the user stuck in a loading state
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+      toast({ title: t('common.error'), description: t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
+    }, PURCHASE_TIMEOUT_MS);
+
     try {
-      // Present Apple's native SubscriptionStoreView — handles purchase + all disclosures
       await presentSubscriptionStore(allProductIds);
-      // Sheet dismissed — check if entitlement is now active
-      await refreshSubscription();
+      // refreshSubscription guarded separately so a hang here doesn't block the UI
+      try { await refreshSubscription(); } catch { /* non-fatal */ }
       setOpen(false);
     } catch (err: unknown) {
-      logError("SubscriptionStore error:", err);
-      toast({ title: t('upgrade.purchaseFailed'), description: t('upgrade.purchaseFailedDesc'), variant: "destructive" });
+      logError('SubscriptionStore error:', err);
+      toast({ title: t('upgrade.purchaseFailed'), description: t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
     } finally {
+      clearTimeout(safetyTimer);
       setIsLoading(false);
     }
   };
 
   const handleRestore = async () => {
     setIsLoading(true);
+    const safetyTimer = setTimeout(() => setIsLoading(false), PURCHASE_TIMEOUT_MS);
     try {
       const granted = await restoreRCPurchases();
       if (granted) {
-        await refreshSubscription();
+        try { await refreshSubscription(); } catch { /* non-fatal */ }
         setOpen(false);
         toast({ title: t('upgrade.purchasesRestored'), description: t('upgrade.subscriptionActive') });
       } else {
         toast({ title: t('upgrade.nothingToRestore'), description: t('upgrade.noActiveSubscription') });
       }
     } catch {
-      toast({ title: t('upgrade.restoreFailed'), description: t('upgrade.purchaseFailedDesc'), variant: "destructive" });
+      toast({ title: t('upgrade.restoreFailed'), description: t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
     } finally {
+      clearTimeout(safetyTimer);
       setIsLoading(false);
     }
   };
 
   const handleWebUpgrade = async () => {
-    if (isNative) return; // iOS must never reach Stripe
+    if (isNative) return;
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: t('upgrade.authRequired'), description: t('upgrade.signInToUpgrade'), variant: "destructive" });
+        toast({ title: t('upgrade.authRequired'), description: t('upgrade.signInToUpgrade'), variant: 'destructive' });
         return;
       }
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -118,11 +133,19 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (error) {
-      logError("Error creating checkout:", error);
-      toast({ title: t('common.error'), description: t('upgrade.failedCheckout'), variant: "destructive" });
+      logError('Error creating checkout:', error);
+      toast({ title: t('common.error'), description: t('upgrade.failedCheckout'), variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Label for the native CTA button
+  const nativeCtaLabel = () => {
+    if (isLoading) return t('upgrade.opening');
+    if (isLoadingOfferings) return t('upgrade.loadingOfferings');
+    if (offeringsError || allProductIds.length === 0) return t('upgrade.retryLoad');
+    return t('upgrade.upgradeToPremium');
   };
 
   return (
@@ -142,19 +165,15 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 <Sparkles className="h-3.5 w-3.5" />
                 {t('upgrade.keepFullAccess')}
               </div>
-              <p className="text-white/75 text-xs mt-2">
-                Upgrade before your trial ends.<br />Cancel anytime.
-              </p>
+              <p className="text-white/75 text-xs mt-2">{t('upgrade.trialEndsSoon')}</p>
             </>
           ) : (
             <>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
                 <Sparkles className="h-3.5 w-3.5" />
-                14-day free trial
+                {t('upgrade.trialSub14')}
               </div>
-              <p className="text-white/75 text-xs mt-2">
-                No charge today.<br />Cancel anytime.
-              </p>
+              <p className="text-white/75 text-xs mt-2">{t('upgrade.noChargeToday')}</p>
             </>
           )}
         </div>
@@ -163,7 +182,13 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
           {/* Features */}
           <div className="space-y-2">
-            {features.map(f => (
+            {[
+              t('onboarding.paywall.voiceFeature'),
+              t('onboarding.paywall.familyFeature'),
+              t('onboarding.paywall.conflictsFeature'),
+              t('onboarding.paywall.listsFeature'),
+              t('onboarding.paywall.digestFeature'),
+            ].map(f => (
               <div key={f} className="flex items-start gap-2.5 text-sm">
                 <Check className="h-4 w-4 mt-0.5 shrink-0" style={{ color: '#964735' }} />
                 <span style={{ color: 'hsl(var(--foreground))' }}>{f}</span>
@@ -171,18 +196,24 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             ))}
           </div>
 
-          {/* iOS: single CTA — Apple's SubscriptionStoreView handles pricing, trial info, T&C */}
+          {/* iOS native CTA */}
           {isNative ? (
             <>
               <button
                 onClick={handleNativeUpgrade}
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
-                <Crown className="h-4 w-4" />
-                {isLoading ? "Opening…" : "Upgrade to Premium"}
+                {isLoading || isLoadingOfferings
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : (offeringsError || allProductIds.length === 0)
+                    ? <RefreshCw className="h-4 w-4" />
+                    : <Crown className="h-4 w-4" />
+                }
+                {nativeCtaLabel()}
               </button>
+
               <button
                 onClick={handleRestore}
                 disabled={isLoading}
@@ -190,14 +221,13 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 style={{ color: 'hsl(var(--muted-foreground))' }}
               >
                 <RotateCcw className="h-3 w-3" />
-                Restore Purchases
+                {t('upgrade.restorePurchases')}
               </button>
             </>
           ) : (
-            /* Web: Stripe — show pricing cards + CTA (web only, never shown on iOS) */
+            /* Web: Stripe pricing */
             <>
               <div className="grid grid-cols-2 gap-2.5 items-stretch">
-                {/* Annual */}
                 <button
                   onClick={() => setBillingCycle('annual')}
                   className="rounded-2xl p-4 text-left flex flex-col transition-all"
@@ -209,12 +239,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                   <span className="self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mb-2" style={{ background: '#964735' }}>
                     SAVE CHF {ANNUAL_SAVINGS}
                   </span>
-                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Annual</p>
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.annual')}</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Billed annually · CHF {ANNUAL_PRICE}/yr</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')} · CHF {ANNUAL_PRICE}/yr</p>
                 </button>
-                {/* Monthly */}
                 <button
                   onClick={() => setBillingCycle('monthly')}
                   className="rounded-2xl p-4 text-left flex flex-col transition-all"
@@ -223,22 +252,21 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                     background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
                   }}
                 >
-                  {/* Invisible spacer matches Annual badge row so card heights align */}
                   <span className="text-[9px] mb-2 select-none" style={{ opacity: 0 }}>SAVE</span>
-                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>Monthly</p>
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.monthly')}</p>
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {MONTHLY_PRICE}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>/month</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Billed monthly</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedMonthly')}</p>
                 </button>
               </div>
               <button
                 onClick={handleWebUpgrade}
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
-                <Crown className="h-4 w-4" />
-                {isLoading ? "Processing…" : "Upgrade to Premium"}
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                {isLoading ? t('upgrade.processing') : t('upgrade.upgradeToPremium')}
               </button>
             </>
           )}
@@ -248,7 +276,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             className="w-full py-1 text-sm"
             style={{ color: 'hsl(var(--muted-foreground))' }}
           >
-            Maybe Later
+            {t('upgrade.maybeLater')}
           </button>
 
         </div>

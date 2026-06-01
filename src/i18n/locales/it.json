@@ -830,7 +830,22 @@
     "restoreFailed": "Ripristino non riuscito",
     "authRequired": "Autenticazione richiesta",
     "signInToUpgrade": "Accedi per eseguire l'upgrade.",
-    "failedCheckout": "Impossibile avviare il checkout. Riprova."
+    "failedCheckout": "Impossibile avviare il checkout. Riprova.",
+    "opening": "Apertura…",
+    "processing": "Elaborazione…",
+    "upgradeToPremium": "Passa a Premium",
+    "restorePurchases": "Ripristina acquisti",
+    "maybeLater": "Forse più tardi",
+    "trialEndsSoon": "Fai l'upgrade prima che scada la prova. Disdici quando vuoi.",
+    "trialSub14": "Prova gratuita di 14 giorni",
+    "noChargeToday": "Nessun addebito oggi. Disdici quando vuoi.",
+    "loadingOfferings": "Caricamento piani…",
+    "annual": "Annuale",
+    "monthly": "Mensile",
+    "billedAnnually": "Fatturato annualmente",
+    "billedMonthly": "Fatturato mensilmente",
+    "perMonth": "/mese",
+    "retryLoad": "Tocca per riprovare"
   },
   "family": {
     "title": "Profilo famiglia",

@@ -830,7 +830,22 @@
     "restoreFailed": "Wiederherstellung fehlgeschlagen",
     "authRequired": "Authentifizierung erforderlich",
     "signInToUpgrade": "Bitte melden Sie sich an, um ein Upgrade durchzuführen.",
-    "failedCheckout": "Kasse konnte nicht gestartet werden. Bitte erneut versuchen."
+    "failedCheckout": "Kasse konnte nicht gestartet werden. Bitte erneut versuchen.",
+    "opening": "Öffnen…",
+    "processing": "Verarbeitung…",
+    "upgradeToPremium": "Auf Premium upgraden",
+    "restorePurchases": "Käufe wiederherstellen",
+    "maybeLater": "Vielleicht später",
+    "trialEndsSoon": "Upgraden Sie vor Ablauf Ihrer Testversion. Jederzeit kündbar.",
+    "trialSub14": "14-tägige kostenlose Testversion",
+    "noChargeToday": "Heute keine Gebühr. Jederzeit kündbar.",
+    "loadingOfferings": "Pläne werden geladen…",
+    "annual": "Jährlich",
+    "monthly": "Monatlich",
+    "billedAnnually": "Jährliche Abrechnung",
+    "billedMonthly": "Monatliche Abrechnung",
+    "perMonth": "/Monat",
+    "retryLoad": "Zum Wiederholen tippen"
   },
   "family": {
     "title": "Familienprofil",

@@ -832,7 +832,22 @@
     "restoreFailed": "Error al restaurar",
     "authRequired": "Autenticación requerida",
     "signInToUpgrade": "Inicia sesión para actualizar.",
-    "failedCheckout": "No se pudo iniciar el pago. Inténtalo de nuevo."
+    "failedCheckout": "No se pudo iniciar el pago. Inténtalo de nuevo.",
+    "opening": "Abriendo…",
+    "processing": "Procesando…",
+    "upgradeToPremium": "Actualizar a Premium",
+    "restorePurchases": "Restaurar compras",
+    "maybeLater": "Quizás más tarde",
+    "trialEndsSoon": "Actualiza antes de que termine tu prueba. Cancela cuando quieras.",
+    "trialSub14": "Prueba gratuita de 14 días",
+    "noChargeToday": "Sin cargo hoy. Cancela cuando quieras.",
+    "loadingOfferings": "Cargando planes…",
+    "annual": "Anual",
+    "monthly": "Mensual",
+    "billedAnnually": "Facturado anualmente",
+    "billedMonthly": "Facturado mensualmente",
+    "perMonth": "/mes",
+    "retryLoad": "Toca para reintentar"
   },
   "family": {
     "title": "Perfil familiar",

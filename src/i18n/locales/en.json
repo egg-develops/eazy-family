@@ -833,7 +833,22 @@
     "restoreFailed": "Restore failed",
     "authRequired": "Authentication Required",
     "signInToUpgrade": "Please sign in to upgrade.",
-    "failedCheckout": "Failed to start checkout. Please try again."
+    "failedCheckout": "Failed to start checkout. Please try again.",
+    "opening": "Opening…",
+    "processing": "Processing…",
+    "upgradeToPremium": "Upgrade to Premium",
+    "restorePurchases": "Restore Purchases",
+    "maybeLater": "Maybe Later",
+    "trialEndsSoon": "Upgrade before your trial ends. Cancel anytime.",
+    "trialSub14": "14-day free trial",
+    "noChargeToday": "No charge today. Cancel anytime.",
+    "loadingOfferings": "Loading plans…",
+    "annual": "Annual",
+    "monthly": "Monthly",
+    "billedAnnually": "Billed annually",
+    "billedMonthly": "Billed monthly",
+    "perMonth": "/month",
+    "retryLoad": "Tap to retry"
   },
   "family": {
     "title": "Family Profile",
