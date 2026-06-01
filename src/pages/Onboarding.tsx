@@ -649,6 +649,33 @@ const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () 
   );
 };
 
+// ── Screen 9 helpers ──────────────────────────────────────────────────────────
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: object) => void;
+          renderButton: (el: HTMLElement, cfg: object) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
+const loadGIS = (): Promise<void> =>
+  new Promise((resolve) => {
+    if (window.google?.accounts?.id) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    document.head.appendChild(s);
+  });
+
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
@@ -660,6 +687,8 @@ const AccountScreen = ({
   loading: boolean; error: string; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
 }) => {
   const oauthBrowserOpen = useRef(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const [googleAuthError, setGoogleAuthError] = useState('');
 
   // Close SFSafariViewController when OAuth completes on native
   useEffect(() => {
@@ -672,6 +701,41 @@ const AccountScreen = ({
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Mount Google Identity Services invisible overlay button (web only).
+  // GIS opens its own popup tied to eazy.family — Google shows "eazy.family"
+  // instead of "jfztyhuagxruhawchfem.supabase.co" in the account picker.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    loadGIS().then(() => {
+      if (!googleBtnRef.current || !window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: { credential: string }) => {
+          const { error: signInError } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+          });
+          if (signInError) setGoogleAuthError('Google sign-in failed. Please try again.');
+        },
+        ux_mode: 'popup',
+        auto_select: false,
+      });
+      // Render Google's own button into the overlay div (invisible, captures clicks).
+      // Our styled button sits underneath — user sees our design, click goes to GIS.
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        width: googleBtnRef.current.offsetWidth || 340,
+        logo_alignment: 'left',
+      });
+    });
+  }, []);
+
   const inputStyle: React.CSSProperties = {
     width: '100%', height: 52, padding: '0 16px',
     borderRadius: 14, border: `1.5px solid ${T.outline}`,
@@ -750,27 +814,45 @@ const AccountScreen = ({
         </button>
 
         {/* Google sign in */}
-        <button
-          onClick={async () => {
-            if (Capacitor.isNativePlatform()) {
-              const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'eazy-family://app', skipBrowserRedirect: true } });
-              if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
-              if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
-            } else {
-              const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
-              if (error) setAuthError('Google sign-in unavailable. Please use email/password.');
-            }
-          }}
-          style={{
-            width: '100%', padding: '14px 24px', borderRadius: 9999,
-            background: T.card, border: `1.5px solid ${T.outline}`, color: T.ink,
-            fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: SANS,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 488 512"><path fill="#4285F4" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
-          {t('onboarding.accountScreen.withGoogle')}
-        </button>
+        {googleAuthError && (
+          <p style={{ color: '#B00020', fontSize: 13, textAlign: 'center', margin: 0 }}>{googleAuthError}</p>
+        )}
+        <div style={{ position: 'relative', width: '100%' }}>
+          {/* Visible styled button (pointer-events off — click passes to GIS overlay) */}
+          <button
+            onClick={async () => {
+              // Native: use Supabase OAuth with deep-link (unchanged)
+              if (Capacitor.isNativePlatform()) {
+                const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'eazy-family://app', skipBrowserRedirect: true } });
+                if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
+                if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
+              }
+              // Web: handled by GIS overlay div below — this branch never fires on web
+            }}
+            style={{
+              width: '100%', padding: '14px 24px', borderRadius: 9999,
+              background: T.card, border: `1.5px solid ${T.outline}`, color: T.ink,
+              fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: SANS,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              pointerEvents: Capacitor.isNativePlatform() ? 'auto' : 'none',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 488 512"><path fill="#4285F4" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
+            {t('onboarding.accountScreen.withGoogle')}
+          </button>
+          {/* Invisible GIS button overlay — web only, captures clicks, opens Google popup
+              showing "eazy.family" instead of "jfztyhuagxruhawchfem.supabase.co" */}
+          {!Capacitor.isNativePlatform() && (
+            <div
+              ref={googleBtnRef}
+              style={{
+                position: 'absolute', inset: 0,
+                opacity: 0, overflow: 'hidden',
+                cursor: 'pointer', borderRadius: 9999,
+              }}
+            />
+          )}
+        </div>
       </div>
 
       <p style={{ fontSize: 13, color: T.faint, textAlign: 'center', margin: 0 }}>
