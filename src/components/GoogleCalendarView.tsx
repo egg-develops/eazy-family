@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CalendarEvent {
   id: string;
@@ -21,6 +22,7 @@ const GoogleCalendarView: React.FC<GoogleCalendarViewProps> = ({
   onDateSelect,
   onEventClick,
 }) => {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [syncedEvents, setSyncedEvents] = useState<CalendarEvent[]>(events);
 
@@ -138,7 +140,7 @@ const GoogleCalendarView: React.FC<GoogleCalendarViewProps> = ({
                 ))}
                 {dayEvents.length > 2 && (
                   <div className="text-xs text-gray-500">
-                    +{dayEvents.length - 2} more
+                    +{dayEvents.length - 2} {t('common.more', { defaultValue: 'more' })}
                   </div>
                 )}
               </div>
@@ -149,7 +151,7 @@ const GoogleCalendarView: React.FC<GoogleCalendarViewProps> = ({
 
       {syncedEvents.length > 0 && (
         <div className="mt-6 border-t pt-4">
-          <h3 className="font-semibold mb-3">Upcoming Events</h3>
+          <h3 className="font-semibold mb-3">{t('marketplace.upcomingEvents')}</h3>
           <div className="space-y-2">
             {syncedEvents
               .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())

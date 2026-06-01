@@ -15,7 +15,7 @@ interface VoiceShoppingAssistantProps {
 
 export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Speak your items", mode = 'shopping' }: VoiceShoppingAssistantProps) => {
   const { toast } = useToast();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const speech = useSpeechRecognition();
 
@@ -41,25 +41,25 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
 
       if (!error && data?.items && data.items.length > 0) {
         onItemsAdded(data.items);
-        toast({ title: "Items added!", description: `Added ${data.items.length} item(s): ${data.items.join(', ')}` });
+        toast({ title: t('voice.itemsAdded'), description: t('voice.itemsAddedDesc', { count: data.items.length, items: data.items.join(', ') }) });
         return;
       }
 
       const items = parseItemsLocally(transcript);
       if (items.length > 0) {
         onItemsAdded(items);
-        toast({ title: "Items added!", description: `Added ${items.length} item(s): ${items.join(', ')}` });
+        toast({ title: t('voice.itemsAdded'), description: t('voice.itemsAddedDesc', { count: items.length, items: items.join(', ') }) });
       } else {
-        toast({ title: "No items detected", description: `I heard: "${transcript}". Try saying items separated by "and".`, variant: "destructive" });
+        toast({ title: t('voice.noItems'), description: `${t('voice.heard')}: "${transcript}". ${t('voice.tryAgain')}`, variant: "destructive" });
       }
     } catch (error: unknown) {
       logError('Error processing transcript:', error);
       const items = parseItemsLocally(transcript);
       if (items.length > 0) {
         onItemsAdded(items);
-        toast({ title: "Items added!", description: items.join(', ') });
+        toast({ title: t('voice.itemsAdded'), description: items.join(', ') });
       } else {
-        toast({ title: "Error processing voice", description: "Please try again.", variant: "destructive" });
+        toast({ title: t('voice.processingError'), description: t('voice.processingErrorDesc'), variant: "destructive" });
       }
     } finally {
       setIsProcessing(false);
@@ -79,16 +79,16 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
       },
       onError: (error) => {
         if (error === 'not-allowed' || error === 'permission-denied') {
-          toast({ title: "Microphone access denied", description: "Allow microphone access in Settings.", variant: "destructive" });
+          toast({ title: t('voice.micAccessDenied'), description: t('voice.allowMicAccess'), variant: "destructive" });
         } else if (error === 'not-supported') {
-          toast({ title: "Voice not available", description: "Speech recognition isn't supported here. Try typing.", variant: "destructive" });
+          toast({ title: t('voice.notAvailable'), description: t('voice.speechNotSupported'), variant: "destructive" });
         } else if (error !== 'no-speech') {
-          toast({ title: "Voice error", description: "Could not capture speech. Please try again.", variant: "destructive" });
+          toast({ title: t('voice.voiceErrorTitle'), description: t('voice.captureError'), variant: "destructive" });
         }
       },
       onEnd: () => {},
     });
-    toast({ title: "Listening...", description: listenerDescription });
+    toast({ title: t('voice.listening'), description: listenerDescription });
   };
 
   return (

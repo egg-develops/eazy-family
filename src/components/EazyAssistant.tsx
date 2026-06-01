@@ -96,7 +96,7 @@ export const EazyAssistant = () => {
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
   const { user, isPremium } = useAuth();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [aiQueryCount, setAIQueryCount] = useState(getAIQueryCount());
 
   useEffect(() => {
@@ -223,16 +223,16 @@ export const EazyAssistant = () => {
     try {
       if (confirmDialog.type === "shopping" && confirmDialog.items?.length) {
         await addShoppingItems(confirmDialog.items);
-        toast({ title: `Added ${confirmDialog.items.length} item${confirmDialog.items.length > 1 ? "s" : ""} to shopping list` });
+        toast({ title: t('assistant.itemsAdded', { count: confirmDialog.items.length }) });
       } else if (confirmDialog.type === "task" && confirmDialog.task) {
         await addTaskItem(confirmDialog.task, confirmDialog.dueDate || null);
-        toast({ title: confirmDialog.dueDate ? `Task added for ${confirmDialog.dueDate}` : "Task added" });
+        toast({ title: confirmDialog.dueDate ? t('assistant.taskAddedFor', { date: confirmDialog.dueDate }) : t('assistant.taskAdded') });
       } else if (confirmDialog.type === "calendar" && confirmDialog.title && confirmDialog.date) {
         addCalendarEventLocal(confirmDialog.title, confirmDialog.date, confirmDialog.time || null);
-        toast({ title: `Event added: ${confirmDialog.title}` });
+        toast({ title: t('assistant.eventAdded', { title: confirmDialog.title }) });
       }
     } catch {
-      toast({ title: "Could not save. Please try again.", variant: "destructive" });
+      toast({ title: t('assistant.couldNotSave'), variant: "destructive" });
     } finally {
       setIsApproving(false);
     }
@@ -268,7 +268,7 @@ export const EazyAssistant = () => {
   const startListening = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      toast({ title: "Not supported", description: "Voice input is not supported in this browser.", variant: "destructive" });
+      toast({ title: t('assistant.voiceNotSupported'), description: t('assistant.voiceInputNotSupported'), variant: "destructive" });
       return;
     }
     const recognition = new SR();
@@ -481,9 +481,9 @@ export const EazyAssistant = () => {
       if (!response.ok || !response.body) {
         const localReply = getLocalResponse(userMessage, isShoppingAdd);
         if (localReply) { setMessages(prev => [...prev, { role: "assistant", content: localReply }]); return; }
-        if (response.status === 429) toast({ title: "Rate limit exceeded", description: "Please try again in a moment.", variant: "destructive" });
-        else if (response.status === 401) toast({ title: "Authentication error", description: "Please sign in and try again.", variant: "destructive" });
-        else toast({ title: "Assistant unavailable", description: "The AI assistant is temporarily unavailable.", variant: "destructive" });
+        if (response.status === 429) toast({ title: t('assistant.rateLimitExceeded'), description: t('assistant.rateLimitRetry'), variant: "destructive" });
+        else if (response.status === 401) toast({ title: t('assistant.authError'), description: t('assistant.authErrorDesc'), variant: "destructive" });
+        else toast({ title: t('assistant.assistantUnavailable'), description: t('assistant.assistantUnavailableDesc'), variant: "destructive" });
         return;
       }
 
@@ -529,7 +529,7 @@ export const EazyAssistant = () => {
       logError("Chat error:", error);
       const localReply = getLocalResponse(userMessage, isShoppingAdd);
       if (localReply) setMessages(prev => [...prev, { role: "assistant", content: localReply }]);
-      else toast({ title: "Error", description: "Failed to send message. Please try again.", variant: "destructive" });
+      else toast({ title: t('common.error'), description: t('assistant.failedToSend'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -582,7 +582,7 @@ export const EazyAssistant = () => {
     return (
       <div className="border-t p-3 bg-muted/40 space-y-2">
         <p className="text-xs font-semibold text-muted-foreground">
-          {confirmDialog.unparseable && !hasData ? "Couldn't parse — review below:" : "Did you mean:"}
+          {confirmDialog.unparseable && !hasData ? t('assistant.parseError') : t('assistant.didYouMean')}
         </p>
 
         {editMode ? (
@@ -594,16 +594,16 @@ export const EazyAssistant = () => {
               className="flex-1 text-sm h-8"
               autoFocus
             />
-            <Button size="sm" className="h-8 text-xs" onClick={handleEditSubmit}>OK</Button>
+            <Button size="sm" className="h-8 text-xs" onClick={handleEditSubmit}>{t('assistant.ok')}</Button>
           </div>
         ) : (
           <div className="text-sm text-foreground">
             {confirmDialog.type === "shopping" && confirmDialog.items?.length ? (
               <span>{confirmDialog.items.map(i => `${i.name}${i.quantity ? ` (${i.quantity})` : ""} · ${i.category}`).join(", ")}</span>
             ) : confirmDialog.type === "task" && confirmDialog.task ? (
-              <span>{confirmDialog.task}{confirmDialog.dueDate ? ` · due ${confirmDialog.dueDate}` : ""}</span>
+              <span>{confirmDialog.task}{confirmDialog.dueDate ? ` · ${confirmDialog.dueDate}` : ""}</span>
             ) : confirmDialog.type === "calendar" && confirmDialog.title ? (
-              <span>{confirmDialog.title} · {confirmDialog.date}{confirmDialog.time ? ` at ${confirmDialog.time}` : ""}</span>
+              <span>{confirmDialog.title} · {confirmDialog.date}{confirmDialog.time ? ` · ${confirmDialog.time}` : ""}</span>
             ) : (
               <span className="text-muted-foreground italic">{confirmDialog.unparseable}</span>
             )}
@@ -614,14 +614,14 @@ export const EazyAssistant = () => {
           <div className="flex gap-2">
             {hasData && (
               <Button size="sm" className="h-7 text-xs gap-1" onClick={handleConfirmApprove} disabled={isApproving}>
-                <Check className="w-3 h-3" /> {isApproving ? "Saving…" : "Approve"}
+                <Check className="w-3 h-3" /> {isApproving ? t('assistant.saving') : t('assistant.approve')}
               </Button>
             )}
             <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={handleConfirmEdit}>
-              <Pencil className="w-3 h-3" /> Edit
+              <Pencil className="w-3 h-3" /> {t('common.edit')}
             </Button>
             <Button size="sm" variant="ghost" className="h-7 text-xs ml-auto" onClick={() => { setConfirmDialog(null); setEditMode(false); }}>
-              Dismiss
+              {t('assistant.dismiss')}
             </Button>
           </div>
         )}
@@ -636,13 +636,13 @@ export const EazyAssistant = () => {
         className="p-6 shadow-custom-lg cursor-pointer hover:shadow-custom-xl transition-shadow bg-primary relative overflow-hidden"
         onClick={() => setIsOpen(true)}
         role="button"
-        aria-label="Open Eazy Assistant"
+        aria-label={t('assistant.openAssistant')}
       >
         <div className="flex items-center justify-between text-primary-foreground">
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Sparkles className="w-6 h-6 flex-shrink-0" style={{ color: "#FFC861" }} />
-              <h3 className="text-xl font-bold">Eazy Assistant</h3>
+              <h3 className="text-xl font-bold">{t('assistant.title')}</h3>
             </div>
             <div className="text-primary-foreground/90 text-sm min-h-[40px] pt-3">
               <TextLoop interval={3}>
@@ -663,7 +663,7 @@ export const EazyAssistant = () => {
       <div className="bg-primary p-4 flex items-center justify-between">
         <div className="flex items-center gap-2 text-primary-foreground">
           <Sparkles className="w-5 h-5" style={{ color: "#FFC861" }} />
-          <h3 className="font-bold">Eazy Assistant</h3>
+          <h3 className="font-bold">{t('assistant.title')}</h3>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -671,7 +671,7 @@ export const EazyAssistant = () => {
             size="icon"
             onClick={() => setIsOpen(false)}
             className="text-primary-foreground hover:bg-primary-foreground/20"
-            aria-label="Close assistant"
+            aria-label={t('assistant.closeAssistant')}
           >
             <X className="w-5 h-5" />
           </Button>
@@ -684,7 +684,7 @@ export const EazyAssistant = () => {
             <div className="text-center text-muted-foreground py-4">
               <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3" style={{ color: "#FFC861" }} />
               <p className="mb-4 text-sm">
-                {i18n.language === "de" ? "Wie kann ich helfen?" : i18n.language === "fr" ? "Comment puis-je vous aider?" : i18n.language === "it" ? "Come posso aiutarti?" : "Ask me anything"}
+                {t('assistant.placeholder')}
               </p>
               <div className="flex flex-wrap gap-2 justify-center px-2">
                 {suggestions.slice(0, 4).map((s) => (
@@ -728,7 +728,7 @@ export const EazyAssistant = () => {
             onClick={isListening ? stopListening : startListening}
             size="icon"
             variant={isListening ? "destructive" : "outline"}
-            aria-label={isListening ? "Stop listening" : "Start voice input"}
+            aria-label={isListening ? t('assistant.stopListening') : t('assistant.startVoice')}
             className="relative"
             disabled={isParsingVoice}
           >
@@ -741,7 +741,7 @@ export const EazyAssistant = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSend()}
-            placeholder={isListening ? "Listening..." : isParsingVoice ? "Parsing..." : "How can I help?"}
+            placeholder={isListening ? t('voice.listening') : isParsingVoice ? t('voice.processing') : t('assistant.placeholder')}
             disabled={isLoading || isParsingVoice}
             className="flex-1 bg-background"
           />
@@ -750,7 +750,7 @@ export const EazyAssistant = () => {
             disabled={!input.trim() || isLoading || isParsingVoice}
             size="icon"
             className="bg-primary hover:bg-primary-hover text-primary-foreground"
-            aria-label="Send message"
+            aria-label={t('assistant.sendMessage')}
           >
             <Send className="w-4 h-4" />
           </Button>

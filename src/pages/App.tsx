@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useConflictDetection } from "@/hooks/useConflictDetection";
 import { useStaleTaskDetection } from "@/hooks/useStaleTaskDetection";
+import { useWelcomeSeed } from "@/hooks/useWelcomeSeed";
 import { EZCapture } from "@/components/EZCapture";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -646,7 +647,7 @@ const HomeWeatherInline = ({
 };
 
 const AppHome = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
@@ -754,6 +755,8 @@ const AppHome = () => {
   const { conflicts } = useConflictDetection();
   const { staleTasks } = useStaleTaskDetection();
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
+  const [seedFamilyId, setSeedFamilyId] = useState<string | null>(null);
+  useWelcomeSeed(user?.id, seedFamilyId, i18n.language);
   const [sharedItems, setSharedItems] = useState<Array<{ id: string; title: string; type: string; initials: string; color: string }>>([]);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
   const [weatherHourly, setWeatherHourly] = useState<HourlySlot[]>([]);
@@ -788,7 +791,7 @@ const AppHome = () => {
     if (!user) return;
     const COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
     Promise.all([
-      supabase.from('profiles').select('home_config').eq('user_id', user.id).single(),
+      supabase.from('profiles').select('home_config, family_id').eq('user_id', user.id).single(),
       supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('tasks').select('id, title, due_date, type').not('due_date', 'is', null).eq('completed', false).in('type', ['task', 'shared']),
       supabase.from('events').select('id, title, start_date, end_date, all_day, location').order('start_date', { ascending: true }).limit(90),
@@ -801,6 +804,7 @@ const AppHome = () => {
           return merged;
         });
       }
+      if (profilesRes.data?.family_id) setSeedFamilyId(profilesRes.data.family_id);
       if (sharedRes.data) {
         setSharedItems(sharedRes.data.map((t, i) => ({
           id: t.id, title: t.title, type: 'task',

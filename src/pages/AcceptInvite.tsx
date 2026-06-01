@@ -7,12 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { error as logError } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 const AcceptInvite = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
@@ -60,8 +62,8 @@ const AcceptInvite = () => {
         setMessage('You have successfully joined the family!');
         
         toast({
-          title: "Welcome!",
-          description: "You've been added to the family",
+          title: t('invite.welcome'),
+          description: t('invite.addedToFamily'),
         });
 
         setTimeout(() => {

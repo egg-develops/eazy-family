@@ -562,7 +562,7 @@ const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next:
           <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={selected.includes(p.value)} onClick={() => toggle(p.value)} multiSelect />
         ))}
       </div>
-      <PrimaryBtn label="Continue" onClick={next} disabled={selected.length === 0} />
+      <PrimaryBtn label={t('onboarding.painSetup.cta')} onClick={next} disabled={selected.length === 0} />
     </div>
   );
 };
@@ -604,13 +604,14 @@ const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next:
 
 // ── SCREEN 8 — Features (final slide before account) ─────────────────────────
 const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => {
+  const { t } = useTranslation();
   const FEATURES = [
-    { emoji: '🎤', text: 'Private voice-powered AI assistant for every feature' },
-    { emoji: '👨‍👩‍👧', text: 'Unlimited family members' },
-    { emoji: '🗓', text: 'Unlimited synced calendars' },
-    { emoji: '🛒', text: 'Shared tasks, and shopping lists' },
-    { emoji: '⚡', text: 'Smart suggestions, conflict detection' },
-    { emoji: '✨', text: 'Your family always in sync. Life a little easier.' },
+    { emoji: '🎤', text: t('onboarding.paywall.voiceFeature') },
+    { emoji: '👨‍👩‍👧', text: t('onboarding.paywall.familyFeature') },
+    { emoji: '🗓', text: t('onboarding.paywall.conflictsFeature') },
+    { emoji: '🛒', text: t('onboarding.paywall.listsFeature') },
+    { emoji: '⚡', text: t('onboarding.paywall.digestFeature') },
+    { emoji: '✨', text: t('onboarding.paywall.syncFeature') },
   ];
   return (
     <div style={{ padding: '32px 24px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -635,13 +636,13 @@ const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () 
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <PrimaryBtn label="Get Started" onClick={next} />
+        <PrimaryBtn label={t('onboarding.paywall.cta')} onClick={next} />
         <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0, lineHeight: 1.5 }}>
-          14-day free trial · Full access · Cancel anytime
+          {t('onboarding.paywall.trialSub')}
         </p>
         <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0 }}>
-          Already have an account?{' '}
-          <a href="/auth" style={{ color: T.primary, fontWeight: 500, textDecoration: 'none' }}>Sign in.</a>
+          {t('onboarding.paywall.alreadyHave')}{' '}
+          <a href="/auth" style={{ color: T.primary, fontWeight: 500, textDecoration: 'none' }}>{t('onboarding.paywall.signIn')}</a>
         </p>
       </div>
     </div>

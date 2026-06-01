@@ -7,9 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 export const ReferralSystem = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [referralCode, setReferralCode] = useState("");
   const [referralCount, setReferralCount] = useState(0);
@@ -60,8 +62,8 @@ export const ReferralSystem = () => {
   const copyReferralCode = () => {
     navigator.clipboard.writeText(referralCode);
     toast({
-      title: "Copied!",
-      description: "Referral code copied to clipboard",
+      title: t('referral.copied'),
+      description: t('referral.copiedDesc'),
     });
   };
 
@@ -75,8 +77,8 @@ export const ReferralSystem = () => {
     } else {
       navigator.clipboard.writeText(shareText);
       toast({
-        title: "Copied!",
-        description: "Share message copied to clipboard",
+        title: t('referral.copied'),
+        description: t('referral.shareCopiedDesc'),
       });
     }
   };

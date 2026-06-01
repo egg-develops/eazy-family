@@ -31,13 +31,13 @@ import {
   deleteAppleEvent,
 } from "@/lib/appleCalendar";
 
-const TAGS: Record<string, { label: string; bg: string; border: string; dot: string }> = {
-  birthday:    { label: "Birthday",    bg: "#FFE4F0", border: "#E57C9A", dot: "#E57C9A" },
-  travel:      { label: "Travel",      bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
-  appointment: { label: "Appointment", bg: "#EEE8FF", border: "#8B7DD8", dot: "#8B7DD8" },
-  meeting:     { label: "Meeting",     bg: "#F4F4F4", border: "#666666", dot: "#666666" },
-  celebration: { label: "Celebration", bg: "#FFF3D0", border: "#FFC861", dot: "#FFC861" },
-  admin:       { label: "Admin",       bg: "#E8F5EC", border: "#44664F", dot: "#44664F" },
+const TAGS: Record<string, { bg: string; border: string; dot: string }> = {
+  birthday:    { bg: "#FFE4F0", border: "#E57C9A", dot: "#E57C9A" },
+  travel:      { bg: "#DDEEFF", border: "#64A0F0", dot: "#64A0F0" },
+  appointment: { bg: "#EEE8FF", border: "#8B7DD8", dot: "#8B7DD8" },
+  meeting:     { bg: "#F4F4F4", border: "#666666", dot: "#666666" },
+  celebration: { bg: "#FFF3D0", border: "#FFC861", dot: "#FFC861" },
+  admin:       { bg: "#E8F5EC", border: "#44664F", dot: "#44664F" },
 };
 type EventTag = string; // preset TAGS key or user-entered custom string
 
@@ -261,6 +261,18 @@ const EZDateTimePicker = ({
 const Calendar = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+
+  const getTagLabel = (tagKey: string): string => {
+    const map: Record<string, string> = {
+      birthday: t('calendar.tagBirthday'),
+      travel: t('calendar.tagTravel'),
+      appointment: t('calendar.tagAppointment'),
+      meeting: t('calendar.tagMeeting'),
+      celebration: t('calendar.tagCelebration'),
+      admin: t('calendar.tagAdmin'),
+    };
+    return map[tagKey] || tagKey;
+  };
   const { isPremium, user } = useAuth();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -400,9 +412,9 @@ const Calendar = () => {
       cloudSet('eazy-apple-calendar-enabled', 'true');
       setAppleRefreshTick(t => t + 1);
       setShowCalendarSyncDialog(false);
-      toast({ title: 'Apple Calendar connected!' });
+      toast({ title: t('calendar.appleConnected') });
     } else {
-      toast({ title: 'Permission denied', description: 'Allow calendar access in iOS Settings → Eazy Family.', variant: 'destructive' });
+      toast({ title: t('calendar.permissionDenied'), description: t('calendar.allowCalendarAccess'), variant: 'destructive' });
     }
     setIsSyncingApple(false);
   };
@@ -411,7 +423,7 @@ const Calendar = () => {
     setAppleCalendarEnabled(false);
     setAppleEvents([]);
     cloudSet('eazy-apple-calendar-enabled', 'false');
-    toast({ title: 'Apple Calendar disconnected' });
+    toast({ title: t('calendar.appleDisconnected') });
   };
 
   useEffect(() => {
@@ -573,7 +585,7 @@ const Calendar = () => {
         cloudSet('eazy-google-calendar-synced', 'true');
         setGoogleSynced(true);
         setShowCalendarSyncDialog(false);
-        toast({ title: t('calendar.syncSuccess') || 'Google Calendar synced!', description: `${mapped.length} events imported.` });
+        toast({ title: t('calendar.syncSuccess'), description: t('calendar.eventsImported', { count: mapped.length }) });
       }
     } catch (err: any) {
       toast({ title: t('common.error'), description: err.message, variant: 'destructive' });
@@ -587,7 +599,7 @@ const Calendar = () => {
     setGoogleSynced(false);
     localStorage.removeItem('eazy-google-calendar-events');
     localStorage.removeItem('eazy-google-calendar-synced');
-    toast({ title: 'Google Calendar disconnected' });
+    toast({ title: t('calendar.googleDisconnected') });
   };
 
   // ── Outlook Calendar ────────────────────────────────────────────────────────
@@ -617,7 +629,7 @@ const Calendar = () => {
       showAdminConsentDialog();
     } else {
       toast({
-        title: 'Outlook connection failed',
+        title: t('calendar.outlookConnectionFailed'),
         description: description || error,
         variant: 'destructive',
       });
@@ -673,7 +685,7 @@ const Calendar = () => {
       if (data?.events) {
         const mapped = applyOutlookEvents(data.events);
         setShowCalendarSyncDialog(false);
-        toast({ title: 'Outlook Calendar synced!', description: `${mapped.length} events imported.` });
+        toast({ title: t('calendar.outlookSynced'), description: t('calendar.eventsImported', { count: mapped.length }) });
       }
     } catch (err: any) {
       if (isAdminConsentError(err.message || '')) {
@@ -695,7 +707,7 @@ const Calendar = () => {
       if (error) throw error;
       if (data?.events) {
         const mapped = applyOutlookEvents(data.events);
-        toast({ title: 'Outlook synced!', description: `${mapped.length} events updated.` });
+        toast({ title: t('calendar.outlookSynced'), description: t('calendar.eventsUpdated', { count: mapped.length }) });
       }
     } catch (err: any) {
       // If session expired, clear and prompt reconnect
@@ -719,7 +731,7 @@ const Calendar = () => {
     setOutlookSynced(false);
     localStorage.removeItem('eazy-outlook-calendar-events');
     localStorage.removeItem('eazy-outlook-calendar-synced');
-    toast({ title: 'Outlook Calendar disconnected' });
+    toast({ title: t('calendar.outlookDisconnected') });
   };
 
   const handleDismissSyncBanner = () => {
@@ -807,7 +819,7 @@ const Calendar = () => {
   const startCalendarVoice = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast({ title: "Voice not supported", description: "Try typing your event instead.", variant: "destructive" });
+      toast({ title: t('calendar.voiceNotSupported'), description: t('calendar.voiceTryTyping'), variant: "destructive" });
       return;
     }
     const recognition = new SpeechRecognition();
@@ -845,7 +857,7 @@ const Calendar = () => {
     recognition.onerror = (event: any) => {
       setIsListeningVoice(false);
       if (event.error !== "no-speech") {
-        toast({ title: "Voice error", description: "Could not capture speech. Try again.", variant: "destructive" });
+        toast({ title: t('calendar.voiceError'), description: t('calendar.voiceCaptureError'), variant: "destructive" });
       }
     };
 
@@ -1085,7 +1097,7 @@ const Calendar = () => {
                   <div key={day.toISOString()} className="flex-1 border-l px-0.5 pt-0.5 space-y-0.5" style={{ borderColor: "hsl(var(--border))" }}>
                     {events.map(item => {
                       if (item.type !== "event") return null;
-                      const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#F1EDE7", border: "#964735", label: "Event" };
+                      const tagStyle = item.tag && TAGS[item.tag] ? TAGS[item.tag] : { bg: "#F1EDE7", border: "#964735", dot: "#964735" };
                       return (
                         <div
                           key={item.id}
@@ -1445,7 +1457,7 @@ const Calendar = () => {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search events…"
+            placeholder={t('calendar.searchEventsPlaceholder')}
             className="w-full px-4 py-2.5 rounded-2xl text-sm outline-none"
             style={{ background: 'hsl(var(--muted))', border: '1.5px solid hsl(var(--border))', color: 'hsl(var(--foreground))' }}
           />
@@ -1472,7 +1484,7 @@ const Calendar = () => {
                   </div>
                 ))}
               {allItems.filter(i => i.title?.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                <div className="px-4 py-3 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>No events found</div>
+                <div className="px-4 py-3 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.noEventsFound')}</div>
               )}
             </div>
           )}
@@ -1593,9 +1605,9 @@ const Calendar = () => {
       {calendarView !== 'year' && (
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>Family Agenda</h2>
+            <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.familyAgenda')}</h2>
             <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>
-              VIEW ALL
+              {t('calendar.viewAll')}
             </button>
           </div>
           <div
@@ -1618,13 +1630,13 @@ const Calendar = () => {
                     <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
                   </div>
                   <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm aa')}</p>
+                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? t('calendar.allDayLabel') : format(ev.startDate, 'hh:mm aa')}</p>
                 </div>
               );
             })}
             {allItems.filter(i => i.type === 'event' && (i as Event).attendees?.length).length === 0 && (
               <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed hsl(var(--border))' }}>
-                <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>No events yet</p>
+                <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.noEventsYet')}</p>
               </div>
             )}
           </div>
@@ -1641,7 +1653,7 @@ const Calendar = () => {
               </h2>
             </div>
             <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              {selectedDayEvents.length} EVENT{selectedDayEvents.length !== 1 ? 'S' : ''}
+              {selectedDayEvents.length} {selectedDayEvents.length !== 1 ? t('calendar.eventCountPlural') : t('calendar.eventCountSingular')}
             </span>
           </div>
 
@@ -1649,8 +1661,8 @@ const Calendar = () => {
             <div className="space-y-2">
               {selectedDayEvents.map((item) => {
                 const ev = item as Event;
-                const timeStr = ev.allDay ? 'All day' : format(ev.startDate, 'hh:mm\naa');
-                const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66', label: 'Event' };
+                const timeStr = ev.allDay ? t('calendar.allDayLabel') : format(ev.startDate, 'hh:mm\naa');
+                const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66' };
                 return (
                   <div key={ev.id}
                     className="flex gap-3 rounded-2xl overflow-hidden"
@@ -1667,11 +1679,11 @@ const Calendar = () => {
                       {ev.tag && (
                         <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1"
                           style={{ background: tagStyle.bg, color: tagStyle.dot }}>
-                          {ev.tag === 'custom' ? (ev.customTag || 'Custom') : tagStyle.label}
+                          {ev.tag === 'custom' ? (ev.customTag || t('calendar.tagCustom')) : getTagLabel(ev.tag)}
                         </span>
                       )}
                       {ev.location && <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.location}</p>}
-                      {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Apple Calendar</p>}
+                      {ev.id.startsWith('apple-device-') && <p className="text-[10px] mt-1 font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.appleCalendar')}</p>}
                     </div>
                     {!ev.id.startsWith('apple-device-') && (
                       <button
@@ -1740,24 +1752,24 @@ const Calendar = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5 text-[#0078d4]" />
-              IT Admin Approval Required
+              {t('calendar.itAdminRequired')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 text-sm">
             <p className="text-muted-foreground">
-              Your organisation's IT policy requires an administrator to approve Eazy.Family before you can connect your work Outlook calendar.
+              {t('calendar.orgPolicyText')}
             </p>
             <div className="rounded-lg border p-4 space-y-2 bg-muted/40">
-              <p className="font-semibold">What to do:</p>
+              <p className="font-semibold">{t('calendar.whatToDo')}</p>
               <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
-                <li>Copy the message below and send it to your IT admin</li>
-                <li>Once they approve, come back and try connecting again</li>
+                <li>{t('calendar.copyMessageForAdmin')}</li>
+                <li>{t('calendar.onceApproved')}</li>
               </ol>
             </div>
 
             {/* Copyable message for IT */}
             <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Message for your IT admin</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t('calendar.messageForAdmin')}</p>
               <p className="text-xs leading-relaxed select-all">
                 Hi, I'd like to connect my work Outlook calendar to Eazy.Family (eazy.family).
                 The app requires admin consent in Azure AD.
@@ -1770,7 +1782,7 @@ const Calendar = () => {
                 onClick={() => {
                   const msg = `Hi, I'd like to connect my work Outlook calendar to Eazy.Family (eazy.family). The app requires admin consent in Azure AD. Please approve it at: ${outlookAdminConsentUrl || 'https://eazy.family/admin-consent'}`;
                   navigator.clipboard.writeText(msg);
-                  toast({ title: 'Copied to clipboard' });
+                  toast({ title: t('calendar.copiedToClipboard') });
                 }}>
                 <Copy className="h-3.5 w-3.5" /> Copy Message
               </Button>
@@ -1782,14 +1794,14 @@ const Calendar = () => {
                 className="w-full gap-2 border-[#0078d4]/40 text-[#0078d4]"
                 onClick={() => window.open(outlookAdminConsentUrl, '_blank')}>
                 <ExternalLink className="h-4 w-4" />
-                Open Admin Consent Page
+                {t('calendar.openAdminConsentPage')}
               </Button>
             )}
 
             <p className="text-xs text-muted-foreground text-center">
-              Using a personal Outlook.com account instead?{' '}
+              {t('calendar.usingPersonalOutlook')}{' '}
               <button className="underline" onClick={() => { setOutlookAdminConsentNeeded(false); handleOutlookConnect(); }}>
-                Try again
+                {t('calendar.tryAgain')}
               </button>
             </p>
           </div>
@@ -1806,14 +1818,14 @@ const Calendar = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            <p className="text-xs text-muted-foreground">Connect a calendar to import your events.</p>
+            <p className="text-xs text-muted-foreground">{t('calendar.connectCalendarInfo')}</p>
 
             {/* Google Calendar */}
             <div className={`p-3 rounded-xl border ${googleSynced ? 'border-green-400/40 bg-green-50 dark:bg-green-950/20' : 'border-border'}`}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center text-sm font-bold text-red-500 shadow-sm flex-shrink-0">G</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Google Calendar</p>
+                  <p className="text-sm font-medium">{t('calendar.googleCalendar')}</p>
                   <p className="text-xs text-muted-foreground">
                     {googleSynced ? `${googleEvents.length} ${t('calendar.eventsSynced')}` : t('calendar.twoWaySync')}
                   </p>
@@ -1845,7 +1857,7 @@ const Calendar = () => {
                   <span className="text-white text-xs font-bold">O</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Outlook Calendar</p>
+                  <p className="text-sm font-medium">{t('calendar.outlookCalendar')}</p>
                   <p className="text-xs text-muted-foreground">
                     {outlookSynced ? `${outlookEvents.length} ${t('calendar.eventsSynced')}` : t('calendar.microsoft365')}
                   </p>
@@ -1877,9 +1889,9 @@ const Calendar = () => {
                   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">Apple Calendar</p>
+                  <p className="text-sm font-medium">{t('calendar.appleCalendar')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {appleCalendarEnabled ? `${appleEvents.length} events from device` : 'Two-way sync with EventKit'}
+                    {appleCalendarEnabled ? t('calendar.appleEventsFromDevice', { count: appleEvents.length }) : t('calendar.appleEventKitSync')}
                   </p>
                 </div>
                 {appleCalendarEnabled && (
@@ -1896,7 +1908,7 @@ const Calendar = () => {
                 </Button>
               ) : (
                 <Button size="sm" className="w-full h-8 text-xs text-white border-0" style={{ background: "#555555" }} onClick={handleAppleCalendarConnect} disabled={isSyncingApple}>
-                  {isSyncingApple ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Connect Apple Calendar'}
+                  {isSyncingApple ? <Loader2 className="h-3 w-3 animate-spin" /> : t('calendar.connectApple')}
                 </Button>
               )}
             </div>
@@ -1937,7 +1949,7 @@ const Calendar = () => {
               <>
                 {/* All day toggle */}
                 <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>All day</span>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.allDay')}</span>
                   <button
                     type="button"
                     onClick={() => { setEventAllDay(v => !v); setShowStartPicker(false); setShowEndPicker(false); }}
@@ -2001,45 +2013,45 @@ const Calendar = () => {
                     <option value="30min">{t('calendar.30minBefore')}</option>
                     <option value="1hour">{t('calendar.1hourBefore')}</option>
                     <option value="1day">{t('calendar.1dayBefore')}</option>
-                    <option value="1week">1 week before</option>
+                    <option value="1week">{t('calendar.weekBefore')}</option>
                   </select>
                 </div>
 
                 {/* Repeat */}
                 <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>Repeat</span>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.repeat')}</span>
                   <select value={eventRepeat} onChange={e => setEventRepeat(e.target.value)}
                     className="text-sm font-medium outline-none rounded-lg px-2.5 py-1"
                     style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none', appearance: 'none', paddingRight: '24px', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23964735\' d=\'M7 10l5 5 5-5z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 6px center' }}>
-                    <option value="never">Never</option>
-                    <option value="daily">Every day</option>
-                    <option value="weekday">Every weekday</option>
-                    <option value="weekly">Every week</option>
-                    <option value="biweekly">Every 2 weeks</option>
-                    <option value="monthly">Every month</option>
-                    <option value="yearly">Every year</option>
-                    <option value="custom">Custom…</option>
+                    <option value="never">{t('calendar.never')}</option>
+                    <option value="daily">{t('calendar.everyDay')}</option>
+                    <option value="weekday">{t('calendar.everyWeekday')}</option>
+                    <option value="weekly">{t('calendar.everyWeek')}</option>
+                    <option value="biweekly">{t('calendar.every2Weeks')}</option>
+                    <option value="monthly">{t('calendar.everyMonth')}</option>
+                    <option value="yearly">{t('calendar.everyYear')}</option>
+                    <option value="custom">{t('calendar.customDots')}</option>
                   </select>
                 </div>
                 {eventRepeat === 'custom' && (
                   <div className="rounded-2xl px-4 py-3.5 flex items-center gap-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                    <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Every</span>
+                    <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.every')}</span>
                     <input type="number" min="1" max="99" value={customRepeatNumber} onChange={e => setCustomRepeatNumber(e.target.value)}
                       className="w-14 text-center text-sm font-semibold outline-none rounded-lg px-2 py-1"
                       style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }} />
                     <select value={customRepeatUnit} onChange={e => setCustomRepeatUnit(e.target.value as 'days' | 'weeks' | 'months')}
                       className="flex-1 text-sm font-medium outline-none rounded-lg px-2.5 py-1"
                       style={{ background: 'hsl(var(--muted))', color: '#964735', border: 'none' }}>
-                      <option value="days">days</option>
-                      <option value="weeks">weeks</option>
-                      <option value="months">months</option>
+                      <option value="days">{t('calendar.days')}</option>
+                      <option value="weeks">{t('calendar.weeks')}</option>
+                      <option value="months">{t('calendar.months')}</option>
                     </select>
                   </div>
                 )}
 
                 {/* Tags */}
                 <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Tag</p>
+                  <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.tagLabel')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(TAGS).map(([key, tag]) => {
                       const isSelected = eventTag === key;
@@ -2051,14 +2063,14 @@ const Calendar = () => {
                         }}
                           className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                           style={{ background: isSelected ? tag.border : tag.bg, color: isSelected ? '#fff' : tag.dot, border: `1.5px solid ${tag.border}` }}>
-                          {tag.label}
+                          {getTagLabel(key)}
                         </button>
                       );
                     })}
                     <button onClick={() => { setEventTag('custom'); }}
                       className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
                       style={{ background: eventTag === 'custom' ? '#555' : 'hsl(var(--muted))', color: eventTag === 'custom' ? '#fff' : 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border))' }}>
-                      + Custom
+                      {t('calendar.addCustomTag')}
                     </button>
                   </div>
                   {eventTag === 'custom' && (
@@ -2066,7 +2078,7 @@ const Calendar = () => {
                       autoFocus
                       className="mt-2.5 w-full text-sm outline-none rounded-lg px-3 py-2"
                       style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--foreground))', border: '1.5px solid hsl(var(--border))' }}
-                      placeholder="Tag name…"
+                      placeholder={t('calendar.tagNamePlaceholder')}
                       value={eventCustomTag}
                       onChange={e => setEventCustomTag(e.target.value)}
                     />
@@ -2075,7 +2087,7 @@ const Calendar = () => {
 
                 {/* Color */}
                 <div className="rounded-2xl px-4 py-3.5 flex items-center gap-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="text-sm font-semibold flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>Color</span>
+                  <span className="text-sm font-semibold flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.colorLabel')}</span>
                   <div className="flex gap-2 flex-wrap flex-1">
                     {['#964735', '#D97B66', '#FFC861', '#4CAF50', '#64A0F0', '#6E8FE5', '#BA1A1A', '#555555'].map(c => (
                       <button key={c} onClick={() => setEventColor(c)}
@@ -2088,9 +2100,9 @@ const Calendar = () => {
 
                 {/* Visible to */}
                 <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>Visible to</span>
+                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.visibleTo')}</span>
                   <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
-                    {([['everyone', 'Everyone'], ['parents', 'Parents'], ['me', 'Just me']] as const).map(([val, label]) => (
+                    {([['everyone', t('calendar.everyone')], ['parents', t('calendar.parents')], ['me', t('calendar.justMe')]] as [string, string][]).map(([val, label]) => (
                       <button key={val} onClick={() => setEventVisibleTo(val)}
                         className="px-2.5 py-1 text-[11px] font-semibold transition-all"
                         style={{ background: eventVisibleTo === val ? '#964735' : 'transparent', color: eventVisibleTo === val ? '#fff' : 'hsl(var(--muted-foreground))' }}>
@@ -2110,7 +2122,7 @@ const Calendar = () => {
                 {/* Participants */}
                 {familyMembers.length > 0 && (
                   <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                    <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>Participants</p>
+                    <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.participants')}</p>
                     <div className="flex flex-wrap gap-2">
                       {familyMembers.map(m => {
                         const selected = eventAttendees.includes(m.user_id);

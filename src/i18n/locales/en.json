@@ -276,7 +276,71 @@
     "1dayBefore": "1 day before",
     "twoWaySync": "Two-way sync",
     "eventsSynced": "events synced",
-    "microsoft365": "Microsoft 365 & Outlook.com"
+    "microsoft365": "Microsoft 365 & Outlook.com",
+    "syncSuccess": "Google Calendar synced!",
+    "everyDay": "Every day",
+    "everyWeekday": "Every weekday",
+    "everyWeek": "Every week",
+    "every2Weeks": "Every 2 weeks",
+    "everyMonth": "Every month",
+    "everyYear": "Every year",
+    "customDots": "Custom…",
+    "weekBefore": "1 week before",
+    "tagLabel": "Tag",
+    "colorLabel": "Color",
+    "visibleTo": "Visible to",
+    "everyone": "Everyone",
+    "parents": "Parents",
+    "justMe": "Just me",
+    "participants": "Participants",
+    "searchEventsPlaceholder": "Search events…",
+    "noEventsFound": "No events found",
+    "familyAgenda": "Family Agenda",
+    "noEventsYet": "No events yet",
+    "appleConnected": "Apple Calendar connected!",
+    "appleDisconnected": "Apple Calendar disconnected",
+    "permissionDenied": "Permission denied",
+    "allowCalendarAccess": "Allow calendar access in iOS Settings → Eazy Family.",
+    "googleDisconnected": "Google Calendar disconnected",
+    "outlookSynced": "Outlook Calendar synced!",
+    "outlookDisconnected": "Outlook Calendar disconnected",
+    "outlookConnectionFailed": "Outlook connection failed",
+    "eventsImported": "{{count}} events imported.",
+    "eventsUpdated": "{{count}} events updated.",
+    "voiceNotSupported": "Voice not supported",
+    "voiceTryTyping": "Try typing your event instead.",
+    "voiceError": "Voice error",
+    "voiceCaptureError": "Could not capture speech. Try again.",
+    "copiedToClipboard": "Copied to clipboard",
+    "messageForAdmin": "Message for your IT admin",
+    "copyMessageForAdmin": "Copy the message below and send it to your IT admin",
+    "googleCalendar": "Google Calendar",
+    "outlookCalendar": "Outlook Calendar",
+    "appleCalendar": "Apple Calendar",
+    "connectApple": "Connect Apple Calendar",
+    "appleEventsFromDevice": "{{count}} events from device",
+    "appleEventKitSync": "Two-way sync with EventKit",
+    "tagBirthday": "Birthday",
+    "tagTravel": "Travel",
+    "tagAppointment": "Appointment",
+    "tagMeeting": "Meeting",
+    "tagCelebration": "Celebration",
+    "tagAdmin": "Admin",
+    "tagEvent": "Event",
+    "tagCustom": "Custom",
+    "addCustomTag": "+ Custom",
+    "eventCountSingular": "EVENT",
+    "eventCountPlural": "EVENTS",
+    "viewAll": "VIEW ALL",
+    "allDayLabel": "All day",
+    "itAdminRequired": "IT Admin Approval Required",
+    "orgPolicyText": "Your organisation's IT policy requires an administrator to approve Eazy.Family before you can connect your work Outlook calendar.",
+    "whatToDo": "What to do:",
+    "onceApproved": "Once they approve, come back and try connecting again",
+    "openAdminConsentPage": "Open Admin Consent Page",
+    "usingPersonalOutlook": "Using a personal Outlook.com account instead?",
+    "tryAgain": "Try again",
+    "connectCalendarInfo": "Connect a calendar to import your events."
   },
   "calendarIntegrations": {
     "title": "Calendar Integrations",
@@ -458,7 +522,9 @@
       "iconOnlySub": "Circular buttons, no labels"
     },
     "profileName": "Profile Name",
-    "save": "Save"
+    "save": "Save",
+    "accountDeleted": "Account deleted",
+    "accountDeletedDesc": "Your Eazy.Family account and all its associated data have been deleted."
   },
   "privacySettings": {
     "title": "Privacy Settings",
@@ -555,7 +621,8 @@
     "and": "and",
     "to": "to",
     "from": "From",
-    "returnHome": "Return to Home"
+    "returnHome": "Return to Home",
+    "more": "more"
   },
   "events": {
     "title": "Events",
@@ -579,7 +646,9 @@
     "showing": "Showing family-friendly events near you",
     "eventsCount": "events",
     "location": "Location",
-    "time": "Time"
+    "time": "Time",
+    "searchPlaceholder": "Search events...",
+    "youAreHere": "You are here"
   },
   "memories": {
     "title": "Memories",
@@ -647,7 +716,16 @@
     "join": "Join",
     "inAppMessaging": "In-App Messaging",
     "messagingDesc": "Connect privately with other parents in your community",
-    "premiumFeature": "Premium Feature"
+    "premiumFeature": "Premium Feature",
+    "createNewGroup": "Create a New Group",
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "e.g., Zurich Parents",
+    "descriptionPlaceholder": "What's this group about?",
+    "typeMessage": "Type a message...",
+    "searchGroups": "Search groups...",
+    "communityGroups": "Community Groups",
+    "groupChat": "Group Chat",
+    "membersCount": "members"
   },
   "marketplace": {
     "title": "Marketplace",
@@ -683,7 +761,17 @@
     "startSellingDesc": "List items for sale and connect with local families",
     "familyPlanFeature": "Family Plan Feature",
     "listFirstItem": "List Your First Item",
-    "popularCategories": "Popular Categories"
+    "popularCategories": "Popular Categories",
+    "createListing": "Create a Listing",
+    "whatAreSelling": "What are you selling?",
+    "describeItem": "Describe the item...",
+    "conditionNew": "New",
+    "conditionLikeNew": "Like New",
+    "conditionGood": "Good",
+    "conditionFair": "Fair",
+    "conditionPoor": "Poor",
+    "noImage": "No Image",
+    "upcomingEvents": "Upcoming Events"
   },
   "referral": {
     "title": "Refer Friends, Get Premium",
@@ -694,7 +782,8 @@
     "shareWithFriends": "Share with Friends",
     "copied": "Copied!",
     "copiedDesc": "Referral code copied to clipboard",
-    "shareMessage": "Join me on Eazy.Family! Use my code {code} to get 7 days of Premium free! 🎁"
+    "shareMessage": "Join me on Eazy.Family! Use my code {code} to get 7 days of Premium free! 🎁",
+    "shareCopiedDesc": "Share message copied to clipboard"
   },
   "upgrade": {
     "title": "Upgrade to Family Plan",
@@ -704,7 +793,21 @@
     "cancelAnytime": "Cancel anytime • Auto-renews after trial",
     "error": "Error",
     "promoError": "Failed to apply promo code.",
-    "checkoutError": "Failed to start checkout. Please try again."
+    "checkoutError": "Failed to start checkout. Please try again.",
+    "familyPremium": "Family Premium",
+    "keepFullAccess": "Keep your full access",
+    "notAvailable": "Not available",
+    "couldNotLoadOfferings": "Could not load offerings. Try again.",
+    "purchaseFailed": "Purchase failed",
+    "purchaseFailedDesc": "Please try again.",
+    "purchasesRestored": "Purchases restored",
+    "subscriptionActive": "Your subscription is active.",
+    "nothingToRestore": "Nothing to restore",
+    "noActiveSubscription": "No active subscription found.",
+    "restoreFailed": "Restore failed",
+    "authRequired": "Authentication Required",
+    "signInToUpgrade": "Please sign in to upgrade.",
+    "failedCheckout": "Failed to start checkout. Please try again."
   },
   "family": {
     "title": "Family Profile",
@@ -752,7 +855,8 @@
     "welcomeDesc": "You've been added to the family",
     "error": "Error",
     "errorDesc": "Failed to accept invitation. The link may be expired or invalid.",
-    "invalidLink": "Invalid invitation link"
+    "invalidLink": "Invalid invitation link",
+    "addedToFamily": "You've been added to the family"
   },
   "joinFamily": {
     "title": "Join a Family",
@@ -761,7 +865,17 @@
     "codePlaceholder": "ABC123",
     "joinButton": "Join Family",
     "error": "Error",
-    "errorDesc": "Failed to join family. Please try again."
+    "errorDesc": "Failed to join family. Please try again.",
+    "enterInviteCode": "Enter invite code",
+    "enterValidCode": "Please enter a valid invite code",
+    "invalidCodeLength": "Invalid code length",
+    "invalidCodeLengthDesc": "Invite codes must be exactly 6 characters",
+    "invalidCodeFormat": "Invalid code format",
+    "invalidCodeFormatDesc": "Invite codes can only contain letters and numbers",
+    "unableToJoin": "Unable to join",
+    "welcomeToFamily": "Welcome to the family! 🎉",
+    "youveJoined": "You've joined {{familyName}}",
+    "failedToJoin": "Failed to join family. Please try again."
   },
   "auth": {
     "signIn": "Sign In",
@@ -830,7 +944,32 @@
     "placeholder": "How can I help you?",
     "hint": "Ask me anything about organizing your family life!",
     "error": "Error",
-    "errorDesc": "Failed to send message. Please try again."
+    "errorDesc": "Failed to send message. Please try again.",
+    "saving": "Saving…",
+    "approve": "Approve",
+    "dismiss": "Dismiss",
+    "ok": "OK",
+    "parseError": "Couldn't parse — review below:",
+    "didYouMean": "Did you mean:",
+    "couldNotSave": "Could not save. Please try again.",
+    "voiceNotSupported": "Not supported",
+    "voiceInputNotSupported": "Voice input is not supported in this browser.",
+    "rateLimitExceeded": "Rate limit exceeded",
+    "rateLimitRetry": "Please try again in a moment.",
+    "authError": "Authentication error",
+    "authErrorDesc": "Please sign in and try again.",
+    "assistantUnavailable": "Assistant unavailable",
+    "assistantUnavailableDesc": "The AI assistant is temporarily unavailable.",
+    "itemsAdded": "Added {{count}} item(s) to shopping list",
+    "taskAdded": "Task added",
+    "taskAddedFor": "Task added for {{date}}",
+    "eventAdded": "Event added: {{title}}",
+    "failedToSend": "Failed to send message. Please try again.",
+    "openAssistant": "Open Eazy Assistant",
+    "closeAssistant": "Close assistant",
+    "stopListening": "Stop listening",
+    "startVoice": "Start voice input",
+    "sendMessage": "Send message"
   },
   "voice": {
     "recordingStarted": "Recording started",
@@ -843,7 +982,15 @@
     "tryAgain": "Please try speaking more clearly.",
     "heard": "I heard:",
     "processingError": "Error processing audio",
-    "processingErrorDesc": "Please try again."
+    "processingErrorDesc": "Please try again.",
+    "micAccessDenied": "Microphone access denied",
+    "allowMicAccess": "Allow microphone access in Settings.",
+    "notAvailable": "Voice not available",
+    "speechNotSupported": "Speech recognition isn't supported here. Try typing.",
+    "voiceErrorTitle": "Voice error",
+    "captureError": "Could not capture speech. Please try again.",
+    "listening": "Listening...",
+    "processing": "Processing..."
   },
   "weather": {
     "title": "Weather",
@@ -851,7 +998,9 @@
     "enterCity": "Enter city name...",
     "feelsLike": "Feels like",
     "humidity": "Humidity",
-    "wind": "Wind"
+    "wind": "Wind",
+    "yourLocation": "Your location",
+    "removeWeather": "Remove weather"
   },
   "todos": {
     "title": "To-Do Lists",
@@ -1490,5 +1639,11 @@
     "guideSignInRequired": "Please sign in to use the guide.",
     "guideError": "Sorry, I couldn't get an answer right now. Please try again.",
     "aiGuide": "Ask me anything about the app — I'm here to help."
+  },
+  "messaging": {
+    "typeMessage": "Type a message...",
+    "searchFamily": "Search family...",
+    "messages": "Messages",
+    "searchConversations": "Search conversations..."
   }
 }

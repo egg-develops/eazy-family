@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
 import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, type RCPackage } from "@/lib/revenuecat";
+import { useTranslation } from "react-i18next";
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -35,6 +36,7 @@ interface UpgradeDialogProps {
 
 export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const { isPremium, isTrial, refreshSubscription } = useAuth();
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
   const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
@@ -64,7 +66,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
 
   const handleNativeUpgrade = async () => {
     if (allProductIds.length === 0) {
-      toast({ title: "Not available", description: "Could not load offerings. Try again.", variant: "destructive" });
+      toast({ title: t('upgrade.notAvailable'), description: t('upgrade.couldNotLoadOfferings'), variant: "destructive" });
       return;
     }
     setIsLoading(true);
@@ -76,7 +78,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       setOpen(false);
     } catch (err: unknown) {
       logError("SubscriptionStore error:", err);
-      toast({ title: "Purchase failed", description: "Please try again.", variant: "destructive" });
+      toast({ title: t('upgrade.purchaseFailed'), description: t('upgrade.purchaseFailedDesc'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -89,12 +91,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       if (granted) {
         await refreshSubscription();
         setOpen(false);
-        toast({ title: "Purchases restored", description: "Your subscription is active." });
+        toast({ title: t('upgrade.purchasesRestored'), description: t('upgrade.subscriptionActive') });
       } else {
-        toast({ title: "Nothing to restore", description: "No active subscription found." });
+        toast({ title: t('upgrade.nothingToRestore'), description: t('upgrade.noActiveSubscription') });
       }
     } catch {
-      toast({ title: "Restore failed", description: "Please try again.", variant: "destructive" });
+      toast({ title: t('upgrade.restoreFailed'), description: t('upgrade.purchaseFailedDesc'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +108,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast({ title: "Authentication Required", description: "Please sign in to upgrade.", variant: "destructive" });
+        toast({ title: t('upgrade.authRequired'), description: t('upgrade.signInToUpgrade'), variant: "destructive" });
         return;
       }
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -117,7 +119,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       if (data?.url) window.location.href = data.url;
     } catch (error) {
       logError("Error creating checkout:", error);
-      toast({ title: "Error", description: "Failed to start checkout. Please try again.", variant: "destructive" });
+      toast({ title: t('common.error'), description: t('upgrade.failedCheckout'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -132,13 +134,13 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         <div className="px-6 pt-7 pb-5 text-center" style={{ background: 'linear-gradient(160deg, #964735 0%, #D97B66 100%)' }}>
           <div className="flex items-center justify-center gap-2 mb-3">
             <Crown className="h-6 w-6 text-white" />
-            <h2 className="text-xl font-bold text-white tracking-tight">Family Premium</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight">{t('upgrade.familyPremium')}</h2>
           </div>
           {isTrial ? (
             <>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}>
                 <Sparkles className="h-3.5 w-3.5" />
-                Keep your full access
+                {t('upgrade.keepFullAccess')}
               </div>
               <p className="text-white/75 text-xs mt-2">
                 Upgrade before your trial ends.<br />Cancel anytime.

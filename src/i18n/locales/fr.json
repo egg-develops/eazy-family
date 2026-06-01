@@ -273,7 +273,71 @@
     "1dayBefore": "1 jour avant",
     "twoWaySync": "Synchronisation bidirectionnelle",
     "eventsSynced": "événements synchronisés",
-    "microsoft365": "Microsoft 365 & Outlook.com"
+    "microsoft365": "Microsoft 365 & Outlook.com",
+    "syncSuccess": "Google Agenda synchronisé !",
+    "everyDay": "Chaque jour",
+    "everyWeekday": "Chaque jour de semaine",
+    "everyWeek": "Chaque semaine",
+    "every2Weeks": "Toutes les 2 semaines",
+    "everyMonth": "Chaque mois",
+    "everyYear": "Chaque année",
+    "customDots": "Personnalisé…",
+    "weekBefore": "1 semaine avant",
+    "tagLabel": "Étiquette",
+    "colorLabel": "Couleur",
+    "visibleTo": "Visible pour",
+    "everyone": "Tout le monde",
+    "parents": "Parents",
+    "justMe": "Que moi",
+    "participants": "Participants",
+    "searchEventsPlaceholder": "Rechercher des événements…",
+    "noEventsFound": "Aucun événement trouvé",
+    "familyAgenda": "Agenda familial",
+    "noEventsYet": "Pas encore d'événements",
+    "appleConnected": "Calendrier Apple connecté !",
+    "appleDisconnected": "Calendrier Apple déconnecté",
+    "permissionDenied": "Permission refusée",
+    "allowCalendarAccess": "Autorisez l'accès au calendrier dans Réglages iOS → Eazy Family.",
+    "googleDisconnected": "Google Agenda déconnecté",
+    "outlookSynced": "Calendrier Outlook synchronisé !",
+    "outlookDisconnected": "Calendrier Outlook déconnecté",
+    "outlookConnectionFailed": "Échec de la connexion Outlook",
+    "eventsImported": "{{count}} événements importés.",
+    "eventsUpdated": "{{count}} événements mis à jour.",
+    "voiceNotSupported": "Voix non prise en charge",
+    "voiceTryTyping": "Essayez plutôt de saisir votre événement.",
+    "voiceError": "Erreur vocale",
+    "voiceCaptureError": "Impossible de capturer la parole. Réessayez.",
+    "copiedToClipboard": "Copié dans le presse-papiers",
+    "messageForAdmin": "Message pour votre admin IT",
+    "copyMessageForAdmin": "Copiez le message ci-dessous et envoyez-le à votre admin IT",
+    "googleCalendar": "Google Agenda",
+    "outlookCalendar": "Calendrier Outlook",
+    "appleCalendar": "Calendrier Apple",
+    "connectApple": "Connecter Calendrier Apple",
+    "appleEventsFromDevice": "{{count}} événements de l'appareil",
+    "appleEventKitSync": "Synchronisation bidirectionnelle avec EventKit",
+    "tagBirthday": "Anniversaire",
+    "tagTravel": "Voyage",
+    "tagAppointment": "Rendez-vous",
+    "tagMeeting": "Réunion",
+    "tagCelebration": "Célébration",
+    "tagAdmin": "Administration",
+    "tagEvent": "Événement",
+    "tagCustom": "Personnalisé",
+    "addCustomTag": "+ Personnalisé",
+    "eventCountSingular": "ÉVÉNEMENT",
+    "eventCountPlural": "ÉVÉNEMENTS",
+    "viewAll": "TOUT VOIR",
+    "allDayLabel": "Toute la journée",
+    "itAdminRequired": "Approbation de l'admin IT requise",
+    "orgPolicyText": "La politique IT de votre organisation exige qu'un administrateur approuve Eazy.Family avant de connecter votre calendrier Outlook professionnel.",
+    "whatToDo": "Que faire :",
+    "onceApproved": "Une fois approuvé, revenez et essayez de vous reconnecter",
+    "openAdminConsentPage": "Ouvrir la page de consentement admin",
+    "usingPersonalOutlook": "Vous utilisez un compte Outlook.com personnel ?",
+    "tryAgain": "Réessayer",
+    "connectCalendarInfo": "Connectez un calendrier pour importer vos événements."
   },
   "calendarIntegrations": {
     "title": "Intégrations de calendrier",
@@ -455,7 +519,9 @@
       "iconOnlySub": "Boutons circulaires, sans étiquettes"
     },
     "profileName": "Nom de profil",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "accountDeleted": "Compte supprimé",
+    "accountDeletedDesc": "Votre compte Eazy.Family et toutes les données associées ont été supprimés."
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",
@@ -552,7 +618,8 @@
     "and": "et",
     "to": "à",
     "from": "De",
-    "returnHome": "Retourner à l'accueil"
+    "returnHome": "Retourner à l'accueil",
+    "more": "plus"
   },
   "events": {
     "title": "Événements",
@@ -576,7 +643,9 @@
     "showing": "Événements familiaux près de chez vous",
     "eventsCount": "événements",
     "location": "Lieu",
-    "time": "Heure"
+    "time": "Heure",
+    "searchPlaceholder": "Rechercher des événements...",
+    "youAreHere": "Vous êtes ici"
   },
   "memories": {
     "title": "Souvenirs",
@@ -644,7 +713,16 @@
     "join": "Rejoindre",
     "inAppMessaging": "Messagerie dans l'application",
     "messagingDesc": "Connectez-vous en privé avec d'autres parents de votre communauté",
-    "premiumFeature": "Fonctionnalité Premium"
+    "premiumFeature": "Fonctionnalité Premium",
+    "createNewGroup": "Créer un nouveau groupe",
+    "groupName": "Nom du groupe",
+    "groupNamePlaceholder": "ex. : Parents de Zurich",
+    "descriptionPlaceholder": "De quoi parle ce groupe ?",
+    "typeMessage": "Tapez un message...",
+    "searchGroups": "Rechercher des groupes...",
+    "communityGroups": "Groupes communautaires",
+    "groupChat": "Chat de groupe",
+    "membersCount": "membres"
   },
   "marketplace": {
     "title": "Marché",
@@ -680,7 +758,17 @@
     "startSellingDesc": "Listez des articles à vendre et connectez-vous avec des familles locales",
     "familyPlanFeature": "Fonctionnalité du plan familial",
     "listFirstItem": "Listez votre premier article",
-    "popularCategories": "Catégories populaires"
+    "popularCategories": "Catégories populaires",
+    "createListing": "Créer une annonce",
+    "whatAreSelling": "Que vendez-vous ?",
+    "describeItem": "Décrivez l'article...",
+    "conditionNew": "Neuf",
+    "conditionLikeNew": "Comme neuf",
+    "conditionGood": "Bon",
+    "conditionFair": "Correct",
+    "conditionPoor": "Mauvais",
+    "noImage": "Pas d'image",
+    "upcomingEvents": "Événements à venir"
   },
   "referral": {
     "title": "Parrainez des amis, obtenez Premium",
@@ -691,7 +779,8 @@
     "shareWithFriends": "Partager avec des amis",
     "copied": "Copié!",
     "copiedDesc": "Code de parrainage copié dans le presse-papiers",
-    "shareMessage": "Rejoignez-moi sur Eazy.Family! Utilisez mon code {code} pour 7 jours de Premium gratuit! 🎁"
+    "shareMessage": "Rejoignez-moi sur Eazy.Family! Utilisez mon code {code} pour 7 jours de Premium gratuit! 🎁",
+    "shareCopiedDesc": "Message de partage copié dans le presse-papiers"
   },
   "upgrade": {
     "title": "Passer au plan famille",
@@ -701,7 +790,21 @@
     "cancelAnytime": "Annulez à tout moment • Renouvellement automatique après l'essai",
     "error": "Erreur",
     "promoError": "Échec de l'application du code promo.",
-    "checkoutError": "Échec du démarrage du paiement. Veuillez réessayer."
+    "checkoutError": "Échec du démarrage du paiement. Veuillez réessayer.",
+    "familyPremium": "Premium Famille",
+    "keepFullAccess": "Conservez votre accès complet",
+    "notAvailable": "Non disponible",
+    "couldNotLoadOfferings": "Impossible de charger les offres. Réessayez.",
+    "purchaseFailed": "Échec de l'achat",
+    "purchaseFailedDesc": "Veuillez réessayer.",
+    "purchasesRestored": "Achats restaurés",
+    "subscriptionActive": "Votre abonnement est actif.",
+    "nothingToRestore": "Rien à restaurer",
+    "noActiveSubscription": "Aucun abonnement actif trouvé.",
+    "restoreFailed": "Restauration échouée",
+    "authRequired": "Authentification requise",
+    "signInToUpgrade": "Veuillez vous connecter pour passer à la version supérieure.",
+    "failedCheckout": "Impossible de démarrer le paiement. Veuillez réessayer."
   },
   "family": {
     "title": "Profil familial",
@@ -749,7 +852,8 @@
     "welcomeDesc": "Vous avez été ajouté à la famille",
     "error": "Erreur",
     "errorDesc": "Échec de l'acceptation de l'invitation. Le lien est peut-être expiré ou invalide.",
-    "invalidLink": "Lien d'invitation invalide"
+    "invalidLink": "Lien d'invitation invalide",
+    "addedToFamily": "Vous avez été ajouté(e) à la famille"
   },
   "joinFamily": {
     "title": "Rejoindre une famille",
@@ -758,7 +862,17 @@
     "codePlaceholder": "ABC123",
     "joinButton": "Rejoindre la famille",
     "error": "Erreur",
-    "errorDesc": "Échec de rejoindre la famille. Veuillez réessayer."
+    "errorDesc": "Échec de rejoindre la famille. Veuillez réessayer.",
+    "enterInviteCode": "Entrez le code d'invitation",
+    "enterValidCode": "Veuillez entrer un code d'invitation valide",
+    "invalidCodeLength": "Longueur de code invalide",
+    "invalidCodeLengthDesc": "Les codes d'invitation doivent comporter exactement 6 caractères",
+    "invalidCodeFormat": "Format de code invalide",
+    "invalidCodeFormatDesc": "Les codes d'invitation ne peuvent contenir que des lettres et des chiffres",
+    "unableToJoin": "Impossible de rejoindre",
+    "welcomeToFamily": "Bienvenue dans la famille ! 🎉",
+    "youveJoined": "Vous avez rejoint {{familyName}}",
+    "failedToJoin": "Échec pour rejoindre la famille. Veuillez réessayer."
   },
   "auth": {
     "signIn": "Se connecter",
@@ -827,7 +941,32 @@
     "placeholder": "Comment puis-je vous aider?",
     "hint": "Posez-moi des questions sur l'organisation de votre vie familiale!",
     "error": "Erreur",
-    "errorDesc": "Échec de l'envoi du message. Veuillez réessayer."
+    "errorDesc": "Échec de l'envoi du message. Veuillez réessayer.",
+    "saving": "Enregistrement…",
+    "approve": "Approuver",
+    "dismiss": "Ignorer",
+    "ok": "OK",
+    "parseError": "Impossible d'analyser — vérifiez ci-dessous :",
+    "didYouMean": "Vouliez-vous dire :",
+    "couldNotSave": "Impossible d'enregistrer. Veuillez réessayer.",
+    "voiceNotSupported": "Non pris en charge",
+    "voiceInputNotSupported": "La saisie vocale n'est pas prise en charge dans ce navigateur.",
+    "rateLimitExceeded": "Limite de débit dépassée",
+    "rateLimitRetry": "Veuillez réessayer dans un moment.",
+    "authError": "Erreur d'authentification",
+    "authErrorDesc": "Veuillez vous connecter et réessayer.",
+    "assistantUnavailable": "Assistant indisponible",
+    "assistantUnavailableDesc": "L'assistant IA est temporairement indisponible.",
+    "itemsAdded": "{{count}} article(s) ajouté(s) à la liste",
+    "taskAdded": "Tâche ajoutée",
+    "taskAddedFor": "Tâche ajoutée pour {{date}}",
+    "eventAdded": "Événement ajouté : {{title}}",
+    "failedToSend": "Échec de l'envoi du message. Veuillez réessayer.",
+    "openAssistant": "Ouvrir l'assistant Eazy",
+    "closeAssistant": "Fermer l'assistant",
+    "stopListening": "Arrêter d'écouter",
+    "startVoice": "Démarrer la saisie vocale",
+    "sendMessage": "Envoyer le message"
   },
   "voice": {
     "recordingStarted": "Enregistrement démarré",
@@ -840,7 +979,15 @@
     "tryAgain": "Veuillez parler plus clairement.",
     "heard": "J'ai entendu:",
     "processingError": "Erreur de traitement audio",
-    "processingErrorDesc": "Veuillez réessayer."
+    "processingErrorDesc": "Veuillez réessayer.",
+    "micAccessDenied": "Accès au microphone refusé",
+    "allowMicAccess": "Autorisez l'accès au microphone dans les Paramètres.",
+    "notAvailable": "Voix non disponible",
+    "speechNotSupported": "La reconnaissance vocale n'est pas prise en charge ici. Essayez de taper.",
+    "voiceErrorTitle": "Erreur vocale",
+    "captureError": "Impossible de capturer la parole. Veuillez réessayer.",
+    "listening": "Écoute en cours...",
+    "processing": "Traitement en cours..."
   },
   "weather": {
     "title": "Météo",
@@ -848,7 +995,9 @@
     "enterCity": "Entrez le nom de la ville...",
     "feelsLike": "Ressenti",
     "humidity": "Humidité",
-    "wind": "Vent"
+    "wind": "Vent",
+    "yourLocation": "Votre position",
+    "removeWeather": "Supprimer la météo"
   },
   "todos": {
     "title": "Listes de tâches",
@@ -1487,5 +1636,11 @@
     "guideSignInRequired": "Connecte-toi pour utiliser le guide.",
     "guideError": "Désolé, je n'ai pas pu trouver de réponse. Réessaie.",
     "aiGuide": "Pose-moi n'importe quelle question sur l'app — je suis là pour t'aider."
+  },
+  "messaging": {
+    "typeMessage": "Tapez un message...",
+    "searchFamily": "Rechercher dans la famille...",
+    "messages": "Messages",
+    "searchConversations": "Rechercher des conversations..."
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, MessageCircle, ChevronRight, BadgeCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Conversation {
   id: string;
@@ -26,6 +27,7 @@ const MessagingConversationList: React.FC<MessagingConversationListProps> = ({
   onStartNewConversation,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredConversations = conversations.filter(
@@ -61,7 +63,7 @@ const MessagingConversationList: React.FC<MessagingConversationListProps> = ({
     <div className="w-full max-w-md bg-white rounded-lg shadow-lg flex flex-col h-screen md:h-96">
       <div className="p-4 border-b">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Messages</h2>
+          <h2 className="text-2xl font-bold">{t('messaging.messages')}</h2>
           <button
             onClick={onStartNewConversation}
             className="p-2 rounded-full hover:bg-gray-100 transition"
@@ -78,7 +80,7 @@ const MessagingConversationList: React.FC<MessagingConversationListProps> = ({
           />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder={t('messaging.searchConversations')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-grape-500 text-sm"

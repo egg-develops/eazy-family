@@ -88,7 +88,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         const { latitude, longitude } = pos.coords;
         const location: WeatherLocation = {
           id: `${latitude}-${longitude}`,
-          name: "Your location",
+          name: t('weather.yourLocation'),
           lat: latitude,
           lon: longitude,
         };
@@ -100,7 +100,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           .then(data => {
             const addr = data.address;
             if (addr) {
-              location.name = addr.city || addr.town || addr.village || addr.county || "Your location";
+              location.name = addr.city || addr.town || addr.village || addr.county || t('weather.yourLocation');
             }
           })
           .catch(() => {})
@@ -210,7 +210,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
         <button
           onClick={onRemove}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
-          aria-label="Remove weather"
+          aria-label={t('weather.removeWeather')}
         >×</button>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
           </div>
           <div className="flex gap-2">
             <Input
-              placeholder="Enter city name..."
+              placeholder={t('weather.enterCity')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchLocation()}
@@ -259,7 +259,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
       <button
         onClick={onRemove}
         className="absolute top-2 right-2 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors z-10 text-lg font-light"
-        aria-label="Remove weather"
+        aria-label={t('weather.removeWeather')}
       >×</button>
 
       <div className="space-y-4">
@@ -321,7 +321,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Enter city name..."
+                  placeholder={t('weather.enterCity')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && searchLocation()}

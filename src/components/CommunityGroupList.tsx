@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Plus, Search, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Group {
   id: string;
@@ -18,15 +19,16 @@ const CommunityGroupList: React.FC<{
   onGroupClick?: (id: string) => void;
 }> = ({ joinedGroups = [], availableGroups = [], onGroupClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useTranslation();
 
   return (
     <div className="w-full max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Community Groups</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('community.communityGroups')}</h2>
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Search groups..."
+          placeholder={t('community.searchGroups')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-10 pr-4 py-2 border rounded-lg"
@@ -48,7 +50,7 @@ const CommunityGroupList: React.FC<{
                 <p className="text-gray-600 text-sm">{group.description}</p>
                 <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
                   <Users size={14} />
-                  <span>{group.memberCount} members</span>
+                  <span>{group.memberCount} {t('community.membersCount')}</span>
                 </div>
               </div>
               <ChevronRight size={20} className="text-gray-400" />

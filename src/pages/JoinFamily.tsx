@@ -9,12 +9,14 @@ import { Users, ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { error as logError } from "@/lib/logger";
+import { useTranslation } from "react-i18next";
 
 const JoinFamily = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [inviteCode, setInviteCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const autoJoinAttempted = useRef(false);
@@ -55,8 +57,8 @@ const JoinFamily = () => {
     const trimmedCode = (overrideCode ?? inviteCode).trim().toUpperCase();
     if (!trimmedCode) {
       toast({
-        title: "Enter invite code",
-        description: "Please enter a valid invite code",
+        title: t('joinFamily.enterInviteCode'),
+        description: t('joinFamily.enterValidCode'),
         variant: "destructive",
       });
       return;
@@ -64,8 +66,8 @@ const JoinFamily = () => {
 
     if (trimmedCode.length !== 6) {
       toast({
-        title: "Invalid code length",
-        description: "Invite codes must be exactly 6 characters",
+        title: t('joinFamily.invalidCodeLength'),
+        description: t('joinFamily.invalidCodeLengthDesc'),
         variant: "destructive",
       });
       return;
@@ -73,8 +75,8 @@ const JoinFamily = () => {
 
     if (!/^[A-Z0-9]{6}$/.test(trimmedCode)) {
       toast({
-        title: "Invalid code format",
-        description: "Invite codes can only contain letters and numbers",
+        title: t('joinFamily.invalidCodeFormat'),
+        description: t('joinFamily.invalidCodeFormatDesc'),
         variant: "destructive",
       });
       return;
@@ -93,8 +95,8 @@ const JoinFamily = () => {
 
       if (!result.success) {
         toast({
-          title: "Unable to join",
-          description: result.error || "Invalid invite code",
+          title: t('joinFamily.unableToJoin'),
+          description: result.error || t('joinFamily.error'),
           variant: "destructive",
         });
         return;
@@ -102,16 +104,16 @@ const JoinFamily = () => {
 
       localStorage.removeItem('pending-invite-code');
       toast({
-        title: "Welcome to the family! 🎉",
-        description: `You've joined ${result.family_name}`,
+        title: t('joinFamily.welcomeToFamily'),
+        description: t('joinFamily.youveJoined', { familyName: result.family_name }),
       });
 
       navigate("/app/family");
     } catch (error) {
       logError("Error joining family:", error);
       toast({
-        title: "Error",
-        description: "Failed to join family. Please try again.",
+        title: t('common.error'),
+        description: t('joinFamily.failedToJoin'),
         variant: "destructive",
       });
     } finally {

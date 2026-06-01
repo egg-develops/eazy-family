@@ -276,8 +276,8 @@ const Settings = () => {
         throw new Error(description);
       }
       toast({
-        title: "Account deleted",
-        description: "Your Eazy.Family account and all its associated data have been deleted.",
+        title: t('settings.accountDeleted'),
+        description: t('settings.accountDeletedDesc'),
       });
       await new Promise(r => setTimeout(r, 1800));
       await signOut();
