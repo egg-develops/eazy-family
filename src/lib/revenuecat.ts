@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { error as logError } from '@/lib/logger';
 
 const isNative = Capacitor.isNativePlatform();
 const RC_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY as string;
@@ -114,7 +115,7 @@ export async function getRCOfferings(): Promise<RCPackage[]> {
     }));
   } catch (err) {
     // Log exact error so it appears in Xcode console for next test run
-    console.error('[RevenueCat] getRCOfferings failed:', err);
+    logError('[RevenueCat] getRCOfferings failed:', err);
     return [];
   }
 }

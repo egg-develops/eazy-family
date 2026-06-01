@@ -17,3 +17,8 @@ To test:
 6. The iOS widget is available after sign-in — long press home screen → Add Widget → Eazy Family.
 
 The app requires no special hardware beyond an iPhone. Push notifications are used for family reminders and are optional.
+
+In-App Subscription:
+The app includes an optional premium subscription (annual and monthly plans). To test, tap the crown/upgrade icon from the home screen or any premium feature prompt.
+
+IMPORTANT — If the paywall displays "Unable to load plans" with a retry button: this is expected behaviour in Apple's sandbox StoreKit environment, which can delay product loading by 10–30 seconds. Simply tap the Retry button and the plans will load. This does not occur in production. The subscription flow uses Apple's native SubscriptionStoreView (iOS 17+). No purchase is required to evaluate any core features of the app.
