@@ -649,32 +649,6 @@ const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () 
   );
 };
 
-// ── Screen 9 helpers ──────────────────────────────────────────────────────────
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (cfg: object) => void;
-          prompt: (cb?: (n: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
-        };
-      };
-    };
-  }
-}
-
-const loadGIS = (): Promise<void> =>
-  new Promise((resolve) => {
-    if (window.google?.accounts?.id) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true;
-    s.defer = true;
-    s.onload = () => resolve();
-    document.head.appendChild(s);
-  });
-
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
@@ -686,8 +660,6 @@ const AccountScreen = ({
   loading: boolean; error: string; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
 }) => {
   const oauthBrowserOpen = useRef(false);
-  const gisReady = useRef(false);
-  const [googleAuthError, setGoogleAuthError] = useState('');
 
   // Close SFSafariViewController when OAuth completes on native
   useEffect(() => {
@@ -700,54 +672,6 @@ const AccountScreen = ({
     });
     return () => subscription.unsubscribe();
   }, []);
-
-  // Initialize GIS once on mount — must NOT be called inside a click handler
-  // or Google suppresses prompt() as a safety measure against programmatic abuse.
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) return;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
-
-    loadGIS().then(() => {
-      if (!window.google?.accounts?.id) return;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (response: { credential: string }) => {
-          const { error: signInError } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: response.credential,
-          });
-          if (signInError) setGoogleAuthError('Google sign-in failed. Please try again.');
-        },
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        use_fedcm_for_prompt: false, // Legacy One Tap — FedCM is suppressed far more aggressively
-      });
-      gisReady.current = true;
-    });
-  }, []);
-
-  const handleGoogleSignInWeb = () => {
-    // GIS not loaded yet — fall back to OAuth redirect
-    if (!gisReady.current || !window.google?.accounts?.id) {
-      supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/app` },
-      });
-      return;
-    }
-
-    // prompt() shows One Tap tied to eazy.family origin (not Supabase).
-    // If suppressed (incognito / cooldown / strict browser), falls back to OAuth.
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: `${window.location.origin}/app` },
-        });
-      }
-    });
-  };
 
   const inputStyle: React.CSSProperties = {
     width: '100%', height: 52, padding: '0 16px',
@@ -827,9 +751,6 @@ const AccountScreen = ({
         </button>
 
         {/* Google sign in */}
-        {googleAuthError && (
-          <p style={{ color: '#B00020', fontSize: 13, textAlign: 'center', margin: 0 }}>{googleAuthError}</p>
-        )}
         <button
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
@@ -837,7 +758,8 @@ const AccountScreen = ({
               if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
               if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
             } else {
-              await handleGoogleSignInWeb();
+              const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+              if (error) setAuthError('Google sign-in unavailable. Please use email/password.');
             }
           }}
           style={{
