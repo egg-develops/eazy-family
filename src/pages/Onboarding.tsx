@@ -701,42 +701,44 @@ const AccountScreen = ({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Pre-load GIS script on web so the button click is instant
+  // Initialize GIS once on mount — must NOT be called inside a click handler
+  // or Google suppresses prompt() as a safety measure against programmatic abuse.
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return;
-    loadGIS().then(() => { gisReady.current = true; });
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    loadGIS().then(() => {
+      if (!window.google?.accounts?.id) return;
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response: { credential: string }) => {
+          const { error: signInError } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+          });
+          if (signInError) setGoogleAuthError('Google sign-in failed. Please try again.');
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: false, // Legacy One Tap — FedCM is suppressed far more aggressively
+      });
+      gisReady.current = true;
+    });
   }, []);
 
-  const handleGoogleSignInWeb = async () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    // If no client ID or GIS failed to load — fall back to Supabase OAuth redirect
-    if (!clientId || !gisReady.current || !window.google?.accounts?.id) {
-      const { error } = await supabase.auth.signInWithOAuth({
+  const handleGoogleSignInWeb = () => {
+    // GIS not loaded yet — fall back to OAuth redirect
+    if (!gisReady.current || !window.google?.accounts?.id) {
+      supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: `${window.location.origin}/app` },
       });
-      if (error) setGoogleAuthError('Google sign-in unavailable. Please use email/password.');
       return;
     }
 
-    // Re-initialize each call so the callback closure is always fresh
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (response: { credential: string }) => {
-        const { error: signInError } = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: response.credential,
-        });
-        if (signInError) setGoogleAuthError('Google sign-in failed. Please try again.');
-      },
-      auto_select: false,
-      cancel_on_tap_outside: false,
-    });
-
-    // prompt() shows Google's One Tap UI tied to eazy.family (not Supabase).
-    // Falls back to Supabase OAuth if suppressed (incognito, dismissed before, etc.)
+    // prompt() shows One Tap tied to eazy.family origin (not Supabase).
+    // If suppressed (incognito / cooldown / strict browser), falls back to OAuth.
     window.google.accounts.id.prompt((notification) => {
       if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         supabase.auth.signInWithOAuth({
