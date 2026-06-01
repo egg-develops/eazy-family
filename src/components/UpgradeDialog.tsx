@@ -4,7 +4,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Check, Crown, RotateCcw, Sparkles, Loader2, RefreshCw } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +37,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [offeringsError, setOfferingsError] = useState(false);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const fetchOfferings = useCallback(async () => {
     if (!isNative) return;
@@ -45,13 +51,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     try {
       const pkgs = await getRCOfferings();
       if (!pkgs || pkgs.length === 0) throw new Error('No offerings returned');
-      setRcPackages(pkgs);
+      if (mountedRef.current) setRcPackages(pkgs);
     } catch (err) {
       logError('getRCOfferings failed:', err);
-      setOfferingsError(true);
-      setRcPackages([]);
+      if (mountedRef.current) { setOfferingsError(true); setRcPackages([]); }
     } finally {
-      setIsLoadingOfferings(false);
+      if (mountedRef.current) setIsLoadingOfferings(false);
     }
   }, []);
 
@@ -201,7 +206,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             <>
               <button
                 onClick={handleNativeUpgrade}
-                disabled={isLoading}
+                disabled={isLoading || isLoadingOfferings}
                 className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
               >
