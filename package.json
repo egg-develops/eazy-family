@@ -13,7 +13,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:voice": "node scripts/smoke-voice.mjs",
-    "cap:ios": "npx cap sync ios && sed -i '' 's/.iOS(.v18)/.iOS(.v16)/' ios/App/CapApp-SPM/Package.swift",
     "postinstall": "patch-package"
   },
   "dependencies": {
