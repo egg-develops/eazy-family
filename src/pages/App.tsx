@@ -1031,16 +1031,16 @@ const AppHome = () => {
             <div className="flex items-center gap-2 mb-3">
               <img src="/logo.png" alt="" className="w-6 h-6 object-contain" style={{ filter: 'none' }} />
               <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-                Welcome to Eazy.Family
+                {t('home.tourBannerTitle')}
               </p>
             </div>
 
             <div className="space-y-2 mb-4">
               {([
-                ['📅', 'Shared family calendar & reminders'],
-                ['✅', 'Lists, tasks & shopping in one place'],
-                ['🟠', 'EZ Button — quick capture from anywhere'],
-                ['🌅', 'Daily rituals & family moments'],
+                ['📅', t('home.tourBannerFeature1')],
+                ['✅', t('home.tourBannerFeature2')],
+                ['🟠', t('home.tourBannerFeature3')],
+                ['🌅', t('home.tourBannerFeature4')],
               ] as [string, string][]).map(([icon, text]) => (
                 <div key={text} className="flex items-center gap-2">
                   <span style={{ fontSize: '0.875rem', lineHeight: 1, fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' }}>{icon}</span>
@@ -1054,7 +1054,7 @@ const AppHome = () => {
               className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
             >
-              Take the Tour →
+              {t('home.takeTour')}
             </button>
           </div>
         </div>
@@ -1067,13 +1067,13 @@ const AppHome = () => {
         <div className="rounded-2xl overflow-hidden" style={{ background: '#FFF8F0', border: '1px solid #EDCFB8' }}>
           <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#C4621A' }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C4621A' }}>Schedule Conflict{conflicts.length > 1 ? 's' : ''}</p>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C4621A' }}>{conflicts.length > 1 ? t('home.scheduleConflicts') : t('home.scheduleConflict')}</p>
           </div>
           {conflicts.map((c, i) => {
             const fmt = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
             return (
               <button key={i} onClick={() => navigate('/app/calendar')} className="w-full px-4 py-3 text-left" style={{ borderBottom: i < conflicts.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
-                <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>overlaps</span> {c.eventB.title}</p>
+                <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>{t('home.overlaps')}</span> {c.eventB.title}</p>
                 <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(c.eventA.start)}</p>
               </button>
             );
@@ -1086,8 +1086,8 @@ const AppHome = () => {
         <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
           <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
             <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
-            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>Overdue Tasks</p>
-            <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>View All</button>
+            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.overdueTasks')}</p>
+            <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
           </div>
           {staleTasks.slice(0, 3).map((task, i) => (
             <button key={task.id} onClick={() => navigate('/app/lists')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
@@ -1095,7 +1095,7 @@ const AppHome = () => {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{task.title}</p>
                 <p className="text-xs" style={{ color: task.isEscalated ? '#C4621A' : '#7A6660' }}>
-                  {task.isEscalated ? 'Stuck for ' : 'No activity for '}{task.daysSinceUpdate}d{task.isEscalated ? ' — delegate or drop?' : ''}
+                  {task.isEscalated ? t('home.stuckFor') : t('home.noActivityFor')} {task.daysSinceUpdate}d{task.isEscalated ? ` ${t('home.delegateOrDrop')}` : ''}
                 </p>
               </div>
             </button>
@@ -1209,7 +1209,7 @@ const AppHome = () => {
           })
           .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
           .slice(0, 5);
-        const dateLabel = (d: Date) => isToday(d) ? 'Today' : isTomorrow(d) ? 'Tomorrow' : format(d, 'EEE, MMM d');
+        const dateLabel = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : format(d, 'EEE, MMM d');
         return (
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
@@ -1253,11 +1253,11 @@ const AppHome = () => {
         } catch { /* ignore */ }
         const msgPreview = (m: ChannelMsg) =>
           m.type === 'text' ? (m.content || '') :
-          m.type === 'voice' ? '🎤 Voice message' :
-          m.type === 'image' ? '📷 Photo' :
-          m.type === 'location' ? '📍 Location' :
-          m.type === 'poll' ? '📊 Poll' :
-          m.type === 'document' ? '📄 Document' : 'New message';
+          m.type === 'voice' ? t('home.voiceMessage') :
+          m.type === 'image' ? t('home.photoMessage') :
+          m.type === 'location' ? t('home.locationMessage') :
+          m.type === 'poll' ? t('home.pollMessage') :
+          m.type === 'document' ? t('home.documentMessage') : t('home.newMessage');
         return (
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
