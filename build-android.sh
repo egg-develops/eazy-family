@@ -1,11 +1,15 @@
 #!/bin/bash
 set -e
 
-# Auto-bump versionCode in build.gradle
 GRADLE_FILE="/Users/hq/eazy-family/android/app/build.gradle"
-CURRENT=$(grep "versionCode" "$GRADLE_FILE" | grep -o '[0-9]*')
+
+# Extract versionCode — match only lines that END with a plain integer
+# (avoids corrupting expressions like Integer.parseInt(...) on the same line)
+CURRENT=$(grep -E 'versionCode [0-9]+$' "$GRADLE_FILE" | grep -oE '[0-9]+$')
 NEXT=$((CURRENT + 1))
-sed -i '' "s/versionCode $CURRENT/versionCode $NEXT/" "$GRADLE_FILE"
+
+# Replace only "versionCode <digits>" at end of line — safe anchor
+sed -i '' -E "s/(versionCode )[0-9]+$/\1$NEXT/" "$GRADLE_FILE"
 echo "▶ versionCode bumped: $CURRENT → $NEXT"
 
 # Build web and sync to Android
@@ -24,6 +28,12 @@ ANDROID_KEYSTORE_PASSWORD='EazyFamily2024!' \
 ANDROID_KEY_ALIAS=eazyfamily \
 ANDROID_KEY_PASSWORD='EazyFamily2024!' \
 ../gradlew bundleRelease 2>&1 | tail -5
+
+# Commit the bumped versionCode
+cd /Users/hq/eazy-family
+git add android/app/build.gradle
+git commit -m "chore: bump Android versionCode to $NEXT"
+git push
 
 echo ""
 echo "✅ Done! AAB ready at:"
