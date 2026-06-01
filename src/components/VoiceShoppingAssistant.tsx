@@ -73,7 +73,6 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
     }
     speech.start({
       lang: speechLang,
-      continuous: false,
       onResult: (transcript, isFinal) => {
         if (isFinal && transcript.trim()) processTranscript(transcript.trim());
       },
@@ -113,12 +112,12 @@ export const VoiceShoppingAssistant = ({ onItemsAdded, listenerDescription = "Sp
       </Button>
       {speech.isListening && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
-          Listening...
+          {t('voice.listening')}
         </div>
       )}
       {isProcessing && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          Processing...
+          {t('voice.processing')}
         </div>
       )}
     </div>

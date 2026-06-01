@@ -17,7 +17,7 @@ interface ShoppingItem {
   listType: 'personal' | 'shared';
 }
 
-const CATEGORIES = ['Produce', 'Dairy', 'Meat', 'Bakery', 'Household', 'Baby', 'Drinks', 'Other'];
+const CATEGORIES = ['Produce', 'Dairy', 'Meat', 'Bakery', 'Household', 'Baby', 'Drinks', 'Snacks', 'Pharmacy', 'Other'];
 
 const cleanShoppingText = (text: string): string =>
   text
@@ -40,6 +40,8 @@ const guessCategory = (title: string): string => {
   if (/paper|soap|detergent|cleaning|towel|toilet|sponge|trash|bag|foil|wrap|wipe/.test(t)) return 'Household';
   if (/diaper|formula|baby|puree/.test(t)) return 'Baby';
   if (/water|juice|coffee|tea|beer|wine|soda|drink|beverage|smoothie/.test(t)) return 'Drinks';
+  if (/crisp|chip|snack|popcorn|pretzel|nut|peanut|cashew|almond|chocolate|candy|sweet|biscuit|cookie|cracker/.test(t)) return 'Snacks';
+  if (/shampoo|conditioner|toothpaste|toothbrush|soap|lotion|cream|sunscreen|medicine|vitamin|painkiller|ibuprofen|paracetamol|plaster|bandage|pharmacy|deodorant|razor|tampon|pad|floss/.test(t)) return 'Pharmacy';
   return 'Other';
 };
 

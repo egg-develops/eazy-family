@@ -486,13 +486,13 @@ const AppLayout = () => {
 
 
       {/* EZ Capture Overlay */}
-      {ezOpen && <EZCapture onClose={() => setEzOpen(false)} defaultType={
+      {ezOpen && <ErrorBoundary><EZCapture onClose={() => setEzOpen(false)} defaultType={
         currentPath.includes('/lists') && new URLSearchParams(window.location.search).get('tab') === 'shopping' ? 'shopping' :
         currentPath.includes('/lists') ? 'task' :
         currentPath.includes('/calendar') ? 'event' :
         currentPath.includes('/rituals') ? 'journal' :
         'event'
-      } />}
+      } /></ErrorBoundary>}
 
       {/* Global tutorial — must live at AppLayout level so it hears events from any page */}
       <GlobalTutorial />

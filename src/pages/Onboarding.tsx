@@ -9,6 +9,7 @@ import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/ap
 import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
 import i18n from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
+import { error as logError } from '@/lib/logger';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -373,6 +374,7 @@ const Onboarding = () => {
             email={authEmail} setEmail={setAuthEmail}
             password={authPassword} setPassword={setAuthPassword}
             loading={authLoading2} error={authError}
+            onError={setAuthError}
             onSubmit={handleSignUp}
             onSkip={handleSkipAccount}
             skipDisabled={skipLoading}
@@ -652,12 +654,12 @@ const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () 
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
-  loading, error, onSubmit, onSkip, skipDisabled,
+  loading, error, onError, onSubmit, onSkip, skipDisabled,
 }: {
   name: string; setName: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   password: string; setPassword: (v: string) => void;
-  loading: boolean; error: string; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
+  loading: boolean; error: string; onError: (msg: string) => void; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
 }) => {
   const oauthBrowserOpen = useRef(false);
 
@@ -731,12 +733,12 @@ const AccountScreen = ({
               } catch (err: any) {
                 const code = err?.error ?? err?.message ?? '';
                 if (code === 'canceled' || code.includes('AuthorizationError error 1001')) return;
-                console.error('Apple sign-in error:', err);
-                setAuthError('Apple sign-in failed. Please try again or use email/password.');
+                logError('Apple sign-in error:', err);
+                onError('Apple sign-in failed. Please try again or use email/password.');
               }
             } else {
               const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
-              if (error) setAuthError('Apple sign-in unavailable. Please use email/password.');
+              if (error) onError('Apple sign-in unavailable. Please use email/password.');
             }
           }}
           style={{
@@ -755,11 +757,11 @@ const AccountScreen = ({
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
               const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'eazy-family://app', skipBrowserRedirect: true } });
-              if (error) { setAuthError('Google sign-in unavailable. Please use email/password.'); return; }
+              if (error) { onError('Google sign-in unavailable. Please use email/password.'); return; }
               if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
             } else {
               const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
-              if (error) setAuthError('Google sign-in unavailable. Please use email/password.');
+              if (error) onError('Google sign-in unavailable. Please use email/password.');
             }
           }}
           style={{

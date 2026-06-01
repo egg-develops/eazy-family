@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { supabase } from "@/integrations/supabase/client";
+import { error as logError } from "@/lib/logger";
 
 // Module-level cache — permission granted status persists for the app session
 let nativePermissionGranted = false;
@@ -281,12 +282,12 @@ export const useSpeechRecognition = () => {
             const transcript = (data.text ?? '').trim();
             if (transcript) opts.onResult(transcript, true);
           } else {
-            console.error('[useSpeechRecognition] Transcription HTTP error:', res.status);
+            logError('[useSpeechRecognition] Transcription HTTP error:', res.status);
             opts.onError?.('transcription-failed');
           }
         } catch (err: any) {
           if (err?.name !== 'AbortError') {
-            console.error('[useSpeechRecognition] Whisper transcription failed:', err);
+            logError('[useSpeechRecognition] Whisper transcription failed:', err);
             opts.onError?.('transcription-failed');
           }
         }

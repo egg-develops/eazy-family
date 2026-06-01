@@ -133,7 +133,7 @@ export const EazyAssistant = () => {
       return await response.json();
     } catch (err) {
       clearTimeout(timeoutId);
-      console.error("Voice parser error:", err);
+      logError("Voice parser error:", err);
       throw err;
     }
   };
