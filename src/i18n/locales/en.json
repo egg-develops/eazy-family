@@ -340,7 +340,12 @@
     "openAdminConsentPage": "Open Admin Consent Page",
     "usingPersonalOutlook": "Using a personal Outlook.com account instead?",
     "tryAgain": "Try again",
-    "connectCalendarInfo": "Connect a calendar to import your events."
+    "connectCalendarInfo": "Connect a calendar to import your events.",
+    "nothingScheduled": "Nothing scheduled. A clear, open day.",
+    "remindersTitle": "Reminders",
+    "year": "Year",
+    "view3Day": "3 Days",
+    "view42Day": "42 Days"
   },
   "calendarIntegrations": {
     "title": "Calendar Integrations",

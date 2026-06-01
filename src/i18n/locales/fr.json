@@ -337,7 +337,12 @@
     "openAdminConsentPage": "Ouvrir la page de consentement admin",
     "usingPersonalOutlook": "Vous utilisez un compte Outlook.com personnel ?",
     "tryAgain": "Réessayer",
-    "connectCalendarInfo": "Connectez un calendrier pour importer vos événements."
+    "connectCalendarInfo": "Connectez un calendrier pour importer vos événements.",
+    "nothingScheduled": "Rien de prévu. Une journée libre et sereine.",
+    "remindersTitle": "Rappels",
+    "year": "Année",
+    "view3Day": "3 Jours",
+    "view42Day": "42 Jours"
   },
   "calendarIntegrations": {
     "title": "Intégrations de calendrier",

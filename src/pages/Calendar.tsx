@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings, AlignLeft, Paperclip } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays, subDays } from "date-fns";
+import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -259,8 +260,21 @@ const EZDateTimePicker = ({
 };
 
 const Calendar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
+
+  const dateFnsLocale = useMemo((): Locale | undefined => {
+    const map: Record<string, Locale> = { de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale };
+    return map[i18n.language.split('-')[0]];
+  }, [i18n.language]);
+
+  // Single-char weekday initials generated from the active locale (Sun→Sat order)
+  const weekDayInitials = useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(2024, 0, 7 + i); // Jan 7 2024 = Sunday
+      return format(d, 'EEEEE', { locale: dateFnsLocale });
+    }),
+  [dateFnsLocale]);
 
   const getTagLabel = (tagKey: string): string => {
     const map: Record<string, string> = {
@@ -825,7 +839,8 @@ const Calendar = () => {
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = "en-US";
+    const langMap: Record<string, string> = { de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT' };
+    recognition.lang = langMap[i18n.language.split('-')[0]] || 'en-US';
 
     recognition.onresult = (event: any) => {
       const transcript: string = event.results[0][0].transcript;
@@ -1120,7 +1135,7 @@ const Calendar = () => {
   };
 
   const renderDayCalendar = () => {
-    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    const weekDays = weekDayInitials;
     const weekStart = startOfWeek(selectedDate);
     const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     return (
@@ -1194,7 +1209,7 @@ const Calendar = () => {
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
     const days = eachDayOfInterval({ start: startDate, end: endDate });
-    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    const weekDays = weekDayInitials;
 
     return (
       <div className="rounded-2xl p-4 sm:p-5" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
@@ -1365,7 +1380,7 @@ const Calendar = () => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const offset = today.getDay(); // 0=Sun … 6=Sat — empty cells before today
     const days = Array.from({ length: 42 }, (_, i) => addDays(today, i));
-    const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+    const weekDays = weekDayInitials;
     return (
       <div className="px-1">
         <div className="grid grid-cols-7 mb-1">
@@ -1421,7 +1436,7 @@ const Calendar = () => {
       {/* Own Header */}
       <div className="flex items-center justify-between px-4 h-14" style={{ background: 'hsl(var(--background))' }}>
         <div className="flex items-center gap-2">
-          <h1 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{format(selectedDate, 'MMMM yyyy')}</h1>
+          <h1 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{format(selectedDate, 'MMMM yyyy', { locale: dateFnsLocale })}</h1>
           <button
             onClick={() => setShowViewPicker(v => !v)}
             className="w-7 h-7 flex items-center justify-center rounded"
@@ -1436,7 +1451,7 @@ const Calendar = () => {
               className="px-2.5 py-1 rounded-full text-xs font-semibold"
               style={{ background: '#964735', color: '#FFFFFF' }}
             >
-              Today
+              {t('calendar.today')}
             </button>
           )}
           <button
@@ -1477,7 +1492,7 @@ const Calendar = () => {
                       <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{item.title}</p>
                       {item.startDate && (
                         <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                          {new Date(item.startDate).toLocaleDateString('en-CH', { weekday: 'short', month: 'short', day: 'numeric' })}
+                          {new Date(item.startDate).toLocaleDateString(i18n.language, { weekday: 'short', month: 'short', day: 'numeric' })}
                         </p>
                       )}
                     </div>
@@ -1508,7 +1523,7 @@ const Calendar = () => {
                   borderBottom: '1px solid hsl(var(--border))',
                 }}
               >
-                {v === '42day' ? '42-day →' : v === '3day' ? '3 Day' : v.charAt(0).toUpperCase() + v.slice(1)}
+                {v === '42day' ? t('calendar.view42Day') : v === '3day' ? t('calendar.view3Day') : v === 'year' ? t('calendar.year') : v === 'month' ? t('calendar.month') : v === 'week' ? t('calendar.week') : t('calendar.day')}
               </button>
             ))}
           </div>
@@ -1536,7 +1551,7 @@ const Calendar = () => {
         const startDt = startOfWeek(monthStart);
         const endDt = endOfWeek(monthEnd);
         const days = eachDayOfInterval({ start: startDt, end: endDt });
-        const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
+        const weekDays = weekDayInitials;
         return (
           <div className="px-1">
             <div className="grid grid-cols-7 mb-1">
@@ -1700,7 +1715,7 @@ const Calendar = () => {
             </div>
           ) : (
             <div className="rounded-2xl p-6 text-center" style={{ background: 'hsl(var(--card))', border: '1px dashed #DAC1BB' }}>
-              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>Nothing scheduled. A clear, open day.</p>
+              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.nothingScheduled')}</p>
             </div>
           )}
 
@@ -1708,7 +1723,7 @@ const Calendar = () => {
           {selectedDayReminders.length > 0 && (
             <div className="mt-4 space-y-2">
               <p className="text-xs font-bold uppercase tracking-wide px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Reminders
+                {t('calendar.remindersTitle')}
               </p>
               {selectedDayReminders.map(rem => (
                 <div key={rem.id}
@@ -1738,7 +1753,7 @@ const Calendar = () => {
             className="mt-3 w-full py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2"
             style={{ border: '1px dashed #DAC1BB', color: '#964735' }}
           >
-            <Plus className="w-4 h-4" /> Add event
+            <Plus className="w-4 h-4" /> {t('calendar.addEvent')}
           </button>
         </div>
       )}
@@ -2050,9 +2065,9 @@ const Calendar = () => {
                 )}
 
                 {/* Tags */}
-                <div className="rounded-2xl px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <p className="text-sm font-semibold mb-2.5" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.tagLabel')}</p>
-                  <div className="flex flex-wrap gap-1.5">
+                <div className="rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="text-xs font-semibold mb-2 block" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.tagLabel').toUpperCase()}</span>
+                  <div className="flex flex-wrap gap-1">
                     {Object.entries(TAGS).map(([key, tag]) => {
                       const isSelected = eventTag === key;
                       return (
@@ -2061,15 +2076,15 @@ const Calendar = () => {
                           if (!isSelected) setEventColor(tag.border);
                           setEventCustomTag('');
                         }}
-                          className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
-                          style={{ background: isSelected ? tag.border : tag.bg, color: isSelected ? '#fff' : tag.dot, border: `1.5px solid ${tag.border}` }}>
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all"
+                          style={{ background: isSelected ? tag.border : tag.bg, color: isSelected ? '#fff' : tag.dot, border: `1px solid ${tag.border}` }}>
                           {getTagLabel(key)}
                         </button>
                       );
                     })}
                     <button onClick={() => { setEventTag('custom'); }}
-                      className="px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all"
-                      style={{ background: eventTag === 'custom' ? '#555' : 'hsl(var(--muted))', color: eventTag === 'custom' ? '#fff' : 'hsl(var(--muted-foreground))', border: '1.5px solid hsl(var(--border))' }}>
+                      className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold transition-all"
+                      style={{ background: eventTag === 'custom' ? '#555' : 'hsl(var(--muted))', color: eventTag === 'custom' ? '#fff' : 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border))' }}>
                       {t('calendar.addCustomTag')}
                     </button>
                   </div>
@@ -2086,26 +2101,30 @@ const Calendar = () => {
                 </div>
 
                 {/* Color */}
-                <div className="rounded-2xl px-4 py-3.5 flex items-center gap-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="text-sm font-semibold flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.colorLabel')}</span>
-                  <div className="flex gap-2 flex-wrap flex-1">
+                <div className="rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="text-xs font-semibold mb-2 block" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.colorLabel').toUpperCase()}</span>
+                  <div className="flex gap-2.5 flex-wrap">
                     {['#964735', '#D97B66', '#FFC861', '#4CAF50', '#64A0F0', '#6E8FE5', '#BA1A1A', '#555555'].map(c => (
                       <button key={c} onClick={() => setEventColor(c)}
-                        className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center transition-transform"
-                        style={{ background: c, transform: eventColor === c ? 'scale(1.3)' : 'scale(1)', boxShadow: eventColor === c ? `0 0 0 2px #fff, 0 0 0 3px ${c}` : 'none' }}>
+                        className="w-6 h-6 rounded-full flex-shrink-0 transition-all"
+                        style={{ background: c, boxShadow: eventColor === c ? `0 0 0 2px #fff, 0 0 0 3.5px ${c}` : 'none', transform: eventColor === c ? 'scale(1.15)' : 'scale(1)' }}>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Visible to */}
-                <div className="rounded-2xl px-4 py-3.5 flex items-center justify-between" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.visibleTo')}</span>
-                  <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
+                <div className="rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <span className="text-xs font-semibold mb-2 block" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.visibleTo').toUpperCase()}</span>
+                  <div className="flex gap-1.5 p-1 rounded-xl" style={{ background: 'hsl(var(--muted))' }}>
                     {([['everyone', t('calendar.everyone')], ['parents', t('calendar.parents')], ['me', t('calendar.justMe')]] as [string, string][]).map(([val, label]) => (
-                      <button key={val} onClick={() => setEventVisibleTo(val)}
-                        className="px-2.5 py-1 text-[11px] font-semibold transition-all"
-                        style={{ background: eventVisibleTo === val ? '#964735' : 'transparent', color: eventVisibleTo === val ? '#fff' : 'hsl(var(--muted-foreground))' }}>
+                      <button key={val} onClick={() => setEventVisibleTo(val as 'everyone' | 'parents' | 'me')}
+                        className="flex-1 py-1.5 text-[11px] font-semibold rounded-lg transition-all"
+                        style={{
+                          background: eventVisibleTo === val ? 'hsl(var(--card))' : 'transparent',
+                          color: eventVisibleTo === val ? '#964735' : 'hsl(var(--muted-foreground))',
+                          boxShadow: eventVisibleTo === val ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+                        }}>
                         {label}
                       </button>
                     ))}
