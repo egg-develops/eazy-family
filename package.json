@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:voice": "node scripts/smoke-voice.mjs",
+    "cap:ios": "npx cap sync ios && sed -i '' 's/.iOS(.v18)/.iOS(.v16)/' ios/App/CapApp-SPM/Package.swift",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -58,6 +59,7 @@
     "@supabase/supabase-js": "^2.58.0",
     "@tanstack/react-query": "^5.83.0",
     "@types/leaflet": "^1.9.21",
+    "@vitejs/plugin-react": "^6.0.2",
     "browser-image-compression": "^2.0.2",
     "chrono-node": "^2.9.0",
     "class-variance-authority": "^0.7.1",
