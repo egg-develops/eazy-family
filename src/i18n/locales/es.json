@@ -1610,6 +1610,8 @@
   "ezCapture": {
     "header": "¿Qué tienes en mente?",
     "subheader": "Habla o escribe — yo me encargo del resto",
+    "headerJournal": "Comparte tus pensamientos",
+    "subheaderJournal": "Tu espacio, tus palabras",
     "placeholder": "Habla o escribe — evento, tarea, nota, recordatorio…",
     "placeholderListening": "Habla libremente — toca el micro para parar",
     "placeholderListeningSingleShot": "Adelante, te escucho…",

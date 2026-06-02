@@ -1612,6 +1612,8 @@
   "ezCapture": {
     "header": "O que está na sua mente?",
     "subheader": "Fale ou escreva — eu cuido do resto",
+    "headerJournal": "Partilhe os seus pensamentos",
+    "subheaderJournal": "O seu espaço, as suas palavras",
     "placeholder": "Fale ou escreva — evento, tarefa, nota, lembrete…",
     "placeholderListening": "Fale livremente — toque no microfone para parar",
     "placeholderListeningSingleShot": "Pode falar, estou a ouvir…",

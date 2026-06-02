@@ -1610,6 +1610,8 @@
   "ezCapture": {
     "header": "Was liegt dir auf dem Herzen?",
     "subheader": "Sprechen oder Tippen — ich kümmere mich um den Rest",
+    "headerJournal": "Teile deine Gedanken",
+    "subheaderJournal": "Dein Raum, deine Worte",
     "placeholder": "Sprich oder tippe — Termin, Aufgabe, Notiz, Erinnerung…",
     "placeholderListening": "Sprich frei — Mikrofon antippen zum Stoppen",
     "placeholderListeningSingleShot": "Los geht's, ich höre zu…",

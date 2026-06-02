@@ -1613,6 +1613,8 @@
   "ezCapture": {
     "header": "What's on your mind?",
     "subheader": "Speak or Type — I'll handle the rest",
+    "headerJournal": "Share your thoughts",
+    "subheaderJournal": "Your space, your words",
     "placeholder": "Speak or type anything — event, task, note, reminder…",
     "placeholderListening": "Speak freely — tap mic to stop",
     "placeholderListeningSingleShot": "Go ahead, I'm listening…",

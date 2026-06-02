@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { pickRitualEmoji } from "@/lib/intelligence";
-import { Mic, Plus, X, Trash2, Send } from "lucide-react";
+import { Plus, X, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
 import { cloudSet } from "@/lib/preferencesSync";
-import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface JournalEntry {
   id: string;
@@ -41,7 +39,6 @@ const getJournalSettings = () => {
 
 const Rituals = () => {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [rituals, setRituals] = useState<Ritual[]>(() => {
     try {
@@ -51,10 +48,7 @@ const Rituals = () => {
     return DEFAULT_RITUALS;
   });
   const [completedRituals, setCompletedRituals] = useState<Set<string>>(new Set());
-  const [journalDraft, setJournalDraft] = useState('');
-  const [isListening, setIsListening] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const journalRef = useRef<HTMLTextAreaElement>(null);
   const [newRitualTitle, setNewRitualTitle] = useState('');
   const [showAllJournal, setShowAllJournal] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
@@ -66,10 +60,6 @@ const Rituals = () => {
   const innerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const pendingRef = useRef<Set<string>>(new Set());
 
-  const speech = useSpeechRecognition();
-  // Use refs for transcript capture — avoids closure/race-condition issues
-  const capturedRef = useRef('');
-  const savedRef = useRef(false);
   const DELETE_W = 72;
 
   const TC = 'hsl(var(--primary))';
@@ -81,16 +71,6 @@ const Rituals = () => {
     const stored = localStorage.getItem('eazy-journal-entries');
     setEntries(stored ? JSON.parse(stored) : []);
   };
-
-  // Pre-fill journal composer when redirected from EZ Button
-  useEffect(() => {
-    const prefill = searchParams.get('journal');
-    if (prefill) {
-      setJournalDraft(decodeURIComponent(prefill));
-      setSearchParams({}, { replace: true });
-      setTimeout(() => journalRef.current?.focus(), 100);
-    }
-  }, []);
 
   useEffect(() => {
     reloadEntries();
@@ -168,39 +148,6 @@ const Rituals = () => {
     saveRituals(rituals.filter(r => r.id !== id));
   };
 
-  const stopListening = () => {
-    speech.stop();
-  };
-
-  const startListening = () => {
-    capturedRef.current = '';
-    savedRef.current = false;
-    setIsListening(true);
-    haptic('light');
-    speech.start({
-      lang: 'en-US',
-      onResult: (transcript) => {
-        capturedRef.current = transcript;
-        setJournalDraft(transcript);
-      },
-      onEnd: () => {
-        setIsListening(false);
-        if (!savedRef.current && capturedRef.current.trim()) {
-          savedRef.current = true;
-          saveEntry(capturedRef.current);
-          setJournalDraft('');
-        }
-        capturedRef.current = '';
-        savedRef.current = false;
-      },
-      onError: () => {
-        setIsListening(false);
-        capturedRef.current = '';
-        savedRef.current = false;
-      },
-    });
-  };
-
   const saveEntry = (text: string) => {
     if (!text.trim()) return;
     const entry: JournalEntry = { id: crypto.randomUUID(), text: text.trim(), date: new Date().toISOString() };
@@ -208,13 +155,6 @@ const Rituals = () => {
     setEntries(updated);
     localStorage.setItem('eazy-journal-entries', JSON.stringify(updated));
     haptic('light');
-  };
-
-  const submitDraft = () => {
-    if (!journalDraft.trim()) return;
-    saveEntry(journalDraft);
-    setJournalDraft('');
-    journalRef.current?.blur();
   };
 
   const deleteEntry = (id: string) => {
@@ -259,11 +199,9 @@ const Rituals = () => {
     el.style.transition = 'transform 0.2s ease';
 
     if (delta > 60) {
-      // Right swipe → start a new journal entry
       el.style.transform = 'translateX(0)';
       setOpenSwipeId(null);
       touchData.current = null;
-      startListening();
       return;
     } else if (delta < -40) {
       el.style.transform = `translateX(-${DELETE_W}px)`;
@@ -463,50 +401,6 @@ const Rituals = () => {
             )}
           </div>
 
-          {/* Inline journal composer */}
-          <div className="mb-3 rounded-2xl overflow-hidden" style={{ border: `1px solid ${isListening ? TC : BORDER}`, background: 'hsl(var(--card))', transition: 'border-color 0.2s' }}>
-            <textarea
-              ref={journalRef}
-              value={journalDraft}
-              onChange={e => setJournalDraft(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitDraft(); }}
-              placeholder={isListening ? t('rituals.listening') : t('rituals.whatsOnYourMind')}
-              rows={journalDraft ? 3 : 2}
-              className="w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm outline-none"
-              style={{ color: 'hsl(var(--foreground))', caretColor: TC }}
-            />
-            <div className="flex items-center justify-between px-3 pb-3">
-              {/* Mic button */}
-              <div className="relative w-8 h-8">
-                {(isListening || speech.isTranscribing) && (
-                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: `${TC}40` }} />
-                )}
-                <button
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={speech.isTranscribing}
-                  className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all"
-                  style={{ background: isListening ? TC : 'hsl(var(--muted))' }}
-                >
-                  {speech.isTranscribing
-                    ? <div className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: TC, borderTopColor: 'transparent' }} />
-                    : <Mic className="w-3.5 h-3.5" style={{ color: isListening ? 'white' : MUTED }} />
-                  }
-                </button>
-              </div>
-              {/* Send button — only when there's text */}
-              {journalDraft.trim() && (
-                <button
-                  onClick={submitDraft}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-white transition-opacity"
-                  style={{ background: TC }}
-                >
-                  <Send className="w-3 h-3" />
-                  {t('settings.save')}
-                </button>
-              )}
-            </div>
-          </div>
-
           {entries.length > 0 ? (
             <div className="space-y-2">
               {displayedEntries.map(entry => (
@@ -549,7 +443,10 @@ const Rituals = () => {
               ))}
             </div>
           ) : (
-            <p className="text-xs text-center py-2" style={{ color: MUTED }}>{t('rituals.whatsOnYourMind')}</p>
+            <div className="py-6 flex flex-col items-center gap-2 text-center">
+              <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle', 'Your journal is waiting')}</p>
+              <p className="text-xs" style={{ color: MUTED }}>{t('rituals.journalEmptyHint', 'Tap the EZ button to share your thoughts — speak or type, EZ handles the rest.')}</p>
+            </div>
           )}
         </div>
       )}

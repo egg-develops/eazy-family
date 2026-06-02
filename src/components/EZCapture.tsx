@@ -635,9 +635,13 @@ STYLE:
 
       } else if (entryType === 'journal') {
         const text = parsed.title + (parsed.notes ? `\n\n${parsed.notes}` : '');
-        haptic('light');
+        const entry = { id: crypto.randomUUID(), text: text.trim(), date: new Date().toISOString() };
+        const existing = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
+        localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...existing]));
+        window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
+        haptic('light'); setTimeout(() => haptic('light'), 150);
+        toast({ title: t('ezCapture.toastJournalSaved') });
         onClose();
-        navigate(`/app/rituals?journal=${encodeURIComponent(text)}`);
       }
 
       if (parseSnapshotRef.current && session) {
@@ -673,6 +677,10 @@ STYLE:
   };
 
   const activeType = userLockedType || parsed?.type || type;
+  const [showTypePicker, setShowTypePicker] = useState(false);
+
+  // Journal-specific header copy
+  const isJournalMode = defaultType === 'journal' || activeType === 'journal';
 
   // Build textarea placeholder based on voice state
   const placeholder = isTranscribing
@@ -695,8 +703,12 @@ STYLE:
           {step === 'capture' && (
             <div className="rounded-3xl p-6 space-y-5" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="text-center space-y-1">
-                <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>{t('ezCapture.header')}</h2>
-                <p className="text-sm" style={{ color: MUTED }}>{t('ezCapture.subheader')}</p>
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>
+                  {isJournalMode ? t('ezCapture.headerJournal', 'Share your thoughts') : t('ezCapture.header')}
+                </h2>
+                <p className="text-sm" style={{ color: MUTED }}>
+                  {isJournalMode ? t('ezCapture.subheaderJournal', 'Your space, your words') : t('ezCapture.subheader')}
+                </p>
               </div>
 
               <div className="relative">
@@ -732,28 +744,6 @@ STYLE:
                     }
                   </button>
                 </div>
-              </div>
-
-              {/* Type pills */}
-              <div className="flex flex-wrap gap-1">
-                {TYPES.map(tp => (
-                  <button
-                    key={tp.id}
-                    onClick={() => { setType(tp.id); setUserLockedType(tp.id); }}
-                    className="flex items-center gap-0.5 rounded-full font-medium transition-all"
-                    style={{
-                      padding: '1px 8px',
-                      fontSize: '11px',
-                      lineHeight: '18px',
-                      background: type === tp.id ? '#964735' : MUTED_BG,
-                      color: type === tp.id ? '#FFFFFF' : MUTED,
-                      border: `1px solid ${type === tp.id ? '#964735' : BORDER}`,
-                    }}
-                  >
-                    <span style={{ fontSize: '10px' }}>{tp.icon}</span>
-                    {tp.label}
-                  </button>
-                ))}
               </div>
 
               <div className="flex gap-2 pt-1">
@@ -810,16 +800,43 @@ STYLE:
                   <h2 className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.confirm')}</h2>
                 </div>
 
-                {/* Type badge */}
-                <div className="flex">
-                  {(() => {
-                    const tp = TYPES.find(tp => tp.id === activeType);
-                    return tp ? (
-                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold" style={{ background: '#964735', color: '#FFFFFF' }}>
-                        <span style={{ fontSize: '12px' }}>{tp.icon}</span> {tp.label}
-                      </span>
-                    ) : null;
-                  })()}
+                {/* Type badge — tap to change */}
+                <div>
+                  {!showTypePicker ? (
+                    <button
+                      onClick={() => setShowTypePicker(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-opacity active:opacity-70"
+                      style={{ background: '#964735', color: '#FFFFFF' }}
+                    >
+                      <span style={{ fontSize: '12px' }}>{TYPES.find(tp => tp.id === activeType)?.icon}</span>
+                      {TYPES.find(tp => tp.id === activeType)?.label}
+                      <span style={{ fontSize: '10px', opacity: 0.75, marginLeft: 2 }}>▾</span>
+                    </button>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {TYPES.map(tp => (
+                        <button
+                          key={tp.id}
+                          onClick={() => {
+                            setParsed(p => p ? { ...p, type: tp.id } : p);
+                            setType(tp.id);
+                            setUserLockedType(tp.id);
+                            setShowTypePicker(false);
+                          }}
+                          className="flex items-center gap-1 rounded-full font-semibold transition-all"
+                          style={{
+                            padding: '4px 10px',
+                            fontSize: '12px',
+                            background: activeType === tp.id ? '#964735' : MUTED_BG,
+                            color: activeType === tp.id ? '#FFFFFF' : MUTED,
+                            border: `1.5px solid ${activeType === tp.id ? '#964735' : BORDER}`,
+                          }}
+                        >
+                          <span style={{ fontSize: '11px' }}>{tp.icon}</span> {tp.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* "Did you mean?" */}
