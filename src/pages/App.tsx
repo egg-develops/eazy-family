@@ -90,11 +90,17 @@ const AppLayout = () => {
   const longPressOriginYRef = useRef(0);
   const prevActiveIndexRef = useRef(-1);
   const ezButtonRef = useRef<HTMLButtonElement>(null);
+  // Prevents false swipe-up detection during initial hydration/auth re-renders.
+  // Swipe mode is only allowed once the component has been stable for 600ms.
+  const interactionReadyRef = useRef(false);
 
 
   const openMenu = () => {
     setMenuOpen(true);
-    requestAnimationFrame(() => setMenuVisible(true));
+    // setTimeout(fn, 0) is more reliable than rAF on first load when the
+    // browser is busy — rAF can be held until the next paint which may be
+    // delayed, causing the slide-up animation to stutter.
+    setTimeout(() => setMenuVisible(true), 0);
   };
 
   const closeMenu = () => {
@@ -144,7 +150,9 @@ const AppLayout = () => {
     const swipeDelta = swipeStartYRef.current - e.clientY;
 
     if (!isSwipeMenuRef.current) {
-      if (swipeDelta > 20) {
+      // Require a more intentional upward swipe (40px) and only after the
+      // component has settled — prevents first-touch jitter opening the menu.
+      if (interactionReadyRef.current && swipeDelta > 40) {
         if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
         isSwipeMenuRef.current = true;
         longPressOriginYRef.current = swipeStartYRef.current;
@@ -219,6 +227,13 @@ const AppLayout = () => {
       longPressTimer.current = null;
     }
   };
+
+  // Mark interaction as ready after 600ms — prevents false swipe detection
+  // during initial hydration and auth state re-renders.
+  useEffect(() => {
+    const t = setTimeout(() => { interactionReadyRef.current = true; }, 600);
+    return () => clearTimeout(t);
+  }, []);
 
   // Sync EZ button prefs when Settings changes them
   useEffect(() => {
@@ -392,7 +407,7 @@ const AppLayout = () => {
             >
               {orderedMenuItems.map((item, i) => {
                 const isActive = activeMenuIndex === i;
-                const delay = i * 40;
+                const delay = i * 22;
                 const iconColor = isActive ? '#fff' : '#964735';
                 const iconEl = item.customIcon
                   ? item.customIcon(iconColor)
@@ -476,6 +491,7 @@ const AppLayout = () => {
               transform: isDragMode ? 'scale(1.12)' : undefined,
               transition: isDragMode ? 'none' : 'transform 0.2s ease, box-shadow 0.2s ease',
               touchAction: 'none',
+              willChange: 'transform',
               WebkitUserSelect: 'none',
             }}
           >

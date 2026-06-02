@@ -270,25 +270,39 @@ const FamilyAgendaView = () => {
           </div>
         ))}
 
-        {/* Channel shortcut */}
+        {/* Channel shortcut — visually separated from agenda events */}
         {!loading && (
-          <button
-            onClick={() => navigate('/app/family-channel')}
-            className="w-full rounded-2xl flex items-center gap-3 px-4 py-3.5"
-            style={{ background: CARD, border: `1px solid ${BORDER}` }}
-          >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'hsl(var(--muted))' }}
+          <div style={{ marginTop: '8px' }}>
+            {/* Section divider */}
+            <div className="flex items-center gap-3 mb-3">
+              <div style={{ flex: 1, height: '1px', background: BORDER }} />
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
+                {t('familyAgenda.connectSection', 'Connect')}
+              </p>
+              <div style={{ flex: 1, height: '1px', background: BORDER }} />
+            </div>
+
+            <button
+              onClick={() => navigate('/app/family-channel')}
+              className="w-full rounded-2xl flex items-center gap-3 px-4 py-4"
+              style={{
+                background: 'linear-gradient(135deg, rgba(150,71,53,0.06) 0%, rgba(217,123,102,0.06) 100%)',
+                border: `1.5px solid rgba(150,71,53,0.18)`,
+              }}
             >
-              <MessageCircle className="w-5 h-5" style={{ color: TC }} />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-semibold" style={{ color: INK }}>Family Channel</p>
-              <p className="text-xs" style={{ color: MUTED }}>Private family messaging</p>
-            </div>
-            <ChevronLeft className="w-4 h-4 rotate-180" style={{ color: MUTED }} />
-          </button>
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #964735 0%, #D97B66 100%)' }}
+              >
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.channelTitle', 'Family Channel')}</p>
+                <p className="text-xs" style={{ color: MUTED }}>{t('familyAgenda.channelDesc', 'Private family messaging')}</p>
+              </div>
+              <ChevronLeft className="w-4 h-4 rotate-180" style={{ color: TC }} />
+            </button>
+          </div>
         )}
       </div>
     </div>
