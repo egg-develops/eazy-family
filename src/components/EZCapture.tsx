@@ -183,7 +183,6 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
 
   useEffect(() => {
     haptic('medium');
-    setTimeout(() => textareaRef.current?.focus(), 150);
     if (isSwissGermanLocale()) warmDialectCache();
   }, []);
 
@@ -682,12 +681,14 @@ STYLE:
   // Journal-specific header copy
   const isJournalMode = defaultType === 'journal' || activeType === 'journal';
 
-  // Build textarea placeholder based on voice state
+  // Build textarea placeholder based on voice state and context
   const placeholder = isTranscribing
     ? t('ezCapture.placeholderTranscribing')
     : isListening
       ? (isSingleShot ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
-      : t('ezCapture.placeholderGuide');
+      : isJournalMode
+        ? ''
+        : t('ezCapture.placeholderGuide');
 
   return (
     <div
