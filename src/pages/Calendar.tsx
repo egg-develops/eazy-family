@@ -23,6 +23,7 @@ import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import {
   requestCalendarAccess,
   checkCalendarAccess,
@@ -475,8 +476,8 @@ const Calendar = () => {
   const [familyMembers, setFamilyMembers] = useState<{ id: string; name: string; user_id: string }[]>([]);
 
   // Voice-to-calendar state
-  const [isListeningVoice, setIsListeningVoice] = useState(false);
-  const calendarRecognitionRef = useRef<any>(null);
+  const calendarSpeech = useSpeechRecognition();
+  const isListeningVoice = calendarSpeech.isListening;
 
   useEffect(() => {
     if (isDialogOpen && familyMembers.length === 0) loadFamilyMembers();
@@ -831,63 +832,47 @@ const Calendar = () => {
   };
 
   const startCalendarVoice = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast({ title: t('calendar.voiceNotSupported'), description: t('calendar.voiceTryTyping'), variant: "destructive" });
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
     const langMap: Record<string, string> = { de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT' };
-    recognition.lang = langMap[i18n.language.split('-')[0]] || 'en-US';
+    const lang = langMap[i18n.language.split('-')[0]] || 'en-US';
 
-    recognition.onresult = (event: any) => {
-      const transcript: string = event.results[0][0].transcript;
-      setIsListeningVoice(false);
+    calendarSpeech.start({
+      lang,
+      onResult: (transcript, isFinal) => {
+        if (!isFinal || !transcript.trim()) return;
 
-      // Parse date/time from transcript
-      const parsed = chrono.parse(transcript, new Date(), { forwardDate: true });
-      const dateResult = parsed[0]?.start.date();
-      const titleText = parsed.length > 0
-        ? transcript.replace(parsed[0].text, "").replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim()
-        : transcript.replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim();
+        // Parse date/time from transcript
+        const parsed = chrono.parse(transcript, new Date(), { forwardDate: true });
+        const dateResult = parsed[0]?.start.date();
+        const titleText = parsed.length > 0
+          ? transcript.replace(parsed[0].text, "").replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim()
+          : transcript.replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim();
 
-      resetEventForm();
-      setEventTitle(titleText || transcript);
-      if (dateResult) {
-        setEventStartDate(dateResult);
-        setEventEndDate(dateResult);
-        if (parsed[0]?.start.isCertain("hour")) {
-          setEventStartTime(format(dateResult, "HH:mm"));
-          const end = new Date(dateResult);
-          end.setHours(end.getHours() + 1);
-          setEventEndTime(format(end, "HH:mm"));
+        resetEventForm();
+        setEventTitle(titleText || transcript);
+        if (dateResult) {
+          setEventStartDate(dateResult);
+          setEventEndDate(dateResult);
+          if (parsed[0]?.start.isCertain("hour")) {
+            setEventStartTime(format(dateResult, "HH:mm"));
+            const end = new Date(dateResult);
+            end.setHours(end.getHours() + 1);
+            setEventEndTime(format(end, "HH:mm"));
+          }
         }
-      }
-      setDialogTab("event");
-      setIsDialogOpen(true);
-    };
-
-    recognition.onerror = (event: any) => {
-      setIsListeningVoice(false);
-      if (event.error !== "no-speech") {
-        toast({ title: t('calendar.voiceError'), description: t('calendar.voiceCaptureError'), variant: "destructive" });
-      }
-    };
-
-    recognition.onend = () => setIsListeningVoice(false);
-
-    calendarRecognitionRef.current = recognition;
-    recognition.start();
-    setIsListeningVoice(true);
+        setDialogTab("event");
+        setIsDialogOpen(true);
+      },
+      onError: (error) => {
+        if (error === "not-supported") {
+          toast({ title: t('calendar.voiceNotSupported'), description: t('calendar.voiceTryTyping'), variant: "destructive" });
+        } else if (error !== "no-speech") {
+          toast({ title: t('calendar.voiceError'), description: t('calendar.voiceCaptureError'), variant: "destructive" });
+        }
+      },
+    });
   };
 
-  const stopCalendarVoice = () => {
-    calendarRecognitionRef.current?.stop();
-    calendarRecognitionRef.current = null;
-    setIsListeningVoice(false);
-  };
+  const stopCalendarVoice = () => calendarSpeech.stop();
 
   const handleEditItem = (item: CalendarItem) => {
     setEditingItemId(item.id);

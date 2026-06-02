@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Smile, Mic, X } from 'lucide-react';
+import { voiceService } from '@/services/VoiceService';
 
 interface Attachment {
   file: File;
@@ -29,12 +30,11 @@ const MessagingMessageInput: React.FC<MessagingMessageInputProps> = ({
   const [recordingTime, setRecordingTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   useEffect(() => {
     return () => {
       if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
-      if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop();
+      voiceService.stopRecordingAttachment();
     };
   }, []);
 
@@ -91,51 +91,30 @@ const MessagingMessageInput: React.FC<MessagingMessageInputProps> = ({
   };
 
   const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      const audioChunks: Blob[] = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const file = new File([audioBlob], 'voice-message.webm', {
-          type: 'audio/webm',
+    const started = await voiceService.startRecordingAttachment(
+      (file) => {
+        setAttachments((prev) => {
+          const updated = [...prev, { file, type: 'voice' as const }];
+          onAttachmentChange?.(updated);
+          return updated;
         });
+      },
+      (err) => {
+        console.error('Error accessing microphone:', err);
+      }
+    );
 
-        const updated = [
-          ...attachments,
-          {
-            file,
-            type: 'voice' as const,
-          },
-        ];
-        setAttachments(updated);
-        onAttachmentChange?.(updated);
-        stream.getTracks().forEach((track) => track.stop());
-      };
+    if (!started) return;
 
-      mediaRecorder.start();
-      setIsRecording(true);
-      setRecordingTime(0);
-
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-    }
+    setIsRecording(true);
+    setRecordingTime(0);
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime((prev) => prev + 1);
+    }, 1000);
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-    }
+    voiceService.stopRecordingAttachment();
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }

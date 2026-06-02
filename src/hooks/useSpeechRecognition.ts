@@ -1,32 +1,14 @@
-import { useRef, useState } from "react";
-import { Capacitor } from "@capacitor/core";
-import { SpeechRecognition } from "@capacitor-community/speech-recognition";
-import { supabase } from "@/integrations/supabase/client";
-import { error as logError } from "@/lib/logger";
+import { useEffect, useRef, useState } from "react";
+import { voiceService } from "@/services/VoiceService";
 
-// Module-level cache — permission granted status persists for the app session
-let nativePermissionGranted = false;
-
-// Use MediaRecorder + Deepgram on mobile web (iOS Safari has no Web Speech API;
-// mobile Chrome's Web Speech API is unreliable). Desktop keeps Web Speech API.
-function shouldUseWhisper(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const hasSpeechAPI = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
-  return isMobile || !hasSpeechAPI;
-}
-
-const IS_IOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-function getBestMimeType(): string {
-  if (typeof MediaRecorder === 'undefined') return '';
-  // iOS Safari's isTypeSupported is unreliable — prefer mp4 explicitly
-  if (IS_IOS) return MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '';
-  const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
-  return candidates.find(t => MediaRecorder.isTypeSupported(t)) ?? '';
-}
-
+/**
+ * Thin React wrapper around the {@link voiceService} singleton.
+ *
+ * The actual speech-to-text logic (native / mobile-web Whisper / desktop Web
+ * Speech) lives in src/services/VoiceService.ts. This hook only adapts the
+ * singleton's event-callback API into React state + the options-object
+ * interface that existing call sites already use.
+ */
 export type SpeechRecognitionOptions = {
   lang?: string;
   onResult: (transcript: string, isFinal: boolean) => void;
@@ -35,352 +17,44 @@ export type SpeechRecognitionOptions = {
 };
 
 export const useSpeechRecognition = () => {
-  const [isListening, setIsListening] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isListening, setIsListening] = useState(voiceService.isListening);
+  const [isTranscribing, setIsTranscribing] = useState(voiceService.isTranscribing);
 
-  // Native path
-  const nativeCleanupRef = useRef<(() => void) | null>(null);
-  const nativeActiveRef = useRef(false);
+  // Latest handlers for the active session — kept in a ref so the singleton
+  // subscriptions always dispatch to the current call site's callbacks.
+  const optsRef = useRef<SpeechRecognitionOptions | null>(null);
 
-  // Web Speech API path (desktop only)
-  const recognitionRef = useRef<any>(null);
-  const webActiveRef = useRef(false);
-  const sessionIdRef = useRef(0);
+  useEffect(() => {
+    const unsubState = voiceService.onStateChange((s) => {
+      setIsListening(s.isListening);
+      setIsTranscribing(s.isTranscribing);
+    });
+    const unsubResult = voiceService.onResult((transcript, isFinal) =>
+      optsRef.current?.onResult(transcript, isFinal)
+    );
+    const unsubError = voiceService.onError((err) => optsRef.current?.onError?.(err));
+    const unsubEnd = voiceService.onEnd(() => optsRef.current?.onEnd?.());
 
-  // MediaRecorder + Deepgram path (mobile web)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const transcribeAbortRef = useRef<AbortController | null>(null);
-  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const vadIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
+    // Sync initial state in case it changed before subscription
+    setIsListening(voiceService.isListening);
+    setIsTranscribing(voiceService.isTranscribing);
 
-  const isNative = Capacitor.isNativePlatform();
-  const useWhisper = !isNative && shouldUseWhisper();
-
-  const stop = () => {
-    if (isNative) {
-      nativeActiveRef.current = false;
-      nativeCleanupRef.current?.();
-      nativeCleanupRef.current = null;
-      SpeechRecognition.stop().catch(() => {});
-      setIsListening(false);
-    } else if (useWhisper) {
-      if (vadIntervalRef.current) { clearInterval(vadIntervalRef.current); vadIntervalRef.current = null; }
-      audioCtxRef.current?.close().catch(() => {}); audioCtxRef.current = null;
-      if (autoStopTimerRef.current) { clearTimeout(autoStopTimerRef.current); autoStopTimerRef.current = null; }
-      if (mediaRecorderRef.current?.state === 'recording') {
-        mediaRecorderRef.current.stop(); // triggers onstop → transcription
-      } else {
-        transcribeAbortRef.current?.abort();
-        mediaStreamRef.current?.getTracks().forEach(t => t.stop());
-        mediaStreamRef.current = null;
-        setIsListening(false);
-        setIsTranscribing(false);
-      }
-    } else {
-      webActiveRef.current = false;
-      sessionIdRef.current++;
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
-      setIsListening(false);
-    }
-  };
-
-  const startNative = async (opts: SpeechRecognitionOptions) => {
-    if (!nativePermissionGranted) {
-      try {
-        const { speechRecognition: current } = await SpeechRecognition.checkPermissions();
-        if (current === 'granted') {
-          nativePermissionGranted = true;
-        } else {
-          const { speechRecognition } = await SpeechRecognition.requestPermissions();
-          if (speechRecognition !== 'granted') {
-            opts.onError?.('not-allowed');
-            return;
-          }
-          nativePermissionGranted = true;
-        }
-        const { available } = await SpeechRecognition.available();
-        if (!available) {
-          opts.onError?.('not-supported');
-          return;
-        }
-      } catch {
-        opts.onError?.('not-supported');
-        return;
-      }
-    }
-
-    if (!nativeActiveRef.current) return;
-
-    setIsListening(true);
-
-    let partialHandle: any = null;
-    let stateHandle: any = null;
-    let cleanedUp = false;
-
-    const cleanup = () => {
-      if (cleanedUp) return;
-      cleanedUp = true;
-      partialHandle?.remove();
-      stateHandle?.remove();
-      nativeCleanupRef.current = null;
-      setIsListening(false);
+    return () => {
+      unsubState();
+      unsubResult();
+      unsubError();
+      unsubEnd();
     };
-
-    nativeCleanupRef.current = cleanup;
-
-    partialHandle = await SpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
-      if (!nativeActiveRef.current || cleanedUp) return;
-      const transcript = data.matches?.[0] ?? '';
-      if (transcript) opts.onResult(transcript, false);
-    });
-
-    stateHandle = await SpeechRecognition.addListener('listeningState', (data: { status: 'started' | 'stopped' }) => {
-      if (data.status === 'stopped' && !cleanedUp) {
-        cleanup();
-        if (nativeActiveRef.current) {
-          opts.onEnd?.();
-        }
-      }
-    });
-
-    try {
-      await SpeechRecognition.start({
-        language: opts.lang ?? 'en-US',
-        partialResults: true,
-        maxResults: 1,
-        popup: false,
-      });
-    } catch (e: any) {
-      if (!cleanedUp) {
-        cleanup();
-        const msg = (e?.message ?? '').toLowerCase();
-        opts.onError?.(msg.includes('permiss') || msg.includes('denied') ? 'not-allowed' : 'unknown');
-      }
-    }
-  };
-
-  const startMediaRecorder = async (opts: SpeechRecognitionOptions) => {
-    // Create AudioContext synchronously while still inside the user-gesture call stack.
-    // iOS Safari drops the activation context once we hit the first `await`, so
-    // AudioContext must be instantiated before getUserMedia.
-    let analyser: AnalyserNode | null = null;
-    let timeDomainData: Uint8Array | null = null;
-    try {
-      const audioCtx = new AudioContext();
-      audioCtxRef.current = audioCtx;
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      timeDomainData = new Uint8Array(analyser.fftSize);
-    } catch {
-      // AudioContext not available — VAD will be skipped
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-
-      // Voice Activity Detection — auto-stop after silence so users don't need to tap stop
-      let hasSpeech = false;
-      let silenceStartMs: number | null = null;
-      const SILENCE_STOP_MS = 2800;
-      const SPEECH_RMS_THRESHOLD = 0.015;
-
-      if (analyser && timeDomainData && audioCtxRef.current) {
-        try {
-          audioCtxRef.current.createMediaStreamSource(stream).connect(analyser);
-          const _analyser = analyser;
-          const _data = timeDomainData;
-
-          vadIntervalRef.current = setInterval(() => {
-            if (mediaRecorderRef.current?.state !== 'recording') {
-              clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
-              return;
-            }
-            _analyser.getByteTimeDomainData(_data);
-            let sum = 0;
-            for (const v of _data) { const n = (v - 128) / 128; sum += n * n; }
-            const rms = Math.sqrt(sum / _data.length);
-
-            if (rms > SPEECH_RMS_THRESHOLD) {
-              hasSpeech = true;
-              silenceStartMs = null;
-            } else if (hasSpeech) {
-              if (silenceStartMs === null) silenceStartMs = Date.now();
-              if (Date.now() - silenceStartMs > SILENCE_STOP_MS) {
-                clearInterval(vadIntervalRef.current!); vadIntervalRef.current = null;
-                if (mediaRecorderRef.current?.state === 'recording') {
-                  mediaRecorderRef.current.stop();
-                }
-              }
-            }
-          }, 100);
-        } catch {
-          // Stream connection failed — VAD disabled
-        }
-      }
-
-      const mimeType = getBestMimeType();
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      const effectiveMimeType = recorder.mimeType || (IS_IOS ? 'audio/mp4' : 'audio/webm');
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        // Clean up VAD and audio context
-        if (vadIntervalRef.current) { clearInterval(vadIntervalRef.current); vadIntervalRef.current = null; }
-        audioCtxRef.current?.close().catch(() => {}); audioCtxRef.current = null;
-
-        if (autoStopTimerRef.current) { clearTimeout(autoStopTimerRef.current); autoStopTimerRef.current = null; }
-        mediaStreamRef.current?.getTracks().forEach(t => t.stop());
-        mediaStreamRef.current = null;
-        mediaRecorderRef.current = null;
-        setIsListening(false);
-
-        const totalSize = chunks.reduce((sum, c) => sum + c.size, 0);
-        if (totalSize < 500) {
-          opts.onEnd?.();
-          return;
-        }
-
-        setIsTranscribing(true);
-        const abort = new AbortController();
-        transcribeAbortRef.current = abort;
-
-        try {
-          const ext = effectiveMimeType.includes('mp4') || effectiveMimeType.includes('aac') ? 'mp4' : 'webm';
-          const blob = new Blob(chunks, { type: effectiveMimeType });
-          let { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            const { data: refreshed } = await supabase.auth.refreshSession();
-            session = refreshed.session;
-          }
-          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-
-          const fd = new FormData();
-          fd.append('audio', blob, `recording.${ext}`);
-          fd.append('language', (opts.lang ?? 'en-US').split('-')[0]);
-
-          const res = await fetch(`${supabaseUrl}/functions/v1/transcribe-audio`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session?.access_token ?? anonKey}`,
-              'apikey': anonKey,
-            },
-            body: fd,
-            signal: abort.signal,
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            const transcript = (data.text ?? '').trim();
-            if (transcript) opts.onResult(transcript, true);
-          } else {
-            logError('[useSpeechRecognition] Transcription HTTP error:', res.status);
-            opts.onError?.('transcription-failed');
-          }
-        } catch (err: any) {
-          if (err?.name !== 'AbortError') {
-            logError('[useSpeechRecognition] Whisper transcription failed:', err);
-            opts.onError?.('transcription-failed');
-          }
-        }
-
-        setIsTranscribing(false);
-        opts.onEnd?.();
-      };
-
-      recorder.start(250);
-      mediaRecorderRef.current = recorder;
-      setIsListening(true);
-      // 30s hard limit — VAD stops it sooner on silence; 30s covers longer journal entries
-      autoStopTimerRef.current = setTimeout(() => {
-        if (mediaRecorderRef.current?.state === 'recording') {
-          mediaRecorderRef.current.stop();
-        }
-      }, 30000);
-
-    } catch (err: any) {
-      const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
-      opts.onError?.(denied ? 'not-allowed' : 'unknown');
-    }
-  };
+  }, []);
 
   const start = (opts: SpeechRecognitionOptions) => {
-    if (isNative) {
-      nativeActiveRef.current = true;
-      startNative(opts);
-      return;
-    }
-
-    if (useWhisper) {
-      startMediaRecorder(opts);
-      return;
-    }
-
-    // Desktop: Web Speech API
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      opts.onError?.('not-supported');
-      return;
-    }
-
-    webActiveRef.current = false;
-    sessionIdRef.current++;
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-
-    webActiveRef.current = true;
-    setIsListening(true);
-
-    const sessionId = sessionIdRef.current;
-    const r = new SR();
-    r.lang = opts.lang ?? 'en-US';
-    r.interimResults = false;
-    r.continuous = false;
-    r.maxAlternatives = 1;
-
-    r.onresult = (e: any) => {
-      if (sessionIdRef.current !== sessionId) return;
-      let sessionText = '';
-      for (let i = 0; i < e.results.length; i++) {
-        sessionText += e.results[i][0].transcript;
-      }
-      opts.onResult(sessionText, true);
-    };
-
-    r.onerror = (e: any) => {
-      if (sessionIdRef.current !== sessionId) return;
-      if (e.error === 'aborted' || e.error === 'no-speech') return;
-      webActiveRef.current = false;
-      setIsListening(false);
-      opts.onError?.(e.error);
-    };
-
-    r.onend = () => {
-      if (sessionIdRef.current !== sessionId) return;
-      setIsListening(false);
-      if (webActiveRef.current) {
-        opts.onEnd?.();
-      }
-    };
-
-    try {
-      r.start();
-      recognitionRef.current = r;
-    } catch {
-      webActiveRef.current = false;
-      setIsListening(false);
-    }
+    optsRef.current = opts;
+    voiceService.startListening(opts.lang ?? "en-US");
   };
 
-  // True when the path is single-shot (MediaRecorder → Deepgram) rather than
-  // continuous Web Speech API. Callers use this to skip the restart loop.
-  return { isListening, isTranscribing, start, stop, isSingleShot: useWhisper };
+  const stop = () => {
+    voiceService.stopListening();
+  };
+
+  return { isListening, isTranscribing, start, stop, isSingleShot: voiceService.isSingleShot };
 };

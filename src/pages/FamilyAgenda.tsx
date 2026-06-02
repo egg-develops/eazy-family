@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
 import { compressAndUpload } from "@/lib/imageUpload";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { format, isToday, isYesterday } from "date-fns";
 import { useNavigate } from "react-router-dom";
 
@@ -445,12 +446,10 @@ const FamilyAgenda = () => {
   const [text, setText] = useState("");
 
   // Voice
-  const [isListening, setIsListening] = useState(false);
+  const speech = useSpeechRecognition();
+  const isListening = speech.isListening;
   const [liveTranscript, setLiveTranscript] = useState("");
-  const isListeningRef = useRef(false);
-  const recognitionRef = useRef<any>(null);
   const capturedRef = useRef("");
-  const baseTextRef = useRef("");
 
   // Attachment tray
   const [trayOpen, setTrayOpen] = useState(false);
@@ -512,77 +511,44 @@ const FamilyAgenda = () => {
   };
 
   // ── Voice recording ─────────────────────────
-  const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: t('familyAgenda.voiceNotSupported') }); return; }
+  const finalizeVoiceMessage = () => {
+    const final = capturedRef.current.trim();
+    if (final) {
+      const wordCount = final.split(/\s+/).length;
+      const duration = Math.max(1, Math.round(wordCount / 2));
+      addMessage({ type: "voice", transcript: final, duration });
+    }
     capturedRef.current = "";
-    baseTextRef.current = "";
-    isListeningRef.current = true;
     setLiveTranscript("");
+  };
 
-    const spawnSession = (): any => {
-      const r = new SR();
-      r.lang = navigator.language || "en-US";
-      r.interimResults = true;
-      r.continuous = true;
-
-      r.onresult = (e: any) => {
-        let sessionText = "";
-        for (let i = 0; i < e.results.length; i++) sessionText += e.results[i][0].transcript;
-        const combined = baseTextRef.current ? `${baseTextRef.current} ${sessionText}` : sessionText;
+  const startListening = () => {
+    capturedRef.current = "";
+    setLiveTranscript("");
+    speech.start({
+      lang: navigator.language || "en-US",
+      onResult: (transcript) => {
+        const combined = capturedRef.current
+          ? `${capturedRef.current} ${transcript}`
+          : transcript;
         capturedRef.current = combined;
         setLiveTranscript(combined);
-      };
-
-      r.onend = () => {
-        if (!isListeningRef.current) {
-          setIsListening(false);
-          const final = capturedRef.current.trim();
-          if (final) {
-            const wordCount = final.split(/\s+/).length;
-            const duration = Math.max(1, Math.round(wordCount / 2));
-            addMessage({ type: "voice", transcript: final, duration });
-          }
-          setLiveTranscript("");
-          return;
+      },
+      onError: (error) => {
+        if (error === "not-supported") {
+          toast({ title: t('familyAgenda.voiceNotSupported') });
+        } else if (error === "not-allowed") {
+          toast({ title: t('familyAgenda.micDenied'), description: t('familyAgenda.micDeniedDesc') });
         }
-        baseTextRef.current = capturedRef.current;
-        try {
-          const next = spawnSession();
-          recognitionRef.current = next;
-        } catch {
-          isListeningRef.current = false;
-          setIsListening(false);
-          const final = capturedRef.current.trim();
-          if (final) {
-            const wordCount = final.split(/\s+/).length;
-            addMessage({ type: "voice", transcript: final, duration: Math.max(1, Math.round(wordCount / 2)) });
-          }
-          setLiveTranscript("");
-        }
-      };
-
-      r.onerror = (e: any) => {
-        if (e.error === "aborted" || e.error === "no-speech") return;
-        if (e.error === "not-allowed") toast({ title: t('familyAgenda.micDenied'), description: t('familyAgenda.micDeniedDesc') });
-        isListeningRef.current = false;
-        setIsListening(false);
+        capturedRef.current = "";
         setLiveTranscript("");
-      };
-
-      try { r.start(); } catch { isListeningRef.current = false; setIsListening(false); }
-      return r;
-    };
-
-    recognitionRef.current = spawnSession();
-    setIsListening(true);
+      },
+      onEnd: finalizeVoiceMessage,
+    });
     haptic("light");
   };
 
-  const stopListening = () => {
-    isListeningRef.current = false;
-    recognitionRef.current?.stop();
-  };
+  const stopListening = () => speech.stop();
 
   const handleMicToggle = () => {
     if (isListening) stopListening();

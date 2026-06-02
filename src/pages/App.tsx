@@ -57,6 +57,7 @@ import { haptic } from "@/lib/haptic";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { Capacitor } from "@capacitor/core";
+import { voiceService } from "@/services/VoiceService";
 import { format, addDays, isToday, isTomorrow } from "date-fns";
 
 const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
@@ -296,14 +297,13 @@ const AppLayout = () => {
   }, []);
 
   // Eagerly warm mic permission on web only — native uses the Capacitor
-  // SpeechRecognition plugin which handles its own permission prompt on first use.
+  // speech plugin (via VoiceService) which prompts lazily on first use.
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
     if (localStorage.getItem('eazy-mic-asked')) return;
-    if (!navigator.mediaDevices?.getUserMedia) return;
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => { stream.getTracks().forEach(t => t.stop()); localStorage.setItem('eazy-mic-asked', '1'); })
-      .catch(() => {});
+    voiceService.prewarmWebPermission().then((ok) => {
+      if (ok) localStorage.setItem('eazy-mic-asked', '1');
+    });
   }, []);
 
   useEffect(() => {

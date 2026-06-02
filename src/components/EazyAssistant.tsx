@@ -12,6 +12,7 @@ import { error as logError } from "@/lib/logger";
 import * as chrono from "chrono-node";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTranslation } from "react-i18next";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 const getMonthKey = () => {
   const d = new Date();
@@ -86,14 +87,14 @@ export const EazyAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isListening, setIsListening] = useState(false);
   const [isParsingVoice, setIsParsingVoice] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editText, setEditText] = useState("");
   const [isApproving, setIsApproving] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const speech = useSpeechRecognition();
+  const isListening = speech.isListening;
   const { toast } = useToast();
   const { user, isPremium } = useAuth();
   const { t, i18n } = useTranslation();
@@ -266,31 +267,24 @@ export const EazyAssistant = () => {
 
   // ── Voice input ───────────────────────────────────────────────────────────
   const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      toast({ title: t('assistant.voiceNotSupported'), description: t('assistant.voiceInputNotSupported'), variant: "destructive" });
-      return;
-    }
-    const recognition = new SR();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = i18n.language === "de" ? "de-DE"
+    const lang = i18n.language === "de" ? "de-DE"
       : i18n.language === "fr" ? "fr-FR"
       : i18n.language === "it" ? "it-IT"
       : i18n.language === "en-GB" ? "en-GB"
       : "en-US";
-    recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript;
-      setIsListening(false);
-      processVoiceInput(transcript);
-    };
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
+    speech.start({
+      lang,
+      onResult: (transcript, isFinal) => {
+        if (isFinal && transcript.trim()) processVoiceInput(transcript.trim());
+      },
+      onError: (error) => {
+        if (error === "not-supported") {
+          toast({ title: t('assistant.voiceNotSupported'), description: t('assistant.voiceInputNotSupported'), variant: "destructive" });
+        }
+      },
+    });
   };
-  const stopListening = () => { recognitionRef.current?.stop(); setIsListening(false); };
+  const stopListening = () => speech.stop();
 
   // ── Shopping: add ─────────────────────────────────────────────────────────
   const handleShoppingAdd = async (content: string): Promise<boolean> => {

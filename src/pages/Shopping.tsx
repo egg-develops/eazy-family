@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useTranslation } from 'react-i18next';
 import { useShoppingPredictions, logPurchase } from "@/hooks/useShoppingPredictions";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 interface ShoppingItem {
   id: string;
@@ -60,13 +61,11 @@ const Shopping = () => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isListening, setIsListening] = useState(false);
+  const speech = useSpeechRecognition();
+  const isListening = speech.isListening;
   const [listType, setListType] = useState<'personal' | 'shared'>('shared');
   const [lastSynced, setLastSynced] = useState<Date>(new Date());
-  const isListeningRef = useRef(false);
-  const recognitionRef = useRef<any>(null);
   const capturedRef = useRef('');
-  const baseTextRef = useRef('');
 
   const { predictions: shoppingPredictions } = useShoppingPredictions();
 
@@ -154,62 +153,29 @@ const Shopping = () => {
     toast({ title: `${completedIds.length} ${t('shopping.itemsRemoved')}` });
   };
 
-  const stopListening = () => {
-    isListeningRef.current = false;
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    setIsListening(false);
-  };
+  const stopListening = () => speech.stop();
 
   const startListening = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) { toast({ title: t('shopping.voiceNotSupported') }); return; }
-    isListeningRef.current = true;
-    setIsListening(true);
+    capturedRef.current = '';
     haptic('light');
-
-    const run = () => {
-      if (!isListeningRef.current) return;
-      const r = new SR();
-      r.lang = navigator.language || 'en-US';
-      r.interimResults = false;   // single-shot: no interim spam
-      r.continuous = false;
-      r.maxAlternatives = 1;
-
-      r.onresult = (e: any) => {
-        const transcript = e.results[0]?.[0]?.transcript || '';
+    speech.start({
+      lang: navigator.language || 'en-US',
+      onResult: (transcript) => {
         if (transcript) {
           capturedRef.current = capturedRef.current
             ? `${capturedRef.current} ${transcript}`
             : transcript;
           setNewItem(capturedRef.current);
         }
-      };
-
-      r.onend = () => {
-        if (isListeningRef.current) setTimeout(run, 300);
-      };
-
-      r.onerror = (e: any) => {
-        if (e.error === 'aborted' || e.error === 'no-speech') return;
-        if (e.error === 'not-allowed') {
+      },
+      onError: (error) => {
+        if (error === 'not-supported') {
+          toast({ title: t('shopping.voiceNotSupported') });
+        } else if (error === 'not-allowed') {
           toast({ title: t('shopping.micDenied'), description: t('shopping.micDeniedDesc') });
-          isListeningRef.current = false;
-          setIsListening(false);
         }
-      };
-
-      try {
-        r.start();
-        recognitionRef.current = r;
-      } catch {
-        isListeningRef.current = false;
-        setIsListening(false);
-      }
-    };
-
-    capturedRef.current = '';
-    run();
+      },
+    });
   };
 
   const filtered = items.filter(i => i.listType === listType);
