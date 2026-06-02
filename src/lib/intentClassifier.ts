@@ -74,13 +74,17 @@ export function guardAIType(
     BUY_VERBS.test(lower) ||
     ADD_TO_LIST.test(lower);
   const isObviouslyTask = TASK_VERBS.test(lower);
+  // User explicitly said "task" or "to-do" — treat as definitive override
+  const hasExplicitTaskWord = /\b(task|to-?do|todo)\b/i.test(lower);
 
   if ((aiType === 'event' || aiType === 'shopping') && isObviouslyShopping) {
     return isPersonalScope(lower) ? 'shopping_personal' : 'shopping';
   }
-  // A task verb overrides "event" even when AI adds a date (date → due_date).
-  // Only a specific time (e.g. "at 3pm") is strong enough to keep it as event.
-  if (aiType === 'event' && isObviouslyTask && !aiTime) return 'task';
+  // A task verb (or explicit "task" keyword) overrides "event" unless the AI
+  // returned a SPECIFIC time (e.g. "at 3pm"). Midnight "00:00" is not a
+  // specific time — it's the AI's default when only a date is present.
+  const hasSpecificTime = !!aiTime && aiTime !== '00:00';
+  if (aiType === 'event' && (isObviouslyTask || hasExplicitTaskWord) && !hasSpecificTime) return 'task';
   // Upgrade shopping → shopping_personal when keyword guard detects personal scope
   if (aiType === 'shopping' && isPersonalScope(lower)) return 'shopping_personal';
   return aiType;

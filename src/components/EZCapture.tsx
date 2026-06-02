@@ -294,7 +294,13 @@ JSON fields:
 - notes: string or null
 - mood: string or null (journal only)
 
-Today is ${today} (${dayOfWeek}). Return ONLY the raw JSON object.`;
+Today is ${today} (${dayOfWeek}). Date resolution rules:
+- "this week" = a date within the 7 days starting from today (${today}), not before today.
+- "next week" = a date 7–14 days from today.
+- "this weekend" = the nearest upcoming Saturday.
+- Never resolve a relative date to a date in the past.
+
+Return ONLY the raw JSON object.`;
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
