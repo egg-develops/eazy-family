@@ -69,6 +69,7 @@ class VoiceServiceImpl {
   // Native path
   private nativeCleanup: (() => void) | null = null;
   private nativeActive = false;
+  private nativeAutoStopTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Web Speech API path (desktop)
   private recognition: any = null;
@@ -86,9 +87,9 @@ class VoiceServiceImpl {
   private readonly isNative = Capacitor.isNativePlatform();
   private readonly useWhisper = !Capacitor.isNativePlatform() && shouldUseWhisper();
 
-  /** True when the active path is single-shot (Whisper) rather than continuous Web Speech. */
+  /** True when the active path is single-shot — native and Whisper both stop after one utterance. */
   get isSingleShot() {
-    return this.useWhisper;
+    return this.isNative || this.useWhisper;
   }
   get isListening() {
     return this._isListening;
@@ -156,6 +157,10 @@ class VoiceServiceImpl {
   stopListening() {
     if (this.isNative) {
       this.nativeActive = false;
+      if (this.nativeAutoStopTimer) {
+        clearTimeout(this.nativeAutoStopTimer);
+        this.nativeAutoStopTimer = null;
+      }
       this.nativeCleanup?.();
       this.nativeCleanup = null;
       SpeechRecognition.stop().catch(() => {});
@@ -345,6 +350,12 @@ class VoiceServiceImpl {
         maxResults: 1,
         popup: false,
       });
+      // Android's SpeechRecognizer without a popup UI can stay open indefinitely —
+      // force-stop after 15s so the user is never left with a stuck mic indicator.
+      this.nativeAutoStopTimer = setTimeout(() => {
+        this.nativeAutoStopTimer = null;
+        if (this.nativeActive) this.stopListening();
+      }, 15_000);
     } catch (e: any) {
       if (!cleanedUp) {
         cleanup();

@@ -2,7 +2,10 @@ import { Capacitor } from '@capacitor/core';
 import { error as logError } from '@/lib/logger';
 
 const isNative = Capacitor.isNativePlatform();
-const RC_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY as string;
+const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
+const RC_IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY as string;
+const RC_ANDROID_KEY = import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string;
+const RC_KEY = platform === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 const ENTITLEMENT = 'premium';
 
 // Lazy-import the native plugin only on native platforms to avoid web build issues
@@ -12,7 +15,11 @@ async function getRC() {
 }
 
 export async function configureRC(userId?: string): Promise<void> {
-  if (!isNative || !RC_KEY) return;
+  if (!isNative) return;
+  if (!RC_KEY) {
+    logError(`[RevenueCat] No API key for platform "${platform}" — set VITE_REVENUECAT_${platform.toUpperCase()}_KEY in .env`);
+    return;
+  }
   const Purchases = await getRC();
   await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
 }
