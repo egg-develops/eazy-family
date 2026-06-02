@@ -84,8 +84,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Configure RevenueCat early (before session resolves) so it's ready
-    configureRC();
+    // Configure RevenueCat early. Store the promise so auth handlers can
+    // await it before calling identifyRCUser — calling logIn() on an
+    // unconfigured SDK causes getOfferings() to hang indefinitely.
+    const rcReady = configureRC().catch(err => logError('[RC] configureRC failed:', err));
 
     // Re-check session when tab becomes visible (iOS Safari pauses JS timers, preventing token refresh)
     // Only update state if we actually get a valid response — don't null-out user on network errors
@@ -134,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               syncWidgetToken(session.access_token, session.user.id);
             }
             if (Capacitor.isNativePlatform()) {
+              await rcReady; // ensure configure() has completed before logIn()
               await identifyRCUser(session.user.id);
               const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
               setIsPremium(premium);
@@ -155,7 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               syncWidgetToken(session.access_token, session.user.id);
             }
             if (Capacitor.isNativePlatform()) {
-              identifyRCUser(session.user.id).then(() =>
+              rcReady.then(() => identifyRCUser(session.user.id)).then(() =>
                 Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]).then(([premium, trial, daysLeft]) => {
                   setIsPremium(premium);
                   setIsTrial(trial);
