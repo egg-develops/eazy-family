@@ -478,6 +478,7 @@ const Calendar = () => {
   // Voice-to-calendar state
   const calendarSpeech = useSpeechRecognition();
   const isListeningVoice = calendarSpeech.isListening;
+  const [isTitleListening, setIsTitleListening] = useState(false);
 
   useEffect(() => {
     if (isDialogOpen && familyMembers.length === 0) loadFamilyMembers();
@@ -873,6 +874,30 @@ const Calendar = () => {
   };
 
   const stopCalendarVoice = () => calendarSpeech.stop();
+
+  const startTitleVoice = () => {
+    const langMap: Record<string, string> = { de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT' };
+    const lang = langMap[i18n.language.split('-')[0]] || 'en-US';
+    setIsTitleListening(true);
+    calendarSpeech.start({
+      lang,
+      onResult: (transcript) => {
+        if (!transcript.trim()) return;
+        const clean = transcript
+          .replace(/^\s*(add|create|schedule|book|put)\s*/i, '')
+          .trim();
+        if (dialogTab === 'event') setEventTitle(clean || transcript);
+        else setReminderTitle(clean || transcript);
+      },
+      onEnd: () => setIsTitleListening(false),
+      onError: () => setIsTitleListening(false),
+    });
+  };
+
+  const stopTitleVoice = () => {
+    calendarSpeech.stop();
+    setIsTitleListening(false);
+  };
 
   const handleEditItem = (item: CalendarItem) => {
     setEditingItemId(item.id);
@@ -1932,16 +1957,38 @@ const Calendar = () => {
           <div className="flex-1 overflow-y-auto py-4 space-y-3 px-4 pb-32">
 
             {/* Title */}
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{
+                background: 'hsl(var(--card))',
+                border: `1px solid ${isTitleListening ? '#964735' : 'hsl(var(--border))'}`,
+                transition: 'border-color 0.2s',
+              }}
+            >
               <div className="px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.titleLabel')}</p>
-                <input
-                  className="w-full text-base outline-none"
-                  style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
-                  placeholder={dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle')}
-                  value={dialogTab === 'event' ? eventTitle : reminderTitle}
-                  onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    className="flex-1 text-base outline-none"
+                    style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
+                    placeholder={isTitleListening ? t('calendar.listening', 'Listening…') : (dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle'))}
+                    value={dialogTab === 'event' ? eventTitle : reminderTitle}
+                    onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
+                  />
+                  <div className="relative flex-shrink-0">
+                    {isTitleListening && (
+                      <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.25)' }} />
+                    )}
+                    <button
+                      type="button"
+                      onClick={isTitleListening ? stopTitleVoice : startTitleVoice}
+                      className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                      style={{ background: isTitleListening ? '#964735' : 'hsl(var(--muted))' }}
+                    >
+                      <Mic className="w-3.5 h-3.5" style={{ color: isTitleListening ? '#fff' : 'hsl(var(--muted-foreground))' }} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
