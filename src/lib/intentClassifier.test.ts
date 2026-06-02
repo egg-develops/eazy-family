@@ -124,3 +124,52 @@ describe('guardAIType – passes through correct AI results', () => {
   it('reminder unchanged',           () =>
     expect(guardAIType('reminder', 'remind me about rent', null, null)).toBe('reminder'));
 });
+
+// ── Regression tests — real failures reported by testers ────────────────────
+// Each test is named with the exact utterance that failed so future regressions
+// are immediately identifiable.
+
+describe('regression – voice command misclassifications', () => {
+  // Reported: "Add peanut butter to my shopping list" → added as calendar event
+  it('"Add peanut butter to my shopping list" → shopping_personal', () =>
+    expect(classifyText('Add peanut butter to my shopping list')).toBe('shopping_personal'));
+
+  // Reported: "Add a task to clean out storage closet this week" → added as event
+  it('"Add a task to clean out storage closet this week" → task', () =>
+    expect(classifyText('Add a task to clean out storage closet this week')).toBe('task'));
+
+  // Explicit "task" keyword must always override event classification
+  it('"add a task to..." always resolves to task', () =>
+    expect(classifyText('add a task to organise the pantry')).toBe('task'));
+
+  it('"create a task to fix the sink" → task', () =>
+    expect(classifyText('create a task to fix the sink')).toBe('task'));
+});
+
+describe('regression – guardAIType 00:00 not treated as specific time', () => {
+  // Reported: AI returned time:"00:00" for "this week" → blocked task correction
+  it('AI says event + task verb + time 00:00 → task (00:00 is not a specific time)', () =>
+    expect(guardAIType('event', 'clean out storage closet this week', '2026-06-07', '00:00')).toBe('task'));
+
+  it('AI says event + explicit task keyword + time 00:00 → task', () =>
+    expect(guardAIType('event', 'add a task to clean out storage closet', '2026-06-07', '00:00')).toBe('task'));
+
+  it('AI says event + task verb + real time 09:00 → stays event', () =>
+    expect(guardAIType('event', 'clean the office at 9am', '2026-06-07', '09:00')).toBe('event'));
+});
+
+describe('regression – shopping scope edge cases', () => {
+  // Reported: "our shopping list" must stay shared even with "my" elsewhere in text
+  it('"add to our shopping list" → shopping (not personal)', () =>
+    expect(classifyText('add peanut butter to our shopping list')).toBe('shopping'));
+
+  it('"family shopping list" → shopping (shared)', () =>
+    expect(classifyText('add bread to the family shopping list')).toBe('shopping'));
+
+  // German equivalents
+  it('DE: "auf unsere Einkaufsliste" → shopping', () =>
+    expect(classifyText('Erdnussbutter auf unsere Einkaufsliste')).toBe('shopping'));
+
+  it('DE: "auf meine Einkaufsliste" → shopping_personal', () =>
+    expect(classifyText('Erdnussbutter auf meine Einkaufsliste')).toBe('shopping_personal'));
+});
