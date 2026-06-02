@@ -200,6 +200,10 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [intendingToListen, setIntendingToListen] = useState(false);
   const sessionBaseRef = useRef('');
   const latestTextRef = useRef('');
+  // Native speech recognition can revise earlier words downward on its final
+  // result, making the last partial shorter than what the user saw mid-speech.
+  // Track the longest transcript seen in the session and use that on auto-process.
+  const longestTranscriptRef = useRef('');
 
   useEffect(() => {
     return () => {
@@ -218,6 +222,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const startListening = () => {
     shouldRestartRef.current = true;
     consecutiveFailsRef.current = 0;
+    longestTranscriptRef.current = latestTextRef.current;
     setIntendingToListen(true);
     haptic('light');
 
@@ -229,7 +234,11 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
         onResult: (transcript) => {
           consecutiveFailsRef.current = 0;
           const base = sessionBaseRef.current;
-          setTextTracked(base ? `${base} ${transcript}` : transcript);
+          const full = base ? `${base} ${transcript}` : transcript;
+          if (full.length > longestTranscriptRef.current.length) {
+            longestTranscriptRef.current = full;
+          }
+          setTextTracked(full);
         },
         onError: (error) => {
           if (error === 'not-allowed') {
@@ -264,7 +273,13 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
           } else {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            if (latestTextRef.current.trim()) {
+            // Use the longest transcript seen — native speech recognition can
+            // revise its final result to be shorter than earlier partials.
+            const best = longestTranscriptRef.current.length > latestTextRef.current.length
+              ? longestTranscriptRef.current
+              : latestTextRef.current;
+            if (best.trim()) {
+              if (best !== latestTextRef.current) setTextTracked(best);
               setTimeout(() => handleParseAndPreviewRef.current?.(), 50);
             }
           }

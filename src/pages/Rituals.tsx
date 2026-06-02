@@ -443,9 +443,13 @@ const Rituals = () => {
               ))}
             </div>
           ) : (
-            <div className="py-6 flex flex-col items-center gap-2 text-center">
-              <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle', 'Your journal is waiting')}</p>
-              <p className="text-xs" style={{ color: MUTED }}>{t('rituals.journalEmptyHint', 'Tap the EZ button to share your thoughts — speak or type, EZ handles the rest.')}</p>
+            <div
+              className="flex flex-col items-center gap-2 text-center px-5 py-8 rounded-2xl"
+              style={{ border: `1.5px dashed ${BORDER}`, background: 'hsl(var(--card))' }}
+            >
+              <span style={{ fontSize: 28 }}>✍️</span>
+              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle', 'Your journal is waiting')}</p>
+              <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('rituals.journalEmptyHint', 'Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest.')}</p>
             </div>
           )}
         </div>
