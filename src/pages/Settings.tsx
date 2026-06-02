@@ -138,7 +138,7 @@ const Settings = () => {
 
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
-  const [displayName, setDisplayName] = useState("");
+  const [displayName, setDisplayName] = useState(() => localStorage.getItem('eazy-display-name') || "");
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [userEmail, setUserEmail] = useState(() => user?.email || '');
@@ -197,7 +197,9 @@ const Settings = () => {
     supabase.from('profiles').select('display_name, home_config').eq('user_id', user.id).single()
       .then(({ data }) => {
         if (data) {
-          setDisplayName(data.display_name || '');
+          const fetchedName = data.display_name || '';
+          setDisplayName(fetchedName);
+          localStorage.setItem('eazy-display-name', fetchedName);
           if (data.home_config && typeof data.home_config === 'object') {
             const cloud = data.home_config as Partial<HomeConfig>;
             setHomeConfig(prev => ({ ...prev, ...cloud }));
@@ -290,10 +292,14 @@ const Settings = () => {
     if (!user) return;
     const trimmed = name.trim();
     setDisplayName(trimmed);
+    localStorage.setItem('eazy-display-name', trimmed);
     try {
       const { error } = await supabase.from('profiles')
         .upsert({ user_id: user.id, display_name: trimmed }, { onConflict: 'user_id' });
-      if (error) logError('saveDisplayName:', error);
+      if (error) {
+        logError('saveDisplayName:', error);
+        toast({ title: t('settings.nameSaveFailed', 'Could not save name'), variant: 'destructive' });
+      }
     } catch (e) { logError('saveDisplayName:', e); }
   };
 

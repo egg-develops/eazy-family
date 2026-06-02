@@ -90,16 +90,41 @@ const getUserLanguageLabel = (): string => {
 
 const cleanCaptureTitle = (raw: string): string => {
   let s = raw
+    // EN: leading command words
     .replace(/^(please\s+)?(add|create|schedule|set\s+up|put|book|make|remind\s+me\s+to?)\s+/i, '')
+    // DE: leading command words
+    .replace(/^(bitte\s+)?(hinzufügen|erstellen|planen|eintragen|erinnere\s+mich\s+an?)\s+/i, '')
+    // FR: leading command words
+    .replace(/^(s'il\s+te\s+plaît\s+)?(ajouter|créer|planifier|mettre|rappelle-moi\s+de?)\s+/i, '')
+    // IT: leading command words
+    .replace(/^(per\s+favore\s+)?(aggiungere|creare|pianificare|mettere|ricordami\s+di?)\s+/i, '')
+    // ES: leading command words
+    .replace(/^(por\s+favor\s+)?(añadir|agregar|crear|planificar|poner|recuérdame\s+que?)\s+/i, '')
+    // PT: leading command words
+    .replace(/^(por\s+favor\s+)?(adicionar|criar|agendar|colocar|lembra-me\s+de?)\s+/i, '')
+    // EN: leading type words
     .replace(/^(an?\s+)?(task|reminder|event|note|appointment)\s*(to\s+|:\s*|for\s+)?/i, '')
+    // EN: trailing list destinations
     .replace(/\s+(on|to|in)\s+(my\s+|our\s+|the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
+    // DE: trailing list destinations
+    .replace(/\s+(auf\s+(die|meine|unsere)\s+)?(einkaufsliste|liste|kalender)\b.*/i, '')
+    // FR: trailing list destinations
+    .replace(/\s+(à\s+(ma|notre|la)\s+)?(liste|liste\s+de\s+courses|calendrier|agenda)\b.*/i, '')
+    // IT: trailing list destinations
+    .replace(/\s+(alla\s+(mia|nostra|la)\s+)?(lista|lista\s+della\s+spesa|calendario|agenda)\b.*/i, '')
+    // ES: trailing list destinations
+    .replace(/\s+(a\s+(mi|nuestra|la)\s+)?(lista|lista\s+de\s+compras|calendario|agenda)\b.*/i, '')
+    // PT: trailing list destinations
+    .replace(/\s+(à\s+(minha|nossa|a)\s+)?(lista|lista\s+de\s+compras|calendário|agenda)\b.*/i, '')
+    // EN: trailing date/time phrases
     .replace(/\s+for\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today|next\s+week)\s*$/i, '')
     .replace(/\s+on\s+(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today)\s*$/i, '')
     .replace(/\s+at\s+\d+\s*(am|pm|:\d+)?\s*$/i, '')
     .replace(/\s+\d{1,2}(:\d{2})?\s*(am|pm)\s*$/i, '')
     .trim();
-  s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
-  s = s.replace(/\s+(for|at|on|by|the|to|in|of)\s*$/i, '').trim();
+  // Strip trailing prepositions (EN + common romance lang equivalents)
+  s = s.replace(/\s+(for|at|on|by|the|to|in|of|pour|pour|par|le|la|les|per|por|para|von|für|an|auf)\s*$/i, '').trim();
+  s = s.replace(/\s+(for|at|on|by|the|to|in|of|pour|par|le|la|les|per|por|para|von|für|an|auf)\s*$/i, '').trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 

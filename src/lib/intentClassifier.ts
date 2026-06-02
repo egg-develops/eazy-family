@@ -1,18 +1,18 @@
 export type CaptureType = 'event' | 'task' | 'shopping' | 'shopping_personal' | 'reminder' | 'ritual' | 'journal';
 
-// "my list/shopping/groceries" signals → personal list (EN + DE)
-const MY_LIST = /\b(my (shopping list|grocery list|groceries|list)|for me\b|meine (einkaufsliste|liste|einkäufe)|für mich\b)/;
-// "our/family/shared" signals → shared list (EN + DE)
-const OUR_LIST = /\b(our (shopping list|grocery list|groceries|list)|family (list|shopping)|shared list|unsere (einkaufsliste|liste|einkäufe)|familienliste|gemeinsame liste)\b/;
-// Generic shopping triggers (no scope signal) — EN + DE
-const BUY_VERBS = /\b(buy|get|grab|pick up|kaufen|einkaufen|besorgen|mitbringen|holen)\b/;
-const ADD_TO_LIST = /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b|(?:auf die|zur|auf meine|auf unsere)\s+(?:einkaufsliste|liste)\b/i;
+// "my list/shopping/groceries" signals → personal list (EN + DE + FR + IT + ES + PT)
+const MY_LIST = /\b(my (shopping list|grocery list|groceries|list)|for me\b|meine (einkaufsliste|liste|einkäufe)|für mich\b|ma (liste|liste de courses|liste des courses)|mes (courses|achats)|pour moi\b|mia (lista|lista della spesa)|per me\b|mi (lista|lista de compras|lista de la compra)|para mí\b|minha (lista|lista de compras)|para mim\b)/i;
+// "our/family/shared" signals → shared list (EN + DE + FR + IT + ES + PT)
+const OUR_LIST = /\b(our (shopping list|grocery list|groceries|list)|family (list|shopping)|shared list|unsere (einkaufsliste|liste|einkäufe)|familienliste|gemeinsame liste|notre (liste|liste de courses)|liste (familiale|commune|partagée)|nostra (lista|lista della spesa)|lista (di famiglia|condivisa|familiare)|nuestra (lista|lista de compras)|lista (familiar|compartida)|nossa (lista|lista de compras)|lista da família|lista compartilhada)\b/i;
+// Generic shopping triggers (no scope signal) — EN + DE + FR + IT + ES + PT
+const BUY_VERBS = /\b(buy|get|grab|pick up|kaufen|einkaufen|besorgen|mitbringen|holen|acheter|prendre|courses|faire les courses|comprare|prendere|fare la spesa|comprar|ir de compras|ir às compras)\b/i;
+const ADD_TO_LIST = /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b|(?:auf die|zur|auf meine|auf unsere)\s+(?:einkaufsliste|liste)\b|(?:ajouter|mettre|rajouter)\b.+\b(liste|courses)\b|(?:à ma liste|sur ma liste|à notre liste|sur la liste)\b|(?:aggiungere|mettere)\b.+\b(lista|spesa)\b|(?:alla mia lista|sulla lista|alla lista)\b|(?:añadir|poner|agregar)\b.+\b(lista|compras)\b|(?:a mi lista|en la lista)\b|(?:adicionar|colocar|pôr)\b.+\b(lista|compras)\b|(?:à minha lista|na lista)\b/i;
 
 function isPersonalScope(lower: string): boolean {
   return MY_LIST.test(lower) && !OUR_LIST.test(lower);
 }
 
-const TASK_VERBS = /\b(clean|clear|sort|declutter|organis|organiz|tidy|pack|unpack|fix|repair|mow|vacuum|sweep|mop|wash|water|call|email|book|return|drop off|finish|complete|task|todo|to-do|aufräumen|putzen|waschen|kochen|anrufen|reparieren|mähen|staubsaugen|wischen|gießen|giessen|buchen|abgeben|fertigstellen|erledigen|auspacken|sortieren|bringen)\b/;
+const TASK_VERBS = /\b(clean|clear|sort|declutter|organis|organiz|tidy|pack|unpack|fix|repair|mow|vacuum|sweep|mop|wash|water|call|email|book|return|drop off|finish|complete|task|todo|to-do|aufräumen|putzen|waschen|kochen|anrufen|reparieren|mähen|staubsaugen|wischen|gießen|giessen|buchen|abgeben|fertigstellen|erledigen|auspacken|sortieren|bringen|nettoyer|ranger|organiser|réparer|tondre|aspirer|arroser|appeler|finir|trier|faire le ménage|pulire|sistemare|riparare|falciare|aspirare|lavare|annaffiare|chiamare|finire|ordinare|limpiar|ordenar|organizar|reparar|cortar|aspirar|lavar|regar|llamar|terminar|clasificar|limpar|arrumar|reparar|aparar|aspirar|regar|ligar|terminar|organizar)\b/i;
 
 /**
  * Keyword-based intent classifier — deterministic fallback used when the AI
