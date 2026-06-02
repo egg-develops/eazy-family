@@ -525,6 +525,7 @@
     },
     "profileName": "Nome profilo",
     "save": "Salva",
+    "nameSaveFailed": "Impossibile salvare il nome",
     "accountDeleted": "Account eliminato",
     "accountDeletedDesc": "Il tuo account Eazy.Family e tutti i dati associati sono stati eliminati."
   },
@@ -583,6 +584,9 @@
     "familyAgenda": "Agenda famiglia",
     "noSharedEvents": "Nessun evento condiviso in arrivo.",
     "openCalendar": "Apri calendario",
+    "channelDesc": "Messaggistica familiare privata",
+    "channelTitle": "Canale Famiglia",
+    "connectSection": "Connetti",
     "openFamilyPage": "Apri la pagina famiglia",
     "noEventsToday": "Nessun evento oggi",
     "tourBannerTitle": "Benvenuto in Eazy.Family",
@@ -1178,7 +1182,9 @@
     "showLess": "Mostra meno",
     "whatsOnYourMind": "A cosa stai pensando…",
     "useVoiceHint": "Usa il pulsante EZ o il Diario vocale per aggiungere un'entrata.",
-    "deleteEntry": "Elimina"
+    "deleteEntry": "Elimina",
+    "journalEmptyHint": "Tocca il pulsante EZ in basso per condividere i tuoi pensieri — parla o scrivi, EZ pensa al resto.",
+    "journalEmptyTitle": "Il tuo diario ti aspetta"
   },
   "familyProfile": {
     "title": "Profilo famiglia",

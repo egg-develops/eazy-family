@@ -526,6 +526,7 @@
     },
     "profileName": "Nome do perfil",
     "save": "Guardar",
+    "nameSaveFailed": "Não foi possível guardar o nome",
     "accountDeleted": "Conta excluída",
     "accountDeletedDesc": "Sua conta do Eazy.Family e todos os seus dados associados foram excluídos.",
     "moduleFamilyAgenda": "Agenda familiar"
@@ -587,6 +588,9 @@
     "familyAgenda": "Agenda familiar",
     "noSharedEvents": "Nenhum evento compartilhado em breve.",
     "openCalendar": "Abrir calendário",
+    "channelDesc": "Mensagens privadas da família",
+    "channelTitle": "Canal da Família",
+    "connectSection": "Ligar",
     "tourBannerTitle": "Bem-vindo ao Eazy.Family",
     "tourBannerFeature1": "Calendário familiar compartilhado & lembretes",
     "tourBannerFeature2": "Listas, tarefas & compras em um só lugar",
@@ -1180,7 +1184,9 @@
     "showLess": "Mostrar menos",
     "whatsOnYourMind": "O que tens em mente…",
     "useVoiceHint": "Usa o botão EZ ou o Diário de voz para adicionar uma entrada.",
-    "deleteEntry": "Eliminar"
+    "deleteEntry": "Eliminar",
+    "journalEmptyHint": "Toque no botão EZ abaixo para partilhar os seus pensamentos — fale ou escreva, o EZ trata do resto.",
+    "journalEmptyTitle": "O seu diário está à espera"
   },
   "familyProfile": {
     "title": "Perfil familiar",

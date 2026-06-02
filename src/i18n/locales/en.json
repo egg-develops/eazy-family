@@ -528,6 +528,7 @@
     },
     "profileName": "Profile Name",
     "save": "Save",
+    "nameSaveFailed": "Could not save name",
     "accountDeleted": "Account deleted",
     "accountDeletedDesc": "Your Eazy.Family account and all its associated data have been deleted."
   },
@@ -1181,7 +1182,9 @@
     "showLess": "Show Less",
     "whatsOnYourMind": "What's on your mind…",
     "useVoiceHint": "Use the EZ button or Voice Journal to add an entry.",
-    "deleteEntry": "Delete"
+    "deleteEntry": "Delete",
+    "journalEmptyTitle": "Your journal is waiting",
+    "journalEmptyHint": "Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest."
   },
   "familyProfile": {
     "title": "Family Profile",
@@ -1285,7 +1288,10 @@
     "docLabel": "Document",
     "emptyTitle": "Family Agenda",
     "emptyDesc": "Shared Family events and tasks will be here.",
-    "openCalendar": "Open Calendar"
+    "openCalendar": "Open Calendar",
+    "connectSection": "Connect",
+    "channelTitle": "Family Channel",
+    "channelDesc": "Private family messaging"
   },
   "website": {
     "nav": {

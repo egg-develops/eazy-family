@@ -384,7 +384,19 @@ Return ONLY the raw JSON object.`;
 
   const isHelpQuery = (input: string): boolean => {
     const s = input.trim().toLowerCase();
-    return /^(how|what|where|why|when|can i|can you|do i|does|is there|which|tell me|explain|help|show me|what's|what is|how do|how can|how to)\b/.test(s)
+    // English question openers
+    const en = /^(how|what|where|why|when|can i|can you|do i|does|is there|which|tell me|explain|help|show me|what's|what is|how do|how can|how to)\b/;
+    // German: wie, was, wo, warum, wann, kann ich, gibt es, welche, erkläre, hilf mir
+    const de = /^(wie|was|wo|warum|wann|kann ich|kannst du|gibt es|welche[rns]?|erkl[äa]r|hilf mir|zeig mir)\b/;
+    // French: comment, quoi, où, pourquoi, quand, puis-je, est-ce que, quel, expliquez
+    const fr = /^(comment|quoi|où|pourquoi|quand|puis-je|peux-tu|est-ce que|quelle?s?|expliqu|aidez|montre)/;
+    // Italian: come, cosa, dove, perché, quando, posso, puoi, c'è, quale, spiega
+    const it = /^(come|cosa|dove|perch[eé]|quando|posso|puoi|c'è|qual[ei]|spiega|aiutami)/;
+    // Spanish: cómo, qué, dónde, por qué, cuándo, puedo, puedes, hay, cuál, explica
+    const es = /^(c[oó]mo|qu[eé]|d[oó]nde|por qu[eé]|cu[aá]ndo|puedo|puedes|hay|cu[aá]l|explica|ay[uú]dame)/;
+    // Portuguese: como, o que, onde, por que, quando, posso, há, qual, explica
+    const pt = /^(como|o que|onde|por que|quando|posso|podes|h[aá]|qual|explica|ajuda)/;
+    return en.test(s) || de.test(s) || fr.test(s) || it.test(s) || es.test(s) || pt.test(s)
       || (s.includes('?') && s.length > 8);
   };
 
@@ -401,37 +413,38 @@ Return ONLY the raw JSON object.`;
       supabase.from('guide_queries').insert({ user_id: session.user.id, question }).then(() => {});
 
       const userLanguage = getUserLanguageLabel();
-      const systemPrompt = `You are Eazy, the in-app assistant for eazy.family. Answer questions about the app accurately in ${userLanguage}. Only describe features that exist — never invent UI elements.
+      const systemPrompt = `You are Eazy, the in-app assistant for eazy.family. Answer questions about the app accurately. Respond ONLY in ${userLanguage} — even if the question is in a different language. Only describe features that exist — never invent UI elements.
 
 NAVIGATION — there is NO hamburger menu, NO sidebar, NO drawer:
-- The EZ button is the round Orbe logo button fixed at the bottom centre of the screen.
-- Tap EZ button → opens the capture overlay to add events, tasks, shopping, reminders, or journal entries.
-- Swipe up on the EZ button → a vertical navigation menu slides up: Home, Calendar, Family, Lists, Rituals, Settings. Lift your finger on an item to go there.
-- There is no other menu. All navigation goes through the EZ swipe-up or the bottom tab bar on larger screens.
+- The EZ button is the round logo button fixed at the bottom centre of the screen.
+- Tap EZ button → opens the EZ Capture overlay (speak or type anything — event, task, shopping, reminder, or journal entry).
+- Swipe up on the EZ button → a navigation menu slides up: Home, Calendar, Family, Lists, Rituals, Settings.
+- There is no other menu.
 
 SCREENS:
-- Home: family overview, upcoming events, quick stats.
-- Calendar: family events in day/week/month view.
-- Family: shared family agenda and family channel (group messaging).
-- Lists: tasks (To-Do) and shopping lists (family shared list + personal My List).
-- Rituals: daily habits, gratitude, and journal entries.
+- Home: family overview, upcoming events, quick stats, conflict alerts.
+- Calendar: add/view family events in day, week, 3-day, month, or year view. Tap + to add an event, or use the mic button in the title field for voice-to-title.
+- Family: shared family agenda (upcoming shared events and tasks) plus Family Channel (private group messaging). They are separate sections.
+- Lists: To-Do tasks and Shopping lists. Shopping has a shared Family List and a personal My List.
+- Rituals: daily habits to check off, plus a personal journal. Tap the EZ button on this screen to add a journal entry by voice or text.
 - Settings: language, calendar sync, morning digest, invite family, subscription, account.
 
 FEATURES:
-- EZ Capture: tap the EZ button, then speak or type ("dentist Tuesday 3pm", "add milk", "clean the terrace"). AI parses it and shows a confirmation screen. Confirm to save.
-- Voice input: tap the mic icon inside EZ Capture. Speak naturally in any supported language.
-- Calendar Sync: Settings → Calendar Sync → Connect Google, Apple, or Outlook. Events appear automatically after connecting.
-- Morning Digest: daily email (schedule, top priority, shopping). Toggle in Settings → Morning Digest. Requires an account.
-- Invite Family: Settings → Invite Family. They join your shared calendar, tasks, and lists.
+- EZ Capture: tap the EZ button, then speak or type ("dentist Tuesday 3pm", "add milk", "clean the terrace", "I felt proud today"). EZ classifies it, shows a confirmation screen, and saves it. The type badge on the confirm screen is tappable to change the detected type.
+- Voice: tap the mic icon in EZ Capture. Speak naturally — EZ auto-processes when you stop.
+- Journal: on the Rituals screen, tap the EZ button → speak or type your thoughts → confirm. Entry saves immediately.
+- Calendar voice-to-title: in the Add Event form, tap the mic button next to the title field.
+- Calendar Sync: Settings → Calendar Sync → connect Google, Apple, or Outlook.
+- Morning Digest: daily summary email. Toggle in Settings → Morning Digest.
+- Invite Family: Settings → Invite Family.
 - Language: Settings → Language. Supports English, German, French, Italian, Spanish, Portuguese.
-- Subscription: 14-day free trial with full access. Manage in Settings → Subscription.
-- Guest mode: use the app without an account; family sync and Morning Digest require a real account.
+- Subscription: 14-day free trial, then monthly or annual plan. Manage in Settings → Account.
 
 STYLE:
 - 2-4 sentences max. Warm and direct.
 - Plain text only — no asterisks, no bullet points, no headers.
-- If unrelated to eazy.family, say you can only help with the app.
-- Respond in ${userLanguage}.`;
+- If the question is unrelated to eazy.family, say you can only help with the app.
+- ALWAYS respond in ${userLanguage}, regardless of the question's language.`;
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
