@@ -166,6 +166,9 @@ serve(async (req) => {
   const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
   const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN");
   const TELEGRAM_CHAT_ID = Deno.env.get("TELEGRAM_CHAT_ID");
+  // TELEGRAM_ADMIN_USER_ID gates Telegram delivery to the account owner only.
+  // Without this, every opted-in user's private data is sent to the same chat.
+  const TELEGRAM_ADMIN_USER_ID = Deno.env.get("TELEGRAM_ADMIN_USER_ID");
 
   // Date range for today in Europe/Zurich
   const now = new Date();
@@ -306,7 +309,11 @@ serve(async (req) => {
     let userSent = false;
 
     // ── Telegram ──────────────────────────────────────────────────────────
-    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+    // Only deliver to Telegram for the admin/owner user. TELEGRAM_CHAT_ID is a
+    // single environment variable — sending it for every user would expose each
+    // user's private schedule and tasks to the owner's chat (cross-account leak).
+    const isAdminUser = !TELEGRAM_ADMIN_USER_ID || user_id === TELEGRAM_ADMIN_USER_ID;
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && isAdminUser) {
       const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale });
       const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
