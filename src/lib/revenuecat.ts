@@ -8,6 +8,10 @@ const RC_ANDROID_KEY = import.meta.env.VITE_REVENUECAT_ANDROID_KEY as string;
 const RC_KEY = platform === 'android' ? RC_ANDROID_KEY : RC_IOS_KEY;
 const ENTITLEMENT = 'premium';
 
+// Tracks when configure() has completed so getOfferings() is never called on an unconfigured SDK
+let _rcConfiguredResolve: () => void;
+const _rcConfigured = new Promise<void>(res => { _rcConfiguredResolve = res; });
+
 // Lazy-import the native plugin only on native platforms to avoid web build issues
 async function getRC() {
   const { Purchases } = await import('@revenuecat/purchases-capacitor');
@@ -15,13 +19,18 @@ async function getRC() {
 }
 
 export async function configureRC(userId?: string): Promise<void> {
-  if (!isNative) return;
+  if (!isNative) { _rcConfiguredResolve?.(); return; }
   if (!RC_KEY) {
     logError(`[RevenueCat] No API key for platform "${platform}" — set VITE_REVENUECAT_${platform.toUpperCase()}_KEY in .env`);
+    _rcConfiguredResolve?.();
     return;
   }
-  const Purchases = await getRC();
-  await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
+  try {
+    const Purchases = await getRC();
+    await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
+  } finally {
+    _rcConfiguredResolve?.();
+  }
 }
 
 export async function identifyRCUser(userId: string): Promise<void> {
@@ -100,6 +109,9 @@ const timeout = <T>(ms: number): Promise<T> =>
 export async function getRCOfferings(): Promise<RCPackage[]> {
   if (!isNative) return [];
   try {
+    // Wait for configure() to complete before calling getOfferings — calling on
+    // an unconfigured SDK causes it to hang indefinitely on Android.
+    await Promise.race([_rcConfigured, timeout<void>(8_000)]);
     const Purchases = await getRC();
     // Race against a 10s timeout — Purchases.getOfferings() can hang indefinitely
     // on certain OS versions (observed on iPadOS 26) if the SDK is not fully ready.
