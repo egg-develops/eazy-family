@@ -2,9 +2,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './i18n/config'
+import { Capacitor } from '@capacitor/core'
 
-// Register service worker for offline support (production only)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Register service worker for web PWA only — skip on native (Capacitor's https://localhost bridge conflicts with SW fetch interception on Android)
+if ('serviceWorker' in navigator && import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
