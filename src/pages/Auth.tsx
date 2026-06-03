@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
@@ -244,8 +245,9 @@ const Auth = () => {
                     style={inputStyle} />
                 </div>
                 <button type="submit" disabled={loading}
-                  className="w-full h-12 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="w-full h-12 rounded-xl text-white font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}>
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   {loading ? t('auth.sending') : t('auth.sendResetLink')}
                 </button>
                 <div className="pt-1" style={{ borderTop: `1px solid ${DIVIDER}` }}>
@@ -310,8 +312,9 @@ const Auth = () => {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full h-12 rounded-xl text-white font-semibold text-sm mt-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="w-full h-12 rounded-xl text-white font-semibold text-sm mt-2 transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
               style={{ background: `linear-gradient(135deg, ${TC}, ${TL})` }}>
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
             </button>
           </form>

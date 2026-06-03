@@ -511,9 +511,10 @@ const Lists = () => {
                                   />
                                 ) : (
                                   <span
-                                    className="text-sm cursor-text"
+                                    className="text-sm cursor-text truncate block"
                                     style={{ color: task.completed ? MUTED : INK, textDecoration: task.completed ? 'line-through' : 'none' }}
                                     onClick={() => !task.completed && startEditing(task)}
+                                    title={task.title}
                                   >
                                     {task.title}
                                   </span>
@@ -529,7 +530,7 @@ const Lists = () => {
                                   );
                                 })()}
                               </div>
-                              <button onClick={() => deleteItem(task.id)} className="opacity-40 hover:opacity-100 transition-opacity p-0.5">
+                              <button onClick={() => deleteItem(task.id)} className="opacity-50 p-2 -mr-1.5 -my-1 rounded-lg transition-opacity active:opacity-100">
                                 <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                               </button>
                             </div>
@@ -645,16 +646,16 @@ const Lists = () => {
                           </p>
                           {listItems.length > 0 && (
                             <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: MUTEDBG }}>
-                              <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / listItems.length) * 100}%`, background: '#4CAF50' }} />
+                              <div className="h-full rounded-full transition-all" style={{ width: `${(doneCount / listItems.length) * 100}%`, background: ACCENT }} />
                             </div>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                        <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="w-9 h-9 flex items-center justify-center rounded-xl opacity-50 transition-opacity active:opacity-100">
                           <Pencil className="w-4 h-4" style={{ color: MUTED }} />
                         </button>
-                        <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                        <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="w-9 h-9 flex items-center justify-center rounded-xl opacity-50 transition-opacity active:opacity-100">
                           <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                         </button>
                       </div>
@@ -688,8 +689,8 @@ const Lists = () => {
                                   </span>
                                 )}
                                 {!item.completed && editingItemId !== item.id && (
-                                  <button onClick={() => startEditing(item)} className="opacity-30 hover:opacity-80 transition-opacity p-0.5 flex-shrink-0">
-                                    <Pencil className="w-3 h-3" style={{ color: MUTED }} />
+                                  <button onClick={() => startEditing(item)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-40 transition-opacity active:opacity-100 flex-shrink-0">
+                                    <Pencil className="w-3.5 h-3.5" style={{ color: MUTED }} />
                                   </button>
                                 )}
                                 {/* Multi-assignee pills */}
@@ -715,13 +716,13 @@ const Lists = () => {
                                   })}
                                   <button
                                     onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                                     style={{ background: (item.assigned_to_users?.length ?? 0) > 0 ? 'transparent' : MUTEDBG, color: MUTED, border: `1px dashed ${MUTED}` }}
                                     title="Assign">
                                     +
                                   </button>
                                 </div>
-                                <button onClick={() => deleteItem(item.id)} className="p-0.5 opacity-40 hover:opacity-100 transition-opacity">
+                                <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
                                   <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                                 </button>
                               </div>
@@ -806,9 +807,9 @@ const Lists = () => {
           {/* Add item bar */}
           <div className="flex items-center rounded-2xl px-3 py-2.5 gap-2" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
             <button onClick={addShoppingItem}
-              className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full flex-shrink-0 transition-colors"
               style={{ background: newShoppingItem.trim() ? ACCENT : '#F1EDE7' }}>
-              <Plus className="w-3.5 h-3.5" style={{ color: newShoppingItem.trim() ? '#fff' : MUTED }} />
+              <Plus className="w-4 h-4" style={{ color: newShoppingItem.trim() ? '#fff' : MUTED }} />
             </button>
             <input
               value={newShoppingItem}
@@ -871,17 +872,19 @@ const Lists = () => {
                         style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
                       />
                     ) : (
-                      <span className="flex-1 text-sm cursor-text" style={{ color: INK }} onClick={() => startEditing(item)}>{item.title}</span>
+                      <span className="flex-1 min-w-0 text-sm cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
-                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '1px 6px', gap: '4px' }}>
+                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '2px 4px', gap: '2px' }}>
                       <button onClick={() => updateQty(item.id, -1)}
-                        style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                      <span className="text-xs font-semibold" style={{ color: INK, minWidth: '14px', textAlign: 'center' }}>{getQty(item.id)}</span>
+                        className="w-7 h-7 flex items-center justify-center rounded-full transition-colors active:bg-black/10"
+                        style={{ color: MUTED, fontSize: '16px', lineHeight: 1 }}>−</button>
+                      <span className="text-xs font-semibold" style={{ color: INK, minWidth: '18px', textAlign: 'center' }}>{getQty(item.id)}</span>
                       <button onClick={() => updateQty(item.id, 1)}
-                        style={{ color: MUTED, fontSize: '14px', lineHeight: 1, width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                        className="w-7 h-7 flex items-center justify-center rounded-full transition-colors active:bg-black/10"
+                        style={{ color: MUTED, fontSize: '16px', lineHeight: 1 }}>+</button>
                     </div>
-                    <button onClick={() => deleteItem(item.id)} className="opacity-40 hover:opacity-100 transition-opacity">
-                      <Trash2 className="w-3.5 h-3.5" style={{ color: MUTED }} />
+                    <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
+                      <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                     </button>
                   </div>
                 ))}
@@ -908,9 +911,9 @@ const Lists = () => {
                       style={{ background: ACCENT, border: `2px solid ${ACCENT}` }}>
                       <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>
                     </button>
-                    <span className="flex-1 text-sm line-through" style={{ color: MUTED }}>{item.title}</span>
-                    <button onClick={() => deleteItem(item.id)} className="opacity-40 hover:opacity-100 transition-opacity">
-                      <Trash2 className="w-3.5 h-3.5" style={{ color: '#DAC1BB' }} />
+                    <span className="flex-1 min-w-0 text-sm line-through truncate" style={{ color: MUTED }} title={item.title}>{item.title}</span>
+                    <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
+                      <Trash2 className="w-4 h-4" style={{ color: '#DAC1BB' }} />
                     </button>
                   </div>
                 ))}

@@ -228,10 +228,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               <button
                 onClick={handleRestore}
                 disabled={isLoading}
-                className="w-full py-2 text-xs flex items-center justify-center gap-1.5"
+                className="w-full py-3 text-xs flex items-center justify-center gap-1.5"
                 style={{ color: 'hsl(var(--muted-foreground))' }}
               >
-                <RotateCcw className="h-3 w-3" />
+                <RotateCcw className="h-3.5 w-3.5" />
                 {t('upgrade.restorePurchases')}
               </button>
             </>

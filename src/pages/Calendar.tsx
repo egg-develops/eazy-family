@@ -1112,7 +1112,7 @@ const Calendar = () => {
           {HOURS.map(hour => (
             <div key={hour} className="flex min-h-[52px] border-b" style={{ borderColor: "hsl(var(--border))" }}>
               <div className="w-12 flex-shrink-0 text-right pr-2 pt-1">
-                <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <span className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
                   {hour === 12 ? "12pm" : hour > 12 ? `${hour - 12}pm` : `${hour}am`}
                 </span>
               </div>
@@ -1126,7 +1126,7 @@ const Calendar = () => {
                       return (
                         <div
                           key={item.id}
-                          className="text-[10px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
+                          className="text-[11px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
                           style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "hsl(var(--foreground))" }}
                           onClick={() => handleEditItem(item)}
                         >
@@ -1232,17 +1232,17 @@ const Calendar = () => {
           <div className="flex gap-1.5">
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() - 1); setSelectedDate(d); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
+              className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
               style={{ border: "1px solid hsl(var(--border))" }}
             >
-              <ChevronLeft className="w-4 h-4" style={{ color: "#964735" }} />
+              <ChevronLeft className="w-5 h-5" style={{ color: "#964735" }} />
             </button>
             <button
               onClick={() => { const d = new Date(selectedDate); d.setMonth(d.getMonth() + 1); setSelectedDate(d); }}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
+              className="w-11 h-11 rounded-full flex items-center justify-center transition-colors hover:bg-[#F7F3ED]"
               style={{ border: "1px solid hsl(var(--border))" }}
             >
-              <ChevronRight className="w-4 h-4" style={{ color: "#964735" }} />
+              <ChevronRight className="w-5 h-5" style={{ color: "#964735" }} />
             </button>
           </div>
         </div>

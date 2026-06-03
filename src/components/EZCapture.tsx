@@ -747,7 +747,7 @@ STYLE:
                   onChange={e => setTextTracked(e.target.value)}
                   placeholder={placeholder}
                   rows={4}
-                  className="w-full resize-none rounded-2xl p-4 pr-12 text-sm outline-none"
+                  className="w-full resize-none rounded-2xl p-4 pr-14 text-sm outline-none"
                   style={{
                     background: MUTED_BG,
                     border: `1.5px solid ${text ? '#D97B66' : BORDER}`,
@@ -757,19 +757,19 @@ STYLE:
                   }}
                   onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleParseAndPreview(); }}
                 />
-                <div className="absolute bottom-3 right-3 w-7 h-7">
+                <div className="absolute bottom-2 right-2 w-10 h-10">
                   {(intendingToListen || isListening) && !isTranscribing && (
                     <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(150,71,53,0.35)' }} />
                   )}
                   <button
                     onClick={(intendingToListen || isListening) ? stopListening : startListening}
                     disabled={isTranscribing}
-                    className="relative w-7 h-7 rounded-full flex items-center justify-center transition-all"
-                    style={{ background: (intendingToListen || isListening || isTranscribing) ? '#D97B66' : '#964735' }}
+                    className="relative w-10 h-10 rounded-full flex items-center justify-center transition-all"
+                    style={{ background: isTranscribing ? '#6E8FE5' : (intendingToListen || isListening) ? '#D97B66' : '#964735' }}
                   >
                     {isTranscribing
-                      ? <div className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      : <Mic className="w-3.5 h-3.5 text-white" />
+                      ? <div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      : <Mic className="w-4 h-4 text-white" />
                     }
                   </button>
                 </div>
@@ -821,10 +821,10 @@ STYLE:
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setStep('capture')}
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: MUTED_BG }}
                   >
-                    <ChevronLeft className="w-4 h-4" style={{ color: MUTED }} />
+                    <ChevronLeft className="w-5 h-5" style={{ color: MUTED }} />
                   </button>
                   <h2 className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.confirm')}</h2>
                 </div>
@@ -854,7 +854,7 @@ STYLE:
                           }}
                           className="flex items-center gap-1 rounded-full font-semibold transition-all"
                           style={{
-                            padding: '4px 10px',
+                            padding: '8px 12px',
                             fontSize: '12px',
                             background: activeType === tp.id ? '#964735' : MUTED_BG,
                             color: activeType === tp.id ? '#FFFFFF' : MUTED,
@@ -878,8 +878,8 @@ STYLE:
                   if (!suggestedMeta) return null;
                   return (
                     <div
-                      className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl text-xs"
-                      style={{ background: '#FEF3EE', border: '1px solid #F5C8B8' }}
+                      className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-2xl text-xs"
+                      style={{ background: '#FEF0E6', border: '1.5px solid #E8A882' }}
                     >
                       <span style={{ color: '#7A6660' }}>
                         {t('ezCapture.didYouMean')} <span style={{ fontWeight: 600, color: '#964735' }}>{suggestedMeta.icon} {suggestedMeta.label}</span>?
@@ -907,7 +907,7 @@ STYLE:
                       value={parsed.title}
                       onChange={e => setParsed(p => p ? { ...p, title: e.target.value.replace(/\n/g, ' ') } : p)}
                       className="w-full bg-transparent outline-none font-semibold text-sm resize-none"
-                      style={{ color: INK, lineHeight: '1.5' }}
+                      style={{ color: INK, lineHeight: '1.5', maxHeight: '80px', overflowY: 'auto' }}
                     />
                   </div>
 
@@ -984,10 +984,10 @@ STYLE:
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => { setStep('capture'); setText(''); latestTextRef.current = ''; }}
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: MUTED_BG }}
                   >
-                    <ChevronLeft className="w-4 h-4" style={{ color: MUTED }} />
+                    <ChevronLeft className="w-5 h-5" style={{ color: MUTED }} />
                   </button>
                   <h2 className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.guideTitle')}</h2>
                 </div>

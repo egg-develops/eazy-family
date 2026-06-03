@@ -305,10 +305,10 @@ const Rituals = () => {
                 {editMode && (
                   <button
                     onClick={() => removeRitual(r.id)}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center"
                     style={{ background: TC }}
                   >
-                    <X className="w-3 h-3 text-white" />
+                    <X className="w-3.5 h-3.5 text-white" />
                   </button>
                 )}
               </div>
@@ -331,10 +331,10 @@ const Rituals = () => {
                 />
                 <button
                   type="submit"
-                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: TC }}
                 >
-                  <Plus className="w-3 h-3 text-white" />
+                  <Plus className="w-4 h-4 text-white" />
                 </button>
               </form>
             )}
@@ -357,16 +357,15 @@ const Rituals = () => {
                     onClick={() => !editMode && toggleRitual(r.id)}
                     className="w-full flex items-center gap-2 p-3 rounded-xl text-left"
                     style={{
-                      background: '#F9F6F2',
-                      border: `1px solid #EDE4DF`,
-                      opacity: 0.7,
+                      background: 'hsl(var(--muted))',
+                      border: `1.5px solid ${TC}30`,
                       cursor: editMode ? 'default' : 'pointer',
                     }}
                   >
-                    <span className="text-lg">{r.emoji}</span>
+                    <span className="text-lg opacity-50">{r.emoji}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate" style={{ color: '#B5A09A', textDecoration: 'line-through' }}>{r.title}</p>
-                      <p className="text-[10px]" style={{ color: TC, fontWeight: 600 }}>✓ {t('rituals.ritualDone')}</p>
+                      <p className="text-[11px] font-semibold" style={{ color: TC }}>✓ {t('rituals.ritualDone')}</p>
                     </div>
                   </button>
                 ))}
@@ -447,7 +446,7 @@ const Rituals = () => {
               className="flex flex-col items-center gap-2 text-center px-5 py-8 rounded-2xl"
               style={{ border: `1.5px dashed ${BORDER}`, background: 'hsl(var(--card))' }}
             >
-              <span style={{ fontSize: 28 }}>✍️</span>
+              <span style={{ fontSize: 40 }}>✍️</span>
               <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle', 'Your journal is waiting')}</p>
               <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('rituals.journalEmptyHint', 'Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest.')}</p>
             </div>
