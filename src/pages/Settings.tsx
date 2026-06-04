@@ -295,7 +295,7 @@ const Settings = () => {
     localStorage.setItem('eazy-display-name', trimmed);
     try {
       const { error } = await supabase.from('profiles')
-        .upsert({ user_id: user.id, display_name: trimmed }, { onConflict: 'user_id' });
+        .update({ display_name: trimmed }).eq('user_id', user.id);
       if (error) {
         logError('saveDisplayName:', error);
         toast({ title: t('settings.nameSaveFailed', 'Could not save name'), variant: 'destructive' });

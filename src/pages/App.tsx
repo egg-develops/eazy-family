@@ -108,6 +108,15 @@ const AppLayout = () => {
     setTimeout(() => setMenuOpen(false), 200);
   };
 
+  const handleEZTap = () => {
+    if (location.pathname.includes('family-channel')) {
+      // On Family Channel, open the channel attachment tray instead of EZCapture
+      window.dispatchEvent(new CustomEvent('ez-family-channel-tray'));
+    } else {
+      setEzOpen(true);
+    }
+  };
+
   const handleEZPointerDown = (e: React.PointerEvent) => {
     isSwipeMenuRef.current = false;
     isDragModeRef.current = false;
@@ -186,9 +195,9 @@ const AppLayout = () => {
         });
         haptic('light');
       } else {
-        // Long press, no move → EZ Capture
+        // Long press, no move → EZ Capture (or channel tray on Family Channel)
         haptic('capture');
-        setEzOpen(true);
+        handleEZTap();
       }
       return;
     }
@@ -203,9 +212,9 @@ const AppLayout = () => {
       prevActiveIndexRef.current = -1;
       isSwipeMenuRef.current = false;
     } else {
-      // Tap → EZ Capture
+      // Tap → EZ Capture (or channel tray on Family Channel)
       haptic('capture');
-      setEzOpen(true);
+      handleEZTap();
     }
   };
 

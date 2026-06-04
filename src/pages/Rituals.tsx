@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { pickRitualEmoji } from "@/lib/intelligence";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Plus, X, Trash2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
@@ -230,7 +230,7 @@ const Rituals = () => {
   const hasMore = !showAllJournal && entries.length > baseCount;
 
   return (
-    <div className="space-y-5 p-4" style={{ paddingBottom: '2rem' }}>
+    <div className="space-y-5 p-4" style={{ paddingBottom: '7rem' }}>
 
       <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#B5A09A' }}>{t('rituals.privateSpace')}</p>
 
@@ -365,7 +365,10 @@ const Rituals = () => {
                     <span className="text-lg opacity-50">{r.emoji}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold truncate" style={{ color: '#B5A09A', textDecoration: 'line-through' }}>{r.title}</p>
-                      <p className="text-[11px] font-semibold" style={{ color: TC }}>✓ {t('rituals.ritualDone')}</p>
+                      <p className="text-[11px] font-semibold flex items-center gap-1" style={{ color: TC }}>
+                        {t('rituals.ritualDone')}
+                        <RefreshCw className="w-2.5 h-2.5 opacity-60" />
+                      </p>
                     </div>
                   </button>
                 ))}

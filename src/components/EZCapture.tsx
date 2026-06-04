@@ -590,8 +590,10 @@ STYLE:
         }
         // Detect family/shared intent so event appears in Family Agenda view
         const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+        // Only treat as a family event when the user explicitly mentions the family calendar/agenda.
+        // Mentioning a person's name (parsed.assignees) is not enough — "business meeting with Badr"
+        // should stay on the personal calendar.
         const isFamilyEvent =
-          (parsed.assignees && parsed.assignees.length > 0) ||
           /\b(family|our|shared|gemeinsam|unsere|famille|familia|nossa|nostro)\b.{0,30}(agenda|calendar|kalender|calendrier|calendario)/i.test(rawInput) ||
           /\b(family agenda|family calendar|familien kalender|agenda famille|agenda familiar)\b/i.test(rawInput);
         const newEvent = {

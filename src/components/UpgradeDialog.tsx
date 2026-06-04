@@ -14,6 +14,11 @@ import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, type RCPa
 import { useTranslation } from "react-i18next";
 
 const isNative = Capacitor.isNativePlatform();
+const platform = Capacitor.getPlatform();
+
+// Known App Store product IDs — used when RC offerings fail to load so the
+// native subscription sheet can still open and show real prices from the store.
+const IOS_FALLBACK_PRODUCT_IDS = ['EZ.Family.Monthly', 'EZ.Family.Annual'];
 
 const MONTHLY_PRICE = 5;
 const ANNUAL_PRICE = 49;
@@ -67,30 +72,46 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   // Already paid (not a trial) — nothing to upgrade
   if (isPremium && !isTrial) return <>{children}</>;
 
-  const allProductIds = rcPackages
-    .map(p => p.product.productIdentifier)
-    .filter(Boolean);
+  const rcProductIds = rcPackages.map(p => p.product.productIdentifier).filter(Boolean);
+  // Fall back to known product IDs on iOS so the subscription sheet opens even when RC fails
+  const allProductIds = rcProductIds.length > 0
+    ? rcProductIds
+    : platform === 'ios' ? IOS_FALLBACK_PRODUCT_IDS : [];
+
+  // Derive per-plan prices — use RC values when loaded, hardcoded CHF otherwise
+  const monthlyPkg = rcPackages.find(p => p.identifier === '$rc_monthly');
+  const annualPkg  = rcPackages.find(p => p.identifier === '$rc_annual');
+  const nativeMonthlyPrice    = monthlyPkg?.product.priceString ?? `CHF ${MONTHLY_PRICE}`;
+  const nativeAnnualPrice     = annualPkg?.product.priceString  ?? `CHF ${ANNUAL_PRICE}`;
+  const nativeAnnualMonthly   = annualPkg
+    ? `${annualPkg.product.currencyCode} ${(annualPkg.product.price / 12).toFixed(2)}`
+    : `CHF ${ANNUAL_MONTHLY}`;
+  const nativeAnnualSavings   = annualPkg
+    ? Math.round(MONTHLY_PRICE * 12 - annualPkg.product.price)
+    : ANNUAL_SAVINGS;
+
+  // Product ID to pass to Apple's sheet — only the plan the user selected
+  const selectedNativeProductId = billingCycle === 'monthly'
+    ? (monthlyPkg?.product.productIdentifier ?? 'EZ.Family.Monthly')
+    : (annualPkg?.product.productIdentifier  ?? 'EZ.Family.Annual');
 
   const handleNativeUpgrade = async () => {
     if (isLoadingOfferings) return;
 
-    if (offeringsError || allProductIds.length === 0) {
-      // Retry fetch instead of dead-ending with an error
+    if (allProductIds.length === 0) {
       await fetchOfferings();
       return;
     }
 
     setIsLoading(true);
 
-    // Safety net — never leave the user stuck in a loading state
     const safetyTimer = setTimeout(() => {
       setIsLoading(false);
       toast({ title: t('common.error'), description: t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
     }, PURCHASE_TIMEOUT_MS);
 
     try {
-      await presentSubscriptionStore(allProductIds);
-      // refreshSubscription guarded separately so a hang here doesn't block the UI
+      await presentSubscriptionStore([selectedNativeProductId]);
       try { await refreshSubscription(); } catch { /* non-fatal */ }
       setOpen(false);
     } catch (err: unknown) {
@@ -149,7 +170,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const nativeCtaLabel = () => {
     if (isLoading) return t('upgrade.opening');
     if (isLoadingOfferings) return t('upgrade.loadingOfferings');
-    if (offeringsError || allProductIds.length === 0) return t('upgrade.retryLoad');
+    if (allProductIds.length === 0) return t('upgrade.retryLoad');
     return t('upgrade.upgradeToPremium');
   };
 
@@ -201,9 +222,42 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
             ))}
           </div>
 
-          {/* iOS native CTA */}
+          {/* Native plan cards + CTA */}
           {isNative ? (
             <>
+              <div className="grid grid-cols-2 gap-2.5 items-stretch">
+                <button
+                  onClick={() => setBillingCycle('annual')}
+                  className="rounded-2xl p-4 text-left flex flex-col transition-all"
+                  style={{
+                    border: billingCycle === 'annual' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                    background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
+                  }}
+                >
+                  <span className="self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mb-2" style={{ background: '#964735' }}>
+                    SAVE CHF {nativeAnnualSavings}
+                  </span>
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.annual')}</p>
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>{nativeAnnualMonthly}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')} · {nativeAnnualPrice}/yr</p>
+                </button>
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className="rounded-2xl p-4 text-left flex flex-col transition-all"
+                  style={{
+                    border: billingCycle === 'monthly' ? '2px solid #964735' : '2px solid hsl(var(--border))',
+                    background: billingCycle === 'monthly' ? '#FDF3EE' : 'hsl(var(--card))',
+                  }}
+                >
+                  <span className="text-[9px] mb-2 select-none" style={{ opacity: 0 }}>SAVE</span>
+                  <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.monthly')}</p>
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>{nativeMonthlyPrice}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedMonthly')}</p>
+                </button>
+              </div>
+
               <button
                 onClick={handleNativeUpgrade}
                 disabled={isLoading || isLoadingOfferings}
@@ -212,18 +266,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               >
                 {isLoading || isLoadingOfferings
                   ? <Loader2 className="h-4 w-4 animate-spin" />
-                  : (offeringsError || allProductIds.length === 0)
+                  : allProductIds.length === 0
                     ? <RefreshCw className="h-4 w-4" />
                     : <Crown className="h-4 w-4" />
                 }
                 {nativeCtaLabel()}
               </button>
-
-              {offeringsError && !isLoadingOfferings && (
-                <p className="text-center text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                  {t('upgrade.offeringsErrorHint')}
-                </p>
-              )}
 
               <button
                 onClick={handleRestore}

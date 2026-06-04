@@ -831,7 +831,7 @@ const Lists = () => {
               <div className="px-4 py-3 flex flex-wrap gap-2">
                 {filteredPredictions.map(p => (
                   <div key={p.itemName} className="flex items-center gap-1 text-xs font-medium rounded-full" style={{ background: '#C8DDD0', color: '#2D4F38' }}>
-                    <button onClick={() => setNewShoppingItem(p.itemName)} className="pl-2.5 pr-1 py-1">
+                    <button onClick={() => setNewShoppingItem(p.itemName)} className="pl-2.5 pr-1 py-1 max-w-[140px] truncate">
                       + {p.itemName}
                     </button>
                     <button

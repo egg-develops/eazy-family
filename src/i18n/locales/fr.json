@@ -326,6 +326,7 @@
     "tagEvent": "Événement",
     "tagCustom": "Personnalisé",
     "addCustomTag": "+ Personnalisé",
+    "tagNamePlaceholder": "Nom du tag...",
     "eventCountSingular": "ÉVÉNEMENT",
     "eventCountPlural": "ÉVÉNEMENTS",
     "viewAll": "TOUT VOIR",

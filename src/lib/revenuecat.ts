@@ -18,6 +18,11 @@ async function getRC() {
   return Purchases;
 }
 
+async function getLogLevel() {
+  const { LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
+  return LOG_LEVEL;
+}
+
 export async function configureRC(userId?: string): Promise<void> {
   if (!isNative) { _rcConfiguredResolve?.(); return; }
   if (!RC_KEY) {
@@ -27,6 +32,8 @@ export async function configureRC(userId?: string): Promise<void> {
   }
   try {
     const Purchases = await getRC();
+    const LOG_LEVEL = await getLogLevel();
+    await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
     await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
   } finally {
     _rcConfiguredResolve?.();

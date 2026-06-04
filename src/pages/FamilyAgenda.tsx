@@ -187,32 +187,43 @@ const ImageBubble = ({ msg, onExpand }: { msg: ChannelMessage; onExpand: (url: s
 );
 
 const LocationBubble = ({ msg }: { msg: ChannelMessage }) => (
-  <div
-    className="rounded-2xl px-3.5 py-2.5 flex items-start gap-2"
+  <button
+    className="rounded-2xl px-3.5 py-2.5 flex items-start gap-2 text-left"
     style={{ background: SAGE_BG, border: `1px solid ${BORDER}`, maxWidth: "72%" }}
+    onClick={() => {
+      if (msg.lat !== undefined && msg.lon !== undefined) {
+        window.open(`https://maps.apple.com/?q=${msg.lat},${msg.lon}`, '_blank');
+      }
+    }}
   >
     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SAGE }} />
     <div>
       <p className="text-sm font-semibold" style={{ color: INK }}>{msg.locationName || "Location"}</p>
-      {msg.lat !== undefined && msg.lon !== undefined && (
-        <p className="text-xs" style={{ color: MUTED }}>{msg.lat.toFixed(4)}, {msg.lon.toFixed(4)}</p>
-      )}
+      <p className="text-xs" style={{ color: SAGE }}>Tap to open in Maps</p>
     </div>
-  </div>
+  </button>
 );
 
 const DocumentBubble = ({ msg }: { msg: ChannelMessage }) => {
   const handleOpen = () => {
-    if (msg.fileData) {
-      // Base64 data — infer type or use octet-stream
-      const byteString = atob(msg.fileData);
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-      const blob = new Blob([ab]);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    }
+    if (!msg.fileData) return;
+    const byteString = atob(msg.fileData);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    // Infer MIME type from extension
+    const ext = (msg.fileName || '').split('.').pop()?.toLowerCase() || '';
+    const mimeMap: Record<string, string> = { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', txt: 'text/plain', csv: 'text/csv' };
+    const mime = mimeMap[ext] || 'application/octet-stream';
+    const blob = new Blob([ab], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = msg.fileName || 'document';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   return (
     <button
@@ -485,6 +496,13 @@ const FamilyAgenda = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // ── EZ button → open attachment tray ────────
+  useEffect(() => {
+    const handler = () => { setTrayOpen(true); setPollCreatorOpen(false); };
+    window.addEventListener('ez-family-channel-tray', handler);
+    return () => window.removeEventListener('ez-family-channel-tray', handler);
+  }, []);
+
   // ── Helpers ─────────────────────────────────
   const me = getUserIdentity();
 
@@ -586,7 +604,12 @@ const FamilyAgenda = () => {
           );
           const data = await res.json();
           const addr = data.address || {};
-          locationName = addr.city || addr.town || addr.village || addr.county || locationName;
+          const street = addr.road || addr.pedestrian || addr.street || '';
+          const houseNo = addr.house_number ? ` ${addr.house_number}` : '';
+          const city = addr.city || addr.town || addr.village || addr.county || '';
+          locationName = street
+            ? `${street}${houseNo}${city ? `, ${city}` : ''}`
+            : city || locationName;
         } catch { /* use fallback */ }
         addMessage({ type: "location", locationName, lat, lon });
       },
@@ -866,8 +889,8 @@ const FamilyAgenda = () => {
             style={{ color: INK, minWidth: 0 }}
           />
 
-          {/* Send or camera/mic */}
-          {text.trim() && !isListening ? (
+          {/* Send button — only visible when there is text */}
+          {text.trim() && (
             <button
               onClick={sendText}
               className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
@@ -875,30 +898,6 @@ const FamilyAgenda = () => {
             >
               <Send className="w-4 h-4 text-white" style={{ marginLeft: "1px" }} />
             </button>
-          ) : (
-            <>
-              {/* Mic */}
-              <button
-                onClick={handleMicToggle}
-                className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0 relative"
-                style={{ background: isListening ? TC : "transparent" }}
-              >
-                {isListening && (
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: TC,
-                      opacity: 0.35,
-                      animation: "ping 1s cubic-bezier(0,0,0.2,1) infinite",
-                    }}
-                  />
-                )}
-                {isListening
-                  ? <MicOff className="w-5 h-5 text-white relative z-10" />
-                  : <Mic className="w-5 h-5 relative z-10" style={{ color: MUTED }} />
-                }
-              </button>
-            </>
           )}
         </div>
 
