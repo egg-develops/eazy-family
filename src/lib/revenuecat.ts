@@ -166,14 +166,14 @@ export async function restoreRCPurchases(): Promise<boolean> {
   return ENTITLEMENT in customerInfo.entitlements.active;
 }
 
-// Presents Apple's native SubscriptionStoreView sheet.
-// Resolves when the sheet is dismissed (purchase or cancel).
-// Caller should then call getRCIsPremium() to check entitlement status.
-export async function presentSubscriptionStore(productIds: string[]): Promise<void> {
-  if (!isNative) return;
+// Triggers a direct StoreKit 2 purchase for the given product ID.
+// Returns true if the purchase was completed successfully.
+export async function presentSubscriptionStore(productIds: string[]): Promise<boolean> {
+  if (!isNative) return false;
   const { registerPlugin } = await import('@capacitor/core');
   const SubscriptionPlugin = registerPlugin<{
-    present: (opts: { productIds: string[] }) => Promise<{ dismissed: boolean }>;
+    present: (opts: { productIds: string[] }) => Promise<{ purchased?: boolean; cancelled?: boolean; pending?: boolean }>;
   }>('SubscriptionPlugin');
-  await SubscriptionPlugin.present({ productIds });
+  const result = await SubscriptionPlugin.present({ productIds });
+  return result.purchased === true;
 }

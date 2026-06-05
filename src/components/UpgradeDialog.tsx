@@ -111,9 +111,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     }, PURCHASE_TIMEOUT_MS);
 
     try {
-      await presentSubscriptionStore([selectedNativeProductId]);
-      try { await refreshSubscription(); } catch { /* non-fatal */ }
-      setOpen(false);
+      const purchased = await presentSubscriptionStore([selectedNativeProductId]);
+      if (purchased) {
+        try { await refreshSubscription(); } catch { /* non-fatal */ }
+        setOpen(false);
+      }
+      // If cancelled/pending, just re-enable the button silently
     } catch (err: unknown) {
       logError('SubscriptionStore error:', err);
       const msg = err instanceof Error ? err.message : String(err);

@@ -1,47 +1,13 @@
 import Capacitor
 import Foundation
 import StoreKit
-import SwiftUI
-
-// MARK: - SwiftUI wrapper
-
-@available(iOS 17.0, *)
-private struct EazySubscriptionView: View {
-    let productIds: [String]
-    let onDismiss: () -> Void
-
-    var body: some View {
-        SubscriptionStoreView(productIDs: productIds)
-            .subscriptionStorePolicyDestination(
-                url: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!,
-                for: .termsOfService
-            )
-            .subscriptionStorePolicyDestination(
-                url: URL(string: "https://eazy.family/privacy")!,
-                for: .privacyPolicy
-            )
-            .onInAppPurchaseCompletion { _, result in
-                // Resolve as soon as a purchase attempt completes (success or failure)
-                // so the JS promise never hangs waiting for onDisappear
-                switch result {
-                case .success:
-                    onDismiss()
-                case .failure:
-                    onDismiss()
-                @unknown default:
-                    onDismiss()
-                }
-            }
-            .onDisappear { onDismiss() }
-    }
-}
 
 // MARK: - Capacitor plugin
 
-/// Presents Apple's native SubscriptionStoreView sheet (iOS 17+).
-/// JS: SubscriptionPlugin.present({ productIds: ["com.eazy.family.annual", ...] })
-/// Resolves { dismissed: true } when the sheet closes (purchase or cancel).
-/// The caller should then refresh RevenueCat entitlements.
+/// Purchases a single subscription product directly via StoreKit 2.
+/// Skips SubscriptionStoreView — the caller already shows plan selection UI.
+/// JS: SubscriptionPlugin.present({ productIds: ["EZ.Family.Annual"] })
+/// Resolves { purchased: true } on success, { purchased: false } on cancel/pending.
 @objc(SubscriptionPlugin)
 public class SubscriptionPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "SubscriptionPlugin"
@@ -51,42 +17,40 @@ public class SubscriptionPlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     @objc func present(_ call: CAPPluginCall) {
-        guard let productIds = call.getArray("productIds") as? [String], !productIds.isEmpty else {
+        guard let productIds = call.getArray("productIds") as? [String],
+              let productId = productIds.first else {
             call.reject("productIds array is required")
             return
         }
 
-        DispatchQueue.main.async { [weak self] in
-            guard let rootVC = self?.bridge?.viewController else {
-                call.reject("No root view controller")
-                return
-            }
-
-            guard #available(iOS 17.0, *) else {
-                call.reject("SubscriptionStoreView requires iOS 17+")
-                return
-            }
-
-            let storeView = EazySubscriptionView(productIds: productIds) {
-                call.resolve(["dismissed": true])
-            }
-
-            let hostingVC = UIHostingController(rootView: storeView)
-            hostingVC.modalPresentationStyle = .pageSheet
-
-            if let sheet = hostingVC.sheetPresentationController {
-                sheet.detents = [.large()]
-                sheet.prefersGrabberVisible = true
-            }
-
-            // Dismiss any previously presented sheet before showing a new one —
-            // avoids the promise hanging when the user switches plans quickly.
-            if let existing = rootVC.presentedViewController {
-                existing.dismiss(animated: false) {
-                    rootVC.present(hostingVC, animated: true)
+        Task {
+            do {
+                let products = try await Product.products(for: [productId])
+                guard let product = products.first else {
+                    call.reject("Product not found: \(productId)")
+                    return
                 }
-            } else {
-                rootVC.present(hostingVC, animated: true)
+
+                let result = try await product.purchase()
+
+                switch result {
+                case .success(let verification):
+                    switch verification {
+                    case .verified(let transaction):
+                        await transaction.finish()
+                        call.resolve(["purchased": true])
+                    case .unverified:
+                        call.resolve(["purchased": false])
+                    }
+                case .pending:
+                    call.resolve(["purchased": false, "pending": true])
+                case .userCancelled:
+                    call.resolve(["purchased": false, "cancelled": true])
+                @unknown default:
+                    call.resolve(["purchased": false])
+                }
+            } catch {
+                call.reject(error.localizedDescription)
             }
         }
     }
