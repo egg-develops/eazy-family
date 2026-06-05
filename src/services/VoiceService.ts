@@ -351,11 +351,11 @@ class VoiceServiceImpl {
         popup: false,
       });
       // Android's SpeechRecognizer without a popup UI can stay open indefinitely —
-      // force-stop after 15s so the user is never left with a stuck mic indicator.
+      // force-stop after 30s so the user is never left with a stuck mic indicator.
       this.nativeAutoStopTimer = setTimeout(() => {
         this.nativeAutoStopTimer = null;
         if (this.nativeActive) this.stopListening();
-      }, 15_000);
+      }, 30_000);
     } catch (e: any) {
       if (!cleanedUp) {
         cleanup();

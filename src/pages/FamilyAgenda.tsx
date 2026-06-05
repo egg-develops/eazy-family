@@ -4,6 +4,7 @@ import {
   Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
   Image, Play, ChevronLeft, Send,
 } from "lucide-react";
+import { ChannelEZCapture } from "@/components/ChannelEZCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -465,6 +466,9 @@ const FamilyAgenda = () => {
   // Attachment tray
   const [trayOpen, setTrayOpen] = useState(false);
 
+  // Channel EZ Capture (voice → message/poll/location)
+  const [channelEZOpen, setChannelEZOpen] = useState(false);
+
   // Poll creator
   const [pollCreatorOpen, setPollCreatorOpen] = useState(false);
 
@@ -496,9 +500,9 @@ const FamilyAgenda = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── EZ button → open attachment tray ────────
+  // ── EZ button → open Channel EZ Capture ─────
   useEffect(() => {
-    const handler = () => { setTrayOpen(true); setPollCreatorOpen(false); };
+    const handler = () => { setChannelEZOpen(true); };
     window.addEventListener('ez-family-channel-tray', handler);
     return () => window.removeEventListener('ez-family-channel-tray', handler);
   }, []);
@@ -940,6 +944,15 @@ const FamilyAgenda = () => {
           75%, 100% { transform: scale(2); opacity: 0; }
         }
       `}</style>
+
+      {/* Channel EZ Capture — voice → message/poll/location */}
+      <ChannelEZCapture
+        open={channelEZOpen}
+        onClose={() => setChannelEZOpen(false)}
+        onSendMessage={(text) => { addMessage({ type: "text", content: text }); }}
+        onCreatePoll={(question, options) => { handleCreatePoll(question, options); }}
+        onShareLocation={() => { shareLocation(); }}
+      />
     </div>
   );
 };

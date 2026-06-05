@@ -855,11 +855,11 @@ const Lists = () => {
               </p>
               <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
                 {catItems.map((item, idx) => (
-                  <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5"
+                  <div key={item.id} className="flex items-center gap-2 px-3 py-2.5"
                     style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? '1px solid #F1EDE7' : 'none' }}>
                     <button onClick={() => toggleItem(item.id)}
-                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 appearance-none p-0"
-                      style={{ border: `1.5px solid ${BORDER}`, background: 'transparent' }}>
+                      className="flex-shrink-0 rounded appearance-none p-0"
+                      style={{ width: 16, height: 16, border: `1.5px solid ${BORDER}`, background: 'transparent' }}>
                     </button>
                     {editingItemId === item.id ? (
                       <input
@@ -868,23 +868,21 @@ const Lists = () => {
                         onChange={e => setEditingTitle(e.target.value)}
                         onBlur={() => commitEdit(item.id)}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(item.id); if (e.key === 'Escape') cancelEdit(); }}
-                        className="flex-1 text-sm outline-none rounded px-1"
+                        className="flex-1 min-w-0 text-sm outline-none rounded px-1"
                         style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
                       />
                     ) : (
                       <span className="flex-1 min-w-0 text-sm cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
-                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '2px 4px', gap: '2px' }}>
+                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '1px 5px', gap: '2px' }}>
                       <button onClick={() => updateQty(item.id, -1)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full transition-colors active:bg-black/10"
-                        style={{ color: MUTED, fontSize: '16px', lineHeight: 1 }}>−</button>
-                      <span className="text-xs font-semibold" style={{ color: INK, minWidth: '18px', textAlign: 'center' }}>{getQty(item.id)}</span>
+                        style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '14px', lineHeight: 1 }}>−</button>
+                      <span className="text-xs font-semibold" style={{ color: INK, minWidth: '14px', textAlign: 'center' }}>{getQty(item.id)}</span>
                       <button onClick={() => updateQty(item.id, 1)}
-                        className="w-7 h-7 flex items-center justify-center rounded-full transition-colors active:bg-black/10"
-                        style={{ color: MUTED, fontSize: '16px', lineHeight: 1 }}>+</button>
+                        style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '14px', lineHeight: 1 }}>+</button>
                     </div>
-                    <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
-                      <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
+                    <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 flex items-center justify-center opacity-50 active:opacity-100" style={{ width: 24, height: 24 }}>
+                      <Trash2 className="w-3.5 h-3.5" style={{ color: MUTED }} />
                     </button>
                   </div>
                 ))}

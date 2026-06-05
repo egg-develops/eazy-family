@@ -983,7 +983,7 @@ const Calendar = () => {
               repeat: repeatValue,
               travelTime: eventTravelTime !== "none" ? eventTravelTime : undefined,
               tag: eventTag || undefined,
-              customTag: eventTag && !TAGS[eventTag] ? eventTag : undefined,
+              customTag: eventTag === 'custom' ? (eventCustomTag.trim() || undefined) : undefined,
               color: eventColor,
               visibleTo: eventVisibleTo,
               attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
@@ -2167,7 +2167,7 @@ const Calendar = () => {
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button
                     type="button"
-                    onClick={() => { if (eventLocation.trim()) window.open(`https://maps.apple.com/?q=${encodeURIComponent(eventLocation)}`, '_blank'); }}
+                    onClick={() => { if (eventLocation.trim()) window.open(`https://maps.apple.com/?q=${encodeURIComponent(eventLocation)}`, '_system'); }}
                     style={{ lineHeight: 0 }}
                   >
                     <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: eventLocation.trim() ? '#964735' : 'hsl(var(--muted-foreground))' }} />
