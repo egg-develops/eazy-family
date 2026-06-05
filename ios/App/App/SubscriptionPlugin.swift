@@ -27,7 +27,8 @@ public class SubscriptionPlugin: CAPPlugin, CAPBridgedPlugin {
             do {
                 let products = try await Product.products(for: [productId])
                 guard let product = products.first else {
-                    call.reject("Product not found: \(productId)")
+                    // Product not found — likely not yet approved in App Store Connect
+                    call.resolve(["purchased": false, "unavailable": true])
                     return
                 }
 

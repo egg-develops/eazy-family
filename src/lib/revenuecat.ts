@@ -172,8 +172,9 @@ export async function presentSubscriptionStore(productIds: string[]): Promise<bo
   if (!isNative) return false;
   const { registerPlugin } = await import('@capacitor/core');
   const SubscriptionPlugin = registerPlugin<{
-    present: (opts: { productIds: string[] }) => Promise<{ purchased?: boolean; cancelled?: boolean; pending?: boolean }>;
+    present: (opts: { productIds: string[] }) => Promise<{ purchased?: boolean; cancelled?: boolean; pending?: boolean; unavailable?: boolean }>;
   }>('SubscriptionPlugin');
   const result = await SubscriptionPlugin.present({ productIds });
+  if (result.unavailable) throw new Error('This plan is not yet available. Please try again later.');
   return result.purchased === true;
 }
