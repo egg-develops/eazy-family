@@ -26,7 +26,7 @@ const ANNUAL_MONTHLY = (ANNUAL_PRICE / 12).toFixed(2);
 const ANNUAL_SAVINGS = MONTHLY_PRICE * 12 - ANNUAL_PRICE;
 
 // Safety timeout — if the native purchase sheet never resolves, unblock the UI
-const PURCHASE_TIMEOUT_MS = 60_000;
+const PURCHASE_TIMEOUT_MS = 15_000;
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
@@ -116,7 +116,8 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       setOpen(false);
     } catch (err: unknown) {
       logError('SubscriptionStore error:', err);
-      toast({ title: t('upgrade.purchaseFailed'), description: t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
+      const msg = err instanceof Error ? err.message : String(err);
+      toast({ title: t('upgrade.purchaseFailed'), description: msg || t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
     } finally {
       clearTimeout(safetyTimer);
       setIsLoading(false);

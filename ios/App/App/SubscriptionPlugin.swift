@@ -20,6 +20,18 @@ private struct EazySubscriptionView: View {
                 url: URL(string: "https://eazy.family/privacy")!,
                 for: .privacyPolicy
             )
+            .onInAppPurchaseCompletion { _, result in
+                // Resolve as soon as a purchase attempt completes (success or failure)
+                // so the JS promise never hangs waiting for onDisappear
+                switch result {
+                case .success:
+                    onDismiss()
+                case .failure:
+                    onDismiss()
+                @unknown default:
+                    onDismiss()
+                }
+            }
             .onDisappear { onDismiss() }
     }
 }
@@ -67,7 +79,15 @@ public class SubscriptionPlugin: CAPPlugin, CAPBridgedPlugin {
                 sheet.prefersGrabberVisible = true
             }
 
-            rootVC.present(hostingVC, animated: true)
+            // Dismiss any previously presented sheet before showing a new one —
+            // avoids the promise hanging when the user switches plans quickly.
+            if let existing = rootVC.presentedViewController {
+                existing.dismiss(animated: false) {
+                    rootVC.present(hostingVC, animated: true)
+                }
+            } else {
+                rootVC.present(hostingVC, animated: true)
+            }
         }
     }
 }
