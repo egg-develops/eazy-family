@@ -21,6 +21,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		A689ABA8210646819237F113 /* SpeechRecognitionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */; };
 		EF1A2B3C4D5E6F7A8B9C0D1E /* SubscriptionPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF1A2B3C4D5E6F7A8B9C0D1F /* SubscriptionPlugin.swift */; };
+		AB9C8D7E6F5A4B3C2D1E0F9A /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9C8D7E6F5A4B3C2D1E0F9B /* MainViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionPlugin.swift; sourceTree = "<group>"; };
 		EF1A2B3C4D5E6F7A8B9C0D1F /* SubscriptionPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPlugin.swift; sourceTree = "<group>"; };
+		AB9C8D7E6F5A4B3C2D1E0F9B /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -139,6 +141,7 @@
 				05D8C5752FB8A0EA009DE013 /* WidgetBridgePlugin.swift */,
 				C8B4EAEE274A4AB3A1CE3D95 /* SpeechRecognitionPlugin.swift */,
 				EF1A2B3C4D5E6F7A8B9C0D1F /* SubscriptionPlugin.swift */,
+				AB9C8D7E6F5A4B3C2D1E0F9B /* MainViewController.swift */,
 				05D8C5722FB89ECE009DE013 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -279,6 +282,7 @@
 				05D8C5762FB8A0EB009DE013 /* WidgetBridgePlugin.swift in Sources */,
 				A689ABA8210646819237F113 /* SpeechRecognitionPlugin.swift in Sources */,
 				EF1A2B3C4D5E6F7A8B9C0D1E /* SubscriptionPlugin.swift in Sources */,
+				AB9C8D7E6F5A4B3C2D1E0F9A /* MainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
