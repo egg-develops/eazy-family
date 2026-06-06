@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useTranslation } from 'react-i18next';
 import {
   Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
@@ -192,9 +193,12 @@ const LocationBubble = ({ msg }: { msg: ChannelMessage }) => (
     className="rounded-2xl px-3.5 py-2.5 flex items-start gap-2 text-left"
     style={{ background: SAGE_BG, border: `1px solid ${BORDER}`, maxWidth: "72%" }}
     onClick={() => {
-      if (msg.lat !== undefined && msg.lon !== undefined) {
-        window.open(`https://maps.apple.com/?q=${msg.lat},${msg.lon}`, '_blank');
-      }
+      if (msg.lat === undefined || msg.lon === undefined) return;
+      const coord = `${msg.lat},${msg.lon}`;
+      const url = Capacitor.getPlatform() === 'android'
+        ? `https://maps.google.com/?q=${coord}`
+        : `https://maps.apple.com/?q=${coord}`;
+      window.open(url, '_system');
     }}
   >
     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SAGE }} />

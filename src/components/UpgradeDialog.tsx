@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
-import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, type RCPackage } from "@/lib/revenuecat";
+import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, type RCPackage } from "@/lib/revenuecat";
 import { useTranslation } from "react-i18next";
 
 const isNative = Capacitor.isNativePlatform();
@@ -111,14 +111,21 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     }, PURCHASE_TIMEOUT_MS);
 
     try {
-      const purchased = await presentSubscriptionStore([selectedNativeProductId]);
+      let purchased = false;
+      if (platform === 'android') {
+        // Android: use RevenueCat purchasePackage (Google Play Billing)
+        const rcIdentifier = billingCycle === 'monthly' ? '$rc_monthly' : '$rc_annual';
+        purchased = await purchaseRCPackage(rcIdentifier);
+      } else {
+        // iOS: use StoreKit 2 direct purchase
+        purchased = await presentSubscriptionStore([selectedNativeProductId]);
+      }
       if (purchased) {
         try { await refreshSubscription(); } catch { /* non-fatal */ }
         setOpen(false);
       }
-      // If cancelled/pending, just re-enable the button silently
     } catch (err: unknown) {
-      logError('SubscriptionStore error:', err);
+      logError('Purchase error:', err);
       const msg = err instanceof Error ? err.message : String(err);
       toast({ title: t('upgrade.purchaseFailed'), description: msg || t('upgrade.purchaseFailedDesc'), variant: 'destructive' });
     } finally {

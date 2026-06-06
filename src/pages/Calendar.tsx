@@ -2167,7 +2167,14 @@ const Calendar = () => {
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button
                     type="button"
-                    onClick={() => { if (eventLocation.trim()) window.open(`https://maps.apple.com/?q=${encodeURIComponent(eventLocation)}`, '_system'); }}
+                    onClick={() => {
+      if (!eventLocation.trim()) return;
+      const q = encodeURIComponent(eventLocation);
+      const url = Capacitor.getPlatform() === 'android'
+        ? `https://maps.google.com/?q=${q}`
+        : `https://maps.apple.com/?q=${q}`;
+      window.open(url, '_system');
+    }}
                     style={{ lineHeight: 0 }}
                   >
                     <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: eventLocation.trim() ? '#964735' : 'hsl(var(--muted-foreground))' }} />
