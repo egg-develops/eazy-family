@@ -177,36 +177,44 @@ const WheelCol = ({ items, idx, setIdx, width }: { items: string[]; idx: number;
 const HOUR_ITEMS = ['12','1','2','3','4','5','6','7','8','9','10','11'];
 const MIN_ITEMS = Array.from({length:60},(_,i) => String(i).padStart(2,'0'));
 const AMPM_ITEMS = ['AM','PM'];
+type ActiveEventPicker = 'start-date' | 'start-time' | 'end-date' | 'end-time' | null;
 
-const EZDateTimePicker = ({
-  date, onDateChange, timeStr, onTimeChange, allDay,
+const parseEventTime = (time: string) => {
+  const [hourRaw, minuteRaw] = time.split(':').map(Number);
+  const hours = Number.isFinite(hourRaw) ? hourRaw : 9;
+  const minutes = Number.isFinite(minuteRaw) ? minuteRaw : 0;
+  return {
+    hours: Math.max(0, Math.min(23, hours)),
+    minutes: Math.max(0, Math.min(59, minutes)),
+  };
+};
+
+const getDateOnly = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const combineEventDateTime = (date: Date, time: string) => {
+  const next = getDateOnly(date);
+  const { hours, minutes } = parseEventTime(time);
+  next.setHours(hours, minutes, 0, 0);
+  return next;
+};
+
+const splitEventDateTime = (date: Date) => ({
+  date: getDateOnly(date),
+  time: `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`,
+});
+
+const EZDatePicker = ({
+  date, onDateChange, fmt, weekDayInitials,
 }: {
   date: Date;
   onDateChange: (d: Date) => void;
-  timeStr: string;
-  onTimeChange: (t: string) => void;
-  allDay?: boolean;
+  fmt: (date: Date, pattern: string) => string;
+  weekDayInitials: string[];
 }) => {
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(date));
-  const parseTime = (t: string) => {
-    const [hStr, mStr] = t.split(':');
-    const hh = parseInt(hStr) || 9;
-    const mm = parseInt(mStr) || 0;
-    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-    return { hourIdx: h12 === 12 ? 0 : h12, minIdx: Math.min(mm, 59), ampmIdx: hh >= 12 ? 1 : 0 };
-  };
-  const init = parseTime(timeStr);
-  const [hourIdx, setHourIdx] = useState(init.hourIdx);
-  const [minIdx, setMinIdx] = useState(init.minIdx);
-  const [ampmIdx, setAmpmIdx] = useState(init.ampmIdx);
   useEffect(() => {
-    const h12 = hourIdx === 0 ? 12 : hourIdx;
-    const ap = ampmIdx === 0 ? 'AM' : 'PM';
-    let h24 = h12;
-    if (ap === 'AM' && h12 === 12) h24 = 0;
-    if (ap === 'PM' && h12 !== 12) h24 = h12 + 12;
-    onTimeChange(`${String(h24).padStart(2,'0')}:${String(minIdx).padStart(2,'0')}`);
-  }, [hourIdx, minIdx, ampmIdx]);
+    setViewMonth(startOfMonth(date));
+  }, [date]);
   const year = viewMonth.getFullYear();
   const month = viewMonth.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -225,8 +233,8 @@ const EZDateTimePicker = ({
         </button>
       </div>
       <div className="grid grid-cols-7 px-3 pb-1">
-        {['S','M','T','W','T','F','S'].map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold py-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{d}</div>
+        {weekDayInitials.map((d, i) => (
+          <div key={`${d}-${i}`} className="text-center text-[10px] font-semibold py-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{d}</div>
         ))}
       </div>
       <div className="grid grid-cols-7 px-3 pb-3">
@@ -237,7 +245,7 @@ const EZDateTimePicker = ({
           const isSelected = isSameDay(thisDate, date);
           const todayMark = isToday(thisDate);
           return (
-            <button key={day} type="button" onClick={() => onDateChange(new Date(year, month, day))}
+            <button key={day} type="button" onClick={() => onDateChange(thisDate)}
               className="flex items-center justify-center rounded-full mx-auto transition-all"
               style={{ width: 30, height: 30, background: isSelected ? '#964735' : todayMark ? 'rgba(150,71,53,0.12)' : 'transparent',
                 color: isSelected ? '#fff' : todayMark ? '#964735' : 'hsl(var(--foreground))',
@@ -247,16 +255,47 @@ const EZDateTimePicker = ({
           );
         })}
       </div>
-      {!allDay && (
-        <div style={{ borderTop: '1px solid #F1EDE7', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
-            <WheelCol items={HOUR_ITEMS} idx={hourIdx} setIdx={setHourIdx} width={48} />
-            <WheelCol items={MIN_ITEMS} idx={minIdx} setIdx={setMinIdx} width={48} />
-            <WheelCol items={AMPM_ITEMS} idx={ampmIdx} setIdx={setAmpmIdx} width={48} />
-          </div>
+    </div>
+  );
+};
+
+const EZTimePicker = ({ timeStr, onTimeChange }: { timeStr: string; onTimeChange: (t: string) => void }) => {
+  const parseTime = (t: string) => {
+    const [hStr, mStr] = t.split(':');
+    const hh = parseInt(hStr) || 9;
+    const mm = parseInt(mStr) || 0;
+    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+    return { hourIdx: h12 === 12 ? 0 : h12, minIdx: Math.min(mm, 59), ampmIdx: hh >= 12 ? 1 : 0 };
+  };
+  const init = parseTime(timeStr);
+  const [hourIdx, setHourIdx] = useState(init.hourIdx);
+  const [minIdx, setMinIdx] = useState(init.minIdx);
+  const [ampmIdx, setAmpmIdx] = useState(init.ampmIdx);
+  useEffect(() => {
+    const next = parseTime(timeStr);
+    setHourIdx(next.hourIdx);
+    setMinIdx(next.minIdx);
+    setAmpmIdx(next.ampmIdx);
+  }, [timeStr]);
+  useEffect(() => {
+    const h12 = hourIdx === 0 ? 12 : hourIdx;
+    const ap = ampmIdx === 0 ? 'AM' : 'PM';
+    let h24 = h12;
+    if (ap === 'AM' && h12 === 12) h24 = 0;
+    if (ap === 'PM' && h12 !== 12) h24 = h12 + 12;
+    const nextTime = `${String(h24).padStart(2,'0')}:${String(minIdx).padStart(2,'0')}`;
+    if (nextTime !== timeStr) onTimeChange(nextTime);
+  }, [hourIdx, minIdx, ampmIdx, timeStr]);
+  return (
+    <div style={{ borderTop: '1px solid #F1EDE7', background: 'hsl(var(--muted))' }}>
+      <div style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '40px', transform: 'translateY(-50%)', background: 'rgba(150,71,53,0.07)', pointerEvents: 'none', zIndex: 1 }} />
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '4px', padding: '0 8px' }}>
+          <WheelCol items={HOUR_ITEMS} idx={hourIdx} setIdx={setHourIdx} width={48} />
+          <WheelCol items={MIN_ITEMS} idx={minIdx} setIdx={setMinIdx} width={48} />
+          <WheelCol items={AMPM_ITEMS} idx={ampmIdx} setIdx={setAmpmIdx} width={48} />
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -467,8 +506,8 @@ const Calendar = () => {
   const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
   const [reminderTime, setReminderTime] = useState("");
   const [reminderPriority, setReminderPriority] = useState<"low" | "medium" | "high">("medium");
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [activeEventPicker, setActiveEventPicker] = useState<ActiveEventPicker>(null);
+  const [endManuallyAdjusted, setEndManuallyAdjusted] = useState(false);
   const [eventNotes, setEventNotes] = useState('');
   const [eventReminder, setEventReminder] = useState('15min');
   const [eventAttendees, setEventAttendees] = useState<string[]>([]);
@@ -777,19 +816,45 @@ const Calendar = () => {
     ));
   };
 
-  // Bump end forward when start moves past it
-  useEffect(() => {
-    if (!showStartPicker) return;
-    const [sh, sm] = eventStartTime.split(':').map(Number);
-    const startMs = new Date(eventStartDate).setHours(sh, sm, 0, 0);
-    const [eh, em] = eventEndTime.split(':').map(Number);
-    const endMs = new Date(eventEndDate).setHours(eh, em, 0, 0);
-    if (startMs >= endMs) {
-      const newEnd = new Date(startMs + 3600000);
-      setEventEndDate(new Date(newEnd.getFullYear(), newEnd.getMonth(), newEnd.getDate()));
-      setEventEndTime(`${String(newEnd.getHours()).padStart(2,'0')}:${String(newEnd.getMinutes()).padStart(2,'0')}`);
+  const applyEndDateTime = (nextEnd: Date) => {
+    const next = splitEventDateTime(nextEnd);
+    setEventEndDate(next.date);
+    setEventEndTime(next.time);
+  };
+
+  const updateEventStart = (nextDate: Date, nextTime = eventStartTime) => {
+    const oldStart = combineEventDateTime(eventStartDate, eventStartTime);
+    const oldEnd = combineEventDateTime(eventEndDate, eventEndTime);
+    const duration = oldEnd.getTime() > oldStart.getTime()
+      ? oldEnd.getTime() - oldStart.getTime()
+      : 60 * 60 * 1000;
+    const nextStart = combineEventDateTime(nextDate, nextTime);
+
+    setEventStartDate(getDateOnly(nextDate));
+    setEventStartTime(nextTime);
+
+    if (eventAllDay) {
+      const nextEndDate = (!endManuallyAdjusted || getDateOnly(eventEndDate).getTime() < getDateOnly(nextDate).getTime())
+        ? getDateOnly(nextDate)
+        : getDateOnly(eventEndDate);
+      setEventEndDate(nextEndDate);
+      return;
     }
-  }, [eventStartDate, eventStartTime]);
+
+    const shouldMoveEnd = !endManuallyAdjusted || oldEnd.getTime() <= nextStart.getTime();
+    if (shouldMoveEnd) applyEndDateTime(new Date(nextStart.getTime() + duration));
+  };
+
+  const updateEventEnd = (nextDate = eventEndDate, nextTime = eventEndTime) => {
+    setEndManuallyAdjusted(true);
+    const start = combineEventDateTime(eventStartDate, eventStartTime);
+    const requestedEnd = combineEventDateTime(nextDate, nextTime);
+    if (eventAllDay) {
+      setEventEndDate(getDateOnly(nextDate).getTime() < getDateOnly(eventStartDate).getTime() ? getDateOnly(eventStartDate) : getDateOnly(nextDate));
+      return;
+    }
+    applyEndDateTime(requestedEnd.getTime() <= start.getTime() ? new Date(start.getTime() + 60 * 60 * 1000) : requestedEnd);
+  };
 
   const resetEventForm = () => {
     setEventTitle("");
@@ -809,6 +874,8 @@ const Calendar = () => {
     setEventColor('#964735');
     setEventVisibleTo('everyone');
     setEventCustomTag('');
+    setActiveEventPicker(null);
+    setEndManuallyAdjusted(false);
   };
 
   const loadFamilyMembers = async () => {
@@ -855,6 +922,7 @@ const Calendar = () => {
         if (dateResult) {
           setEventStartDate(dateResult);
           setEventEndDate(dateResult);
+          setEndManuallyAdjusted(false);
           if (parsed[0]?.start.isCertain("hour")) {
             setEventStartTime(format(dateResult, "HH:mm"));
             const end = new Date(dateResult);
@@ -919,6 +987,8 @@ const Calendar = () => {
       setEventVisibleTo(item.visibleTo || 'everyone');
       setEventCustomTag(item.customTag || '');
       setEventAttendees(item.attendees || []);
+      setEndManuallyAdjusted(false);
+      setActiveEventPicker(null);
     } else {
       setDialogTab("reminder");
       setReminderTitle(item.title);
@@ -1020,7 +1090,7 @@ const Calendar = () => {
         type: "event",
         color: eventColor,
         tag: eventTag || undefined,
-        customTag: eventTag && !TAGS[eventTag] ? eventTag : undefined,
+        customTag: eventTag === 'custom' ? (eventCustomTag.trim() || undefined) : undefined,
         appleCalendarId,
         attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
         visibleTo: eventVisibleTo,
@@ -1948,7 +2018,7 @@ const Calendar = () => {
         <div className="fixed inset-0 z-[100] flex flex-col" style={{ background: 'hsl(var(--muted))', paddingTop: 'max(0px, env(safe-area-inset-top))' }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 h-14 flex-shrink-0" style={{ background: 'hsl(var(--muted))', borderBottom: '1px solid hsl(var(--border))' }}>
-            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setShowStartPicker(false); setShowEndPicker(false); setEventNotes(''); }} className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('common.cancel')}</button>
+            <button onClick={() => { resetEventForm(); setIsDialogOpen(false); setActiveEventPicker(null); setEventNotes(''); }} className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('common.cancel')}</button>
             <h2 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{editingItemId ? t('calendar.editEvent') : t('calendar.newEvent')}</h2>
             <button onClick={dialogTab==='event'?handleAddEvent:handleAddReminder} className="text-sm font-semibold" style={{ color: '#964735' }}>
               {editingItemId ? t('common.update') : t('common.add')}
@@ -2001,7 +2071,14 @@ const Calendar = () => {
                   <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.allDay')}</span>
                   <button
                     type="button"
-                    onClick={() => { setEventAllDay(v => !v); setShowStartPicker(false); setShowEndPicker(false); }}
+                    onClick={() => {
+                      const nextAllDay = !eventAllDay;
+                      setEventAllDay(nextAllDay);
+                      setActiveEventPicker(null);
+                      if (nextAllDay && getDateOnly(eventEndDate).getTime() < getDateOnly(eventStartDate).getTime()) {
+                        setEventEndDate(getDateOnly(eventStartDate));
+                      }
+                    }}
                     className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0"
                     style={{ background: eventAllDay ? '#964735' : 'hsl(var(--muted))' }}
                   >
@@ -2014,39 +2091,71 @@ const Calendar = () => {
 
                 {/* Starts */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <button className="w-full flex items-center justify-between px-4 py-3.5"
-                    onClick={() => { if (eventAllDay) return; setShowStartPicker(p => !p); setShowEndPicker(false); }}>
+                  <div className="px-4 py-3.5">
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.starts')}</span>
-                    <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{fmt(eventStartDate, 'PP')}</span>
-                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventStartTime}`), 'p'); } catch { return eventStartTime; } })()}</span>}
+                    <div className={`grid ${eventAllDay ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mt-3`}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveEventPicker(activeEventPicker === 'start-date' ? null : 'start-date')}
+                        className="rounded-xl px-3 py-2 text-left transition-all"
+                        style={{ background: activeEventPicker === 'start-date' ? 'rgba(150,71,53,0.12)' : 'hsl(var(--muted))', border: activeEventPicker === 'start-date' ? '1px solid rgba(150,71,53,0.35)' : '1px solid transparent' }}
+                      >
+                        <span className="block text-[10px] font-semibold uppercase mb-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.startDate')}</span>
+                        <span className="block text-sm font-semibold truncate" style={{ color: '#964735' }}>{fmt(eventStartDate, 'PP')}</span>
+                      </button>
+                      {!eventAllDay && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveEventPicker(activeEventPicker === 'start-time' ? null : 'start-time')}
+                          className="rounded-xl px-3 py-2 text-left transition-all"
+                          style={{ background: activeEventPicker === 'start-time' ? 'rgba(150,71,53,0.12)' : 'hsl(var(--muted))', border: activeEventPicker === 'start-time' ? '1px solid rgba(150,71,53,0.35)' : '1px solid transparent' }}
+                        >
+                          <span className="block text-[10px] font-semibold uppercase mb-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.startTime')}</span>
+                          <span className="block text-sm font-semibold truncate" style={{ color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventStartTime}`), 'p'); } catch { return eventStartTime; } })()}</span>
+                        </button>
+                      )}
                     </div>
-                  </button>
-                  {showStartPicker && (
-                    <EZDateTimePicker
-                      date={eventStartDate} onDateChange={setEventStartDate}
-                      timeStr={eventStartTime} onTimeChange={setEventStartTime}
-                      allDay={eventAllDay}
-                    />
+                  </div>
+                  {activeEventPicker === 'start-date' && (
+                    <EZDatePicker date={eventStartDate} onDateChange={(date) => updateEventStart(date)} fmt={fmt} weekDayInitials={weekDayInitials} />
+                  )}
+                  {activeEventPicker === 'start-time' && !eventAllDay && (
+                    <EZTimePicker timeStr={eventStartTime} onTimeChange={(time) => updateEventStart(eventStartDate, time)} />
                   )}
                 </div>
 
                 {/* Ends */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <button className="w-full flex items-center justify-between px-4 py-3.5"
-                    onClick={() => { if (eventAllDay) return; setShowEndPicker(p => !p); setShowStartPicker(false); }}>
+                  <div className="px-4 py-3.5">
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.ends')}</span>
-                    <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{fmt(eventEndDate, 'PP')}</span>
-                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventEndTime}`), 'p'); } catch { return eventEndTime; } })()}</span>}
+                    <div className={`grid ${eventAllDay ? 'grid-cols-1' : 'grid-cols-2'} gap-2 mt-3`}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveEventPicker(activeEventPicker === 'end-date' ? null : 'end-date')}
+                        className="rounded-xl px-3 py-2 text-left transition-all"
+                        style={{ background: activeEventPicker === 'end-date' ? 'rgba(150,71,53,0.12)' : 'hsl(var(--muted))', border: activeEventPicker === 'end-date' ? '1px solid rgba(150,71,53,0.35)' : '1px solid transparent' }}
+                      >
+                        <span className="block text-[10px] font-semibold uppercase mb-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.endDate')}</span>
+                        <span className="block text-sm font-semibold truncate" style={{ color: '#964735' }}>{fmt(eventEndDate, 'PP')}</span>
+                      </button>
+                      {!eventAllDay && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveEventPicker(activeEventPicker === 'end-time' ? null : 'end-time')}
+                          className="rounded-xl px-3 py-2 text-left transition-all"
+                          style={{ background: activeEventPicker === 'end-time' ? 'rgba(150,71,53,0.12)' : 'hsl(var(--muted))', border: activeEventPicker === 'end-time' ? '1px solid rgba(150,71,53,0.35)' : '1px solid transparent' }}
+                        >
+                          <span className="block text-[10px] font-semibold uppercase mb-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.endTime')}</span>
+                          <span className="block text-sm font-semibold truncate" style={{ color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventEndTime}`), 'p'); } catch { return eventEndTime; } })()}</span>
+                        </button>
+                      )}
                     </div>
-                  </button>
-                  {showEndPicker && (
-                    <EZDateTimePicker
-                      date={eventEndDate} onDateChange={setEventEndDate}
-                      timeStr={eventEndTime} onTimeChange={setEventEndTime}
-                      allDay={eventAllDay}
-                    />
+                  </div>
+                  {activeEventPicker === 'end-date' && (
+                    <EZDatePicker date={eventEndDate} onDateChange={(date) => updateEventEnd(date)} fmt={fmt} weekDayInitials={weekDayInitials} />
+                  )}
+                  {activeEventPicker === 'end-time' && !eventAllDay && (
+                    <EZTimePicker timeStr={eventEndTime} onTimeChange={(time) => updateEventEnd(eventEndDate, time)} />
                   )}
                 </div>
 
