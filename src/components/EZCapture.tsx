@@ -172,6 +172,17 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // The tap on the EZ orb that opens this overlay also produces a synthesized
+  // `click` a few ms later. Because the overlay mounts under that same point,
+  // that click lands on the backdrop and would instantly close it (open→close
+  // in one frame, so the window never visibly appears). Ignore backdrop-dismiss
+  // clicks that arrive within this window — a real dismiss tap can't be that fast.
+  const openedAtRef = useRef(Date.now());
+  const handleBackdropClose = () => {
+    if (Date.now() - openedAtRef.current < 400) return;
+    onClose();
+  };
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -724,7 +735,7 @@ STYLE:
     <div
       className="fixed inset-0 z-[200] flex flex-col"
       style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
+      onClick={handleBackdropClose}
     >
       <style>{`@keyframes ez-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
       <div className="flex-1 flex items-center justify-center px-4 py-8">
