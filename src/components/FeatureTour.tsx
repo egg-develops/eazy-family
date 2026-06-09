@@ -134,7 +134,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
           onClick={onDone}
           className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
           style={{ background: 'hsl(var(--muted))', color: MUTED }}
-          aria-label="Skip tour"
+          aria-label={t('tour.skip')}
         >
           <X className="w-5 h-5" />
         </button>
@@ -176,7 +176,7 @@ export function FeatureTour({ onDone }: FeatureTourProps) {
             <button
               key={i}
               onClick={() => setIdx(i)}
-              aria-label={`Slide ${i + 1}`}
+              aria-label={`${t('tour.slideLabel')} ${i + 1}`}
               style={{
                 width: i === idx ? '20px' : '6px',
                 height: '6px',

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Phone, Video, Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -31,6 +32,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
   onVideoCallClick,
   onInfoClick,
 }) => {
+  const { t, i18n } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [expandedAttachments, setExpandedAttachments] = useState<Set<string>>(
     new Set()
@@ -45,7 +47,7 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
   }, [messages]);
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
+    return new Date(date).toLocaleTimeString(i18n.language, {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -56,16 +58,16 @@ const MessagingChatThread: React.FC<MessagingChatThreadProps> = ({
     const messageDate = new Date(date);
 
     if (messageDate.toDateString() === today.toDateString()) {
-      return 'Today';
+      return t('familyAgenda.today');
     }
 
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     if (messageDate.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
+      return t('familyAgenda.yesterday');
     }
 
-    return messageDate.toLocaleDateString('en-US', {
+    return messageDate.toLocaleDateString(i18n.language, {
       month: 'short',
       day: 'numeric',
       year:

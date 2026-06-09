@@ -346,7 +346,8 @@
     "remindersTitle": "Reminders",
     "year": "Year",
     "view3Day": "3 Days",
-    "view42Day": "42 Days"
+    "view42Day": "42 Days",
+    "listening": "Listening…"
   },
   "calendarIntegrations": {
     "title": "Calendar Integrations",
@@ -610,7 +611,8 @@
     "documentMessage": "📄 Document",
     "newMessage": "New message",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "addPhotos": "Add photos"
   },
   "common": {
     "add": "Add",
@@ -650,7 +652,8 @@
     "to": "to",
     "from": "From",
     "returnHome": "Return to Home",
-    "more": "more"
+    "more": "more",
+    "yesterday": "Yesterday"
   },
   "events": {
     "title": "Events",
@@ -1165,7 +1168,9 @@
       "Baby": "Baby",
       "Drinks": "Drinks",
       "Other": "Other"
-    }
+    },
+    "probablyRunningLow": "Probably Running Low",
+    "removeSuggestion": "Remove suggestion"
   },
   "rituals": {
     "title": "Daily Rituals",
@@ -1185,7 +1190,16 @@
     "useVoiceHint": "Use the EZ button or Voice Journal to add an entry.",
     "deleteEntry": "Delete",
     "journalEmptyTitle": "Your journal is waiting",
-    "journalEmptyHint": "Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest."
+    "journalEmptyHint": "Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest.",
+    "defaultMorning": "Morning Routine",
+    "defaultEvening": "Evening Routine",
+    "defaultExercise": "15 min Exercise",
+    "defaultMeditation": "Daily Meditation",
+    "defaultQualityTime": "Quality Time",
+    "timeMorning": "Morning",
+    "timeAfternoon": "Afternoon",
+    "timeEvening": "Evening",
+    "timeAny": "Any"
   },
   "familyProfile": {
     "title": "Family Profile",
@@ -1292,7 +1306,13 @@
     "openCalendar": "Open Calendar",
     "connectSection": "Connect",
     "channelTitle": "Family Channel",
-    "channelDesc": "Private family messaging"
+    "channelDesc": "Private family messaging",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "event": "Event",
+    "task": "Task",
+    "allDay": "All day"
   },
   "website": {
     "nav": {
@@ -1615,7 +1635,38 @@
       "title": "Morning Digest",
       "body": "Get a daily or weekly summary of your family's schedule, tasks, and reminders — delivered in-app and by email. Eazy thinks ahead so you don't have to.",
       "hint": "Set your digest frequency in Settings."
-    }
+    },
+    "walkthrough": {
+      "welcomeTitle": "Welcome to Eazy.Family 👋",
+      "welcomeBody": "Your family's private hub — calendar, tasks, shopping, messaging, and AI in one place.",
+      "welcomeHint": "Let's find the three most important things on screen.",
+      "ezTitle": "EZ Button ✨",
+      "ezBody": "The glowing button on your screen is EZ — your family command center. Tap to add anything by voice or text:",
+      "ezItem1": "Events & reminders",
+      "ezItem2": "Shopping items",
+      "ezItem3": "Tasks & to-dos",
+      "ezItem4": "Journal entries",
+      "ezHint": "Press EZ and swipe up to open the menu. Long-press to move it anywhere on your screen.",
+      "overviewTitle": "Your Daily Overview 📋",
+      "overviewBody": "Your home screen shows everything at a glance:",
+      "overviewItem1": "Today's events and upcoming schedule",
+      "overviewItem2": "Top tasks and overdue reminders",
+      "overviewItem3": "Smart AI suggestions from Eazy",
+      "overviewItem4": "Family Channel messages",
+      "listsTitle": "Tasks & Shopping 🛒",
+      "listsBody": "Your top tasks are here on the home screen. Use EZ or go to the To-Do's or Shopping tabs for full lists.",
+      "listsHint": "Shared lists update in real time across your whole family.",
+      "doneTitle": "You're all set! 🎉",
+      "doneBody": "A few more things to explore:",
+      "doneItem1": "Family tab — invite members with a link",
+      "doneItem2": "Rituals — build daily family habits",
+      "doneItem3": "Settings — sync calendars, upload photos, change language",
+      "doneHint": "Replay this tour any time from the bottom of Settings.",
+      "done": "Done ✓",
+      "nextArrow": "Next →",
+      "skipTour": "Skip tour"
+    },
+    "slideLabel": "Slide"
   },
   "ezCapture": {
     "header": "What's on your mind?",

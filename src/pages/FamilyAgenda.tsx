@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Capacitor } from "@capacitor/core";
 import { useTranslation } from 'react-i18next';
 import {
   Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
@@ -11,8 +10,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
 import { compressAndUpload } from "@/lib/imageUpload";
+import { openInMaps } from "@/lib/maps";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { format, isToday, isYesterday } from "date-fns";
+import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
 // ─────────────────────────────────────────────
@@ -84,12 +85,12 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function groupByDate(messages: ChannelMessage[]) {
+function groupByDate(messages: ChannelMessage[], t: (key: string) => string, fmt: (date: Date, pattern: string) => string) {
   const groups: { label: string; messages: ChannelMessage[] }[] = [];
   let currentLabel = "";
   for (const msg of messages) {
     const d = new Date(msg.timestamp);
-    const label = isToday(d) ? "TODAY" : isYesterday(d) ? "YESTERDAY" : format(d, "MMM d, yyyy").toUpperCase();
+    const label = isToday(d) ? t('familyAgenda.today').toUpperCase() : isYesterday(d) ? t('familyAgenda.yesterday').toUpperCase() : fmt(d, "PP").toUpperCase();
     if (label !== currentLabel) {
       currentLabel = label;
       groups.push({ label, messages: [msg] });
@@ -194,11 +195,7 @@ const LocationBubble = ({ msg }: { msg: ChannelMessage }) => (
     style={{ background: SAGE_BG, border: `1px solid ${BORDER}`, maxWidth: "72%" }}
     onClick={() => {
       if (msg.lat === undefined || msg.lon === undefined) return;
-      const coord = `${msg.lat},${msg.lon}`;
-      const url = Capacitor.getPlatform() === 'android'
-        ? `https://maps.google.com/?q=${coord}`
-        : `https://maps.apple.com/?q=${coord}`;
-      window.open(url, '_system');
+      void openInMaps(`${msg.lat},${msg.lon}`);
     }}
   >
     <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SAGE }} />
@@ -288,7 +285,7 @@ const PollBubble = ({
   );
 };
 
-const EventCard = ({ msg }: { msg: ChannelMessage }) => {
+const EventCard = ({ msg, t }: { msg: ChannelMessage; t: (key: string) => string }) => {
   const navigate = useNavigate();
   return (
     <div
@@ -307,7 +304,7 @@ const EventCard = ({ msg }: { msg: ChannelMessage }) => {
         className="text-[11px] font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
         style={{ background: SAGE_BG, color: SAGE }}
       >
-        View
+        {t('common.view')}
       </button>
     </div>
   );
@@ -320,17 +317,21 @@ const MessageRow = ({
   msg,
   onImageExpand,
   onVote,
+  t,
+  fmt,
 }: {
   msg: ChannelMessage;
   onImageExpand: (url: string) => void;
   onVote: (msgId: string, optionIndex: number) => void;
+  t: (key: string) => string;
+  fmt: (date: Date, pattern: string) => string;
 }) => {
-  const ts = format(new Date(msg.timestamp), "h:mm a");
+  const ts = fmt(new Date(msg.timestamp), "p");
 
   if (msg.type === "event") {
     return (
       <div className="flex justify-center my-1">
-        <EventCard msg={msg} />
+        <EventCard msg={msg} t={t} />
       </div>
     );
   }
@@ -444,7 +445,9 @@ const PollCreator = ({
 // Main component
 // ─────────────────────────────────────────────
 const FamilyAgenda = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale | undefined = ({ de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale } as Record<string, Locale>)[i18n.language.split('-')[0]];
+  const fmt = (date: Date, pattern: string) => format(date, pattern, { locale: dateFnsLocale });
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -673,7 +676,7 @@ const FamilyAgenda = () => {
   };
 
   // ── Grouped messages ─────────────────────────
-  const groups = groupByDate(messages);
+  const groups = groupByDate(messages, t, fmt);
 
   // ── Render ───────────────────────────────────
   return (
@@ -767,6 +770,8 @@ const FamilyAgenda = () => {
                   msg={msg}
                   onImageExpand={setPreviewUrl}
                   onVote={handleVote}
+                  t={t}
+                  fmt={fmt}
                 />
               ))}
             </div>

@@ -343,7 +343,8 @@
     "remindersTitle": "Recordatorios",
     "year": "Año",
     "view3Day": "3 Días",
-    "view42Day": "42 Días"
+    "view42Day": "42 Días",
+    "listening": "Escuchando…"
   },
   "calendarIntegrations": {
     "title": "Integraciones de calendario",
@@ -612,7 +613,8 @@
     "documentMessage": "📄 Documento",
     "newMessage": "Nuevo mensaje",
     "today": "Hoy",
-    "tomorrow": "Mañana"
+    "tomorrow": "Mañana",
+    "addPhotos": "Añadir fotos"
   },
   "common": {
     "add": "Añadir",
@@ -652,7 +654,8 @@
     "to": "a",
     "from": "De",
     "returnHome": "Volver al inicio",
-    "more": "más"
+    "more": "más",
+    "yesterday": "Ayer"
   },
   "events": {
     "title": "Eventos",
@@ -1167,7 +1170,9 @@
       "Baby": "Bebé",
       "Drinks": "Bebidas",
       "Other": "Otros"
-    }
+    },
+    "probablyRunningLow": "Probablemente casi agotado",
+    "removeSuggestion": "Quitar sugerencia"
   },
   "rituals": {
     "title": "Rituales diarios",
@@ -1187,7 +1192,16 @@
     "useVoiceHint": "Usa el botón EZ o el Diario de voz para añadir una entrada.",
     "deleteEntry": "Eliminar",
     "journalEmptyHint": "Toca el botón EZ de abajo para compartir tus pensamientos — habla o escribe, EZ se encarga del resto.",
-    "journalEmptyTitle": "Tu diario te espera"
+    "journalEmptyTitle": "Tu diario te espera",
+    "defaultMorning": "Rutina de la mañana",
+    "defaultEvening": "Rutina de la noche",
+    "defaultExercise": "15 min de ejercicio",
+    "defaultMeditation": "Meditación diaria",
+    "defaultQualityTime": "Tiempo en familia",
+    "timeMorning": "Mañana",
+    "timeAfternoon": "Tarde",
+    "timeEvening": "Noche",
+    "timeAny": "Cuando quieras"
   },
   "familyProfile": {
     "title": "Perfil familiar",
@@ -1291,7 +1305,16 @@
     "docLabel": "Documento",
     "emptyTitle": "Agenda Familiar",
     "emptyDesc": "Los eventos y tareas familiares compartidos aparecerán aquí.",
-    "openCalendar": "Abrir el calendario"
+    "openCalendar": "Abrir el calendario",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "yesterday": "Ayer",
+    "event": "Evento",
+    "task": "Tarea",
+    "allDay": "Todo el día",
+    "channelTitle": "Canal familiar",
+    "channelDesc": "Mensajes privados de la familia",
+    "connectSection": "Conectar"
   },
   "website": {
     "nav": {
@@ -1612,7 +1635,38 @@
       "title": "Resumen Matutino",
       "body": "Recibe un resumen diario o semanal del calendario, las tareas y los recordatorios de tu familia — en la app y por correo. Eazy piensa con antelación para que tú no tengas que hacerlo.",
       "hint": "Configura la frecuencia del resumen en Ajustes."
-    }
+    },
+    "walkthrough": {
+      "welcomeTitle": "Bienvenido a Eazy.Family 👋",
+      "welcomeBody": "El hub privado de tu familia — calendario, tareas, compras, mensajes e IA en un solo lugar.",
+      "welcomeHint": "Veamos las tres cosas más importantes en pantalla.",
+      "ezTitle": "Botón EZ ✨",
+      "ezBody": "El botón brillante es EZ — el centro de mando familiar. Tócalo para añadir cualquier cosa por voz o texto:",
+      "ezItem1": "Eventos y recordatorios",
+      "ezItem2": "Artículos de compra",
+      "ezItem3": "Tareas y pendientes",
+      "ezItem4": "Entradas de diario",
+      "ezHint": "Pulsa EZ y desliza hacia arriba para abrir el menú. Mantén pulsado para moverlo.",
+      "overviewTitle": "Tu resumen diario 📋",
+      "overviewBody": "La pantalla de inicio muestra todo de un vistazo:",
+      "overviewItem1": "Eventos de hoy y próximos planes",
+      "overviewItem2": "Tareas principales y recordatorios vencidos",
+      "overviewItem3": "Sugerencias inteligentes de Eazy",
+      "overviewItem4": "Mensajes del canal familiar",
+      "listsTitle": "Tareas y compras 🛒",
+      "listsBody": "Tus tareas principales están en la pantalla de inicio. Usa EZ o ve a las pestañas Tareas o Compras para ver las listas completas.",
+      "listsHint": "Las listas compartidas se actualizan en tiempo real para toda la familia.",
+      "doneTitle": "¡Todo listo! 🎉",
+      "doneBody": "Algunas cosas más para explorar:",
+      "doneItem1": "Pestaña Familia — invita miembros con un enlace",
+      "doneItem2": "Rituales — crea hábitos diarios en familia",
+      "doneItem3": "Ajustes — sincroniza calendarios, sube fotos, cambia idioma",
+      "doneHint": "Puedes repetir este recorrido desde la parte inferior de Ajustes.",
+      "done": "Listo ✓",
+      "nextArrow": "Siguiente →",
+      "skipTour": "Saltar recorrido"
+    },
+    "slideLabel": "Diapositiva"
   },
   "ezCapture": {
     "header": "¿Qué tienes en mente?",

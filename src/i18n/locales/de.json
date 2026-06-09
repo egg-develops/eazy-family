@@ -343,7 +343,8 @@
     "remindersTitle": "Erinnerungen",
     "year": "Jahr",
     "view3Day": "3 Tage",
-    "view42Day": "42 Tage"
+    "view42Day": "42 Tage",
+    "listening": "Hoere zu…"
   },
   "calendarIntegrations": {
     "title": "Kalenderintegrationen",
@@ -610,7 +611,8 @@
     "documentMessage": "📄 Dokument",
     "newMessage": "Neue Nachricht",
     "today": "Heute",
-    "tomorrow": "Morgen"
+    "tomorrow": "Morgen",
+    "addPhotos": "Fotos hinzufügen"
   },
   "common": {
     "add": "Hinzufügen",
@@ -650,7 +652,8 @@
     "to": "bis",
     "from": "Von",
     "returnHome": "Zur Startseite zurückkehren",
-    "more": "mehr"
+    "more": "mehr",
+    "yesterday": "Gestern"
   },
   "events": {
     "title": "Veranstaltungen",
@@ -1165,7 +1168,9 @@
       "Baby": "Baby",
       "Drinks": "Getränke",
       "Other": "Sonstiges"
-    }
+    },
+    "probablyRunningLow": "Wahrscheinlich bald leer",
+    "removeSuggestion": "Vorschlag entfernen"
   },
   "rituals": {
     "title": "Tägliche Rituale",
@@ -1185,7 +1190,16 @@
     "useVoiceHint": "Verwenden Sie den EZ-Button oder das Sprach-Tagebuch, um einen Eintrag hinzuzufügen.",
     "deleteEntry": "Löschen",
     "journalEmptyHint": "Tippe auf den EZ-Knopf unten, um deine Gedanken zu teilen — sprechen oder tippen, EZ kümmert sich um den Rest.",
-    "journalEmptyTitle": "Dein Tagebuch wartet"
+    "journalEmptyTitle": "Dein Tagebuch wartet",
+    "defaultMorning": "Morgenroutine",
+    "defaultEvening": "Abendroutine",
+    "defaultExercise": "15 Min. Bewegung",
+    "defaultMeditation": "Taegliche Meditation",
+    "defaultQualityTime": "Familienzeit",
+    "timeMorning": "Morgen",
+    "timeAfternoon": "Nachmittag",
+    "timeEvening": "Abend",
+    "timeAny": "Jederzeit"
   },
   "familyProfile": {
     "title": "Familienprofil",
@@ -1289,7 +1303,16 @@
     "docLabel": "Dokument",
     "emptyTitle": "Familienagenda",
     "emptyDesc": "Geteilte Familientermine und Aufgaben erscheinen hier.",
-    "openCalendar": "Kalender öffnen"
+    "openCalendar": "Kalender öffnen",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "yesterday": "Gestern",
+    "event": "Ereignis",
+    "task": "Aufgabe",
+    "allDay": "Ganztägig",
+    "channelTitle": "Familienkanal",
+    "channelDesc": "Private Familiennachrichten",
+    "connectSection": "Verbinden"
   },
   "website": {
     "nav": {
@@ -1612,7 +1635,38 @@
       "title": "Morgen-Digest",
       "body": "Erhalte eine tägliche oder wöchentliche Zusammenfassung des Familienkalenders, der Aufgaben und Erinnerungen — in der App und per E-Mail. Eazy denkt voraus, damit du es nicht musst.",
       "hint": "Stelle die Häufigkeit in den Einstellungen ein."
-    }
+    },
+    "walkthrough": {
+      "welcomeTitle": "Willkommen bei Eazy.Family 👋",
+      "welcomeBody": "Der private Hub deiner Familie — Kalender, Aufgaben, Einkauf, Nachrichten und KI an einem Ort.",
+      "welcomeHint": "Schauen wir uns die drei wichtigsten Dinge auf dem Bildschirm an.",
+      "ezTitle": "EZ Button ✨",
+      "ezBody": "Der leuchtende Button ist EZ — die Kommandozentrale deiner Familie. Tippe, um alles per Sprache oder Text hinzuzufügen:",
+      "ezItem1": "Ereignisse & Erinnerungen",
+      "ezItem2": "Einkaufsartikel",
+      "ezItem3": "Aufgaben & To-dos",
+      "ezItem4": "Tagebucheinträge",
+      "ezHint": "Tippe EZ und wische nach oben, um das Menü zu öffnen. Lange drücken, um ihn zu verschieben.",
+      "overviewTitle": "Dein Tagesüberblick 📋",
+      "overviewBody": "Dein Startbildschirm zeigt alles auf einen Blick:",
+      "overviewItem1": "Heutige Ereignisse und anstehende Termine",
+      "overviewItem2": "Wichtige Aufgaben und überfällige Erinnerungen",
+      "overviewItem3": "Smarte KI-Vorschläge von Eazy",
+      "overviewItem4": "Nachrichten im Familienkanal",
+      "listsTitle": "Aufgaben & Einkauf 🛒",
+      "listsBody": "Deine wichtigsten Aufgaben sind direkt auf dem Startbildschirm. Nutze EZ oder öffne die Aufgaben- oder Einkauf-Tabs für vollständige Listen.",
+      "listsHint": "Geteilte Listen aktualisieren sich in Echtzeit für die ganze Familie.",
+      "doneTitle": "Alles bereit! 🎉",
+      "doneBody": "Noch ein paar Dinge zum Entdecken:",
+      "doneItem1": "Familie — Mitglieder per Link einladen",
+      "doneItem2": "Rituale — tägliche Familiengewohnheiten aufbauen",
+      "doneItem3": "Einstellungen — Kalender synchronisieren, Fotos hochladen, Sprache ändern",
+      "doneHint": "Du kannst diese Tour jederzeit unten in den Einstellungen erneut starten.",
+      "done": "Fertig ✓",
+      "nextArrow": "Weiter →",
+      "skipTour": "Tour überspringen"
+    },
+    "slideLabel": "Folie"
   },
   "ezCapture": {
     "header": "Was liegt dir auf dem Herzen?",

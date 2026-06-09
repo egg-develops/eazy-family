@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { pickRitualEmoji } from "@/lib/intelligence";
 import { Plus, X, Trash2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 import { haptic } from "@/lib/haptic";
 import { useTranslation } from 'react-i18next';
 import { cloudSet } from "@/lib/preferencesSync";
@@ -20,12 +21,12 @@ interface Ritual {
   time: string;
 }
 
-const DEFAULT_RITUALS: Ritual[] = [
-  { id: 'r1', title: 'Morning Routine', emoji: '☀️', time: 'Morning' },
-  { id: 'r2', title: 'Evening Routine', emoji: '🌙', time: 'Evening' },
-  { id: 'r3', title: '15 min Exercise', emoji: '🏃', time: 'Morning' },
-  { id: 'r4', title: 'Daily Meditation', emoji: '🧘', time: 'Any' },
-  { id: 'r5', title: 'Quality Time', emoji: '❤️', time: 'Evening' },
+const getDefaultRituals = (t: (key: string) => string): Ritual[] => [
+  { id: 'r1', title: t('rituals.defaultMorning'), emoji: '☀️', time: t('rituals.timeMorning') },
+  { id: 'r2', title: t('rituals.defaultEvening'), emoji: '🌙', time: t('rituals.timeEvening') },
+  { id: 'r3', title: t('rituals.defaultExercise'), emoji: '🏃', time: t('rituals.timeMorning') },
+  { id: 'r4', title: t('rituals.defaultMeditation'), emoji: '🧘', time: t('rituals.timeAny') },
+  { id: 'r5', title: t('rituals.defaultQualityTime'), emoji: '❤️', time: t('rituals.timeEvening') },
 ];
 
 
@@ -38,14 +39,15 @@ const getJournalSettings = () => {
 };
 
 const Rituals = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale | undefined = ({ de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale } as Record<string, Locale>)[i18n.language.split('-')[0]];
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [rituals, setRituals] = useState<Ritual[]>(() => {
     try {
       const s = localStorage.getItem('eazy-rituals-list');
       if (s) return JSON.parse(s);
     } catch {}
-    return DEFAULT_RITUALS;
+    return getDefaultRituals(t);
   });
   const [completedRituals, setCompletedRituals] = useState<Set<string>>(new Set());
   const [editMode, setEditMode] = useState(false);
@@ -137,7 +139,7 @@ const Rituals = () => {
 
   const addRitual = () => {
     if (!newRitualTitle.trim()) return;
-    const r: Ritual = { id: crypto.randomUUID(), title: newRitualTitle.trim(), emoji: pickRitualEmoji(newRitualTitle), time: 'Any' };
+    const r: Ritual = { id: crypto.randomUUID(), title: newRitualTitle.trim(), emoji: pickRitualEmoji(newRitualTitle), time: t('rituals.timeAny') };
     saveRituals([...rituals, r]);
     setNewRitualTitle('');
     haptic('light');
@@ -220,8 +222,8 @@ const Rituals = () => {
   const getTimeLabel = (dateStr: string) => {
     const d = new Date(dateStr);
     const hour = d.getHours();
-    const dayTime = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
-    return `${format(d, 'EEEE')} ${dayTime}`;
+    const dayTime = hour < 12 ? t('rituals.timeMorning') : hour < 17 ? t('rituals.timeAfternoon') : t('rituals.timeEvening');
+    return `${format(d, 'EEEE', { locale: dateFnsLocale })} ${dayTime}`;
   };
 
   const settings = getJournalSettings();
@@ -450,8 +452,8 @@ const Rituals = () => {
               style={{ border: `1.5px dashed ${BORDER}`, background: 'hsl(var(--card))' }}
             >
               <span style={{ fontSize: 40 }}>✍️</span>
-              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle', 'Your journal is waiting')}</p>
-              <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('rituals.journalEmptyHint', 'Tap the EZ button below to share your thoughts — speak or type, EZ handles the rest.')}</p>
+              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('rituals.journalEmptyTitle')}</p>
+              <p className="text-xs leading-relaxed" style={{ color: MUTED }}>{t('rituals.journalEmptyHint')}</p>
             </div>
           )}
         </div>

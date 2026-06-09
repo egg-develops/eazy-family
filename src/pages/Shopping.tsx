@@ -235,7 +235,7 @@ const Shopping = () => {
         <div className="rounded-2xl overflow-hidden" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
           <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid #C8DDD0' }}>
             <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>Probably Running Low</p>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>{t('shopping.probablyRunningLow')}</p>
           </div>
           <div className="px-4 py-3 flex flex-wrap gap-2">
             {shoppingPredictions.map(p => (

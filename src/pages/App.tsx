@@ -59,6 +59,7 @@ import { cloudSet } from "@/lib/preferencesSync";
 import { Capacitor } from "@capacitor/core";
 import { voiceService } from "@/services/VoiceService";
 import { format, addDays, isToday, isTomorrow } from "date-fns";
+import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 
 const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
 
@@ -673,6 +674,8 @@ const HomeWeatherInline = ({
 
 const AppHome = () => {
   const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale | undefined = ({ de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale } as Record<string, Locale>)[i18n.language.split('-')[0]];
+  const fmt = (date: Date, pattern: string) => format(date, pattern, { locale: dateFnsLocale });
   const navigate = useNavigate();
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
@@ -1095,11 +1098,11 @@ const AppHome = () => {
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#C4621A' }}>{conflicts.length > 1 ? t('home.scheduleConflicts') : t('home.scheduleConflict')}</p>
           </div>
           {conflicts.map((c, i) => {
-            const fmt = (d: Date) => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            const conflictTime = (d: Date) => fmt(d, 'EEE, MMM d · p');
             return (
               <button key={i} onClick={() => navigate('/app/calendar')} className="w-full px-4 py-3 text-left" style={{ borderBottom: i < conflicts.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
                 <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{c.eventA.title} <span style={{ color: '#C4621A' }}>{t('home.overlaps')}</span> {c.eventB.title}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(c.eventA.start)}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{conflictTime(c.eventA.start)}</p>
               </button>
             );
           })}
@@ -1179,7 +1182,7 @@ const AppHome = () => {
                   <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
-                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{format(e.startDate, 'h:mm a')}</p>
+                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
                   </div>
                 </div>
               ))}
@@ -1196,7 +1199,7 @@ const AppHome = () => {
               <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
               <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
               <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : format(upcoming.startDate, 'EEE MMM d')} · {format(upcoming.startDate, 'h:mm a')}
+                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : fmt(upcoming.startDate, 'EEE MMM d')} · {fmt(upcoming.startDate, 'p')}
               </p>
             </button>
           );
@@ -1234,7 +1237,7 @@ const AppHome = () => {
           })
           .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
           .slice(0, 5);
-        const dateLabel = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : format(d, 'EEE, MMM d');
+        const dateLabel = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : fmt(d, 'EEE, MMM d');
         return (
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
@@ -1253,7 +1256,7 @@ const AppHome = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{dateLabel(d)}{ev.allDay ? '' : ` · ${format(d, 'h:mm a')}`}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{dateLabel(d)}{ev.allDay ? '' : ` · ${fmt(d, 'p')}`}</p>
                     </div>
                   </button>
                 );
@@ -1302,7 +1305,7 @@ const AppHome = () => {
                     <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{msgPreview(msg)}</p>
                   </div>
                   <p className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {format(new Date(msg.timestamp), 'h:mm a')}
+                    {fmt(new Date(msg.timestamp), 'p')}
                   </p>
                 </button>
               ))
@@ -1345,11 +1348,16 @@ const AppHome = () => {
         ) : (
           <button
             onClick={() => setShowGalleryDialog(true)}
-            className="w-full rounded-2xl flex flex-col items-center justify-center gap-2 py-8 transition-colors hover:opacity-80"
-            style={{ border: '2px dashed hsl(var(--border))', background: 'hsl(var(--muted) / 0.4)' }}
+            className="group w-full rounded-2xl flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5"
+            style={{ border: '1px solid #DAC1BB', background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF3EE 100%)', boxShadow: '0 8px 24px rgba(150,71,53,0.08)' }}
           >
-            <ImagePlus className="w-6 h-6" style={{ color: 'hsl(var(--muted-foreground))' }} />
-            <p className="text-xs font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>Add family photos</p>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105" style={{ background: '#FFDAD3', color: '#964735' }}>
+                <ImagePlus className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('home.addPhotos')}</p>
+            </div>
+            <Plus className="w-4 h-4" style={{ color: '#964735' }} />
           </button>
         )
       )}

@@ -343,7 +343,8 @@
     "remindersTitle": "Rappels",
     "year": "Année",
     "view3Day": "3 Jours",
-    "view42Day": "42 Jours"
+    "view42Day": "42 Jours",
+    "listening": "Écoute…"
   },
   "calendarIntegrations": {
     "title": "Intégrations de calendrier",
@@ -610,7 +611,8 @@
     "documentMessage": "📄 Document",
     "newMessage": "Nouveau message",
     "today": "Aujourd'hui",
-    "tomorrow": "Demain"
+    "tomorrow": "Demain",
+    "addPhotos": "Ajouter des photos"
   },
   "common": {
     "add": "Ajouter",
@@ -650,7 +652,8 @@
     "to": "à",
     "from": "De",
     "returnHome": "Retourner à l'accueil",
-    "more": "plus"
+    "more": "plus",
+    "yesterday": "Hier"
   },
   "events": {
     "title": "Événements",
@@ -1165,7 +1168,9 @@
       "Baby": "Bébé",
       "Drinks": "Boissons",
       "Other": "Autre"
-    }
+    },
+    "probablyRunningLow": "Probablement bientôt épuisé",
+    "removeSuggestion": "Supprimer la suggestion"
   },
   "rituals": {
     "title": "Rituels quotidiens",
@@ -1185,7 +1190,16 @@
     "useVoiceHint": "Utilisez le bouton EZ ou le Journal vocal pour ajouter une entrée.",
     "deleteEntry": "Supprimer",
     "journalEmptyHint": "Appuyez sur le bouton EZ ci-dessous pour partager vos pensées — parlez ou écrivez, EZ s'occupe du reste.",
-    "journalEmptyTitle": "Votre journal vous attend"
+    "journalEmptyTitle": "Votre journal vous attend",
+    "defaultMorning": "Routine du matin",
+    "defaultEvening": "Routine du soir",
+    "defaultExercise": "15 min d’exercice",
+    "defaultMeditation": "Méditation quotidienne",
+    "defaultQualityTime": "Temps en famille",
+    "timeMorning": "Matin",
+    "timeAfternoon": "Après-midi",
+    "timeEvening": "Soir",
+    "timeAny": "À tout moment"
   },
   "familyProfile": {
     "title": "Profil familial",
@@ -1289,7 +1303,16 @@
     "docLabel": "Document",
     "emptyTitle": "Agenda Famille",
     "emptyDesc": "Les événements et tâches familiaux partagés apparaîtront ici.",
-    "openCalendar": "Ouvrir le calendrier"
+    "openCalendar": "Ouvrir le calendrier",
+    "today": "Aujourd’hui",
+    "tomorrow": "Demain",
+    "yesterday": "Hier",
+    "event": "Événement",
+    "task": "Tâche",
+    "allDay": "Toute la journée",
+    "channelTitle": "Canal familial",
+    "channelDesc": "Messages privés de la famille",
+    "connectSection": "Connexion"
   },
   "website": {
     "nav": {
@@ -1612,7 +1635,38 @@
       "title": "Résumé matinal",
       "body": "Reçois un résumé quotidien ou hebdomadaire du calendrier familial, des tâches et des rappels — dans l'application et par e-mail. Eazy pense à l'avance pour que tu n'aies pas à le faire.",
       "hint": "Règle la fréquence dans les Paramètres."
-    }
+    },
+    "walkthrough": {
+      "welcomeTitle": "Bienvenue sur Eazy.Family 👋",
+      "welcomeBody": "Le hub privé de votre famille — calendrier, tâches, courses, messages et IA au même endroit.",
+      "welcomeHint": "Repérons les trois éléments les plus importants à l’écran.",
+      "ezTitle": "Bouton EZ ✨",
+      "ezBody": "Le bouton lumineux est EZ — le centre de commande de votre famille. Touchez-le pour ajouter n’importe quoi par voix ou texte :",
+      "ezItem1": "Événements et rappels",
+      "ezItem2": "Articles de courses",
+      "ezItem3": "Tâches et to-dos",
+      "ezItem4": "Entrées de journal",
+      "ezHint": "Appuyez sur EZ et balayez vers le haut pour ouvrir le menu. Appui long pour le déplacer.",
+      "overviewTitle": "Votre aperçu du jour 📋",
+      "overviewBody": "Votre accueil montre tout en un coup d’œil :",
+      "overviewItem1": "Événements du jour et planning à venir",
+      "overviewItem2": "Tâches prioritaires et rappels en retard",
+      "overviewItem3": "Suggestions intelligentes d’Eazy",
+      "overviewItem4": "Messages du canal familial",
+      "listsTitle": "Tâches et courses 🛒",
+      "listsBody": "Vos tâches principales sont ici sur l’accueil. Utilisez EZ ou ouvrez les onglets Tâches et Courses pour les listes complètes.",
+      "listsHint": "Les listes partagées se mettent à jour en temps réel pour toute la famille.",
+      "doneTitle": "Tout est prêt ! 🎉",
+      "doneBody": "Encore quelques éléments à explorer :",
+      "doneItem1": "Onglet Famille — inviter des membres avec un lien",
+      "doneItem2": "Rituels — créer des habitudes familiales quotidiennes",
+      "doneItem3": "Réglages — synchroniser les calendriers, ajouter des photos, changer la langue",
+      "doneHint": "Vous pouvez relancer cette visite depuis le bas des Réglages.",
+      "done": "Terminé ✓",
+      "nextArrow": "Suivant →",
+      "skipTour": "Ignorer la visite"
+    },
+    "slideLabel": "Diapositive"
   },
   "ezCapture": {
     "header": "Qu'avez-vous en tête ?",

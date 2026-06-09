@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import Joyride, { Step, CallBackProps, STATUS } from 'react-joyride';
+import { useTranslation } from 'react-i18next';
 
 function readCSSVar(name: string, fallback: string): string {
   if (typeof document === 'undefined') return fallback;
@@ -13,6 +14,7 @@ interface TutorialWalkthroughProps {
 }
 
 export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProps) {
+  const { t } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
 
   const joyrideColors = useMemo(() => ({
@@ -30,12 +32,12 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>Welcome to Eazy.Family 👋</p>
+          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>{t('tour.walkthrough.welcomeTitle')}</p>
           <p style={{ lineHeight: 1.6, marginBottom: 6 }}>
-            Your family's private hub — calendar, tasks, shopping, messaging, and AI in one place.
+            {t('tour.walkthrough.welcomeBody')}
           </p>
           <p style={{ lineHeight: 1.6, fontSize: '0.9rem', opacity: 0.75 }}>
-            Let's find the three most important things on screen.
+            {t('tour.walkthrough.welcomeHint')}
           </p>
         </div>
       ),
@@ -47,18 +49,18 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontWeight: 700, marginBottom: 8 }}>EZ Button ✨</p>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>{t('tour.walkthrough.ezTitle')}</p>
           <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
-            The glowing button on your screen is EZ — your family command center. <strong>Tap to add anything</strong> by voice or text:
+            {t('tour.walkthrough.ezBody')}
           </p>
           <ul style={{ paddingLeft: 16, lineHeight: 1.8, fontSize: '0.9rem', opacity: 0.85 }}>
-            <li>Events &amp; reminders</li>
-            <li>Shopping items</li>
-            <li>Tasks &amp; to-dos</li>
-            <li>Journal entries</li>
+            <li>{t('tour.walkthrough.ezItem1')}</li>
+            <li>{t('tour.walkthrough.ezItem2')}</li>
+            <li>{t('tour.walkthrough.ezItem3')}</li>
+            <li>{t('tour.walkthrough.ezItem4')}</li>
           </ul>
           <p style={{ marginTop: 8, fontSize: '0.85rem', opacity: 0.7 }}>
-            Press EZ and swipe up to open the menu. Long-press to move it anywhere on your screen.
+            {t('tour.walkthrough.ezHint')}
           </p>
         </div>
       ),
@@ -70,15 +72,15 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontWeight: 700, marginBottom: 8 }}>Your Daily Overview 📋</p>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>{t('tour.walkthrough.overviewTitle')}</p>
           <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
-            Your home screen shows everything at a glance:
+            {t('tour.walkthrough.overviewBody')}
           </p>
           <ul style={{ paddingLeft: 16, lineHeight: 1.8, fontSize: '0.9rem', opacity: 0.85 }}>
-            <li>Today's events and upcoming schedule</li>
-            <li>Top tasks and overdue reminders</li>
-            <li>Smart AI suggestions from Eazy</li>
-            <li>Family Channel messages</li>
+            <li>{t('tour.walkthrough.overviewItem1')}</li>
+            <li>{t('tour.walkthrough.overviewItem2')}</li>
+            <li>{t('tour.walkthrough.overviewItem3')}</li>
+            <li>{t('tour.walkthrough.overviewItem4')}</li>
           </ul>
         </div>
       ),
@@ -90,12 +92,12 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontWeight: 700, marginBottom: 8 }}>Tasks &amp; Shopping 🛒</p>
+          <p style={{ fontWeight: 700, marginBottom: 8 }}>{t('tour.walkthrough.listsTitle')}</p>
           <p style={{ lineHeight: 1.6, marginBottom: 8 }}>
-            Your top tasks are here on the home screen. Use EZ or go to the <strong>To-Do's</strong> or <strong>Shopping</strong> tabs for full lists.
+            {t('tour.walkthrough.listsBody')}
           </p>
           <p style={{ fontSize: '0.9rem', opacity: 0.75 }}>
-            Shared lists update in real time across your whole family.
+            {t('tour.walkthrough.listsHint')}
           </p>
         </div>
       ),
@@ -107,17 +109,17 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
       disableBeacon: true,
       content: (
         <div>
-          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>You're all set! 🎉</p>
+          <p style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 8 }}>{t('tour.walkthrough.doneTitle')}</p>
           <p style={{ lineHeight: 1.6, marginBottom: 12 }}>
-            A few more things to explore:
+            {t('tour.walkthrough.doneBody')}
           </p>
           <ul style={{ paddingLeft: 16, lineHeight: 1.9, fontSize: '0.9rem' }}>
-            <li><strong>Family tab</strong> — invite members with a link</li>
-            <li><strong>Rituals</strong> — build daily family habits</li>
-            <li><strong>Settings</strong> — sync calendars, upload photos, change language</li>
+            <li>{t('tour.walkthrough.doneItem1')}</li>
+            <li>{t('tour.walkthrough.doneItem2')}</li>
+            <li>{t('tour.walkthrough.doneItem3')}</li>
           </ul>
           <p style={{ marginTop: 12, fontSize: '0.85rem', opacity: 0.65 }}>
-            Replay this tour any time from the bottom of Settings.
+            {t('tour.walkthrough.doneHint')}
           </p>
         </div>
       ),
@@ -173,11 +175,11 @@ export function TutorialWalkthrough({ run, onComplete }: TutorialWalkthroughProp
         beacon: { display: 'none' },
       }}
       locale={{
-        back: 'Back',
-        close: 'Close',
-        last: 'Done ✓',
-        next: 'Next →',
-        skip: 'Skip tour',
+        back: t('common.back'),
+        close: t('common.close'),
+        last: t('tour.walkthrough.done'),
+        next: t('tour.walkthrough.nextArrow'),
+        skip: t('tour.walkthrough.skipTour'),
       }}
     />
   );

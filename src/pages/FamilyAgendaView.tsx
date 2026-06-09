@@ -5,6 +5,7 @@ import { ChevronLeft, MessageCircle, Calendar, CheckSquare, Clock } from "lucide
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, isToday, isTomorrow, startOfDay, addDays } from "date-fns";
+import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 
 const TC = 'hsl(var(--primary))';
 const CARD = 'hsl(var(--card))';
@@ -28,13 +29,7 @@ interface MemberMap {
   [userId: string]: string;
 }
 
-function dateLabel(date: Date): string {
-  if (isToday(date)) return 'Today';
-  if (isTomorrow(date)) return 'Tomorrow';
-  return format(date, 'EEEE, MMM d');
-}
-
-function groupByDay(items: AgendaItem[]): { label: string; date: Date; items: AgendaItem[] }[] {
+function groupByDay(items: AgendaItem[], dateLabel: (date: Date) => string): { label: string; date: Date; items: AgendaItem[] }[] {
   const map = new Map<string, { label: string; date: Date; items: AgendaItem[] }>();
   for (const item of items) {
     const key = startOfDay(item.startDate).toISOString();
@@ -47,14 +42,14 @@ function groupByDay(items: AgendaItem[]): { label: string; date: Date; items: Ag
 }
 
 const TYPE_META = {
-  event: { icon: Calendar, color: TC, label: 'Event' },
-  task: { icon: CheckSquare, color: '#6E8FE5', label: 'Task' },
+  event: { icon: Calendar, color: TC, labelKey: 'familyAgenda.event' },
+  task: { icon: CheckSquare, color: '#6E8FE5', labelKey: 'familyAgenda.task' },
 };
 
-const AgendaItemRow = ({ item, members }: { item: AgendaItem; members: MemberMap }) => {
+const AgendaItemRow = ({ item, members, t, fmt }: { item: AgendaItem; members: MemberMap; t: (key: string) => string; fmt: (date: Date, pattern: string) => string }) => {
   const meta = TYPE_META[item.type];
   const Icon = meta.icon;
-  const timeStr = item.allDay ? 'All day' : format(item.startDate, 'h:mm a');
+  const timeStr = item.allDay ? t('familyAgenda.allDay') : fmt(item.startDate, 'p');
   const assigneeName = item.assignedTo ? members[item.assignedTo] : null;
 
   return (
@@ -95,7 +90,9 @@ const AgendaItemRow = ({ item, members }: { item: AgendaItem; members: MemberMap
 
 const FamilyAgendaView = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale: Locale | undefined = ({ de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale } as Record<string, Locale>)[i18n.language.split('-')[0]];
+  const fmt = (date: Date, pattern: string) => format(date, pattern, { locale: dateFnsLocale });
   const { user } = useAuth();
   const [items, setItems] = useState<AgendaItem[]>([]);
   const [members, setMembers] = useState<MemberMap>({});
@@ -177,7 +174,12 @@ const FamilyAgendaView = () => {
     load();
   }, [user]);
 
-  const groups = groupByDay(items);
+  const dateLabel = (date: Date): string => {
+    if (isToday(date)) return t('familyAgenda.today');
+    if (isTomorrow(date)) return t('familyAgenda.tomorrow');
+    return fmt(date, 'EEEE, MMM d');
+  };
+  const groups = groupByDay(items, dateLabel);
 
   return (
     <div
@@ -194,12 +196,12 @@ const FamilyAgendaView = () => {
             <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
           </button>
           <p className="flex-1 text-center font-bold text-2xl" style={{ color: INK }}>
-            {t('nav.family', 'Family')}
+            {t('familyAgenda.title')}
           </p>
           <button
             onClick={() => navigate('/app/family-channel')}
             className="w-9 h-9 flex items-center justify-center"
-            title="Family Channel"
+            title={t('familyAgenda.channelTitle')}
           >
             <MessageCircle className="w-5 h-5" style={{ color: TC }} />
           </button>
@@ -263,7 +265,7 @@ const FamilyAgendaView = () => {
                   key={item.id}
                   style={i === group.items.length - 1 ? { borderBottom: 'none' } : undefined}
                 >
-                  <AgendaItemRow item={item} members={members} />
+                  <AgendaItemRow item={item} members={members} t={t} fmt={fmt} />
                 </div>
               ))}
             </div>
@@ -277,7 +279,7 @@ const FamilyAgendaView = () => {
             <div className="flex items-center gap-3 mb-3">
               <div style={{ flex: 1, height: '1px', background: BORDER }} />
               <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: MUTED }}>
-                {t('familyAgenda.connectSection', 'Connect')}
+                {t('familyAgenda.connectSection')}
               </p>
               <div style={{ flex: 1, height: '1px', background: BORDER }} />
             </div>
@@ -297,8 +299,8 @@ const FamilyAgendaView = () => {
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.channelTitle', 'Family Channel')}</p>
-                <p className="text-xs" style={{ color: MUTED }}>{t('familyAgenda.channelDesc', 'Private family messaging')}</p>
+                <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.channelTitle')}</p>
+                <p className="text-xs" style={{ color: MUTED }}>{t('familyAgenda.channelDesc')}</p>
               </div>
               <ChevronLeft className="w-4 h-4 rotate-180" style={{ color: TC }} />
             </button>

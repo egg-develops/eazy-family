@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import { error as logError } from "@/lib/logger";
+import { openInMaps } from "@/lib/maps";
 import * as chrono from "chrono-node";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
@@ -217,7 +218,7 @@ const EZDateTimePicker = ({
           className="w-8 h-8 flex items-center justify-center rounded-full" style={{ color: '#964735' }}>
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{format(viewMonth, 'MMMM yyyy')}</span>
+        <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{fmt(viewMonth, 'MMMM yyyy')}</span>
         <button type="button" onClick={() => setViewMonth(new Date(year, month + 1, 1))}
           className="w-8 h-8 flex items-center justify-center rounded-full" style={{ color: '#964735' }}>
           <ChevronRight className="w-4 h-4" />
@@ -268,14 +269,15 @@ const Calendar = () => {
     const map: Record<string, Locale> = { de: deLocale, fr: frLocale, it: itLocale, es: esLocale, pt: ptLocale };
     return map[i18n.language.split('-')[0]];
   }, [i18n.language]);
+  const fmt = useCallback((date: Date, pattern: string) => format(date, pattern, { locale: dateFnsLocale }), [dateFnsLocale]);
 
   // Single-char weekday initials generated from the active locale (Sun→Sat order)
   const weekDayInitials = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => {
       const d = new Date(2024, 0, 7 + i); // Jan 7 2024 = Sunday
-      return format(d, 'EEEEE', { locale: dateFnsLocale });
+      return fmt(d, 'EEEEE');
     }),
-  [dateFnsLocale]);
+  [fmt]);
 
   const getTagLabel = (tagKey: string): string => {
     const map: Record<string, string> = {
@@ -1096,12 +1098,12 @@ const Calendar = () => {
             const isTodayDate = isToday(day);
             return (
               <div key={day.toISOString()} className="flex-1 text-center py-2.5 text-xs font-medium" style={{ color: isTodayDate ? "#964735" : "hsl(var(--muted-foreground))" }}>
-                <div>{format(day, "EEE")}</div>
+                <div>{fmt(day, "EEE")}</div>
                 <div
                   className="w-7 h-7 mx-auto mt-0.5 rounded-full flex items-center justify-center text-sm font-semibold"
                   style={{ background: isTodayDate ? "#964735" : "transparent", color: isTodayDate ? "#fff" : "hsl(var(--foreground))" }}
                 >
-                  {format(day, "d")}
+                  {fmt(day, "d")}
                 </div>
               </div>
             );
@@ -1154,8 +1156,8 @@ const Calendar = () => {
         <div className="rounded-2xl p-3" style={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
           <div className="mb-2">
             <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
-              {format(selectedDate, "MMMM")}{" "}
-              <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
+              {fmt(selectedDate, "MMMM")}{" "}
+              <em style={{ color: "#964735" }}>'{fmt(selectedDate, "yy")}</em>
             </h2>
           </div>
           <div className="grid grid-cols-7">
@@ -1173,7 +1175,7 @@ const Calendar = () => {
                       background: isTodayDate ? "#964735" : isSel ? "#F1EDE7" : "transparent",
                       color: isTodayDate ? "#fff" : isSel ? "#964735" : "hsl(var(--foreground))",
                     }}
-                  >{format(day, "d")}</span>
+                  >{fmt(day, "d")}</span>
                 </button>
               );
             })}
@@ -1190,7 +1192,7 @@ const Calendar = () => {
       <div className="space-y-3">
         <div className="px-1">
           <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
-            {format(days[0], "MMM d")} – {format(days[2], "d")}
+            {fmt(days[0], "MMM d")} – {fmt(days[2], "d")}
           </h2>
         </div>
         {renderTimeGrid(days)}
@@ -1205,7 +1207,7 @@ const Calendar = () => {
       <div className="space-y-3">
         <div className="px-1">
           <h2 className="font-serif text-lg font-light" style={{ color: "hsl(var(--foreground))" }}>
-            {format(days[0], "MMM d")} – {format(days[6], "MMM d")}
+            {fmt(days[0], "MMM d")} – {fmt(days[6], "MMM d")}
           </h2>
         </div>
         {renderTimeGrid(days)}
@@ -1226,8 +1228,8 @@ const Calendar = () => {
         {/* Header: "May '26" style */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-serif text-2xl font-light" style={{ color: "hsl(var(--foreground))" }}>
-            {format(selectedDate, "MMMM")}{" "}
-            <em style={{ color: "#964735" }}>'{format(selectedDate, "yy")}</em>
+            {fmt(selectedDate, "MMMM")}{" "}
+            <em style={{ color: "#964735" }}>'{fmt(selectedDate, "yy")}</em>
           </h2>
           <div className="flex gap-1.5">
             <button
@@ -1278,7 +1280,7 @@ const Calendar = () => {
                     color: isTodayDate ? "#fff" : isSelected ? "#964735" : "hsl(var(--foreground))",
                   }}
                 >
-                  {format(day, "d")}
+                  {fmt(day, "d")}
                 </span>
                 {dayItems.length > 0 && (
                   <div className="absolute bottom-1.5 left-1.5 right-1.5 flex flex-col gap-px">
@@ -1352,7 +1354,7 @@ const Calendar = () => {
               >
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs font-bold" style={{ color: selectedDate.getMonth() === monthIdx ? '#FFFFFF' : 'hsl(var(--foreground))' }}>
-                    {format(monthDate, 'MMM')}
+                    {fmt(monthDate, 'MMM')}
                   </p>
                   {hasEventInMonth && (
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: selectedDate.getMonth() === monthIdx ? '#D97B66' : '#D97B66' }} />
@@ -1373,7 +1375,7 @@ const Calendar = () => {
                           fontWeight: isTodayDate ? 700 : 400,
                         }}
                       >
-                        {isCurrentMonth ? format(day, 'd') : ''}
+                        {isCurrentMonth ? fmt(day, 'd') : ''}
                       </div>
                     );
                   })}
@@ -1416,7 +1418,7 @@ const Calendar = () => {
               >
                 {isNewMonth && (
                   <span className="absolute top-0 left-0 right-0 text-center text-[9px] font-bold uppercase tracking-wide" style={{ color: '#964735', lineHeight: '12px' }}>
-                    {format(day, 'MMM')}
+                    {fmt(day, 'MMM')}
                   </span>
                 )}
                 <span
@@ -1427,7 +1429,7 @@ const Calendar = () => {
                     fontWeight: isTodayDate ? 800 : isSelected ? 700 : 600,
                   }}
                 >
-                  {format(day, 'd')}
+                  {fmt(day, 'd')}
                 </span>
                 {hasEvents && (
                   <span className="w-1.5 h-1.5 rounded-full mt-0.5" style={{ background: isTodayDate ? '#D97B66' : '#964735' }} />
@@ -1446,7 +1448,7 @@ const Calendar = () => {
       {/* Own Header */}
       <div className="flex items-center justify-between px-4 h-14" style={{ background: 'hsl(var(--background))' }}>
         <div className="flex items-center gap-2">
-          <h1 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{format(selectedDate, 'MMMM yyyy', { locale: dateFnsLocale })}</h1>
+          <h1 className="font-bold text-base" style={{ color: 'hsl(var(--foreground))' }}>{fmt(selectedDate, 'MMMM yyyy')}</h1>
           <button
             onClick={() => setShowViewPicker(v => !v)}
             className="w-7 h-7 flex items-center justify-center rounded"
@@ -1591,7 +1593,7 @@ const Calendar = () => {
                         fontWeight: isTodayDate ? 800 : isSelected ? 700 : 600,
                       }}
                     >
-                      {format(day, 'd')}
+                      {fmt(day, 'd')}
                     </span>
                     {dayItems.length > 0 && (
                       <div className="flex gap-px mt-0.5 px-1 w-full justify-center">
@@ -1655,7 +1657,7 @@ const Calendar = () => {
                     <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
                   </div>
                   <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? t('calendar.allDayLabel') : format(ev.startDate, 'hh:mm aa')}</p>
+                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? t('calendar.allDayLabel') : fmt(ev.startDate, 'p')}</p>
                 </div>
               );
             })}
@@ -1674,7 +1676,7 @@ const Calendar = () => {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>
-                {isToday(selectedDate) ? 'Today' : format(selectedDate, 'EEEE, MMM d')}
+                {isToday(selectedDate) ? t('calendar.today') : fmt(selectedDate, 'EEEE, MMM d')}
               </h2>
             </div>
             <span className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
@@ -1686,7 +1688,7 @@ const Calendar = () => {
             <div className="space-y-2">
               {selectedDayEvents.map((item) => {
                 const ev = item as Event;
-                const timeStr = ev.allDay ? t('calendar.allDayLabel') : format(ev.startDate, 'hh:mm\naa');
+                const timeStr = ev.allDay ? t('calendar.allDayLabel') : fmt(ev.startDate, 'p');
                 const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : { bg: '#FDF3EE', border: '#D97B66', dot: '#D97B66' };
                 return (
                   <div key={ev.id}
@@ -1971,7 +1973,7 @@ const Calendar = () => {
                   <input
                     className="flex-1 text-base outline-none"
                     style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
-                    placeholder={isTitleListening ? t('calendar.listening', 'Listening…') : (dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle'))}
+                    placeholder={isTitleListening ? t('calendar.listening') : (dialogTab === 'event' ? t('calendar.eventTitle') : t('calendar.reminderTitle'))}
                     value={dialogTab === 'event' ? eventTitle : reminderTitle}
                     onChange={e => dialogTab === 'event' ? setEventTitle(e.target.value) : setReminderTitle(e.target.value)}
                   />
@@ -2016,8 +2018,8 @@ const Calendar = () => {
                     onClick={() => { if (eventAllDay) return; setShowStartPicker(p => !p); setShowEndPicker(false); }}>
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.starts')}</span>
                     <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventStartDate, 'MMM d, yyyy')}</span>
-                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventStartTime}`), 'h:mm a'); } catch { return eventStartTime; } })()}</span>}
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{fmt(eventStartDate, 'PP')}</span>
+                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventStartTime}`), 'p'); } catch { return eventStartTime; } })()}</span>}
                     </div>
                   </button>
                   {showStartPicker && (
@@ -2035,8 +2037,8 @@ const Calendar = () => {
                     onClick={() => { if (eventAllDay) return; setShowEndPicker(p => !p); setShowStartPicker(false); }}>
                     <span className="font-semibold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.ends')}</span>
                     <div className="flex gap-2">
-                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{format(eventEndDate, 'MMM d, yyyy')}</span>
-                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return format(new Date(`2000-01-01T${eventEndTime}`), 'h:mm a'); } catch { return eventEndTime; } })()}</span>}
+                      <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{fmt(eventEndDate, 'PP')}</span>
+                      {!eventAllDay && <span className="px-2.5 py-1 rounded-lg text-sm font-medium" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{(() => { try { return fmt(new Date(`2000-01-01T${eventEndTime}`), 'p'); } catch { return eventEndTime; } })()}</span>}
                     </div>
                   </button>
                   {showEndPicker && (
@@ -2167,14 +2169,7 @@ const Calendar = () => {
                 <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                   <button
                     type="button"
-                    onClick={() => {
-      if (!eventLocation.trim()) return;
-      const q = encodeURIComponent(eventLocation);
-      const url = Capacitor.getPlatform() === 'android'
-        ? `https://maps.google.com/?q=${q}`
-        : `https://maps.apple.com/?q=${q}`;
-      window.open(url, '_system');
-    }}
+                    onClick={() => { void openInMaps(eventLocation); }}
                     style={{ lineHeight: 0 }}
                   >
                     <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: eventLocation.trim() ? '#964735' : 'hsl(var(--muted-foreground))' }} />

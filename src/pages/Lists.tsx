@@ -394,7 +394,7 @@ const Lists = () => {
             style={{ background: mainTab === tab ? ACCENT : 'transparent', color: mainTab === tab ? '#fff' : MUTED }}
           >
             {tab === 'tasks' ? <CheckSquare className="w-4 h-4" /> : <CartCheckIcon className="w-4 h-4" />}
-            {tab === 'tasks' ? t('nav.todos', 'Tasks') : t('nav.shopping', 'Shopping')}
+            {tab === 'tasks' ? t('nav.todos') : t('nav.shopping')}
           </button>
         ))}
       </div>
@@ -406,7 +406,7 @@ const Lists = () => {
             className="px-3 py-0.5 rounded-full text-xs font-semibold transition-all"
             style={{ background: scope === s ? ACCENT : 'transparent', color: scope === s ? '#fff' : MUTED }}
           >
-            {s === 'personal' ? t('shopping.personalList', 'Personal') : t('shopping.sharedList', 'Shared')}
+            {s === 'personal' ? t('shopping.personalList') : t('shopping.sharedList')}
           </button>
         ))}
       </div>
@@ -437,7 +437,7 @@ const Lists = () => {
                   className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
                   style={{ background: ACCENT, color: '#fff' }}
                 >
-                  {t('todos.newTask', 'New Task')}
+                  {t('todos.newTask')}
                 </button>
               </div>
 
@@ -826,7 +826,7 @@ const Lists = () => {
             <div className="rounded-2xl overflow-hidden" style={{ background: '#EEF4F0', border: '1px solid #C8DDD0' }}>
               <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid #C8DDD0' }}>
                 <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#44664F' }} />
-                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>Probably Running Low</p>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#44664F' }}>{t('shopping.probablyRunningLow')}</p>
               </div>
               <div className="px-4 py-3 flex flex-wrap gap-2">
                 {filteredPredictions.map(p => (
@@ -837,7 +837,7 @@ const Lists = () => {
                     <button
                       onClick={() => dismissPrediction(p.itemName)}
                       className="flex items-center justify-center w-5 h-5 mr-1 rounded-full hover:bg-black/10 transition-colors flex-shrink-0"
-                      title="Remove suggestion"
+                      title={t('shopping.removeSuggestion')}
                     >
                       <X className="w-2.5 h-2.5" style={{ color: '#44664F' }} />
                     </button>

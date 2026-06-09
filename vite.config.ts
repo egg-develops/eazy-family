@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => ({
       'react/jsx-dev-runtime',
       'react-dom',
       'react-dom/client',
+      '@supabase/supabase-js',
     ],
   },
   resolve: {
