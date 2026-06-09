@@ -42,6 +42,15 @@
         </provider>
     </application>
 
+    <!-- Android 11+ package visibility: without this, the speech recognizer is
+         hidden and SpeechRecognition.available() returns false, so the EZ Button
+         voice capture silently fails with "not-supported". -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
