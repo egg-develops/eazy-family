@@ -40,6 +40,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
   const [isLoadingOfferings, setIsLoadingOfferings] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
+  const [offeringsErrorMsg, setOfferingsErrorMsg] = useState<string | null>(null);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const mountedRef = useRef(true);
@@ -53,13 +54,18 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     if (!isNative) return;
     setIsLoadingOfferings(true);
     setOfferingsError(false);
+    setOfferingsErrorMsg(null);
     try {
       const pkgs = await getRCOfferings();
       if (!pkgs || pkgs.length === 0) throw new Error('No offerings returned');
       if (mountedRef.current) setRcPackages(pkgs);
     } catch (err) {
       logError('getRCOfferings failed:', err);
-      if (mountedRef.current) { setOfferingsError(true); setRcPackages([]); }
+      if (mountedRef.current) {
+        setOfferingsError(true);
+        setRcPackages([]);
+        setOfferingsErrorMsg(err instanceof Error ? err.message : String(err));
+      }
     } finally {
       if (mountedRef.current) setIsLoadingOfferings(false);
     }
@@ -283,6 +289,12 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                 }
                 {nativeCtaLabel()}
               </button>
+
+              {offeringsError && offeringsErrorMsg && (
+                <p className="text-[11px] leading-snug text-center px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {offeringsErrorMsg}
+                </p>
+              )}
 
               <button
                 onClick={handleRestore}

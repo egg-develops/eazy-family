@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { error as logError } from '@/lib/logger';
 
 const isNative = Capacitor.isNativePlatform();
@@ -12,29 +13,35 @@ const ENTITLEMENT = 'premium';
 let _rcConfiguredResolve: () => void;
 const _rcConfigured = new Promise<void>(res => { _rcConfiguredResolve = res; });
 
-// Lazy-import the native plugin only on native platforms to avoid web build issues
-async function getRC() {
-  const { Purchases } = await import('@revenuecat/purchases-capacitor');
-  return Purchases;
-}
+// Records how far configureRC() got, so a stuck configure can be diagnosed from the UI.
+let _rcConfigureStatus = 'not-started';
+export function getRCConfigureStatus(): string { return _rcConfigureStatus; }
 
-async function getLogLevel() {
-  const { LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
-  return LOG_LEVEL;
-}
+// NOTE: never `await` the `Purchases` plugin object itself, and never return it
+// from an async function — the Capacitor proxy turns any property access into a
+// native call, so Promise-resolution probing `.then` invokes a non-existent
+// native "then" method ("Purchases.then() is not implemented"). Only ever call
+// real methods on it (Purchases.configure(), Purchases.getOfferings(), …).
 
 export async function configureRC(userId?: string): Promise<void> {
-  if (!isNative) { _rcConfiguredResolve?.(); return; }
+  if (!isNative) { _rcConfigureStatus = 'web-skip'; _rcConfiguredResolve?.(); return; }
   if (!RC_KEY) {
+    _rcConfigureStatus = 'no-api-key';
     logError(`[RevenueCat] No API key for platform "${platform}" — set VITE_REVENUECAT_${platform.toUpperCase()}_KEY in .env`);
     _rcConfiguredResolve?.();
     return;
   }
+  // Each step is bounded by its own timeout so a hung native bridge call can't
+  // wedge configure forever — and _rcConfigureStatus records exactly where it stalled.
   try {
-    const Purchases = await getRC();
-    const LOG_LEVEL = await getLogLevel();
-    await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-    await Purchases.configure({ apiKey: RC_KEY, appUserID: userId });
+    _rcConfigureStatus = 'setting-log-level';
+    await Promise.race([Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG }), timeout<void>(7_000)]);
+    _rcConfigureStatus = 'configuring';
+    await Promise.race([Purchases.configure({ apiKey: RC_KEY, appUserID: userId }), timeout<void>(7_000)]);
+    _rcConfigureStatus = 'configured';
+  } catch (err) {
+    _rcConfigureStatus = `failed@${_rcConfigureStatus}: ${err instanceof Error ? err.message : String(err)}`;
+    logError('[RevenueCat] configureRC failed:', err);
   } finally {
     _rcConfiguredResolve?.();
   }
@@ -42,20 +49,17 @@ export async function configureRC(userId?: string): Promise<void> {
 
 export async function identifyRCUser(userId: string): Promise<void> {
   if (!isNative) return;
-  const Purchases = await getRC();
   await Purchases.logIn({ appUserID: userId });
 }
 
 export async function resetRCUser(): Promise<void> {
   if (!isNative) return;
-  const Purchases = await getRC();
   await Purchases.logOut();
 }
 
 export async function getRCIsPremium(): Promise<boolean> {
   if (!isNative) return true; // web always treated as premium (Stripe not wired)
   try {
-    const Purchases = await getRC();
     const { customerInfo } = await Purchases.getCustomerInfo();
     return ENTITLEMENT in customerInfo.entitlements.active;
   } catch {
@@ -67,7 +71,6 @@ export async function getRCIsPremium(): Promise<boolean> {
 export async function getRCIsTrial(): Promise<boolean> {
   if (!isNative) return true; // web has no Stripe yet — everyone is in "trial" state
   try {
-    const Purchases = await getRC();
     const { customerInfo } = await Purchases.getCustomerInfo();
     const entitlement = customerInfo.entitlements.active[ENTITLEMENT];
     if (!entitlement) return false;
@@ -82,7 +85,6 @@ export async function getRCIsTrial(): Promise<boolean> {
 export async function getRCTrialDaysLeft(): Promise<number | null> {
   if (!isNative) return null;
   try {
-    const Purchases = await getRC();
     const { customerInfo } = await Purchases.getCustomerInfo();
     const entitlement = customerInfo.entitlements.active[ENTITLEMENT];
     if (!entitlement) return null;
@@ -115,40 +117,53 @@ const timeout = <T>(ms: number): Promise<T> =>
 
 export async function getRCOfferings(): Promise<RCPackage[]> {
   if (!isNative) return [];
+  if (!RC_KEY) throw new Error(`No RevenueCat API key for ${platform}`);
+  // Wait for configure() to complete before calling getOfferings — calling on
+  // an unconfigured SDK causes it to hang indefinitely on Android.
   try {
-    // Wait for configure() to complete before calling getOfferings — calling on
-    // an unconfigured SDK causes it to hang indefinitely on Android.
     await Promise.race([_rcConfigured, timeout<void>(8_000)]);
-    const Purchases = await getRC();
-    // Race against a 10s timeout — Purchases.getOfferings() can hang indefinitely
-    // on certain OS versions (observed on iPadOS 26) if the SDK is not fully ready.
-    const { current } = await Promise.race([
-      Purchases.getOfferings(),
-      timeout<Awaited<ReturnType<typeof Purchases.getOfferings>>>(10_000),
-    ]);
-    if (!current) return [];
-    return current.availablePackages.map(p => ({
-      identifier: p.identifier,
-      packageType: p.packageType,
-      product: {
-        title: p.product.title,
-        description: p.product.description,
-        priceString: p.product.priceString,
-        currencyCode: p.product.currencyCode,
-        price: p.product.price,
-        productIdentifier: p.product.identifier,
-      },
-    }));
-  } catch (err) {
-    // Log exact error so it appears in Xcode console for next test run
-    logError('[RevenueCat] getRCOfferings failed:', err);
-    return [];
+  } catch {
+    throw new Error(`RevenueCat not ready (configure status: ${_rcConfigureStatus})`);
   }
+  if (_rcConfigureStatus !== 'configured') {
+    throw new Error(`RevenueCat configure did not succeed (status: ${_rcConfigureStatus})`);
+  }
+  // Race against a 10s timeout — Purchases.getOfferings() can hang indefinitely
+  // on certain OS versions (observed on iPadOS 26) if the SDK is not fully ready.
+  const { current } = await Promise.race([
+    Purchases.getOfferings(),
+    timeout<Awaited<ReturnType<typeof Purchases.getOfferings>>>(10_000),
+  ]);
+  if (!current) {
+    // Offering exists in the SDK response but none is marked "current".
+    throw new Error('No "current" offering set in RevenueCat. Set a current Offering in the dashboard.');
+  }
+  if (current.availablePackages.length === 0) {
+    // current offering exists but the store returned no purchasable products.
+    // On Android this almost always means the app is not installed from a Google
+    // Play track, or the subscription products are not Active in Play Console.
+    throw new Error(
+      platform === 'android'
+        ? 'Play Billing returned no products. Install from a Play (internal testing) track and ensure the subscriptions are Active and mapped to the current Offering.'
+        : 'The store returned no products for the current Offering.'
+    );
+  }
+  return current.availablePackages.map(p => ({
+    identifier: p.identifier,
+    packageType: p.packageType,
+    product: {
+      title: p.product.title,
+      description: p.product.description,
+      priceString: p.product.priceString,
+      currencyCode: p.product.currencyCode,
+      price: p.product.price,
+      productIdentifier: p.product.identifier,
+    },
+  }));
 }
 
 export async function purchaseRCPackage(packageIdentifier: string): Promise<boolean> {
   if (!isNative) return false;
-  const Purchases = await getRC();
   const { current } = await Purchases.getOfferings();
   if (!current) throw new Error('No offerings available');
 
@@ -161,7 +176,6 @@ export async function purchaseRCPackage(packageIdentifier: string): Promise<bool
 
 export async function restoreRCPurchases(): Promise<boolean> {
   if (!isNative) return false;
-  const Purchases = await getRC();
   const { customerInfo } = await Purchases.restorePurchases();
   return ENTITLEMENT in customerInfo.entitlements.active;
 }
