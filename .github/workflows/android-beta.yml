@@ -39,6 +39,13 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build web app
+        # Vite inlines VITE_* at build time; without them the app white-screens
+        # on launch (undefined Supabase config). Public client keys.
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.VITE_REVENUECAT_IOS_KEY }}
+          VITE_REVENUECAT_ANDROID_KEY: ${{ secrets.VITE_REVENUECAT_ANDROID_KEY }}
         run: npm run build
 
       - name: Sync Capacitor
