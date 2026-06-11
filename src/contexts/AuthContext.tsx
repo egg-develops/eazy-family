@@ -3,7 +3,21 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
-import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from "@/lib/preferencesSync";
+import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences, clearAllLocalUserData } from "@/lib/preferencesSync";
+
+// Wipe the previous account's local data when a DIFFERENT user appears on this
+// device/browser. Prevents cross-account bleed (journal, rituals, calendar,
+// channel messages were all unscoped localStorage). Must run BEFORE we hydrate
+// the new user's cloud preferences. Returns nothing; updates the boundary marker.
+function enforceUserBoundary(userId: string) {
+  try {
+    const prev = localStorage.getItem('eazy-last-user-id');
+    if (prev && prev !== userId) clearAllLocalUserData();
+    localStorage.setItem('eazy-last-user-id', userId);
+  } catch {
+    // best-effort
+  }
+}
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
@@ -130,6 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
+            enforceUserBoundary(session.user.id);
             fetchSubscriptionTier(session.user.id);
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
@@ -152,6 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           fetchSubscriptionTier(session.user.id);
           if (event === 'SIGNED_IN') {
+            enforceUserBoundary(session.user.id);
             localStorage.setItem('eazy-has-signed-in', '1');
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
