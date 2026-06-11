@@ -24,7 +24,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # Match the Vercel + Android pipelines. Plain `npm ci` fails here on a
+        # peer-dep conflict / lockfile strictness and silently blocked every
+        # TestFlight upload since 2026-06-05.
+        run: npm install --legacy-peer-deps
 
       - name: Build web app
         run: npm run build
