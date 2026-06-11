@@ -12,9 +12,24 @@ if ('serviceWorker' in navigator && Capacitor.isNativePlatform()) {
 
 if ('serviceWorker' in navigator && import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.addEventListener('load', () => {
+    // Capture whether a SW already controls this page BEFORE registering, so we
+    // can distinguish a genuine update (replace existing controller → reload)
+    // from the first-ever install (clients.claim fires controllerchange too).
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing || !hadController) return;
+      refreshing = true;
+      // A new deploy's SW just took over — reload so the client runs the new
+      // JS bundle instead of the stale one it loaded with. This is what stops
+      // shipped fixes from "regressing" for users still on an old cached build.
+      window.location.reload();
+    });
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
-        console.log('Service Worker registered:', registration);
+        // Poll for an updated SW so users don't have to fully close all tabs.
+        registration.update?.();
+        setInterval(() => registration.update?.(), 60 * 60 * 1000);
       })
       .catch(error => {
         console.log('Service Worker registration failed:', error);
