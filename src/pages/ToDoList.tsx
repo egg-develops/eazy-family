@@ -26,7 +26,7 @@ interface Task {
   user_id: string;
   title: string;
   completed: boolean;
-  type: "task" | "shopping" | "shared";
+  type: "task" | "shopping" | "shopping_personal" | "shared";
   due_date?: string | null;
   created_at: string;
   updated_at: string;

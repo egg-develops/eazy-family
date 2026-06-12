@@ -75,6 +75,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshNativeSubscriptionState = async () => {
+    const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
+    setIsPremium(premium);
+    setIsTrial(trial);
+    setTrialDaysLeft(daysLeft);
+  };
+
   const refreshSubscription = async () => {
     if (DEV_BYPASS_AUTH) {
       setSubscriptionTier('family');
@@ -84,10 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchSubscriptionTier(user.id);
     }
     if (Capacitor.isNativePlatform()) {
-      const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-      setIsPremium(premium);
-      setIsTrial(trial);
-      setTrialDaysLeft(daysLeft);
+      await refreshNativeSubscriptionState();
     }
   };
 
@@ -116,10 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Re-check RevenueCat entitlement so trial expirations that
             // occurred while the app was backgrounded are caught immediately.
             if (Capacitor.isNativePlatform()) {
-              const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-              setIsPremium(premium);
-              setIsTrial(trial);
-              setTrialDaysLeft(daysLeft);
+              await refreshNativeSubscriptionState();
             }
           } else {
             // Only sign out if we got a definitive null (not a network failure)
@@ -153,10 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (Capacitor.isNativePlatform()) {
               await rcReady; // ensure configure() has completed before logIn()
               await identifyRCUser(session.user.id);
-              const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-              setIsPremium(premium);
-              setIsTrial(trial);
-              setTrialDaysLeft(daysLeft);
+              await refreshNativeSubscriptionState();
             }
           }
           return;
@@ -276,6 +274,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session) {
           setSession(session);
           setUser(session.user);
+          await fetchSubscriptionTier(session.user.id);
+          await rcReady;
+          await refreshNativeSubscriptionState();
         } else {
           setSession(null);
           setUser(null);
