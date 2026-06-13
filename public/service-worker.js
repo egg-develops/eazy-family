@@ -1,4 +1,8 @@
-const CACHE_NAME = 'eazy-family-v5';
+// Bump this on every release that must invalidate stale clients. The activate
+// handler purges every cache whose name !== CACHE_NAME, so bumping guarantees
+// old precached shells/assets are dropped. (v5→v6: 2026-06-11, stale JS was
+// serving pre-fix EZ-button code to web users.)
+const CACHE_NAME = 'eazy-family-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

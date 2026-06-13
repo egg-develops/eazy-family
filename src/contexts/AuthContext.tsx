@@ -3,7 +3,21 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
-import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences } from "@/lib/preferencesSync";
+import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences, clearAllLocalUserData } from "@/lib/preferencesSync";
+
+// Wipe the previous account's local data when a DIFFERENT user appears on this
+// device/browser. Prevents cross-account bleed (journal, rituals, calendar,
+// channel messages were all unscoped localStorage). Must run BEFORE we hydrate
+// the new user's cloud preferences. Returns nothing; updates the boundary marker.
+function enforceUserBoundary(userId: string) {
+  try {
+    const prev = localStorage.getItem('eazy-last-user-id');
+    if (prev && prev !== userId) clearAllLocalUserData();
+    localStorage.setItem('eazy-last-user-id', userId);
+  } catch {
+    // best-effort
+  }
+}
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
@@ -61,6 +75,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshNativeSubscriptionState = async () => {
+    const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
+    setIsPremium(premium);
+    setIsTrial(trial);
+    setTrialDaysLeft(daysLeft);
+  };
+
   const refreshSubscription = async () => {
     if (DEV_BYPASS_AUTH) {
       setSubscriptionTier('family');
@@ -70,10 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchSubscriptionTier(user.id);
     }
     if (Capacitor.isNativePlatform()) {
-      const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-      setIsPremium(premium);
-      setIsTrial(trial);
-      setTrialDaysLeft(daysLeft);
+      await refreshNativeSubscriptionState();
     }
   };
 
@@ -102,10 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Re-check RevenueCat entitlement so trial expirations that
             // occurred while the app was backgrounded are caught immediately.
             if (Capacitor.isNativePlatform()) {
-              const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-              setIsPremium(premium);
-              setIsTrial(trial);
-              setTrialDaysLeft(daysLeft);
+              await refreshNativeSubscriptionState();
             }
           } else {
             // Only sign out if we got a definitive null (not a network failure)
@@ -130,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
+            enforceUserBoundary(session.user.id);
             fetchSubscriptionTier(session.user.id);
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
@@ -138,10 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (Capacitor.isNativePlatform()) {
               await rcReady; // ensure configure() has completed before logIn()
               await identifyRCUser(session.user.id);
-              const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-              setIsPremium(premium);
-              setIsTrial(trial);
-              setTrialDaysLeft(daysLeft);
+              await refreshNativeSubscriptionState();
             }
           }
           return;
@@ -152,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session?.user) {
           fetchSubscriptionTier(session.user.id);
           if (event === 'SIGNED_IN') {
+            enforceUserBoundary(session.user.id);
             localStorage.setItem('eazy-has-signed-in', '1');
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
@@ -260,6 +274,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (session) {
           setSession(session);
           setUser(session.user);
+          await fetchSubscriptionTier(session.user.id);
+          await rcReady;
+          await refreshNativeSubscriptionState();
         } else {
           setSession(null);
           setUser(null);

@@ -14,6 +14,13 @@ import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
+import {
+  buildCalendarCaptureItem,
+  buildShoppingCaptureRows,
+  buildTaskCaptureRows,
+  isFeatureHelpQuery,
+  type EZParsedEntry,
+} from "@/lib/ezCapturePersistence";
 
 type Step = 'capture' | 'processing' | 'preview' | 'guide';
 
@@ -22,18 +29,7 @@ interface EZCaptureProps {
   defaultType?: CaptureType;
 }
 
-interface ParsedEntry {
-  type: CaptureType;
-  title: string;
-  date: string | null;
-  time: string | null;
-  endTime: string | null;
-  location: string | null;
-  assignees: string[] | null;
-  reminder: string | null;
-  notes: string | null;
-  mood: string | null;
-}
+type ParsedEntry = EZParsedEntry;
 
 const CARD = 'hsl(var(--card))';
 const MUTED_BG = 'hsl(var(--muted))';
@@ -172,6 +168,17 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // The tap on the EZ orb that opens this overlay also produces a synthesized
+  // `click` a few ms later. Because the overlay mounts under that same point,
+  // that click lands on the backdrop and would instantly close it (open→close
+  // in one frame, so the window never visibly appears). Ignore backdrop-dismiss
+  // clicks that arrive within this window — a real dismiss tap can't be that fast.
+  const openedAtRef = useRef(Date.now());
+  const handleBackdropClose = () => {
+    if (Date.now() - openedAtRef.current < 400) return;
+    onClose();
+  };
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -382,24 +389,6 @@ Return ONLY the raw JSON object.`;
     }
   };
 
-  const isHelpQuery = (input: string): boolean => {
-    const s = input.trim().toLowerCase();
-    // English question openers
-    const en = /^(how|what|where|why|when|can i|can you|do i|does|is there|which|tell me|explain|help|show me|what's|what is|how do|how can|how to)\b/;
-    // German: wie, was, wo, warum, wann, kann ich, gibt es, welche, erkläre, hilf mir
-    const de = /^(wie|was|wo|warum|wann|kann ich|kannst du|gibt es|welche[rns]?|erkl[äa]r|hilf mir|zeig mir)\b/;
-    // French: comment, quoi, où, pourquoi, quand, puis-je, est-ce que, quel, expliquez
-    const fr = /^(comment|quoi|où|pourquoi|quand|puis-je|peux-tu|est-ce que|quelle?s?|expliqu|aidez|montre)/;
-    // Italian: come, cosa, dove, perché, quando, posso, puoi, c'è, quale, spiega
-    const it = /^(come|cosa|dove|perch[eé]|quando|posso|puoi|c'è|qual[ei]|spiega|aiutami)/;
-    // Spanish: cómo, qué, dónde, por qué, cuándo, puedo, puedes, hay, cuál, explica
-    const es = /^(c[oó]mo|qu[eé]|d[oó]nde|por qu[eé]|cu[aá]ndo|puedo|puedes|hay|cu[aá]l|explica|ay[uú]dame)/;
-    // Portuguese: como, o que, onde, por que, quando, posso, há, qual, explica
-    const pt = /^(como|o que|onde|por que|quando|posso|podes|h[aá]|qual|explica|ajuda)/;
-    return en.test(s) || de.test(s) || fr.test(s) || it.test(s) || es.test(s) || pt.test(s)
-      || (s.includes('?') && s.length > 8);
-  };
-
   const fetchGuideAnswer = async (question: string) => {
     setGuideQuestion(question);
     setGuideAnswer('');
@@ -484,7 +473,7 @@ STYLE:
     if (isListening) stopListening();
 
     const rawInput = latestTextRef.current.trim();
-    if (isHelpQuery(rawInput)) {
+    if (isFeatureHelpQuery(rawInput)) {
       await fetchGuideAnswer(rawInput);
       return;
     }
@@ -565,51 +554,26 @@ STYLE:
       const { data: { session } } = await supabase.auth.getSession();
 
       if (entryType === 'event' || entryType === 'reminder') {
-        let startDate: Date;
-        if (parsed.date && parsed.time) {
-          startDate = new Date(`${parsed.date}T${parsed.time}`);
-        } else if (parsed.date) {
-          startDate = new Date(`${parsed.date}T00:00:00`);
-        } else {
-          startDate = new Date();
-        }
-        let endDate = new Date(startDate.getTime() + 3600000);
-        if (parsed.endTime && parsed.date) {
-          const ed = new Date(`${parsed.date}T${parsed.endTime}`);
-          if (ed > startDate) endDate = ed;
-        }
+        const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+        const eventDraft = buildCalendarCaptureItem(parsed, {
+          id: crypto.randomUUID(),
+          now: new Date(),
+          rawInput,
+          userId: user?.id,
+        });
         let appleCalendarId: string | undefined;
         if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
           appleCalendarId = (await createAppleEvent({
             title: parsed.title,
-            startDate,
-            endDate,
+            startDate: new Date(eventDraft.startDate),
+            endDate: new Date(eventDraft.endDate),
             allDay: !parsed.time,
             location: parsed.location || undefined,
           })) ?? undefined;
         }
-        // Detect family/shared intent so event appears in Family Agenda view
-        const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
-        // Only treat as a family event when the user explicitly mentions the family calendar/agenda.
-        // Mentioning a person's name (parsed.assignees) is not enough — "business meeting with Badr"
-        // should stay on the personal calendar.
-        const isFamilyEvent =
-          /\b(family|our|shared|gemeinsam|unsere|famille|familia|nossa|nostro)\b.{0,30}(agenda|calendar|kalender|calendrier|calendario)/i.test(rawInput) ||
-          /\b(family agenda|family calendar|familien kalender|agenda famille|agenda familiar)\b/i.test(rawInput);
-        const newEvent = {
-          id: crypto.randomUUID(),
-          title: parsed.title,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          ...(entryType === 'reminder' ? { dueDate: startDate.toISOString(), completed: false } : {}),
-          allDay: !parsed.time,
-          type: entryType,
-          color: entryType === 'reminder' ? '#6E8FE5' : '#D97B66',
-          location: parsed.location || undefined,
-          notes: parsed.notes || undefined,
-          ...(isFamilyEvent && user ? { attendees: [user.id] } : {}),
-          ...(appleCalendarId ? { appleCalendarId } : {}),
-        };
+        const newEvent = appleCalendarId
+          ? { ...eventDraft, appleCalendarId }
+          : eventDraft;
         const existing = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
@@ -619,32 +583,26 @@ STYLE:
 
       } else if (entryType === 'task') {
         if (!user || !session) return;
-        const taskItems = parsed.title.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
-        const dueDate = parsed.date
-          ? new Date(`${parsed.date}T${parsed.time ?? '00:00:00'}`).toISOString()
-          : null;
-        await Promise.all(taskItems.map(ti =>
-          supabase.from('tasks').insert({ title: ti, type: 'task', user_id: user.id, completed: false, due_date: dueDate })
-        ));
+        const rows = buildTaskCaptureRows(parsed, user.id);
+        const { error } = await supabase.from('tasks').insert(rows);
+        if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: taskItems.length > 1
-          ? t('ezCapture.toastTasksAdded', { count: taskItems.length })
+        toast({ title: rows.length > 1
+          ? t('ezCapture.toastTasksAdded', { count: rows.length })
           : t('ezCapture.toastTaskAdded')
         });
         onClose(); navigate('/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) return;
-        const dbType = entryType === 'shopping_personal' ? 'shopping_personal' : 'shopping';
-        const items = parsed.title.split(/[,;\n]|\band\b/i).map(s => s.trim()).filter(Boolean);
-        await Promise.all(items.map(item =>
-          supabase.from('tasks').insert({ title: item, type: dbType, user_id: user.id, completed: false })
-        ));
+        const rows = buildShoppingCaptureRows(parsed, user.id);
+        const { error } = await supabase.from('tasks').insert(rows);
+        if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        const listLabel = t(dbType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
-        toast({ title: items.length === 1
+        const listLabel = t(entryType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
+        toast({ title: rows.length === 1
           ? t('ezCapture.toastItemAdded', { list: listLabel })
-          : t('ezCapture.toastItemsAdded', { count: items.length, list: listLabel })
+          : t('ezCapture.toastItemsAdded', { count: rows.length, list: listLabel })
         });
         onClose(); navigate('/app/lists?tab=shopping');
 
@@ -724,7 +682,7 @@ STYLE:
     <div
       className="fixed inset-0 z-[200] flex flex-col"
       style={{ background: 'rgba(28, 20, 18, 0.6)', backdropFilter: 'blur(8px)' }}
-      onClick={onClose}
+      onClick={handleBackdropClose}
     >
       <style>{`@keyframes ez-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
       <div className="flex-1 flex items-center justify-center px-4 py-8">

@@ -74,17 +74,24 @@ export function guardAIType(
     BUY_VERBS.test(lower) ||
     ADD_TO_LIST.test(lower);
   const isObviouslyTask = TASK_VERBS.test(lower);
-  // User explicitly said "task" or "to-do" — treat as definitive override
-  const hasExplicitTaskWord = /\b(task|to-?do|todo)\b/i.test(lower);
+  // User explicitly named the destination as tasks/to-dos. Plural-safe:
+  // "tasks", "to-dos", "todos" must match (the old /\btask\b/ missed "tasks",
+  // so "add X to our tasks" fell through to the calendar). EN + DE + FR + IT + ES + PT.
+  const hasExplicitTaskWord =
+    /\b(tasks?|to-?dos?|todos?|aufgaben?|t[âa]ches?|compiti?|tareas?|tarefas?)\b/i.test(lower);
 
   if ((aiType === 'event' || aiType === 'shopping') && isObviouslyShopping) {
     return isPersonalScope(lower) ? 'shopping_personal' : 'shopping';
   }
-  // A task verb (or explicit "task" keyword) overrides "event" unless the AI
-  // returned a SPECIFIC time (e.g. "at 3pm"). Midnight "00:00" is not a
-  // specific time — it's the AI's default when only a date is present.
+  // An explicit task DESTINATION ("…to our tasks", "…to my to-do list") is
+  // definitive — it overrides an "event" misclassification even when the AI
+  // attached a time (you can put a due time on a task).
+  if (aiType === 'event' && hasExplicitTaskWord && !isObviouslyShopping) return 'task';
+  // A bare task verb overrides "event" only when the AI did NOT return a
+  // SPECIFIC time — "fix the shelf" is a task, but "dinner at 7pm" stays an
+  // event. Midnight "00:00" is the AI's date-only default, not a real time.
   const hasSpecificTime = !!aiTime && aiTime !== '00:00';
-  if (aiType === 'event' && (isObviouslyTask || hasExplicitTaskWord) && !hasSpecificTime) return 'task';
+  if (aiType === 'event' && isObviouslyTask && !hasSpecificTime) return 'task';
   // Upgrade shopping → shopping_personal when keyword guard detects personal scope
   if (aiType === 'shopping' && isPersonalScope(lower)) return 'shopping_personal';
   return aiType;

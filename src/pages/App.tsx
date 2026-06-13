@@ -26,6 +26,7 @@ import {
 import { useConflictDetection } from "@/hooks/useConflictDetection";
 import { useStaleTaskDetection } from "@/hooks/useStaleTaskDetection";
 import { useWelcomeSeed } from "@/hooks/useWelcomeSeed";
+import { seedReviewLocalData } from "@/lib/reviewSeed";
 import { EZCapture } from "@/components/EZCapture";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -785,6 +786,9 @@ const AppHome = () => {
   const [pendingTasksCount, setPendingTasksCount] = useState(0);
   const [seedFamilyId, setSeedFamilyId] = useState<string | null>(null);
   useWelcomeSeed(user?.id, seedFamilyId, i18n.language);
+  // App Review demo: seed local-only calendar/journal/ritual data on the
+  // reviewer's device (no-op for everyone except the review account).
+  useEffect(() => { seedReviewLocalData(user?.email); }, [user?.email]);
   const [sharedItems, setSharedItems] = useState<Array<{ id: string; title: string; type: string; initials: string; color: string }>>([]);
   const [weatherExpanded, setWeatherExpanded] = useState(false);
   const [weatherHourly, setWeatherHourly] = useState<HourlySlot[]>([]);

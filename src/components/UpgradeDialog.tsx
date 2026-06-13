@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
-import { getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, type RCPackage } from "@/lib/revenuecat";
+import { getRCDiagnostics, getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, type RCPackage } from "@/lib/revenuecat";
 import { useTranslation } from "react-i18next";
 
 const isNative = Capacitor.isNativePlatform();
@@ -60,7 +60,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
       if (!pkgs || pkgs.length === 0) throw new Error('No offerings returned');
       if (mountedRef.current) setRcPackages(pkgs);
     } catch (err) {
-      logError('getRCOfferings failed:', err);
+      logError('getRCOfferings failed:', {
+        error: err,
+        diagnostics: getRCDiagnostics(),
+      });
       if (mountedRef.current) {
         setOfferingsError(true);
         setRcPackages([]);
@@ -293,6 +296,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
               {offeringsError && offeringsErrorMsg && (
                 <p className="text-[11px] leading-snug text-center px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                   {offeringsErrorMsg}
+                </p>
+              )}
+              {offeringsError && import.meta.env.DEV && (
+                <p className="text-[10px] leading-snug text-center px-1 font-mono" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {JSON.stringify(getRCDiagnostics())}
                 </p>
               )}
 

@@ -173,3 +173,33 @@ describe('regression – shopping scope edge cases', () => {
   it('DE: "auf meine Einkaufsliste" → shopping_personal', () =>
     expect(classifyText('Erdnussbutter auf meine Einkaufsliste')).toBe('shopping_personal'));
 });
+
+// ── Regression — reported 2026-06-11 (web + TestFlight) ─────────────────────
+// Both utterances were being saved as calendar events. Root gaps fixed:
+//  1) explicit plural destination "tasks" wasn't matched by the guard's
+//     /\btask\b/ (only singular), and
+//  2) an AI-attached time defeated the task override.
+describe('regression – 2026-06-11 EZ button → wrong destination', () => {
+  it('"Add peanut butter to our shared shopping list" → shopping', () =>
+    expect(classifyText('Add peanut butter to our shared shopping list')).toBe('shopping'));
+
+  it('guard: AI=event, "…to our shared shopping list" → shopping', () =>
+    expect(guardAIType('event', 'Add peanut butter to our shared shopping list', null, null)).toBe('shopping'));
+
+  it('"add fix broken shelf to our tasks" → task', () =>
+    expect(classifyText('add fix broken shelf to our tasks')).toBe('task'));
+
+  it('guard: AI=event, "…to our tasks" → task (plural destination matched)', () =>
+    expect(guardAIType('event', 'add fix broken shelf to our tasks', null, null)).toBe('task'));
+
+  // explicit task destination must win even if the AI hallucinated a real time
+  it('guard: AI=event + "to our tasks" + time 15:00 → task (explicit destination beats time)', () =>
+    expect(guardAIType('event', 'add fix broken shelf to our tasks', '2026-06-12', '15:00')).toBe('task'));
+
+  it('plural "to-dos" destination → task', () =>
+    expect(guardAIType('event', 'add water the plants to my to-dos', null, null)).toBe('task'));
+
+  // a real event with a task-ish word but a genuine time must still stay an event
+  it('"dinner with the team at 7pm" → event (not hijacked)', () =>
+    expect(guardAIType('event', 'dinner with the team at 7pm', '2026-06-12', '19:00')).toBe('event'));
+});

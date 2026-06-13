@@ -17,6 +17,17 @@ const _rcConfigured = new Promise<void>(res => { _rcConfiguredResolve = res; });
 let _rcConfigureStatus = 'not-started';
 export function getRCConfigureStatus(): string { return _rcConfigureStatus; }
 
+export interface RCDiagnostics {
+  platform: string;
+  isNative: boolean;
+  apiKeyPresent: boolean;
+  configureStatus: string;
+}
+
+export function getRCDiagnostics(): RCDiagnostics {
+  return { platform, isNative, apiKeyPresent: Boolean(RC_KEY), configureStatus: _rcConfigureStatus };
+}
+
 // NOTE: never `await` the `Purchases` plugin object itself, and never return it
 // from an async function — the Capacitor proxy turns any property access into a
 // native call, so Promise-resolution probing `.then` invokes a non-existent
@@ -164,7 +175,13 @@ export async function getRCOfferings(): Promise<RCPackage[]> {
 
 export async function purchaseRCPackage(packageIdentifier: string): Promise<boolean> {
   if (!isNative) return false;
-  const { current } = await Purchases.getOfferings();
+  if (_rcConfigureStatus !== 'configured') {
+    throw new Error(`RevenueCat is not ready for purchase (status: ${_rcConfigureStatus})`);
+  }
+  const { current } = await Promise.race([
+    Purchases.getOfferings(),
+    timeout<Awaited<ReturnType<typeof Purchases.getOfferings>>>(10_000),
+  ]);
   if (!current) throw new Error('No offerings available');
 
   const pkg = current.availablePackages.find(p => p.identifier === packageIdentifier);

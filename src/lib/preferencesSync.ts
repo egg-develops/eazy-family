@@ -71,6 +71,37 @@ export function clearLocalPreferences() {
   }
 }
 
+// Device-level keys that are NOT user data and may safely persist across
+// accounts on a shared browser/device.
+const DEVICE_KEYS = new Set([
+  'i18nextLng',          // i18next runtime locale
+  'eazy-button-pos',     // EZ button position (device UI)
+  'eazy-ez-icon-only',   // EZ menu density (device UI)
+  'eazy-ez-menu-order',  // EZ menu order (device UI)
+  'eazy-last-user-id',   // user-boundary marker (managed by AuthContext)
+]);
+
+/**
+ * Hard-wipe ALL user-scoped local data. Call when a DIFFERENT user signs in on
+ * this device, to stop cross-account data bleed (journal, rituals, calendar,
+ * channel messages, etc.). Fail-safe by design: it preserves only an explicit
+ * device allowlist + the Supabase auth session, so any NEW user-data key added
+ * later is wiped by default rather than silently leaking across accounts.
+ */
+export function clearAllLocalUserData() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (DEVICE_KEYS.has(key)) continue;
+      // Preserve the active Supabase session token (we're keeping the NEW user
+      // signed in) and GoTrue's internal keys.
+      if (key.startsWith('sb-') || key.startsWith('supabase.')) continue;
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // best-effort
+  }
+}
+
 /** Write to localStorage immediately and sync to Supabase in the background. */
 export function cloudSet(key: string, value: string) {
   localStorage.setItem(key, value);
