@@ -12,6 +12,7 @@ import * as chrono from "chrono-node";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
+import { initialLockedType } from "@/lib/ezCaptureType";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
 import {
@@ -163,7 +164,12 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     });
   };
   const [type, setType] = useState<CaptureType>(defaultType ?? 'event');
-  const [userLockedType, setUserLockedType] = useState<CaptureType | null>(defaultType ?? null);
+  // defaultType is a per-screen STARTING hint, not a lock — see initialLockedType.
+  // Locking from defaultType disabled auto-classification entirely (the Home EZ
+  // orb passes 'event', which pinned every capture to a calendar Event).
+  const [userLockedType, setUserLockedType] = useState<CaptureType | null>(
+    initialLockedType(defaultType)
+  );
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
