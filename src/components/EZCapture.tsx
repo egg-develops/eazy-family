@@ -211,6 +211,11 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
   // result, making the last partial shorter than what the user saw mid-speech.
   // Track the longest transcript seen in the session and use that on auto-process.
   const longestTranscriptRef = useRef('');
+  // Continuous (journaling) mode: long-form entries have natural pauses to
+  // think. Single-shot engines (native + Whisper) end on the first pause, which
+  // truncates the entry — so in continuous mode we transparently restart the
+  // recognizer on each natural end and only finish when the user taps stop.
+  const continuousRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -230,6 +235,10 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     shouldRestartRef.current = true;
     consecutiveFailsRef.current = 0;
     longestTranscriptRef.current = latestTextRef.current;
+    // Journaling captures long-form thoughts with pauses — keep listening across
+    // pauses until the user explicitly stops, instead of cutting off after one
+    // utterance the way quick capture does.
+    continuousRef.current = defaultType === 'journal' || type === 'journal';
     setIntendingToListen(true);
     haptic('light');
 
@@ -274,7 +283,11 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
           }
         },
         onEnd: () => {
-          if (shouldRestartRef.current && !isSingleShot) {
+          // Restart on natural end when in continuous mode (journaling) even on
+          // single-shot engines — a pause must not end the entry. The session
+          // only truly ends when the user taps stop (which clears
+          // shouldRestartRef before calling speech.stop()).
+          if (shouldRestartRef.current && (!isSingleShot || continuousRef.current)) {
             const delay = Capacitor.isNativePlatform() ? 700 : 300;
             setTimeout(run, delay);
           } else {
@@ -673,7 +686,7 @@ STYLE:
   const placeholder = isTranscribing
     ? t('ezCapture.placeholderTranscribing')
     : isListening
-      ? (isSingleShot ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
+      ? ((isSingleShot && !isJournalMode) ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
       : isJournalMode
         ? ''
         : t('ezCapture.placeholderGuide');

@@ -163,6 +163,14 @@ describe('regression – shopping scope edge cases', () => {
   it('"add to our shopping list" → shopping (not personal)', () =>
     expect(classifyText('add peanut butter to our shopping list')).toBe('shopping'));
 
+  // Exact field report (June 2026): this utterance created a calendar EVENT on
+  // the shipped build. Logic is correct here — the shipped build was stale.
+  // Pin both the AI=event guard and the bogus-time variant.
+  it('guard: AI=event, "add peanut butter to our shopping list" → shopping', () =>
+    expect(guardAIType('event', 'add peanut butter to our shopping list', null, null)).toBe('shopping'));
+  it('guard: AI=event + bogus time, "add peanut butter to our shopping list" → shopping', () =>
+    expect(guardAIType('event', 'add peanut butter to our shopping list', '2026-06-13', '09:00')).toBe('shopping'));
+
   it('"family shopping list" → shopping (shared)', () =>
     expect(classifyText('add bread to the family shopping list')).toBe('shopping'));
 
