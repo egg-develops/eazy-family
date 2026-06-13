@@ -109,5 +109,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git add android/app/build.gradle
           git commit -m "ci: bump Android versionCode to ${{ steps.bump.outputs.version_code }} [skip ci]"
-          git pull --rebase origin main
+          # The web build + cap sync leave unstaged changes in tracked files, which
+          # made a bare `pull --rebase` abort ("you have unstaged changes") AFTER the
+          # AAB had already uploaded — leaving build.gradle un-bumped and the next
+          # run colliding on a used versionCode. --autostash stashes/reapplies them.
+          git pull --rebase --autostash origin main
           git push
