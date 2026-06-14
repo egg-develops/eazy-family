@@ -133,22 +133,41 @@ async function main() {
     { id: rid(), title: 'Sign Mia’s permission slip', dueDate: isoDay(0), completed: false, priority: 'high', type: 'reminder' },
     { id: rid(), title: 'Renew car insurance', dueDate: isoDay(4), completed: false, priority: 'medium', type: 'reminder' },
   ];
-  const me = { authorName: 'Alex Rivera', authorInitials: 'AR', authorColor: C.brand, isMe: true };
-  const sofia = { authorName: 'Sofia Rivera', authorInitials: 'SR', authorColor: '#6E8FE5', isMe: false };
-  const mia = { authorName: 'Mia Rivera', authorInitials: 'MR', authorColor: C.coral, isMe: false };
-  const channel = [
-    { id: rid(), ...sofia, type: 'text', content: 'Don’t forget Mia has swimming at 4 today 🏊', timestamp: isoAt(0, 8, 12) },
-    { id: rid(), ...me, type: 'text', content: 'Got it — I’ll pick her up straight after work', timestamp: isoAt(0, 8, 15) },
-    { id: rid(), ...sofia, type: 'text', content: 'Could you grab milk and bread on the way home?', timestamp: isoAt(0, 8, 16) },
-    { id: rid(), ...me, type: 'text', content: 'Added them to the shopping list ✅', timestamp: isoAt(0, 8, 18) },
-    { id: rid(), ...mia, type: 'text', content: 'Can Lily come over this weekend?? 🥺', timestamp: isoAt(0, 16, 40) },
-    { id: rid(), ...me, type: 'text', content: 'We’ll sort it after Grandma’s birthday dinner 🎂', timestamp: isoAt(0, 16, 45) },
-    { id: rid(), ...sofia, type: 'poll', pollQuestion: 'Where for Grandma’s birthday dinner?', pollOptions: ['Home-cooked 🏡', 'Italian restaurant 🍝', 'Sushi 🍣'], pollVotes: { '0': 2, '1': 1, '2': 0 }, timestamp: isoAt(0, 19, 5) },
-    { id: rid(), ...sofia, type: 'text', content: 'Booked the lake house for next weekend 🏖️ so excited!', timestamp: isoAt(0, 20, 30) },
-  ];
   await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-calendar-items', p_value: calendar });
-  await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-channel-messages', p_value: channel });
-  console.log('✓ cloud calendar (with family attendees) + channel messages');
+  console.log('✓ cloud calendar (with family attendees)');
+
+  // 9b) Family Channel → shared `family_messages` table. Real senders only
+  //     (Alex = this account, Sofia = 2nd member). Idempotent: skip if seeded.
+  const existingMsgs = await rest(`family_messages?family_id=eq.${familyId}&select=id&limit=1`);
+  if (!existingMsgs.length) {
+    const sofiaLogin = await (await fetch(`${SUPA}/auth/v1/token?grant_type=password`, {
+      method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'sofia.rivera@eazy.family', password: 'EazyReview!2026' }),
+    })).json();
+    const postAs = (tok, rows) => fetch(`${SUPA}/rest/v1/family_messages`, {
+      method: 'POST', headers: { apikey: KEY, Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(rows),
+    });
+    const msg = (sender, content, h, mm) => ({ family_id: familyId, sender_id: sender, type: 'text', content, created_at: isoAt(0, h, mm) });
+    // RLS: sender_id must equal the inserting user, so each member posts their own.
+    await postAs(TOKEN, [
+      msg(UID, 'Got it — I’ll pick her up straight after work', 8, 15),
+      msg(UID, 'Added them to the shopping list ✅', 8, 18),
+      msg(UID, 'Amazing 🎉 the kids will love it', 20, 32),
+    ]);
+    if (sofiaLogin.access_token && sofiaLogin.user?.id) {
+      await postAs(sofiaLogin.access_token, [
+        msg(sofiaLogin.user.id, 'Don’t forget Mia has swimming at 4 today 🏊', 8, 12),
+        msg(sofiaLogin.user.id, 'Could you grab milk and bread on the way home?', 8, 16),
+        msg(sofiaLogin.user.id, 'Booked the lake house for next weekend 🏖️ so excited!', 20, 30),
+      ]);
+      console.log('✓ family channel seeded (shared family_messages, Alex + Sofia)');
+    } else {
+      console.log('… Sofia login failed — seeded only Alex’s channel messages');
+    }
+  } else {
+    console.log('✓ family channel already seeded — skipped');
+  }
 
   // 10) realistic shopping purchase history so the "running low" prediction has
   //     a trustworthy, regular cadence to work from. The logic now requires ≥3
