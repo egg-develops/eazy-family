@@ -285,7 +285,8 @@ const Lists = () => {
     haptic('light');
     const dbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
     const { error } = await supabase.from('tasks').insert(
-      titles.map(title => ({ title, type: dbType, user_id: user.id, completed: false }))
+      // shared shopping MUST carry family_id or RLS hides it from other members
+      titles.map(title => ({ title, type: dbType, user_id: user.id, completed: false, family_id: scope === 'shared' ? userFamilyId : null }))
     );
     if (error) { toast({ title: 'Could not add item', variant: 'destructive' }); return; }
     setNewShoppingItem('');

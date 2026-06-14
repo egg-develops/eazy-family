@@ -104,10 +104,16 @@ describe('buildShoppingCaptureRows assignment', () => {
     });
     expect(rows[0]).toMatchObject({ title: 'Milk', type: 'shopping', assigned_to_users: ['u-mia'], family_id: 'fam-1' });
   });
-  it('personal shopping ignores assignees', () => {
+  it('personal shopping ignores assignees and family', () => {
     const rows = buildShoppingCaptureRows(entry({ type: 'shopping_personal', title: 'Milk' }), 'u-self', {
       assignedUserIds: ['u-mia'], familyId: 'fam-1',
     });
+    expect(rows[0]).not.toHaveProperty('assigned_to_users');
+    expect(rows[0]).not.toHaveProperty('family_id');
+  });
+  it('shared shopping always carries family_id (so RLS shows it to the family)', () => {
+    const rows = buildShoppingCaptureRows(entry({ type: 'shopping', title: 'Eggs' }), 'u-self', { familyId: 'fam-1' });
+    expect(rows[0]).toMatchObject({ type: 'shopping', family_id: 'fam-1' });
     expect(rows[0]).not.toHaveProperty('assigned_to_users');
   });
 });

@@ -121,6 +121,8 @@ export function buildShoppingCaptureRows(
   // Assignment only applies to the shared (family) shopping list.
   const type = entry.type === 'shopping_personal' ? 'shopping_personal' : 'shopping';
   const assignees = type === 'shopping' ? (options.assignedUserIds ?? []) : [];
+  // Shared shopping MUST carry family_id, or RLS hides it from other members.
+  const familyId = type === 'shopping' ? (options.familyId ?? null) : null;
   return entry.title
     .split(/[,;\n]|\band\b/i)
     .map(title => title.trim())
@@ -128,7 +130,7 @@ export function buildShoppingCaptureRows(
     .map(title => ({
       title, type, user_id: userId, completed: false,
       ...(assignees.length ? { assigned_to_users: assignees } : {}),
-      ...(assignees.length && options.familyId ? { family_id: options.familyId } : {}),
+      ...(familyId ? { family_id: familyId } : {}),
     }));
 }
 
