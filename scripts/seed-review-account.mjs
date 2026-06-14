@@ -112,6 +112,44 @@ async function main() {
     title, type: 'shared', user_id: UID, family_id: familyId, parent_id: list.id, completed: i === 1 }))) });
   console.log('✓ shared list + items');
 
+  // 9) cloud-synced localStorage stores → user_preferences, so they hydrate on
+  //    the reviewer's device at login (no new build needed). These keys are in
+  //    preferencesSync SYNC_KEYS, so loadCloudPreferences writes them locally.
+  //    The calendar's family events carry `attendees` so they appear in the
+  //    Family Agenda / home agenda card / Calendar "family" section.
+  const isoAt = (days, hh = 9, mm = 0) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hh, mm, 0, 0); return d.toISOString(); };
+  const isoDay = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(0, 0, 0, 0); return d.toISOString(); };
+  const rid = () => crypto.randomUUID();
+  const C = { brand: '#964735', gold: '#FFC861', coral: '#D97B66' };
+  const FAM = [UID]; // attendee → marks event as a shared family event
+  const calendar = [
+    { id: rid(), title: '🏊 Mia — swimming lesson', startDate: isoAt(0, 16, 0), endDate: isoAt(0, 17, 0), allDay: false, location: 'Aquatic Center', type: 'event', color: C.brand, tag: 'appointment', attendees: FAM },
+    { id: rid(), title: '👩‍⚕️ Dentist checkup', startDate: isoAt(1, 9, 30), endDate: isoAt(1, 10, 15), allDay: false, location: 'Bright Smiles Clinic', type: 'event', color: C.coral, tag: 'appointment' },
+    { id: rid(), title: '⚽ Leo — football practice', startDate: isoAt(2, 10, 0), endDate: isoAt(2, 11, 30), allDay: false, location: 'Community Pitch', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: rid(), title: '🎂 Grandma’s birthday dinner', startDate: isoAt(3, 18, 30), endDate: isoAt(3, 21, 0), allDay: false, location: 'Home', type: 'event', color: C.brand, tag: 'celebration', attendees: FAM },
+    { id: rid(), title: '🏖️ Family trip to the lake', startDate: isoDay(6), endDate: isoDay(7), allDay: true, location: 'Lake Geneva', type: 'event', color: C.coral, tag: 'travel', attendees: FAM },
+    { id: rid(), title: '🧑‍🏫 Parent–teacher meeting', startDate: isoAt(9, 17, 0), endDate: isoAt(9, 17, 30), allDay: false, location: 'Riverside School', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: rid(), title: '🩺 Annual health check', startDate: isoAt(12, 8, 45), endDate: isoAt(12, 9, 30), allDay: false, type: 'event', color: C.brand, tag: 'appointment' },
+    { id: rid(), title: 'Sign Mia’s permission slip', dueDate: isoDay(0), completed: false, priority: 'high', type: 'reminder' },
+    { id: rid(), title: 'Renew car insurance', dueDate: isoDay(4), completed: false, priority: 'medium', type: 'reminder' },
+  ];
+  const me = { authorName: 'Alex Rivera', authorInitials: 'AR', authorColor: C.brand, isMe: true };
+  const sofia = { authorName: 'Sofia Rivera', authorInitials: 'SR', authorColor: '#6E8FE5', isMe: false };
+  const mia = { authorName: 'Mia Rivera', authorInitials: 'MR', authorColor: C.coral, isMe: false };
+  const channel = [
+    { id: rid(), ...sofia, type: 'text', content: 'Don’t forget Mia has swimming at 4 today 🏊', timestamp: isoAt(0, 8, 12) },
+    { id: rid(), ...me, type: 'text', content: 'Got it — I’ll pick her up straight after work', timestamp: isoAt(0, 8, 15) },
+    { id: rid(), ...sofia, type: 'text', content: 'Could you grab milk and bread on the way home?', timestamp: isoAt(0, 8, 16) },
+    { id: rid(), ...me, type: 'text', content: 'Added them to the shopping list ✅', timestamp: isoAt(0, 8, 18) },
+    { id: rid(), ...mia, type: 'text', content: 'Can Lily come over this weekend?? 🥺', timestamp: isoAt(0, 16, 40) },
+    { id: rid(), ...me, type: 'text', content: 'We’ll sort it after Grandma’s birthday dinner 🎂', timestamp: isoAt(0, 16, 45) },
+    { id: rid(), ...sofia, type: 'poll', pollQuestion: 'Where for Grandma’s birthday dinner?', pollOptions: ['Home-cooked 🏡', 'Italian restaurant 🍝', 'Sushi 🍣'], pollVotes: { '0': 2, '1': 1, '2': 0 }, timestamp: isoAt(0, 19, 5) },
+    { id: rid(), ...sofia, type: 'text', content: 'Booked the lake house for next weekend 🏖️ so excited!', timestamp: isoAt(0, 20, 30) },
+  ];
+  await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-calendar-items', p_value: calendar });
+  await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-channel-messages', p_value: channel });
+  console.log('✓ cloud calendar (with family attendees) + channel messages');
+
   console.log('\nDONE. Family:', familyId, '| invite:', inviteCode);
 }
 main().catch(e => { console.error('✗', e.message); process.exit(1); });
