@@ -10,6 +10,8 @@
 -- see, tick, edit, and remove the shared shopping list. Personal shopping
 -- (type = 'shopping_personal') stays private via the existing own-task policies.
 
+-- Idempotent: safe to re-run (drop-then-create).
+DROP POLICY IF EXISTS "Family members can view shared shopping" ON public.tasks;
 CREATE POLICY "Family members can view shared shopping"
 ON public.tasks FOR SELECT
 USING (
@@ -17,6 +19,7 @@ USING (
   AND public.user_belongs_to_family(auth.uid(), family_id)
 );
 
+DROP POLICY IF EXISTS "Family members can update shared shopping" ON public.tasks;
 CREATE POLICY "Family members can update shared shopping"
 ON public.tasks FOR UPDATE
 USING (
@@ -24,6 +27,7 @@ USING (
   AND public.user_belongs_to_family(auth.uid(), family_id)
 );
 
+DROP POLICY IF EXISTS "Family members can delete shared shopping" ON public.tasks;
 CREATE POLICY "Family members can delete shared shopping"
 ON public.tasks FOR DELETE
 USING (
