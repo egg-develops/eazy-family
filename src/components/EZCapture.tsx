@@ -224,6 +224,23 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     return () => { cancelled = true; };
   }, [user]);
 
+  // Find (or create) a shared family list to drop assigned tasks into, so they
+  // render as rows with an assignee pill instead of as an empty list header.
+  const ensureFamilyTaskList = async (famId: string, uid: string): Promise<string | null> => {
+    try {
+      const { data: existing } = await supabase
+        .from('tasks').select('id')
+        .eq('type', 'shared').eq('family_id', famId).is('parent_id', null)
+        .order('created_at', { ascending: true }).limit(1).maybeSingle();
+      if (existing?.id) return existing.id;
+      const { data: created } = await supabase
+        .from('tasks')
+        .insert({ title: 'Family To-Dos 🏡', type: 'shared', user_id: uid, family_id: famId, completed: false, visible_to: 'family' })
+        .select('id').single();
+      return created?.id ?? null;
+    } catch { return null; }
+  };
+
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
     const t = isSwissGermanLocale() ? normalizeCHDE(text, getDbRules()) : text;
@@ -630,7 +647,11 @@ STYLE:
       } else if (entryType === 'task') {
         if (!user || !session) return;
         const assignedUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName });
-        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId });
+        // Assigning to another member → drop it into a shared family list so the
+        // assignee can see it and it shows with their pill.
+        const assignedToOthers = assignedUserIds.some(id => id !== user.id);
+        const parentId = (assignedToOthers && familyId) ? await ensureFamilyTaskList(familyId, user.id) : null;
+        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId, parentId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
@@ -638,11 +659,14 @@ STYLE:
           ? t('ezCapture.toastTasksAdded', { count: rows.length })
           : t('ezCapture.toastTaskAdded')
         });
-        onClose(); navigate('/app/lists');
+        onClose(); navigate(parentId ? '/app/lists?tab=tasks' : '/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) return;
-        const rows = buildShoppingCaptureRows(parsed, user.id);
+        const assignedUserIds = entryType === 'shopping'
+          ? resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName })
+          : [];
+        const rows = buildShoppingCaptureRows(parsed, user.id, { assignedUserIds, familyId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);

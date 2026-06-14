@@ -357,6 +357,30 @@ const Lists = () => {
   };
 
   const shoppingDbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
+  // Avatar + first-name pill(s) for assigned members — used on shopping rows.
+  const renderAssigneePills = (uids: string[] | null | undefined, max = 2) => {
+    if (!uids?.length) return null;
+    return (
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {uids.slice(0, max).map(uid => {
+          const m = familyMembers.find(fm => fm.user_id === uid);
+          const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
+          return (
+            <span key={uid}
+              className="flex items-center gap-1 rounded-full pl-0.5 pr-2 py-0.5 text-[11px] font-semibold flex-shrink-0"
+              style={{ background: '#EEF4F0', color: '#44664F' }}
+              title={m?.full_name || name}>
+              {m?.photo
+                ? <img src={m.photo} className="w-4 h-4 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                : <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0" style={{ background: '#8FB399' }}>{name.charAt(0).toUpperCase()}</span>}
+              {name}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
   const shoppingItems = items.filter(i => i.type === shoppingDbType);
   const shoppingUncompleted = shoppingItems.filter(i => !i.completed);
   const shoppingCompleted = shoppingItems.filter(i => i.completed);
@@ -874,6 +898,7 @@ const Lists = () => {
                     ) : (
                       <span className="flex-1 min-w-0 text-[15px] cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
+                    {scope === 'shared' && renderAssigneePills(item.assigned_to_users)}
                     <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '3px 8px', gap: '4px' }}>
                       <button onClick={() => updateQty(item.id, -1)}
                         style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>−</button>

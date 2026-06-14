@@ -66,33 +66,49 @@ describe('resolveAssignees', () => {
 });
 
 describe('buildTaskCaptureRows assignment', () => {
-  it('assigning to another member → SHARED family task with assignees', () => {
+  it('assigned to another member, with a parent list → SHARED list item with pill data', () => {
     const rows = buildTaskCaptureRows(entry({ type: 'task', title: 'Walk the dog' }), 'u-self', {
-      assignedUserIds: ['u-mia'], familyId: 'fam-1',
+      assignedUserIds: ['u-mia'], familyId: 'fam-1', parentId: 'list-1',
     });
     expect(rows).toEqual([
       { title: 'Walk the dog', type: 'shared', user_id: 'u-self', completed: false, due_date: null,
-        assigned_to_users: ['u-mia'], family_id: 'fam-1', visible_to: 'family' },
+        assigned_to_users: ['u-mia'], family_id: 'fam-1', visible_to: 'family', parent_id: 'list-1' },
     ]);
   });
   it('self-only assignment stays a personal task', () => {
     const rows = buildTaskCaptureRows(entry({ type: 'task', title: 'Call dentist' }), 'u-self', {
-      assignedUserIds: ['u-self'], familyId: 'fam-1',
+      assignedUserIds: ['u-self'], familyId: 'fam-1', parentId: 'list-1',
     });
     expect(rows[0].type).toBe('task');
     expect(rows[0].assigned_to_users).toEqual(['u-self']);
-    expect(rows[0]).not.toHaveProperty('family_id');
+    expect(rows[0]).not.toHaveProperty('parent_id');
   });
-  it('assigning to another member but no family → falls back to personal task', () => {
+  it('assigned to another member but no parent list → personal task (still records assignees)', () => {
     const rows = buildTaskCaptureRows(entry({ type: 'task', title: 'Walk the dog' }), 'u-self', {
-      assignedUserIds: ['u-mia'], familyId: null,
+      assignedUserIds: ['u-mia'], familyId: 'fam-1', parentId: null,
     });
     expect(rows[0].type).toBe('task');
+    expect(rows[0].assigned_to_users).toEqual(['u-mia']);
   });
   it('no assignees → plain personal task, no assignment fields', () => {
     const rows = buildTaskCaptureRows(entry({ type: 'task', title: 'Buy milk' }), 'u-self');
     expect(rows[0]).not.toHaveProperty('assigned_to_users');
     expect(rows[0].type).toBe('task');
+  });
+});
+
+describe('buildShoppingCaptureRows assignment', () => {
+  it('shared shopping with assignees → assigned_to_users + family_id', () => {
+    const rows = buildShoppingCaptureRows(entry({ type: 'shopping', title: 'Milk' }), 'u-self', {
+      assignedUserIds: ['u-mia'], familyId: 'fam-1',
+    });
+    expect(rows[0]).toMatchObject({ title: 'Milk', type: 'shopping', assigned_to_users: ['u-mia'], family_id: 'fam-1' });
+  });
+  it('personal shopping ignores assignees', () => {
+    const rows = buildShoppingCaptureRows(entry({ type: 'shopping_personal', title: 'Milk' }), 'u-self', {
+      assignedUserIds: ['u-mia'], familyId: 'fam-1',
+    });
+    expect(rows[0]).not.toHaveProperty('assigned_to_users');
   });
 });
 

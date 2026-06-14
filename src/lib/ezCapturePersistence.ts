@@ -22,6 +22,7 @@ export interface TaskCaptureRow {
   assigned_to_users?: string[] | null;
   family_id?: string | null;
   visible_to?: string | null;
+  parent_id?: string | null;
 }
 
 export interface FamilyMemberLite {
@@ -63,6 +64,8 @@ export function resolveAssignees(
 export interface TaskCaptureOptions {
   assignedUserIds?: string[];
   familyId?: string | null;
+  /** When set, the task is created as an ITEM inside this shared list. */
+  parentId?: string | null;
 }
 
 export function isFeatureHelpQuery(input: string): boolean {
@@ -89,9 +92,11 @@ export function buildTaskCaptureRows(
   const assignees = options.assignedUserIds ?? [];
   // If assigned to anyone other than the creator, it must be a SHARED family
   // task — a personal task ('task') is only visible to its creator, so the
-  // assignee would never see it. Needs a family to share into.
+  // assignee would never see it (RLS). It also lands as an ITEM inside a shared
+  // list (parentId) so it renders as a row with an assignee pill, not as an
+  // empty list header. Needs a family + a parent list to share into.
   const hasOthers = assignees.some(id => id !== userId);
-  const isShared = hasOthers && !!options.familyId;
+  const isShared = hasOthers && !!options.familyId && !!options.parentId;
 
   return entry.title
     .split(/[,;\n]/)
@@ -104,17 +109,27 @@ export function buildTaskCaptureRows(
       completed: false,
       due_date: dueDate,
       ...(assignees.length ? { assigned_to_users: assignees } : {}),
-      ...(isShared ? { family_id: options.familyId, visible_to: 'family' } : {}),
+      ...(isShared ? { family_id: options.familyId, visible_to: 'family', parent_id: options.parentId } : {}),
     }));
 }
 
-export function buildShoppingCaptureRows(entry: EZParsedEntry, userId: string): TaskCaptureRow[] {
+export function buildShoppingCaptureRows(
+  entry: EZParsedEntry,
+  userId: string,
+  options: TaskCaptureOptions = {},
+): TaskCaptureRow[] {
+  // Assignment only applies to the shared (family) shopping list.
   const type = entry.type === 'shopping_personal' ? 'shopping_personal' : 'shopping';
+  const assignees = type === 'shopping' ? (options.assignedUserIds ?? []) : [];
   return entry.title
     .split(/[,;\n]|\band\b/i)
     .map(title => title.trim())
     .filter(Boolean)
-    .map(title => ({ title, type, user_id: userId, completed: false }));
+    .map(title => ({
+      title, type, user_id: userId, completed: false,
+      ...(assignees.length ? { assigned_to_users: assignees } : {}),
+      ...(assignees.length && options.familyId ? { family_id: options.familyId } : {}),
+    }));
 }
 
 export function isFamilyCalendarIntent(rawInput: string): boolean {
