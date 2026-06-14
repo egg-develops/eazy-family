@@ -400,7 +400,9 @@
       "lightEnabled": "Light theme enabled",
       "colorScheme": "Color Scheme",
       "colorSchemeDesc": "Choose your preferred color accent",
-      "customColor": "Custom Color"
+      "customColor": "Custom Color",
+      "largeTapTargets": "Larger touch targets",
+      "largeTapTargetsSub": "Bigger, easier-to-tap buttons and controls"
     },
     "privacy": {
       "title": "Privacy & Security",

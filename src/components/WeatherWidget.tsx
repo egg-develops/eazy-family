@@ -299,7 +299,7 @@ export const WeatherWidget = ({ onRemove }: { onRemove: () => void }) => {
                 </Button>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeLocation(loc.id); }}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
+                  className="tap-pad absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
                   aria-label={`Remove ${loc.name}`}
                 >×</button>
               </div>

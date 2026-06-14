@@ -397,7 +397,9 @@
       "lightEnabled": "Helles Design aktiviert",
       "colorScheme": "Farbschema",
       "colorSchemeDesc": "Wählen Sie Ihren bevorzugten Farbakzent",
-      "customColor": "Benutzerdefinierte Farbe"
+      "customColor": "Benutzerdefinierte Farbe",
+      "largeTapTargets": "Größere Schaltflächen",
+      "largeTapTargetsSub": "Größere, leichter antippbare Schaltflächen und Bedienelemente"
     },
     "privacy": {
       "title": "Datenschutz & Sicherheit",

@@ -397,7 +397,9 @@
       "lightEnabled": "Tema claro ativado",
       "colorScheme": "Esquema de cores",
       "colorSchemeDesc": "Escolhe o teu tom de cor preferido",
-      "customColor": "Cor personalizada"
+      "customColor": "Cor personalizada",
+      "largeTapTargets": "Alvos de toque maiores",
+      "largeTapTargetsSub": "Botões e controlos maiores e mais fáceis de tocar"
     },
     "privacy": {
       "title": "Privacidade e segurança",
