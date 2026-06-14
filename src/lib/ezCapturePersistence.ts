@@ -15,10 +15,54 @@ export interface EZParsedEntry {
 
 export interface TaskCaptureRow {
   title: string;
-  type: 'task' | 'shopping' | 'shopping_personal';
+  type: 'task' | 'shared' | 'shopping' | 'shopping_personal';
   user_id: string;
   completed: false;
   due_date?: string | null;
+  assigned_to_users?: string[] | null;
+  family_id?: string | null;
+  visible_to?: string | null;
+}
+
+export interface FamilyMemberLite {
+  user_id: string;
+  name: string; // full or display name
+}
+
+/** First word, lowercased — for first-name matching. */
+const firstName = (n: string): string => n.trim().toLowerCase().split(/\s+/)[0] || '';
+
+/**
+ * Resolve parsed assignee names (first names from the voice query) to family
+ * member user ids. Matches on first name, case-insensitive. "me"/"myself"/"I"
+ * and the user's own first name resolve to self. Unmatched names are dropped.
+ * Deduplicated, order-preserving.
+ */
+export function resolveAssignees(
+  names: string[] | null | undefined,
+  members: FamilyMemberLite[],
+  self: { userId: string; name: string },
+): string[] {
+  if (!names || names.length === 0) return [];
+  const selfFirst = firstName(self.name);
+  const out: string[] = [];
+  const add = (id: string) => { if (id && !out.includes(id)) out.push(id); };
+  for (const raw of names) {
+    const fn = firstName(raw);
+    if (!fn) continue;
+    if (fn === 'me' || fn === 'myself' || fn === 'i' || (selfFirst && fn === selfFirst)) {
+      add(self.userId);
+      continue;
+    }
+    const match = members.find(m => firstName(m.name) === fn);
+    if (match) add(match.user_id);
+  }
+  return out;
+}
+
+export interface TaskCaptureOptions {
+  assignedUserIds?: string[];
+  familyId?: string | null;
 }
 
 export function isFeatureHelpQuery(input: string): boolean {
@@ -33,15 +77,35 @@ export function isFeatureHelpQuery(input: string): boolean {
     || (s.includes('?') && s.length > 8);
 }
 
-export function buildTaskCaptureRows(entry: EZParsedEntry, userId: string): TaskCaptureRow[] {
+export function buildTaskCaptureRows(
+  entry: EZParsedEntry,
+  userId: string,
+  options: TaskCaptureOptions = {},
+): TaskCaptureRow[] {
   const dueDate = entry.date
     ? new Date(`${entry.date}T${entry.time ?? '00:00:00'}`).toISOString()
     : null;
+
+  const assignees = options.assignedUserIds ?? [];
+  // If assigned to anyone other than the creator, it must be a SHARED family
+  // task — a personal task ('task') is only visible to its creator, so the
+  // assignee would never see it. Needs a family to share into.
+  const hasOthers = assignees.some(id => id !== userId);
+  const isShared = hasOthers && !!options.familyId;
+
   return entry.title
     .split(/[,;\n]/)
     .map(title => title.trim())
     .filter(Boolean)
-    .map(title => ({ title, type: 'task', user_id: userId, completed: false, due_date: dueDate }));
+    .map(title => ({
+      title,
+      type: isShared ? 'shared' as const : 'task' as const,
+      user_id: userId,
+      completed: false,
+      due_date: dueDate,
+      ...(assignees.length ? { assigned_to_users: assignees } : {}),
+      ...(isShared ? { family_id: options.familyId, visible_to: 'family' } : {}),
+    }));
 }
 
 export function buildShoppingCaptureRows(entry: EZParsedEntry, userId: string): TaskCaptureRow[] {
@@ -66,6 +130,7 @@ interface CalendarCaptureOptions {
   rawInput: string;
   userId?: string;
   appleCalendarId?: string;
+  attendeeUserIds?: string[]; // resolved assignees → event attendees
 }
 
 export function buildCalendarCaptureItem(entry: EZParsedEntry, options: CalendarCaptureOptions) {
@@ -87,6 +152,13 @@ export function buildCalendarCaptureItem(entry: EZParsedEntry, options: Calendar
   const isReminder = entry.type === 'reminder';
   const isFamilyEvent = isFamilyCalendarIntent(options.rawInput);
 
+  // Attendees = explicit assignees, plus the creator when it's a "family" event.
+  // A non-empty attendees list is what marks an event as shared/family elsewhere.
+  const attendees = Array.from(new Set([
+    ...(isFamilyEvent && options.userId ? [options.userId] : []),
+    ...(options.attendeeUserIds ?? []),
+  ]));
+
   return {
     id: options.id,
     title: entry.title,
@@ -98,7 +170,7 @@ export function buildCalendarCaptureItem(entry: EZParsedEntry, options: Calendar
     color: isReminder ? '#6E8FE5' : '#D97B66',
     location: entry.location || undefined,
     notes: entry.notes || undefined,
-    ...(isFamilyEvent && options.userId ? { attendees: [options.userId] } : {}),
+    ...(attendees.length ? { attendees } : {}),
     ...(options.appleCalendarId ? { appleCalendarId: options.appleCalendarId } : {}),
   };
 }

@@ -20,7 +20,9 @@ import {
   buildShoppingCaptureRows,
   buildTaskCaptureRows,
   isFeatureHelpQuery,
+  resolveAssignees,
   type EZParsedEntry,
+  type FamilyMemberLite,
 } from "@/lib/ezCapturePersistence";
 
 type Step = 'capture' | 'processing' | 'preview' | 'guide';
@@ -199,6 +201,29 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (isSwissGermanLocale()) warmDialectCache();
   }, []);
 
+  // Family roster — so voice assignees ("assign to Mia") resolve to member ids.
+  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberLite[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: mine } = await supabase
+          .from('family_members').select('family_id')
+          .eq('user_id', user.id).eq('is_active', true).maybeSingle();
+        if (cancelled || !mine?.family_id) return;
+        setFamilyId(mine.family_id);
+        const { data } = await supabase
+          .from('family_members').select('user_id, full_name')
+          .eq('family_id', mine.family_id).eq('is_active', true);
+        if (cancelled || !data) return;
+        setFamilyMembers(data.filter(m => m.user_id).map(m => ({ user_id: m.user_id as string, name: m.full_name || '' })));
+      } catch { /* assignment is best-effort; never block capture */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
     const t = isSwissGermanLocale() ? normalizeCHDE(text, getDbRules()) : text;
@@ -349,12 +374,12 @@ TYPE CLASSIFICATION — pick exactly one:
 
 JSON fields:
 - type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
+- title: ONLY the core subject — NEVER include date, time, location, command words, list-destination phrases, or assignment phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), assignment phrases ("assign to X", "ask X to", "tell X to", "have X", "for X"), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals. Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed, otherwise the following month.
 - time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
-- assignees: array of first names or null
+- assignees: array of first names of who should do it, or null. Extract from phrases like "assign to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title.
 - reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
@@ -574,11 +599,13 @@ STYLE:
 
       if (entryType === 'event' || entryType === 'reminder') {
         const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+        const attendeeUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user?.id ?? '', name: userName });
         const eventDraft = buildCalendarCaptureItem(parsed, {
           id: crypto.randomUUID(),
           now: new Date(),
           rawInput,
           userId: user?.id,
+          attendeeUserIds,
         });
         let appleCalendarId: string | undefined;
         if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
@@ -602,7 +629,8 @@ STYLE:
 
       } else if (entryType === 'task') {
         if (!user || !session) return;
-        const rows = buildTaskCaptureRows(parsed, user.id);
+        const assignedUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName });
+        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
