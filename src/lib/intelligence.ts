@@ -84,14 +84,34 @@ export function scoreStaleTask(updatedAt: Date, now: Date): StaleScore {
 // ── 3. Shopping purchase history → predictions ───────────────────────────────
 
 /**
- * Given raw purchase history (desc or any order), compute which items are
- * overdue based on average repurchase interval.
+ * Normalises an item name for grouping/comparison: strips emoji and punctuation,
+ * collapses whitespace, lowercases. So "Bananas 🍌", "bananas" and "BANANAS"
+ * all collapse to "bananas" — they're the same product and must share history.
+ */
+export function normalizeItemName(raw: string): string {
+  return raw
+    .replace(/[\p{Extended_Pictographic}‍️]/gu, '') // emoji, ZWJ, variation selectors
+    .replace(/[^\p{L}\p{N}\s'-]/gu, ' ')                      // other punctuation → space (keep ' and -)
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Given raw purchase history (any order), compute which items are overdue based
+ * on a *confident* repurchase rhythm. The bar is deliberately high so a new or
+ * thin account never sees a guess it can't trust — a "running low" nudge must be
+ * earned by real, regular history.
  *
- * Rules:
- *  - Item needs ≥ 2 purchases to build an interval
- *  - Phrases longer than 4 words are skipped (likely unprocessed voice input)
- *  - An item is "overdue" when daysSinceLast > avgDaysBetween
- *  - Results sorted by daysOverdue desc, capped at top 5
+ * An item qualifies only when ALL hold:
+ *  - ≥ 3 purchases (so there are ≥ 2 intervals — one interval is not a rhythm)
+ *  - history spans ≥ 14 days (rejects 3 buys in one shopping trip)
+ *  - average interval is plausible (3–60 days)
+ *  - the rhythm is regular (interval coefficient of variation ≤ 0.6)
+ *  - it is meaningfully overdue: daysSinceLast ≥ avg × 1.25 (25% past due)
+ * Names are normalised (emoji/case/punctuation) before grouping. Phrases longer
+ * than 4 words are skipped (likely unprocessed voice input). Sorted by how
+ * overdue, capped at top 5.
  */
 export function computeShoppingPredictions(
   history: ShoppingHistoryRow[],
@@ -100,7 +120,8 @@ export function computeShoppingPredictions(
   // Group by normalised item name
   const byItem: Record<string, Date[]> = {};
   for (const row of history) {
-    const key = row.itemName.toLowerCase().trim();
+    const key = normalizeItemName(row.itemName);
+    if (!key || key.split(' ').length > 4) continue;
     if (!byItem[key]) byItem[key] = [];
     byItem[key].push(row.purchasedAt);
   }
@@ -108,29 +129,40 @@ export function computeShoppingPredictions(
   const preds: ShoppingPrediction[] = [];
 
   for (const [name, dates] of Object.entries(byItem)) {
-    if (dates.length < 2) continue;
-    if (name.split(' ').length > 4) continue;
+    // Need ≥ 3 purchases (≥ 2 intervals) to infer a repeat cadence at all.
+    if (dates.length < 3) continue;
 
     // Sort desc so dates[0] is most recent
     dates.sort((a, b) => b.getTime() - a.getTime());
 
+    // Reject same-trip bursts: the history must span a real window.
+    const spanDays = (dates[0].getTime() - dates[dates.length - 1].getTime()) / 86400000;
+    if (spanDays < 14) continue;
+
     const intervals: number[] = [];
     for (let i = 0; i < dates.length - 1; i++) {
-      const diff = (dates[i].getTime() - dates[i + 1].getTime()) / 86400000;
-      intervals.push(diff);
+      intervals.push((dates[i].getTime() - dates[i + 1].getTime()) / 86400000);
     }
     const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    const daysSince = (now.getTime() - dates[0].getTime()) / 86400000;
-    const overdue = daysSince - avg;
 
-    if (overdue > 0) {
-      preds.push({
-        itemName: name.charAt(0).toUpperCase() + name.slice(1),
-        avgDaysBetween: Math.round(avg),
-        daysSinceLast: Math.round(daysSince),
-        daysOverdue: Math.round(overdue),
-      });
-    }
+    // Only a plausible repurchase rhythm (a few days to ~2 months).
+    if (avg < 3 || avg > 60) continue;
+
+    // The rhythm must be regular — high variance means it's not a real cadence.
+    const variance = intervals.reduce((s, x) => s + (x - avg) ** 2, 0) / intervals.length;
+    if (Math.sqrt(variance) / avg > 0.6) continue;
+
+    const daysSince = (now.getTime() - dates[0].getTime()) / 86400000;
+
+    // Surface only when meaningfully overdue (≥ 25% past the average gap).
+    if (daysSince < avg * 1.25) continue;
+
+    preds.push({
+      itemName: name.charAt(0).toUpperCase() + name.slice(1),
+      avgDaysBetween: Math.round(avg),
+      daysSinceLast: Math.round(daysSince),
+      daysOverdue: Math.round(daysSince - avg),
+    });
   }
 
   preds.sort((a, b) => b.daysOverdue - a.daysOverdue);
@@ -139,15 +171,15 @@ export function computeShoppingPredictions(
 
 /**
  * Cleans a raw voice/text string before logging as a purchase history entry.
- * Strips leading command verbs and trailing list destinations.
- * Returns empty string if result is >4 words (not suitable for history).
+ * Strips leading command verbs and trailing list destinations, then normalises
+ * (emoji/punctuation/case) so the stored name is a clean, groupable product.
+ * Returns empty string if result is empty or >4 words (not suitable for history).
  */
 export function cleanPurchaseItem(raw: string): string {
-  const cleaned = raw
+  const deCommanded = raw
     .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
-    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '')
-    .toLowerCase()
-    .trim();
+    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '');
+  const cleaned = normalizeItemName(deCommanded);
   if (!cleaned || cleaned.split(' ').length > 4) return '';
   return cleaned;
 }

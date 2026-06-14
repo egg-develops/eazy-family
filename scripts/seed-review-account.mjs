@@ -150,6 +150,19 @@ async function main() {
   await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-channel-messages', p_value: channel });
   console.log('✓ cloud calendar (with family attendees) + channel messages');
 
+  // 10) realistic shopping purchase history so the "running low" prediction has
+  //     a trustworthy, regular cadence to work from. The logic now requires ≥3
+  //     purchases over ≥14 days with a consistent rhythm, so without this a fresh
+  //     account correctly shows NO suggestion. Wipe first for idempotency.
+  await rest(`shopping_purchase_history?user_id=eq.${UID}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(() => {});
+  const daysAgoIso = (n) => { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(18, 0, 0, 0); return d.toISOString(); };
+  const histRows = [
+    ...[10, 17, 24, 31, 38, 45].map(n => ({ user_id: UID, item_name: 'milk', purchased_at: daysAgoIso(n) })),  // weekly, ~3d overdue
+    ...[9, 14, 19, 24, 29, 34].map(n => ({ user_id: UID, item_name: 'bread', purchased_at: daysAgoIso(n) })),   // ~5-daily, ~4d overdue
+  ];
+  await rest('shopping_purchase_history', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(histRows) });
+  console.log('✓ shopping purchase history (milk + bread cadence → demoable "running low")');
+
   console.log('\nDONE. Family:', familyId, '| invite:', inviteCode);
 }
 main().catch(e => { console.error('✗', e.message); process.exit(1); });
