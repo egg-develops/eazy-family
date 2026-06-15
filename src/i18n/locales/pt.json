@@ -1748,7 +1748,8 @@
     "guideGotIt": "Entendido",
     "guideSignInRequired": "Inicia sessão para usar o guia.",
     "guideError": "Desculpa, não consegui encontrar uma resposta. Tenta novamente.",
-    "aiGuide": "Pergunta-me qualquer coisa sobre a app — estou aqui para ajudar."
+    "aiGuide": "Pergunta-me qualquer coisa sobre a app — estou aqui para ajudar.",
+    "messageSent": "Mensagem enviada para {{name}}"
   },
   "messaging": {
     "typeMessage": "Digite uma mensagem...",

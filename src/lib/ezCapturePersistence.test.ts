@@ -5,6 +5,7 @@ import {
   buildTaskCaptureRows,
   isFamilyCalendarIntent,
   isFeatureHelpQuery,
+  parseMessageIntent,
   resolveAssignees,
   type EZParsedEntry,
   type FamilyMemberLite,
@@ -35,6 +36,36 @@ describe('EZ Capture task persistence rows', () => {
       { title: 'Call dentist', type: 'task', user_id: 'user-1', completed: false, due_date: new Date('2026-06-15T09:30').toISOString() },
       { title: 'pay electricity', type: 'task', user_id: 'user-1', completed: false, due_date: new Date('2026-06-15T09:30').toISOString() },
     ]);
+  });
+});
+
+describe('parseMessageIntent', () => {
+  it('"send a message to X saying …"', () => {
+    expect(parseMessageIntent('send a message to Sofia saying I will be late')).toEqual({ to: 'Sofia', body: 'I will be late' });
+  });
+  it('"send a message to X that …"', () => {
+    expect(parseMessageIntent('Send a message to Leo that dinner is ready')).toEqual({ to: 'Leo', body: 'dinner is ready' });
+  });
+  it('"send a message to X <body>" (no connector)', () => {
+    expect(parseMessageIntent('send a message to Mia pick up milk')).toEqual({ to: 'Mia', body: 'pick up milk' });
+  });
+  it('"send X a message saying …"', () => {
+    expect(parseMessageIntent('send Sofia a message saying running 10 min late')).toEqual({ to: 'Sofia', body: 'running 10 min late' });
+  });
+  it('"message X: …" and "text X …"', () => {
+    expect(parseMessageIntent('message Sofia: on my way')).toEqual({ to: 'Sofia', body: 'on my way' });
+    expect(parseMessageIntent('text Leo I will be there soon')).toEqual({ to: 'Leo', body: 'I will be there soon' });
+  });
+  it('"tell X that …" and "let X know …"', () => {
+    expect(parseMessageIntent('tell Sofia that I parked out front')).toEqual({ to: 'Sofia', body: 'I parked out front' });
+    expect(parseMessageIntent('let Leo know the game is cancelled')).toEqual({ to: 'Leo', body: 'the game is cancelled' });
+  });
+  it('does NOT treat "tell X to <task>" as a message (that is assignment)', () => {
+    expect(parseMessageIntent('tell Mia to clean her room')).toBeNull();
+  });
+  it('non-message input → null', () => {
+    expect(parseMessageIntent('buy milk and eggs')).toBeNull();
+    expect(parseMessageIntent('dentist appointment tomorrow at 3')).toBeNull();
   });
 });
 

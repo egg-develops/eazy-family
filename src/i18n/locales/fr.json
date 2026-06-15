@@ -1746,7 +1746,8 @@
     "guideGotIt": "Compris",
     "guideSignInRequired": "Connecte-toi pour utiliser le guide.",
     "guideError": "Désolé, je n'ai pas pu trouver de réponse. Réessaie.",
-    "aiGuide": "Pose-moi n'importe quelle question sur l'app — je suis là pour t'aider."
+    "aiGuide": "Pose-moi n'importe quelle question sur l'app — je suis là pour t'aider.",
+    "messageSent": "Message envoyé à {{name}}"
   },
   "messaging": {
     "typeMessage": "Tapez un message...",

@@ -1746,7 +1746,8 @@
     "guideGotIt": "Capito",
     "guideSignInRequired": "Accedi per usare la guida.",
     "guideError": "Spiacente, non ho trovato una risposta. Riprova.",
-    "aiGuide": "Chiedimi qualsiasi cosa sull'app — sono qui per aiutarti."
+    "aiGuide": "Chiedimi qualsiasi cosa sull'app — sono qui per aiutarti.",
+    "messageSent": "Messaggio inviato a {{name}}"
   },
   "messaging": {
     "typeMessage": "Scrivi un messaggio...",

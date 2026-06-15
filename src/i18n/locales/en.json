@@ -1746,7 +1746,8 @@
     "guideGotIt": "Got it",
     "guideSignInRequired": "Please sign in to use the guide.",
     "guideError": "Sorry, I couldn't get an answer right now. Please try again.",
-    "aiGuide": "Ask me anything about the app — I'm here to help."
+    "aiGuide": "Ask me anything about the app — I'm here to help.",
+    "messageSent": "Message sent to {{name}}"
   },
   "messaging": {
     "typeMessage": "Type a message...",

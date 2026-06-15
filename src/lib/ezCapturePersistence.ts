@@ -134,6 +134,35 @@ export function buildShoppingCaptureRows(
     }));
 }
 
+/**
+ * Detects a "send a message to X" voice intent and pulls out the recipient name
+ * + message body, for posting an @mention into the Family Channel. Deliberately
+ * does NOT match "tell X to <do something>" — that's a task assignment, handled
+ * via assignees. Returns null when it's not a message intent.
+ */
+export function parseMessageIntent(raw: string): { to: string; body: string } | null {
+  const s = raw.trim();
+  const patterns: RegExp[] = [
+    // "send a message to Sofia saying/that/: …"  ·  "send a message to Sofia …"
+    /^(?:can you |please |could you )?send (?:a |an )?message to (\p{L}+)[,:]?\s+(?:saying |that |to say |: ?)?(.+)$/iu,
+    // "send Sofia a message saying/that …"
+    /^(?:can you |please |could you )?send (\p{L}+) a message(?:,| saying| that|:)?\s+(.+)$/iu,
+    // "message Sofia: …"  ·  "text Sofia …"
+    /^(?:message|text) (\p{L}+)[,:]?\s+(.+)$/iu,
+    // "tell Sofia that …"  (only the "that" form — "tell X to …" is assignment)
+    /^(?:can you |please )?tell (\p{L}+) that\s+(.+)$/iu,
+    // "let Sofia know (that) …"
+    /^(?:can you |please )?let (\p{L}+) know (?:that\s+)?(.+)$/iu,
+  ];
+  for (const re of patterns) {
+    const m = s.match(re);
+    if (m && m[1] && m[2] && m[2].trim().length >= 1) {
+      return { to: m[1].trim(), body: m[2].trim() };
+    }
+  }
+  return null;
+}
+
 export function isFamilyCalendarIntent(rawInput: string): boolean {
   return (
     /\b(family|our|shared|gemeinsam|unsere|famille|familia|nossa|nostro)\b.{0,30}(agenda|calendar|kalender|calendrier|calendario)/i.test(rawInput) ||

@@ -20,6 +20,7 @@ import {
   buildShoppingCaptureRows,
   buildTaskCaptureRows,
   isFeatureHelpQuery,
+  parseMessageIntent,
   resolveAssignees,
   type EZParsedEntry,
   type FamilyMemberLite,
@@ -537,6 +538,28 @@ STYLE:
     if (isFeatureHelpQuery(rawInput)) {
       await fetchGuideAnswer(rawInput);
       return;
+    }
+
+    // "send a message to X …" → post an @mention into the shared Family Channel,
+    // but only when X resolves to a real family member (else fall through to the
+    // normal capture so we don't message nobody).
+    const msgIntent = parseMessageIntent(rawInput);
+    if (msgIntent && user && familyId) {
+      const ids = resolveAssignees([msgIntent.to], familyMembers, { userId: user.id, name: userName });
+      if (ids.length) {
+        const recipient = familyMembers.find(fm => fm.user_id === ids[0]);
+        const recipientName = (recipient?.name || msgIntent.to).split(' ')[0];
+        const { error } = await supabase.from('family_messages').insert({
+          family_id: familyId, sender_id: user.id, type: 'text',
+          content: `@${recipientName} ${msgIntent.body}`,
+        });
+        if (!error) {
+          haptic('light'); setTimeout(() => haptic('light'), 150);
+          toast({ title: t('ezCapture.messageSent', { name: recipientName, defaultValue: `Message sent to ${recipientName}` }) });
+          onClose(); navigate('/app/family-channel');
+          return;
+        }
+      }
     }
 
     setStep('processing');
