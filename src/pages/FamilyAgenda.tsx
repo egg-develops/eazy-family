@@ -4,7 +4,6 @@ import {
   Mic, MicOff, X, Plus, MapPin, FileText,
   Image, Play, ChevronLeft, Send,
 } from "lucide-react";
-import { ChannelEZCapture } from "@/components/ChannelEZCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -334,9 +333,6 @@ const FamilyAgenda = () => {
   // Attachment tray
   const [trayOpen, setTrayOpen] = useState(false);
 
-  // Channel EZ Capture (voice → message/location)
-  const [channelEZOpen, setChannelEZOpen] = useState(false);
-
   // Preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -408,12 +404,18 @@ const FamilyAgenda = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── EZ button → open Channel EZ Capture ─────
+  // The EZ orb opens the standard EZCapture in channel mode (App.tsx); when it
+  // posts, it dispatches the new row so we can show it instantly (own realtime
+  // events are skipped, and navigating to this same route won't reload).
   useEffect(() => {
-    const handler = () => { setChannelEZOpen(true); };
-    window.addEventListener('ez-family-channel-tray', handler);
-    return () => window.removeEventListener('ez-family-channel-tray', handler);
-  }, []);
+    const handler = (e: Event) => {
+      const row = (e as CustomEvent).detail as FamilyMessageRow;
+      if (!user || !row?.id) return;
+      setMessages(prev => prev.some(m => m.id === row.id) ? prev : [...prev, rowToChannelMessage(row, authors, user.id)]);
+    };
+    window.addEventListener('eazy-channel-message-sent', handler);
+    return () => window.removeEventListener('eazy-channel-message-sent', handler);
+  }, [authors, user]);
 
   // ── Helpers ─────────────────────────────────
   // Prefer the resolved family author (so my bubble matches what others see);
@@ -816,14 +818,6 @@ const FamilyAgenda = () => {
         }
       `}</style>
 
-      {/* Channel EZ Capture — voice → message/location (polls dropped) */}
-      <ChannelEZCapture
-        open={channelEZOpen}
-        onClose={() => setChannelEZOpen(false)}
-        onSendMessage={(text) => { addMessage({ type: "text", content: text }); }}
-        onCreatePoll={() => { /* polls dropped — see familyChannel */ }}
-        onShareLocation={() => { shareLocation(); }}
-      />
     </div>
   );
 };

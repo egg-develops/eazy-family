@@ -1747,7 +1747,12 @@
     "guideSignInRequired": "Connecte-toi pour utiliser le guide.",
     "guideError": "Désolé, je n'ai pas pu trouver de réponse. Réessaie.",
     "aiGuide": "Pose-moi n'importe quelle question sur l'app — je suis là pour t'aider.",
-    "messageSent": "Message envoyé à {{name}}"
+    "messageSent": "Message envoyé à {{name}}",
+    "headerChannel": "Message à la famille",
+    "subheaderChannel": "Tout le monde dans le canal le verra",
+    "placeholderChannel": "Message à votre famille…",
+    "couldNotSend": "Impossible d’envoyer le message",
+    "send": "Envoyer"
   },
   "messaging": {
     "typeMessage": "Tapez un message...",
