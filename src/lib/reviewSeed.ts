@@ -9,11 +9,21 @@
 // Safe to delete after the app is approved (and remove the call in App.tsx).
 
 const REVIEW_EMAIL = 'appreview@eazy.family';
-const FLAG = 'eazy-review-seeded-v1';
+// Bumped to v2: adds Family Channel messages + attendees on family events so the
+// Family Agenda / Family Channel screens are no longer empty. v2 force-reseeds
+// the calendar + channel stores (demo content only) so devices that already ran
+// v1 pick up the additions.
+const FLAG = 'eazy-review-seeded-v2';
 
 const CAL_KEY = 'eazy-family-calendar-items';
 const JOURNAL_KEY = 'eazy-journal-entries';
 const RITUALS_KEY = 'eazy-rituals';
+const CHANNEL_KEY = 'eazy-family-channel-messages';
+
+// Review account's own user id — used as an attendee so events register as
+// "family" events (FamilyAgendaView / home agenda / Calendar all gate on
+// attendees?.length) and resolve to the self member's name.
+const REVIEW_UID = 'e31f73e7-0d8e-4c9c-aaea-d099ae8eddee';
 
 // Brand palette / tag colors used elsewhere in the calendar
 const C = { brand: '#964735', gold: '#FFC861', coral: '#D97B66' };
@@ -49,22 +59,42 @@ export function seedReviewLocalData(email: string | null | undefined): void {
   if (email !== REVIEW_EMAIL) return;
   if (localStorage.getItem(FLAG)) return;
 
-  // ── Calendar: events + reminders (only if the store is empty) ──────────────
-  if (!hasContent(CAL_KEY)) {
-    const calendar = [
-      { id: id(), title: '🏊 Mia — swimming lesson', startDate: at(0, 16, 0), endDate: at(0, 17, 0), allDay: false, location: 'Aquatic Center', type: 'event', color: C.brand, tag: 'appointment' },
-      { id: id(), title: '👩‍⚕️ Dentist checkup', startDate: at(1, 9, 30), endDate: at(1, 10, 15), allDay: false, location: 'Bright Smiles Clinic', type: 'event', color: C.coral, tag: 'appointment' },
-      { id: id(), title: '⚽ Leo — football practice', startDate: at(2, 10, 0), endDate: at(2, 11, 30), allDay: false, location: 'Community Pitch', type: 'event', color: C.gold, tag: 'meeting' },
-      { id: id(), title: '🎂 Grandma’s birthday dinner', startDate: at(3, 18, 30), endDate: at(3, 21, 0), allDay: false, location: 'Home', type: 'event', color: C.brand, tag: 'celebration' },
-      { id: id(), title: '🏖️ Family trip to the lake', startDate: dayOnly(6), endDate: dayOnly(7), allDay: true, location: 'Lake Geneva', type: 'event', color: C.coral, tag: 'travel' },
-      { id: id(), title: '🧑‍🏫 Parent–teacher meeting', startDate: at(9, 17, 0), endDate: at(9, 17, 30), allDay: false, location: 'Riverside School', type: 'event', color: C.gold, tag: 'meeting' },
-      { id: id(), title: '🩺 Annual health check', startDate: at(12, 8, 45), endDate: at(12, 9, 30), allDay: false, type: 'event', color: C.brand, tag: 'appointment' },
-      // a couple of reminders
-      { id: id(), title: 'Sign Mia’s permission slip', dueDate: dayOnly(0), completed: false, priority: 'high', type: 'reminder' },
-      { id: id(), title: 'Renew car insurance', dueDate: dayOnly(4), completed: false, priority: 'medium', type: 'reminder' },
-    ];
-    localStorage.setItem(CAL_KEY, JSON.stringify(calendar));
-  }
+  // ── Calendar: events + reminders ───────────────────────────────────────────
+  // Force-set (not guarded by hasContent) so the v2 upgrade adds `attendees` to
+  // family events on devices that already seeded v1. Demo content only.
+  const FAM = [REVIEW_UID]; // marks an event as a shared "family" event
+  const calendar = [
+    { id: id(), title: '🏊 Mia — swimming lesson', startDate: at(0, 16, 0), endDate: at(0, 17, 0), allDay: false, location: 'Aquatic Center', type: 'event', color: C.brand, tag: 'appointment', attendees: FAM },
+    { id: id(), title: '👩‍⚕️ Dentist checkup', startDate: at(1, 9, 30), endDate: at(1, 10, 15), allDay: false, location: 'Bright Smiles Clinic', type: 'event', color: C.coral, tag: 'appointment' },
+    { id: id(), title: '⚽ Leo — football practice', startDate: at(2, 10, 0), endDate: at(2, 11, 30), allDay: false, location: 'Community Pitch', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: id(), title: '🎂 Grandma’s birthday dinner', startDate: at(3, 18, 30), endDate: at(3, 21, 0), allDay: false, location: 'Home', type: 'event', color: C.brand, tag: 'celebration', attendees: FAM },
+    { id: id(), title: '🏖️ Family trip to the lake', startDate: dayOnly(6), endDate: dayOnly(7), allDay: true, location: 'Lake Geneva', type: 'event', color: C.coral, tag: 'travel', attendees: FAM },
+    { id: id(), title: '🧑‍🏫 Parent–teacher meeting', startDate: at(9, 17, 0), endDate: at(9, 17, 30), allDay: false, location: 'Riverside School', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: id(), title: '🩺 Annual health check', startDate: at(12, 8, 45), endDate: at(12, 9, 30), allDay: false, type: 'event', color: C.brand, tag: 'appointment' },
+    // a couple of reminders
+    { id: id(), title: 'Sign Mia’s permission slip', dueDate: dayOnly(0), completed: false, priority: 'high', type: 'reminder' },
+    { id: id(), title: 'Renew car insurance', dueDate: dayOnly(4), completed: false, priority: 'medium', type: 'reminder' },
+  ];
+  localStorage.setItem(CAL_KEY, JSON.stringify(calendar));
+
+  // ── Family Channel: a realistic shared conversation ─────────────────────────
+  const msg = (over: Record<string, unknown>) => ({
+    id: id(), isMe: false, type: 'text', ...over,
+  });
+  const me = { authorName: 'Alex Rivera', authorInitials: 'AR', authorColor: C.brand, isMe: true };
+  const sofia = { authorName: 'Sofia Rivera', authorInitials: 'SR', authorColor: '#6E8FE5' };
+  const mia = { authorName: 'Mia Rivera', authorInitials: 'MR', authorColor: C.coral };
+  const channel = [
+    msg({ ...sofia, content: 'Don’t forget Mia has swimming at 4 today 🏊', timestamp: at(0, 8, 12) }),
+    msg({ ...me, content: 'Got it — I’ll pick her up straight after work', timestamp: at(0, 8, 15) }),
+    msg({ ...sofia, content: 'Could you grab milk and bread on the way home?', timestamp: at(0, 8, 16) }),
+    msg({ ...me, content: 'Added them to the shopping list ✅', timestamp: at(0, 8, 18) }),
+    msg({ ...mia, content: 'Can Lily come over this weekend?? 🥺', timestamp: at(0, 16, 40) }),
+    msg({ ...me, content: 'We’ll sort it after Grandma’s birthday dinner 🎂', timestamp: at(0, 16, 45) }),
+    msg({ ...sofia, type: 'poll', pollQuestion: 'Where for Grandma’s birthday dinner?', pollOptions: ['Home-cooked 🏡', 'Italian restaurant 🍝', 'Sushi 🍣'], pollVotes: { '0': 2, '1': 1, '2': 0 }, timestamp: at(0, 19, 5) }),
+    msg({ ...sofia, content: 'Booked the lake house for next weekend 🏖️ so excited!', timestamp: at(0, 20, 30) }),
+  ];
+  localStorage.setItem(CHANNEL_KEY, JSON.stringify(channel));
 
   // ── Journal entries ────────────────────────────────────────────────────────
   if (!hasContent(JOURNAL_KEY)) {

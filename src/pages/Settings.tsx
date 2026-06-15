@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   User, Mail, Share2, Lock, Globe, Sparkles, Database,
-  Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight,
+  Bell, Sunrise, Moon, HelpCircle, Shield, ExternalLink, ChevronRight, Accessibility,
   UserPlus, LogOut, X, Plus, Check, Trash2, Crown, RotateCcw, GripVertical
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -119,6 +120,7 @@ const Settings = () => {
   const { signOut, user, isPremium, isTrial, trialDaysLeft, refreshSubscription, isGuest } = useAuth();
   const [guestFeature, setGuestFeature] = useState<string | null>(null);
   const { setTheme, isDark } = useTheme();
+  const { largeTapTargets, setLargeTapTargets } = useAccessibility();
 
   const [language, setLanguage] = useState(localStorage.getItem('eazy-family-language') || 'en');
   const [langOpen, setLangOpen] = useState(false);
@@ -491,6 +493,12 @@ const Settings = () => {
             title={t('settings.appearance.darkMode')}
             right={<Tog checked={isDark} onChange={() => setTheme(isDark ? 'light' : 'dark')} />}
           />
+          <Row
+            icon={<Accessibility className="w-4 h-4" style={{ color: MUTED }} />}
+            title={t('settings.appearance.largeTapTargets')}
+            subtitle={t('settings.appearance.largeTapTargetsSub')}
+            right={<Tog checked={largeTapTargets} onChange={setLargeTapTargets} />}
+          />
           <div className="relative" style={{ borderBottom: 'none' }}>
             <div className="flex items-center gap-3 px-4 py-3.5 cursor-pointer" onClick={() => setLangOpen(p => !p)}>
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
@@ -704,7 +712,7 @@ const Settings = () => {
                       <>
                         <img src={img} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         <button onClick={() => { const n = imgs.filter((_, i) => i !== idx); saveHomeConfig({ headerImages: n, headerImage: n[0] }); deleteStorageFile('user-uploads', img).catch(() => {}); }}
-                          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(28,28,24,0.6)' }}>
+                          className="tap-pad absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(28,28,24,0.6)' }}>
                           <X className="w-2.5 h-2.5 text-white" />
                         </button>
                       </>

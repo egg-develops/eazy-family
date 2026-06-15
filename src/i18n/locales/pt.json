@@ -397,7 +397,9 @@
       "lightEnabled": "Tema claro ativado",
       "colorScheme": "Esquema de cores",
       "colorSchemeDesc": "Escolhe o teu tom de cor preferido",
-      "customColor": "Cor personalizada"
+      "customColor": "Cor personalizada",
+      "largeTapTargets": "Alvos de toque maiores",
+      "largeTapTargetsSub": "Botões e controlos maiores e mais fáceis de tocar"
     },
     "privacy": {
       "title": "Privacidade e segurança",
@@ -1746,7 +1748,8 @@
     "guideGotIt": "Entendido",
     "guideSignInRequired": "Inicia sessão para usar o guia.",
     "guideError": "Desculpa, não consegui encontrar uma resposta. Tenta novamente.",
-    "aiGuide": "Pergunta-me qualquer coisa sobre a app — estou aqui para ajudar."
+    "aiGuide": "Pergunta-me qualquer coisa sobre a app — estou aqui para ajudar.",
+    "messageSent": "Mensagem enviada para {{name}}"
   },
   "messaging": {
     "typeMessage": "Digite uma mensagem...",

@@ -50,16 +50,43 @@ a:focus-visible,
   border-width: 0;
 }
 
-/* Ensure adequate touch targets (min 44x44px) */
+/* Touch targets.
+   Default: controls render at their authored (compact) size. Genuinely small
+   controls opt into a >=24px hit area (WCAG 2.2 AA, SC 2.5.8) via the .tap-pad
+   utility below — the visible box is unchanged, only the clickable area grows.
+   Opt-in: users can enable Settings → Preferences → "Larger touch targets" to
+   enforce the 44px AAA target (WCAG SC 2.5.5) on every control, app-wide.
+   NOTE: do NOT re-add a blanket `button { min-width/height: 44px }` here — it
+   silently inflates every compact control (checkboxes, quantity pills, etc.) on
+   touch devices and overrides component sizing. That regression is why these
+   fixes never stuck. Gate it behind `html.large-tap-targets`. */
 @media (pointer: coarse) {
-  button,
-  a,
-  [role="button"],
-  input[type="checkbox"],
-  input[type="radio"] {
+  html.large-tap-targets button,
+  html.large-tap-targets a,
+  html.large-tap-targets [role="button"],
+  html.large-tap-targets input[type="checkbox"],
+  html.large-tap-targets input[type="radio"] {
     min-height: 44px;
     min-width: 44px;
   }
+}
+
+/* Compact control: keeps its visual size but exposes a >=24px tap area.
+   The pseudo-element is transparent and absolutely positioned, so it enlarges
+   the hit region without affecting layout or appearance. */
+.tap-pad {
+  position: relative;
+}
+.tap-pad::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  min-width: 24px;
+  min-height: 24px;
 }
 
 /* Reduced motion preference */

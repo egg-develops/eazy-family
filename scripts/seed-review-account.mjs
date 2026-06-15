@@ -112,6 +112,76 @@ async function main() {
     title, type: 'shared', user_id: UID, family_id: familyId, parent_id: list.id, completed: i === 1 }))) });
   console.log('✓ shared list + items');
 
+  // 9) cloud-synced localStorage stores → user_preferences, so they hydrate on
+  //    the reviewer's device at login (no new build needed). These keys are in
+  //    preferencesSync SYNC_KEYS, so loadCloudPreferences writes them locally.
+  //    The calendar's family events carry `attendees` so they appear in the
+  //    Family Agenda / home agenda card / Calendar "family" section.
+  const isoAt = (days, hh = 9, mm = 0) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(hh, mm, 0, 0); return d.toISOString(); };
+  const isoDay = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(0, 0, 0, 0); return d.toISOString(); };
+  const rid = () => crypto.randomUUID();
+  const C = { brand: '#964735', gold: '#FFC861', coral: '#D97B66' };
+  const FAM = [UID]; // attendee → marks event as a shared family event
+  const calendar = [
+    { id: rid(), title: '🏊 Mia — swimming lesson', startDate: isoAt(0, 16, 0), endDate: isoAt(0, 17, 0), allDay: false, location: 'Aquatic Center', type: 'event', color: C.brand, tag: 'appointment', attendees: FAM },
+    { id: rid(), title: '👩‍⚕️ Dentist checkup', startDate: isoAt(1, 9, 30), endDate: isoAt(1, 10, 15), allDay: false, location: 'Bright Smiles Clinic', type: 'event', color: C.coral, tag: 'appointment' },
+    { id: rid(), title: '⚽ Leo — football practice', startDate: isoAt(2, 10, 0), endDate: isoAt(2, 11, 30), allDay: false, location: 'Community Pitch', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: rid(), title: '🎂 Grandma’s birthday dinner', startDate: isoAt(3, 18, 30), endDate: isoAt(3, 21, 0), allDay: false, location: 'Home', type: 'event', color: C.brand, tag: 'celebration', attendees: FAM },
+    { id: rid(), title: '🏖️ Family trip to the lake', startDate: isoDay(6), endDate: isoDay(7), allDay: true, location: 'Lake Geneva', type: 'event', color: C.coral, tag: 'travel', attendees: FAM },
+    { id: rid(), title: '🧑‍🏫 Parent–teacher meeting', startDate: isoAt(9, 17, 0), endDate: isoAt(9, 17, 30), allDay: false, location: 'Riverside School', type: 'event', color: C.gold, tag: 'meeting', attendees: FAM },
+    { id: rid(), title: '🩺 Annual health check', startDate: isoAt(12, 8, 45), endDate: isoAt(12, 9, 30), allDay: false, type: 'event', color: C.brand, tag: 'appointment' },
+    { id: rid(), title: 'Sign Mia’s permission slip', dueDate: isoDay(0), completed: false, priority: 'high', type: 'reminder' },
+    { id: rid(), title: 'Renew car insurance', dueDate: isoDay(4), completed: false, priority: 'medium', type: 'reminder' },
+  ];
+  await rpc('upsert_preference', { p_user_id: UID, p_key: 'eazy-family-calendar-items', p_value: calendar });
+  console.log('✓ cloud calendar (with family attendees)');
+
+  // 9b) Family Channel → shared `family_messages` table. Real senders only
+  //     (Alex = this account, Sofia = 2nd member). Idempotent: skip if seeded.
+  const existingMsgs = await rest(`family_messages?family_id=eq.${familyId}&select=id&limit=1`);
+  if (!existingMsgs.length) {
+    const sofiaLogin = await (await fetch(`${SUPA}/auth/v1/token?grant_type=password`, {
+      method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'sofia.rivera@eazy.family', password: 'EazyReview!2026' }),
+    })).json();
+    const postAs = (tok, rows) => fetch(`${SUPA}/rest/v1/family_messages`, {
+      method: 'POST', headers: { apikey: KEY, Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify(rows),
+    });
+    const msg = (sender, content, h, mm) => ({ family_id: familyId, sender_id: sender, type: 'text', content, created_at: isoAt(0, h, mm) });
+    // RLS: sender_id must equal the inserting user, so each member posts their own.
+    await postAs(TOKEN, [
+      msg(UID, 'Got it — I’ll pick her up straight after work', 8, 15),
+      msg(UID, 'Added them to the shopping list ✅', 8, 18),
+      msg(UID, 'Amazing 🎉 the kids will love it', 20, 32),
+    ]);
+    if (sofiaLogin.access_token && sofiaLogin.user?.id) {
+      await postAs(sofiaLogin.access_token, [
+        msg(sofiaLogin.user.id, 'Don’t forget Mia has swimming at 4 today 🏊', 8, 12),
+        msg(sofiaLogin.user.id, 'Could you grab milk and bread on the way home?', 8, 16),
+        msg(sofiaLogin.user.id, 'Booked the lake house for next weekend 🏖️ so excited!', 20, 30),
+      ]);
+      console.log('✓ family channel seeded (shared family_messages, Alex + Sofia)');
+    } else {
+      console.log('… Sofia login failed — seeded only Alex’s channel messages');
+    }
+  } else {
+    console.log('✓ family channel already seeded — skipped');
+  }
+
+  // 10) realistic shopping purchase history so the "running low" prediction has
+  //     a trustworthy, regular cadence to work from. The logic now requires ≥3
+  //     purchases over ≥14 days with a consistent rhythm, so without this a fresh
+  //     account correctly shows NO suggestion. Wipe first for idempotency.
+  await rest(`shopping_purchase_history?user_id=eq.${UID}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).catch(() => {});
+  const daysAgoIso = (n) => { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(18, 0, 0, 0); return d.toISOString(); };
+  const histRows = [
+    ...[10, 17, 24, 31, 38, 45].map(n => ({ user_id: UID, item_name: 'milk', purchased_at: daysAgoIso(n) })),  // weekly, ~3d overdue
+    ...[9, 14, 19, 24, 29, 34].map(n => ({ user_id: UID, item_name: 'bread', purchased_at: daysAgoIso(n) })),   // ~5-daily, ~4d overdue
+  ];
+  await rest('shopping_purchase_history', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(histRows) });
+  console.log('✓ shopping purchase history (milk + bread cadence → demoable "running low")');
+
   console.log('\nDONE. Family:', familyId, '| invite:', inviteCode);
 }
 main().catch(e => { console.error('✗', e.message); process.exit(1); });

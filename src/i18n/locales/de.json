@@ -397,7 +397,9 @@
       "lightEnabled": "Helles Design aktiviert",
       "colorScheme": "Farbschema",
       "colorSchemeDesc": "Wählen Sie Ihren bevorzugten Farbakzent",
-      "customColor": "Benutzerdefinierte Farbe"
+      "customColor": "Benutzerdefinierte Farbe",
+      "largeTapTargets": "Größere Schaltflächen",
+      "largeTapTargetsSub": "Größere, leichter antippbare Schaltflächen und Bedienelemente"
     },
     "privacy": {
       "title": "Datenschutz & Sicherheit",
@@ -1744,7 +1746,8 @@
     "guideGotIt": "Verstanden",
     "guideSignInRequired": "Bitte melde dich an, um den Guide zu nutzen.",
     "guideError": "Entschuldigung, ich konnte gerade keine Antwort finden. Bitte versuche es erneut.",
-    "aiGuide": "Frag mich alles über die App — ich helfe gerne."
+    "aiGuide": "Frag mich alles über die App — ich helfe gerne.",
+    "messageSent": "Nachricht an {{name}} gesendet"
   },
   "messaging": {
     "typeMessage": "Nachricht eingeben...",

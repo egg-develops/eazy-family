@@ -984,7 +984,7 @@ const AppHome = () => {
                 <img src={img} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   onClick={() => handleDeleteHeaderImage(i)}
-                  className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-destructive/80 hover:bg-destructive rounded-full text-white transition-colors"
+                  className="tap-pad absolute top-1 right-1 w-5 h-5 flex items-center justify-center bg-destructive/80 hover:bg-destructive rounded-full text-white transition-colors"
                   aria-label="Delete image"
                 >
                   <Trash2 className="w-2.5 h-2.5" />
@@ -1482,13 +1482,13 @@ const QuickToDos = ({ navigate, initialTasks = [] }: { navigate?: (path: string)
           <div key={task.id} className="flex items-center gap-3 px-3 py-2.5 mx-3 my-1.5 rounded-2xl" style={{ background: 'hsl(var(--muted))' }}>
             <button
               onClick={() => toggleTask(task.id)}
-              className="w-3.5 h-3.5 rounded-full flex items-center justify-center flex-shrink-0 border transition-all appearance-none p-0"
+              className="w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all appearance-none p-0"
               style={{ borderColor: task.completed ? '#964735' : 'hsl(var(--border))', background: task.completed ? '#964735' : 'transparent' }}
             >
-              {task.completed && <span className="text-white" style={{ fontSize: '7px', lineHeight: 1 }}>✓</span>}
+              {task.completed && <span className="text-white" style={{ fontSize: '12px', lineHeight: 1 }}>✓</span>}
             </button>
             <span
-              className={`text-sm flex-1 ${task.completed ? 'line-through' : ''}`}
+              className={`text-[15px] flex-1 ${task.completed ? 'line-through' : ''}`}
               style={{ color: task.completed ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))' }}
             >
               {task.title}

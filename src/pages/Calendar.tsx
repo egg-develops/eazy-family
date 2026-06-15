@@ -1814,12 +1814,12 @@ const Calendar = () => {
                 >
                   <button
                     onClick={() => toggleReminder(rem.id)}
-                    className="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                    className="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
                     style={{ borderColor: rem.completed ? '#6E8FE5' : 'hsl(var(--border))', background: rem.completed ? '#6E8FE5' : 'transparent' }}
                   >
-                    {rem.completed && <span className="text-white text-[10px] font-bold">✓</span>}
+                    {rem.completed && <span className="text-white text-[12px] font-bold">✓</span>}
                   </button>
-                  <p className="flex-1 text-sm font-medium" style={{ color: 'hsl(var(--foreground))', textDecoration: rem.completed ? 'line-through' : 'none', opacity: rem.completed ? 0.5 : 1 }}>
+                  <p className="flex-1 text-[15px] font-medium" style={{ color: 'hsl(var(--foreground))', textDecoration: rem.completed ? 'line-through' : 'none', opacity: rem.completed ? 0.5 : 1 }}>
                     {rem.title}
                   </p>
                   <button onClick={() => handleDeleteItem(rem.id)} className="opacity-30 hover:opacity-100 transition-opacity">

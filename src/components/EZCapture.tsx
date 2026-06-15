@@ -20,7 +20,10 @@ import {
   buildShoppingCaptureRows,
   buildTaskCaptureRows,
   isFeatureHelpQuery,
+  parseMessageIntent,
+  resolveAssignees,
   type EZParsedEntry,
+  type FamilyMemberLite,
 } from "@/lib/ezCapturePersistence";
 
 type Step = 'capture' | 'processing' | 'preview' | 'guide';
@@ -199,6 +202,46 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     if (isSwissGermanLocale()) warmDialectCache();
   }, []);
 
+  // Family roster — so voice assignees ("assign to Mia") resolve to member ids.
+  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberLite[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: mine } = await supabase
+          .from('family_members').select('family_id')
+          .eq('user_id', user.id).eq('is_active', true).maybeSingle();
+        if (cancelled || !mine?.family_id) return;
+        setFamilyId(mine.family_id);
+        const { data } = await supabase
+          .from('family_members').select('user_id, full_name')
+          .eq('family_id', mine.family_id).eq('is_active', true);
+        if (cancelled || !data) return;
+        setFamilyMembers(data.filter(m => m.user_id).map(m => ({ user_id: m.user_id as string, name: m.full_name || '' })));
+      } catch { /* assignment is best-effort; never block capture */ }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Find (or create) a shared family list to drop assigned tasks into, so they
+  // render as rows with an assignee pill instead of as an empty list header.
+  const ensureFamilyTaskList = async (famId: string, uid: string): Promise<string | null> => {
+    try {
+      const { data: existing } = await supabase
+        .from('tasks').select('id')
+        .eq('type', 'shared').eq('family_id', famId).is('parent_id', null)
+        .order('created_at', { ascending: true }).limit(1).maybeSingle();
+      if (existing?.id) return existing.id;
+      const { data: created } = await supabase
+        .from('tasks')
+        .insert({ title: 'Family To-Dos 🏡', type: 'shared', user_id: uid, family_id: famId, completed: false, visible_to: 'family' })
+        .select('id').single();
+      return created?.id ?? null;
+    } catch { return null; }
+  };
+
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
     const t = isSwissGermanLocale() ? normalizeCHDE(text, getDbRules()) : text;
@@ -349,12 +392,12 @@ TYPE CLASSIFICATION — pick exactly one:
 
 JSON fields:
 - type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, or list-destination phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
+- title: ONLY the core subject — NEVER include date, time, location, command words, list-destination phrases, or assignment phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), assignment phrases ("assign to X", "ask X to", "tell X to", "have X", "for X"), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
 - date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals. Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed, otherwise the following month.
 - time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
-- assignees: array of first names or null
+- assignees: array of first names of who should do it, or null. Extract from phrases like "assign to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title.
 - reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
@@ -497,6 +540,28 @@ STYLE:
       return;
     }
 
+    // "send a message to X …" → post an @mention into the shared Family Channel,
+    // but only when X resolves to a real family member (else fall through to the
+    // normal capture so we don't message nobody).
+    const msgIntent = parseMessageIntent(rawInput);
+    if (msgIntent && user && familyId) {
+      const ids = resolveAssignees([msgIntent.to], familyMembers, { userId: user.id, name: userName });
+      if (ids.length) {
+        const recipient = familyMembers.find(fm => fm.user_id === ids[0]);
+        const recipientName = (recipient?.name || msgIntent.to).split(' ')[0];
+        const { error } = await supabase.from('family_messages').insert({
+          family_id: familyId, sender_id: user.id, type: 'text',
+          content: `@${recipientName} ${msgIntent.body}`,
+        });
+        if (!error) {
+          haptic('light'); setTimeout(() => haptic('light'), 150);
+          toast({ title: t('ezCapture.messageSent', { name: recipientName, defaultValue: `Message sent to ${recipientName}` }) });
+          onClose(); navigate('/app/family-channel');
+          return;
+        }
+      }
+    }
+
     setStep('processing');
 
     const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput, getDbRules()) : rawInput;
@@ -574,11 +639,13 @@ STYLE:
 
       if (entryType === 'event' || entryType === 'reminder') {
         const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+        const attendeeUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user?.id ?? '', name: userName });
         const eventDraft = buildCalendarCaptureItem(parsed, {
           id: crypto.randomUUID(),
           now: new Date(),
           rawInput,
           userId: user?.id,
+          attendeeUserIds,
         });
         let appleCalendarId: string | undefined;
         if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
@@ -602,7 +669,12 @@ STYLE:
 
       } else if (entryType === 'task') {
         if (!user || !session) return;
-        const rows = buildTaskCaptureRows(parsed, user.id);
+        const assignedUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName });
+        // Assigning to another member → drop it into a shared family list so the
+        // assignee can see it and it shows with their pill.
+        const assignedToOthers = assignedUserIds.some(id => id !== user.id);
+        const parentId = (assignedToOthers && familyId) ? await ensureFamilyTaskList(familyId, user.id) : null;
+        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId, parentId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
@@ -610,11 +682,14 @@ STYLE:
           ? t('ezCapture.toastTasksAdded', { count: rows.length })
           : t('ezCapture.toastTaskAdded')
         });
-        onClose(); navigate('/app/lists');
+        onClose(); navigate(parentId ? '/app/lists?tab=tasks' : '/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) return;
-        const rows = buildShoppingCaptureRows(parsed, user.id);
+        const assignedUserIds = entryType === 'shopping'
+          ? resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName })
+          : [];
+        const rows = buildShoppingCaptureRows(parsed, user.id, { assignedUserIds, familyId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);

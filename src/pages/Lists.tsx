@@ -285,7 +285,8 @@ const Lists = () => {
     haptic('light');
     const dbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
     const { error } = await supabase.from('tasks').insert(
-      titles.map(title => ({ title, type: dbType, user_id: user.id, completed: false }))
+      // shared shopping MUST carry family_id or RLS hides it from other members
+      titles.map(title => ({ title, type: dbType, user_id: user.id, completed: false, family_id: scope === 'shared' ? userFamilyId : null }))
     );
     if (error) { toast({ title: 'Could not add item', variant: 'destructive' }); return; }
     setNewShoppingItem('');
@@ -357,6 +358,30 @@ const Lists = () => {
   };
 
   const shoppingDbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
+  // Avatar + first-name pill(s) for assigned members — used on shopping rows.
+  const renderAssigneePills = (uids: string[] | null | undefined, max = 2) => {
+    if (!uids?.length) return null;
+    return (
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {uids.slice(0, max).map(uid => {
+          const m = familyMembers.find(fm => fm.user_id === uid);
+          const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
+          return (
+            <span key={uid}
+              className="flex items-center gap-1 rounded-full pl-0.5 pr-2 py-0.5 text-[11px] font-semibold flex-shrink-0"
+              style={{ background: '#EEF4F0', color: '#44664F' }}
+              title={m?.full_name || name}>
+              {m?.photo
+                ? <img src={m.photo} className="w-4 h-4 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                : <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0" style={{ background: '#8FB399' }}>{name.charAt(0).toUpperCase()}</span>}
+              {name}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
   const shoppingItems = items.filter(i => i.type === shoppingDbType);
   const shoppingUncompleted = shoppingItems.filter(i => !i.completed);
   const shoppingCompleted = shoppingItems.filter(i => i.completed);
@@ -480,22 +505,22 @@ const Lists = () => {
                           const isCompleting = completingId === task.id;
                           return (
                             <div key={task.id}
-                              className="flex items-center gap-3 px-4 py-3"
+                              className="flex items-center gap-3 px-4 py-3.5"
                               style={{ background: CARD, borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}
                             >
                               <button onClick={() => toggleItem(task.id)}
                                 className="flex-shrink-0 rounded-full flex items-center justify-center appearance-none p-0"
                                 style={{
-                                  width: isCompleting ? '22px' : '16px',
-                                  height: isCompleting ? '22px' : '16px',
+                                  width: isCompleting ? '26px' : '22px',
+                                  height: isCompleting ? '26px' : '22px',
                                   flexShrink: 0,
-                                  border: (task.completed || isCompleting) ? 'none' : '1.5px solid #DAC1BB',
+                                  border: (task.completed || isCompleting) ? 'none' : '2px solid #DAC1BB',
                                   background: isCompleting ? '#8FB399' : task.completed ? ACCENT : 'transparent',
                                   transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
                                 }}
                               >
                                 {(task.completed || isCompleting) && (
-                                  <Check className={isCompleting ? "w-3.5 h-3.5 text-white" : "w-2.5 h-2.5 text-white"} />
+                                  <Check className={isCompleting ? "w-4 h-4 text-white" : "w-3.5 h-3.5 text-white"} />
                                 )}
                               </button>
                               <div className="flex-1 min-w-0">
@@ -506,12 +531,12 @@ const Lists = () => {
                                     onChange={e => setEditingTitle(e.target.value)}
                                     onBlur={() => commitEdit(task.id)}
                                     onKeyDown={e => { if (e.key === 'Enter') commitEdit(task.id); if (e.key === 'Escape') cancelEdit(); }}
-                                    className="w-full text-sm outline-none rounded px-1"
+                                    className="w-full text-[15px] outline-none rounded px-1"
                                     style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
                                   />
                                 ) : (
                                   <span
-                                    className="text-sm cursor-text truncate block"
+                                    className="text-[15px] cursor-text truncate block"
                                     style={{ color: task.completed ? MUTED : INK, textDecoration: task.completed ? 'line-through' : 'none' }}
                                     onClick={() => !task.completed && startEditing(task)}
                                     title={task.title}
@@ -523,7 +548,7 @@ const Lists = () => {
                                   const dd = new Date(task.due_date);
                                   const hasTime = dd.getHours() !== 0 || dd.getMinutes() !== 0;
                                   return (
-                                    <div className="text-xs mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
+                                    <div className="text-[13px] mt-0.5" style={{ color: isOverdue ? '#BA1A1A' : '#7A6660' }}>
                                       {isOverdue ? `${t('todos.urgent')} · ` : ''}
                                       {format(dd, hasTime ? "EEE, h:mm a" : "EEE, MMM d")}
                                     </div>
@@ -836,7 +861,7 @@ const Lists = () => {
                     </button>
                     <button
                       onClick={() => dismissPrediction(p.itemName)}
-                      className="flex items-center justify-center w-5 h-5 mr-1 rounded-full hover:bg-black/10 transition-colors flex-shrink-0"
+                      className="tap-pad flex items-center justify-center w-5 h-5 mr-1 rounded-full hover:bg-black/10 transition-colors flex-shrink-0"
                       title={t('shopping.removeSuggestion')}
                     >
                       <X className="w-2.5 h-2.5" style={{ color: '#44664F' }} />
@@ -855,11 +880,11 @@ const Lists = () => {
               </p>
               <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
                 {catItems.map((item, idx) => (
-                  <div key={item.id} className="flex items-center gap-2 px-3 py-2.5"
+                  <div key={item.id} className="flex items-center gap-3 px-4 py-3.5"
                     style={{ background: CARD, borderBottom: idx < catItems.length - 1 ? '1px solid #F1EDE7' : 'none' }}>
                     <button onClick={() => toggleItem(item.id)}
-                      className="flex-shrink-0 rounded appearance-none p-0"
-                      style={{ width: 16, height: 16, border: `1.5px solid ${BORDER}`, background: 'transparent' }}>
+                      className="flex-shrink-0 rounded-md appearance-none p-0"
+                      style={{ width: 22, height: 22, border: `2px solid ${BORDER}`, background: 'transparent' }}>
                     </button>
                     {editingItemId === item.id ? (
                       <input
@@ -868,21 +893,22 @@ const Lists = () => {
                         onChange={e => setEditingTitle(e.target.value)}
                         onBlur={() => commitEdit(item.id)}
                         onKeyDown={e => { if (e.key === 'Enter') commitEdit(item.id); if (e.key === 'Escape') cancelEdit(); }}
-                        className="flex-1 min-w-0 text-sm outline-none rounded px-1"
+                        className="flex-1 min-w-0 text-[15px] outline-none rounded px-1"
                         style={{ color: INK, background: MUTEDBG, border: `1px solid ${ACCENT}` }}
                       />
                     ) : (
-                      <span className="flex-1 min-w-0 text-sm cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
+                      <span className="flex-1 min-w-0 text-[15px] cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
-                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '1px 5px', gap: '2px' }}>
+                    {scope === 'shared' && renderAssigneePills(item.assigned_to_users)}
+                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '3px 8px', gap: '4px' }}>
                       <button onClick={() => updateQty(item.id, -1)}
-                        style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '14px', lineHeight: 1 }}>−</button>
-                      <span className="text-xs font-semibold" style={{ color: INK, minWidth: '14px', textAlign: 'center' }}>{getQty(item.id)}</span>
+                        style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>−</button>
+                      <span className="text-sm font-semibold" style={{ color: INK, minWidth: '18px', textAlign: 'center' }}>{getQty(item.id)}</span>
                       <button onClick={() => updateQty(item.id, 1)}
-                        style={{ width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '14px', lineHeight: 1 }}>+</button>
+                        style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>+</button>
                     </div>
-                    <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 flex items-center justify-center opacity-50 active:opacity-100" style={{ width: 24, height: 24 }}>
-                      <Trash2 className="w-3.5 h-3.5" style={{ color: MUTED }} />
+                    <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 flex items-center justify-center opacity-50 active:opacity-100" style={{ width: 32, height: 32 }}>
+                      <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                     </button>
                   </div>
                 ))}
@@ -902,14 +928,14 @@ const Lists = () => {
               </div>
               <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${BORDER}` }}>
                 {shoppingCompleted.map((item, idx) => (
-                  <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5"
+                  <div key={item.id} className="flex items-center gap-3 px-4 py-3.5"
                     style={{ background: CARD, borderBottom: idx < shoppingCompleted.length - 1 ? '1px solid #F1EDE7' : 'none' }}>
                     <button onClick={() => toggleItem(item.id)}
-                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0 appearance-none p-0"
+                      className="w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 appearance-none p-0"
                       style={{ background: ACCENT, border: `2px solid ${ACCENT}` }}>
-                      <span className="text-white" style={{ fontSize: '9px', lineHeight: 1 }}>✓</span>
+                      <span className="text-white" style={{ fontSize: '12px', lineHeight: 1 }}>✓</span>
                     </button>
-                    <span className="flex-1 min-w-0 text-sm line-through truncate" style={{ color: MUTED }} title={item.title}>{item.title}</span>
+                    <span className="flex-1 min-w-0 text-[15px] line-through truncate" style={{ color: MUTED }} title={item.title}>{item.title}</span>
                     <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
                       <Trash2 className="w-4 h-4" style={{ color: '#DAC1BB' }} />
                     </button>

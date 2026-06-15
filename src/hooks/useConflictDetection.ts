@@ -1,11 +1,25 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { detectConflicts, type CalEvent, type ConflictPair } from '@/lib/intelligence';
 
 // Re-export so callers that import from this hook still work
 export type ConflictEvent = CalEvent;
 export type { ConflictPair };
+
+// The user's calendar lives in localStorage (the Supabase `events` table is the
+// separate community/local-events feature). Read the SAME store the Calendar
+// page writes, or conflict detection silently analyses the wrong data.
+const CAL_KEY = 'eazy-family-calendar-items';
+
+interface RawCalItem {
+  id: string;
+  title: string;
+  type?: string;
+  startDate?: string;
+  endDate?: string;
+  allDay?: boolean;
+  location?: string;
+}
 
 export function useConflictDetection() {
   const { user } = useAuth();
@@ -15,31 +29,27 @@ export function useConflictDetection() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
 
-    const detect = async () => {
+    const detect = () => {
       try {
+        const raw: RawCalItem[] = JSON.parse(localStorage.getItem(CAL_KEY) || '[]');
         const now = new Date();
         const weekAhead = new Date(now.getTime() + 7 * 86400000);
 
-        const { data: events } = await supabase
-          .from('events')
-          .select('id, title, start_date, end_date, all_day, location')
-          .gte('start_date', now.toISOString())
-          .lte('start_date', weekAhead.toISOString())
-          .eq('all_day', false)
-          .order('start_date');
+        const events: CalEvent[] = raw
+          .filter(e => e.type !== 'reminder' && !e.allDay && e.startDate)
+          .map(e => ({
+            id: e.id,
+            title: e.title,
+            start: new Date(e.startDate!),
+            // default 1-hour duration if no end_date
+            end: e.endDate ? new Date(e.endDate) : new Date(new Date(e.startDate!).getTime() + 3600000),
+            allDay: false,
+            location: e.location ?? undefined,
+          }))
+          // only upcoming events in the next 7 days
+          .filter(e => e.start >= now && e.start <= weekAhead);
 
-        if (!events || events.length < 2) { setLoading(false); return; }
-
-        const normalized: ConflictEvent[] = events.map(e => ({
-          id: e.id,
-          title: e.title,
-          start: new Date(e.start_date),
-          // default 1-hour duration if no end_date
-          end: e.end_date ? new Date(e.end_date) : new Date(new Date(e.start_date).getTime() + 3600000),
-          location: e.location ?? undefined,
-        }));
-
-        setConflicts(detectConflicts(normalized).slice(0, 3));
+        setConflicts(detectConflicts(events).slice(0, 3));
       } catch {
         // silent — never block UI for AI features
       } finally {
@@ -48,6 +58,9 @@ export function useConflictDetection() {
     };
 
     detect();
+    // Recompute once cloud preferences hydrate the calendar after login.
+    window.addEventListener('eazy-prefs-loaded', detect);
+    return () => window.removeEventListener('eazy-prefs-loaded', detect);
   }, [user]);
 
   return { conflicts, loading };

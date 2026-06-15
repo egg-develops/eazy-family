@@ -164,21 +164,31 @@ describe('scoreStaleTask', () => {
 describe('computeShoppingPredictions', () => {
   const NOW = d('2026-06-10T00:00:00Z');
 
+  /** weekly purchases ending `lastDaysAgo` before NOW, `count` of them */
+  function weekly(item: string, lastDaysAgo: number, count: number): ShoppingHistoryRow[] {
+    const rows: ShoppingHistoryRow[] = [];
+    for (let i = 0; i < count; i++) {
+      const dt = new Date(NOW.getTime() - (lastDaysAgo + i * 7) * 86400000);
+      rows.push({ itemName: item, purchasedAt: dt });
+    }
+    return rows;
+  }
+
   it('empty history → no predictions', () => {
     expect(computeShoppingPredictions([], NOW)).toHaveLength(0);
   });
 
-  it('item with only 1 purchase → no prediction (need ≥ 2)', () => {
-    const history = [purchase('milk', '2026-06-01')];
+  it('1 purchase → none', () => {
+    expect(computeShoppingPredictions([purchase('milk', '2026-06-01')], NOW)).toHaveLength(0);
+  });
+
+  it('only 2 purchases → none (one interval is not a rhythm)', () => {
+    const history = [purchase('milk', '2026-05-31'), purchase('milk', '2026-05-24')];
     expect(computeShoppingPredictions(history, NOW)).toHaveLength(0);
   });
 
-  it('item purchased every 7 days, last 10 days ago → overdue by 3', () => {
-    const history = [
-      purchase('milk', '2026-05-31'), // 10 days ago
-      purchase('milk', '2026-05-24'), // 17 days ago (interval = 7)
-    ];
-    const result = computeShoppingPredictions(history, NOW);
+  it('3+ regular weekly purchases, last 10 days ago → overdue by 3', () => {
+    const result = computeShoppingPredictions(weekly('milk', 10, 4), NOW);
     expect(result).toHaveLength(1);
     expect(result[0].itemName).toBe('Milk');
     expect(result[0].avgDaysBetween).toBe(7);
@@ -186,61 +196,59 @@ describe('computeShoppingPredictions', () => {
     expect(result[0].daysOverdue).toBe(3);
   });
 
-  it('item purchased every 7 days, last 5 days ago → NOT overdue', () => {
+  it('regular weekly but bought 4 days ago → NOT overdue (within 25% margin)', () => {
+    expect(computeShoppingPredictions(weekly('eggs', 4, 4), NOW)).toHaveLength(0);
+  });
+
+  it('three purchases in the same shopping trip (span < 14d) → none', () => {
     const history = [
-      purchase('eggs', '2026-06-05'), // 5 days ago
-      purchase('eggs', '2026-05-29'), // 12 days ago (interval = 7)
+      purchase('chips', '2026-06-09'),
+      purchase('chips', '2026-06-08'),
+      purchase('chips', '2026-06-07'),
     ];
     expect(computeShoppingPredictions(history, NOW)).toHaveLength(0);
   });
 
-  it('average interval across 3 purchases is used', () => {
-    // intervals: 7, 14 → avg = 10.5 → ~11 days
+  it('irregular cadence (high variance) → none', () => {
+    // intervals 2 and 30 → CV ≈ 0.88 > 0.6
     const history = [
-      purchase('bread', '2026-05-28'), // 13 days ago
-      purchase('bread', '2026-05-21'), // 20 days ago (interval 7)
-      purchase('bread', '2026-05-07'), // 34 days ago (interval 14)
+      purchase('soda', '2026-06-05'),
+      purchase('soda', '2026-06-03'),
+      purchase('soda', '2026-05-04'),
+    ];
+    expect(computeShoppingPredictions(history, NOW)).toHaveLength(0);
+  });
+
+  it('implausibly long interval (> 60 days) → none', () => {
+    const history = [
+      purchase('lightbulbs', '2026-06-01'),
+      purchase('lightbulbs', '2026-03-23'), // ~70d
+      purchase('lightbulbs', '2026-01-12'), // ~70d
+    ];
+    expect(computeShoppingPredictions(history, NOW)).toHaveLength(0);
+  });
+
+  it('groups emoji/case variants and surfaces a clean name (the reported bug)', () => {
+    const history = [
+      { itemName: 'Bananas 🍌', purchasedAt: new Date(NOW.getTime() - 10 * 86400000) },
+      { itemName: 'bananas',    purchasedAt: new Date(NOW.getTime() - 17 * 86400000) },
+      { itemName: 'BANANAS',    purchasedAt: new Date(NOW.getTime() - 24 * 86400000) },
+      { itemName: 'Bananas 🍌', purchasedAt: new Date(NOW.getTime() - 31 * 86400000) },
     ];
     const result = computeShoppingPredictions(history, NOW);
     expect(result).toHaveLength(1);
-    expect(result[0].avgDaysBetween).toBe(11); // round(10.5) = 11
-    expect(result[0].daysOverdue).toBe(3);      // round(13 - 10.5) = round(2.5) = 3
+    expect(result[0].itemName).toBe('Bananas');
   });
 
   it('phrase with more than 4 words is skipped', () => {
-    const history = [
-      purchase('add some organic almond milk please', '2026-05-31'),
-      purchase('add some organic almond milk please', '2026-05-24'),
-    ];
+    const history = weekly('add some organic almond milk please', 10, 4);
     expect(computeShoppingPredictions(history, NOW)).toHaveLength(0);
-  });
-
-  it('exactly 4-word phrase is kept', () => {
-    const history = [
-      purchase('almond oat soy milk', '2026-05-31'),
-      purchase('almond oat soy milk', '2026-05-24'),
-    ];
-    const result = computeShoppingPredictions(history, NOW);
-    expect(result).toHaveLength(1);
-  });
-
-  it('normalises item name to title case', () => {
-    const history = [
-      purchase('COFFEE', '2026-05-31'),
-      purchase('coffee', '2026-05-24'),
-    ];
-    const result = computeShoppingPredictions(history, NOW);
-    expect(result[0].itemName).toBe('Coffee');
   });
 
   it('results sorted by daysOverdue desc', () => {
     const history = [
-      // milk: avg 7, last 20 days ago → 13 days overdue
-      purchase('milk', '2026-05-21'),
-      purchase('milk', '2026-05-14'),
-      // eggs: avg 7, last 10 days ago → 3 days overdue
-      purchase('eggs', '2026-05-31'),
-      purchase('eggs', '2026-05-24'),
+      ...weekly('milk', 20, 4), // avg 7, last 20d ago → overdue 13
+      ...weekly('eggs', 10, 4), // avg 7, last 10d ago → overdue 3
     ];
     const result = computeShoppingPredictions(history, NOW);
     expect(result[0].itemName).toBe('Milk');
@@ -248,12 +256,8 @@ describe('computeShoppingPredictions', () => {
   });
 
   it('caps results at 5 items', () => {
-    const items = ['a', 'b', 'c', 'd', 'e', 'f'].map(name => [
-      purchase(name, '2026-05-21'),
-      purchase(name, '2026-05-14'),
-    ]).flat();
-    const result = computeShoppingPredictions(items, NOW);
-    expect(result.length).toBeLessThanOrEqual(5);
+    const history = ['a', 'b', 'c', 'd', 'e', 'f'].flatMap(name => weekly(name, 14, 4));
+    expect(computeShoppingPredictions(history, NOW).length).toBeLessThanOrEqual(5);
   });
 });
 
@@ -271,6 +275,9 @@ describe('cleanPurchaseItem', () => {
   it('strips "please add "',                     () => expect(cleanPurchaseItem('please add avocado')).toBe('avocado'));
   it('plain item name passes through',           () => expect(cleanPurchaseItem('milk')).toBe('milk'));
   it('lowercases the result',                    () => expect(cleanPurchaseItem('MILK')).toBe('milk'));
+  it('strips emoji',                             () => expect(cleanPurchaseItem('Bananas 🍌')).toBe('bananas'));
+  it('strips trailing punctuation',              () => expect(cleanPurchaseItem('eggs!')).toBe('eggs'));
+  it('keeps apostrophes',                        () => expect(cleanPurchaseItem("kids' snacks")).toBe("kids' snacks"));
   it('>4 words → empty string (junk)',           () => expect(cleanPurchaseItem('some very long complicated phrase here')).toBe(''));
   it('empty input → empty string',               () => expect(cleanPurchaseItem('')).toBe(''));
 });

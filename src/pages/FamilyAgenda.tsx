@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import {
-  Mic, MicOff, X, Plus, MapPin, FileText, BarChart2,
+  Mic, MicOff, X, Plus, MapPin, FileText,
   Image, Play, ChevronLeft, Send,
 } from "lucide-react";
 import { ChannelEZCapture } from "@/components/ChannelEZCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  rowToChannelMessage, channelMessageToRow, buildAuthors,
+  type ChannelMessage, type ChannelAuthor, type FamilyMessageRow, type ChannelMessageInput,
+} from "@/lib/familyChannel";
 import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
 import { compressAndUpload } from "@/lib/imageUpload";
@@ -16,35 +20,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
-// ─────────────────────────────────────────────
-// Data model
-// ─────────────────────────────────────────────
-interface ChannelMessage {
-  id: string;
-  authorName: string;
-  authorInitials: string;
-  authorColor: string;
-  isMe: boolean;
-  type: "text" | "voice" | "image" | "location" | "document" | "poll" | "event";
-  timestamp: string;
-  content?: string;
-  transcript?: string;
-  duration?: number;
-  imageUrl?: string;
-  locationName?: string;
-  lat?: number;
-  lon?: number;
-  fileName?: string;
-  fileSize?: string;
-  fileData?: string;
-  pollQuestion?: string;
-  pollOptions?: string[];
-  pollVotes?: Record<string, number>;
-  myVote?: number;
-  eventTitle?: string;
-  eventDate?: string;
-  eventLocation?: string;
-}
+// ChannelMessage / row types now live in @/lib/familyChannel (shared, tested).
 
 // ─────────────────────────────────────────────
 // Constants
@@ -58,7 +34,6 @@ const SAGE_BG = "#EEF4F0";
 const BG = "hsl(var(--background))";
 const CARD = "hsl(var(--card))";
 const INK = "hsl(var(--foreground))";
-const LS_KEY = "eazy-family-channel-messages";
 const MAX_MESSAGES = 200;
 
 function getUserIdentity() {
@@ -244,47 +219,6 @@ const DocumentBubble = ({ msg }: { msg: ChannelMessage }) => {
   );
 };
 
-const PollBubble = ({
-  msg,
-  onVote,
-}: {
-  msg: ChannelMessage;
-  onVote: (msgId: string, optionIndex: number) => void;
-}) => {
-  const totalVotes = Object.values(msg.pollVotes || {}).reduce((a, b) => a + b, 0);
-  return (
-    <div
-      className="rounded-2xl px-3.5 py-3 space-y-2"
-      style={{ background: CARD, border: `1px solid ${BORDER}`, maxWidth: "72%", minWidth: "200px" }}
-    >
-      <p className="text-sm font-semibold" style={{ color: INK }}>{msg.pollQuestion}</p>
-      {(msg.pollOptions || []).map((opt, i) => {
-        const votes = (msg.pollVotes || {})[String(i)] || 0;
-        const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-        const isMyVote = msg.myVote === i;
-        return (
-          <button
-            key={i}
-            onClick={() => onVote(msg.id, i)}
-            className="w-full text-left rounded-xl overflow-hidden relative"
-            style={{ border: `1px solid ${isMyVote ? TC : BORDER}` }}
-          >
-            <div
-              className="absolute inset-y-0 left-0 rounded-xl"
-              style={{ width: `${pct}%`, background: isMyVote ? `${TC}22` : `${SAGE}15`, transition: "width 0.3s ease" }}
-            />
-            <div className="relative flex items-center justify-between px-2.5 py-2">
-              <span className="text-sm" style={{ color: isMyVote ? TC : INK, fontWeight: isMyVote ? 600 : 400 }}>{opt}</span>
-              <span className="text-xs font-medium ml-2" style={{ color: MUTED }}>{pct}%</span>
-            </div>
-          </button>
-        );
-      })}
-      <p className="text-xs" style={{ color: MUTED }}>{totalVotes} vote{totalVotes !== 1 ? "s" : ""}</p>
-    </div>
-  );
-};
-
 const EventCard = ({ msg, t }: { msg: ChannelMessage; t: (key: string) => string }) => {
   const navigate = useNavigate();
   return (
@@ -316,13 +250,11 @@ const EventCard = ({ msg, t }: { msg: ChannelMessage; t: (key: string) => string
 const MessageRow = ({
   msg,
   onImageExpand,
-  onVote,
   t,
   fmt,
 }: {
   msg: ChannelMessage;
   onImageExpand: (url: string) => void;
-  onVote: (msgId: string, optionIndex: number) => void;
   t: (key: string) => string;
   fmt: (date: Date, pattern: string) => string;
 }) => {
@@ -343,7 +275,6 @@ const MessageRow = ({
       case "image": return <ImageBubble msg={msg} onExpand={onImageExpand} />;
       case "location": return <LocationBubble msg={msg} />;
       case "document": return <DocumentBubble msg={msg} />;
-      case "poll": return <PollBubble msg={msg} onVote={onVote} />;
       default: return null;
     }
   })();
@@ -375,72 +306,6 @@ const MessageRow = ({
 // ─────────────────────────────────────────────
 // Poll creator
 // ─────────────────────────────────────────────
-const PollCreator = ({
-  onCreate,
-  onCancel,
-}: {
-  onCreate: (question: string, options: string[]) => void;
-  onCancel: () => void;
-}) => {
-  const { t } = useTranslation();
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState(["", ""]);
-
-  const addOption = () => {
-    if (options.length < 4) setOptions(p => [...p, ""]);
-  };
-  const setOption = (i: number, val: string) => {
-    setOptions(p => p.map((o, idx) => idx === i ? val : o));
-  };
-  const valid = question.trim() && options.filter(o => o.trim()).length >= 2;
-
-  return (
-    <div className="mx-4 mb-3 rounded-2xl p-4 shadow-lg" style={{ background: CARD, border: `1px solid ${BORDER}` }}>
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold" style={{ color: INK }}>{t('familyAgenda.createPoll')}</p>
-        <button onClick={onCancel} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'hsl(var(--muted))' }}><X className="w-4 h-4" style={{ color: MUTED }} /></button>
-      </div>
-      <input
-        className="w-full text-sm rounded-xl px-3 py-2 mb-3 outline-none"
-        style={{ border: `1px solid ${BORDER}`, color: INK }}
-        placeholder={t('familyAgenda.askQuestion')}
-        value={question}
-        onChange={e => setQuestion(e.target.value)}
-        autoFocus
-      />
-      {options.map((opt, i) => (
-        <input
-          key={i}
-          className="w-full text-sm rounded-xl px-3 py-2 mb-2 outline-none"
-          style={{ border: `1px solid ${BORDER}`, color: INK }}
-          placeholder={`${t('familyAgenda.optionPlaceholder')} ${i + 1}`}
-          value={opt}
-          onChange={e => setOption(i, e.target.value)}
-        />
-      ))}
-      <div className="flex items-center gap-2 mt-1">
-        {options.length < 4 && (
-          <button
-            onClick={addOption}
-            className="text-[11px] px-2.5 py-1 rounded-full"
-            style={{ background: SAGE_BG, color: SAGE }}
-          >
-            {t('familyAgenda.addOption')}
-          </button>
-        )}
-        <button
-          onClick={() => valid && onCreate(question.trim(), options.filter(o => o.trim()))}
-          disabled={!valid}
-          className="text-[11px] px-3 py-1 rounded-full font-semibold text-white ml-auto"
-          style={{ background: valid ? TC : BORDER }}
-        >
-          {t('familyAgenda.createPollBtn')}
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // ─────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────
@@ -452,14 +317,10 @@ const FamilyAgenda = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Messages
-  const [messages, setMessages] = useState<ChannelMessage[]>(() => {
-    try {
-      const s = localStorage.getItem(LS_KEY);
-      if (s) return JSON.parse(s);
-    } catch { /* ignore */ }
-    return [];
-  });
+  // Messages — shared via the family_messages table (loaded + realtime below)
+  const [messages, setMessages] = useState<ChannelMessage[]>([]);
+  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [authors, setAuthors] = useState<Record<string, ChannelAuthor>>({});
 
   // Input
   const [text, setText] = useState("");
@@ -473,11 +334,8 @@ const FamilyAgenda = () => {
   // Attachment tray
   const [trayOpen, setTrayOpen] = useState(false);
 
-  // Channel EZ Capture (voice → message/poll/location)
+  // Channel EZ Capture (voice → message/location)
   const [channelEZOpen, setChannelEZOpen] = useState(false);
-
-  // Poll creator
-  const [pollCreatorOpen, setPollCreatorOpen] = useState(false);
 
   // Preview
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -496,11 +354,54 @@ const FamilyAgenda = () => {
   const hour = new Date().getHours();
   const isQuietHours = hour < 7 || hour >= 21;
 
-  // ── Persist ─────────────────────────────────
+  // ── Load family roster + messages, then subscribe to realtime ──────────────
   useEffect(() => {
-    const capped = messages.slice(-MAX_MESSAGES);
-    localStorage.setItem(LS_KEY, JSON.stringify(capped));
-  }, [messages]);
+    if (!user) return;
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      const { data: mine } = await supabase
+        .from('family_members').select('family_id')
+        .eq('user_id', user.id).eq('is_active', true).maybeSingle();
+      const fid = mine?.family_id;
+      if (cancelled || !fid) return;
+      setFamilyId(fid);
+
+      // Author lookup: member full_name + profile display_name, stable colour.
+      const { data: members } = await supabase
+        .from('family_members').select('user_id, full_name')
+        .eq('family_id', fid).eq('is_active', true);
+      const ids = (members ?? []).map(m => m.user_id).filter(Boolean) as string[];
+      const { data: profiles } = ids.length
+        ? await supabase.from('profiles').select('user_id, display_name').in('user_id', ids)
+        : { data: [] as { user_id: string; display_name: string | null }[] };
+      const authorMap = buildAuthors(members ?? [], profiles ?? []);
+      if (cancelled) return;
+      setAuthors(authorMap);
+
+      const { data: rows } = await supabase
+        .from('family_messages')
+        .select('id, family_id, sender_id, content, media_url, type, metadata, created_at')
+        .eq('family_id', fid)
+        .order('created_at', { ascending: true })
+        .limit(MAX_MESSAGES);
+      if (cancelled) return;
+      setMessages((rows ?? []).map(r => rowToChannelMessage(r as FamilyMessageRow, authorMap, user.id)));
+
+      // Realtime: append inserts from OTHER members (mine are already optimistic).
+      channel = supabase
+        .channel(`family-${fid}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'family_messages', filter: `family_id=eq.${fid}` }, (payload) => {
+          const row = payload.new as FamilyMessageRow;
+          if (row.sender_id === user.id) return;
+          setMessages(prev => prev.some(m => m.id === row.id) ? prev : [...prev, rowToChannelMessage(row, authorMap, user.id)]);
+        })
+        .subscribe();
+    })();
+
+    return () => { cancelled = true; if (channel) supabase.removeChannel(channel); };
+  }, [user]);
 
   // ── Scroll to bottom ────────────────────────
   useEffect(() => {
@@ -515,11 +416,14 @@ const FamilyAgenda = () => {
   }, []);
 
   // ── Helpers ─────────────────────────────────
-  const me = getUserIdentity();
+  // Prefer the resolved family author (so my bubble matches what others see);
+  // fall back to the on-device onboarding name until the roster loads.
+  const me: ChannelAuthor = (user && authors[user.id]) || getUserIdentity();
 
-  const addMessage = useCallback((partial: Omit<ChannelMessage, "id" | "authorName" | "authorInitials" | "authorColor" | "isMe" | "timestamp">) => {
-    const msg: ChannelMessage = {
-      id: crypto.randomUUID(),
+  const addMessage = useCallback((partial: ChannelMessageInput) => {
+    const tempId = crypto.randomUUID();
+    const optimistic: ChannelMessage = {
+      id: tempId,
       authorName: me.name,
       authorInitials: me.initials,
       authorColor: me.color,
@@ -527,10 +431,18 @@ const FamilyAgenda = () => {
       timestamp: new Date().toISOString(),
       ...partial,
     };
-    setMessages(prev => [...prev, msg]);
+    setMessages(prev => [...prev, optimistic]);
     haptic("light");
-    return msg;
-  }, [me.name, me.initials, me.color]);
+    // Persist to the shared channel; swap the temp row for the real DB row.
+    if (familyId && user) {
+      const row = channelMessageToRow(partial, familyId, user.id);
+      supabase.from('family_messages').insert(row).select('id, created_at').single()
+        .then(({ data }) => {
+          if (data) setMessages(prev => prev.map(m => m.id === tempId ? { ...optimistic, id: data.id, timestamp: data.created_at } : m));
+        });
+    }
+    return optimistic;
+  }, [me.name, me.initials, me.color, familyId, user]);
 
   // ── Text send ───────────────────────────────
   const sendText = () => {
@@ -647,34 +559,6 @@ const FamilyAgenda = () => {
     addMessage({ type: "document", fileName: file.name, fileSize: sizeStr, fileData });
   };
 
-  // ── Poll ────────────────────────────────────
-  const handleCreatePoll = (question: string, options: string[]) => {
-    const pollVotes: Record<string, number> = {};
-    options.forEach((_, i) => { pollVotes[String(i)] = 0; });
-    addMessage({ type: "poll", pollQuestion: question, pollOptions: options, pollVotes });
-    setPollCreatorOpen(false);
-    setTrayOpen(false);
-  };
-
-  const handleVote = (msgId: string, optionIndex: number) => {
-    setMessages(prev => prev.map(m => {
-      if (m.id !== msgId) return m;
-      const prevVote = m.myVote;
-      const newVotes = { ...(m.pollVotes || {}) };
-      // Remove old vote
-      if (prevVote !== undefined) {
-        newVotes[String(prevVote)] = Math.max(0, (newVotes[String(prevVote)] || 1) - 1);
-      }
-      // Add new vote (toggle off if same)
-      if (prevVote === optionIndex) {
-        return { ...m, pollVotes: newVotes, myVote: undefined };
-      }
-      newVotes[String(optionIndex)] = (newVotes[String(optionIndex)] || 0) + 1;
-      return { ...m, pollVotes: newVotes, myVote: optionIndex };
-    }));
-    haptic("light");
-  };
-
   // ── Grouped messages ─────────────────────────
   const groups = groupByDate(messages, t, fmt);
 
@@ -769,7 +653,6 @@ const FamilyAgenda = () => {
                   key={msg.id}
                   msg={msg}
                   onImageExpand={setPreviewUrl}
-                  onVote={handleVote}
                   t={t}
                   fmt={fmt}
                 />
@@ -796,24 +679,14 @@ const FamilyAgenda = () => {
         <div ref={bottomRef} style={{ height: "1px" }} />
       </div>
 
-      {/* ── Poll creator ─────────────────────────── */}
-      {pollCreatorOpen && (
-        <div style={{ flexShrink: 0 }}>
-          <PollCreator
-            onCreate={handleCreatePoll}
-            onCancel={() => setPollCreatorOpen(false)}
-          />
-        </div>
-      )}
-
       {/* ── Attachment tray ───────────────────── */}
-      {trayOpen && !pollCreatorOpen && (
+      {trayOpen && (
         <div style={{ flexShrink: 0, animation: "slideUp 0.2s ease" }}>
           <div
             className="mx-4 mb-2 rounded-2xl p-4 shadow-xl"
             style={{ background: CARD, border: `1px solid ${BORDER}` }}
           >
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {/* PHOTOS */}
               <button
                 className="flex flex-col items-center gap-2"
@@ -846,17 +719,6 @@ const FamilyAgenda = () => {
                 </div>
                 <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.document')}</span>
               </button>
-
-              {/* POLL */}
-              <button
-                className="flex flex-col items-center gap-2"
-                onClick={() => { setPollCreatorOpen(true); setTrayOpen(false); }}
-              >
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#FEF9E7" }}>
-                  <BarChart2 className="w-5 h-5" style={{ color: "#B8860B" }} />
-                </div>
-                <span className="text-xs font-medium" style={{ color: MUTED }}>{t('familyAgenda.poll')}</span>
-              </button>
             </div>
           </div>
         </div>
@@ -880,7 +742,7 @@ const FamilyAgenda = () => {
         >
           {/* +/× toggle */}
           <button
-            onClick={() => { setTrayOpen(p => !p); if (pollCreatorOpen) setPollCreatorOpen(false); }}
+            onClick={() => setTrayOpen(p => !p)}
             className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
             style={{ background: trayOpen ? `${TC}15` : "transparent" }}
           >
@@ -954,12 +816,12 @@ const FamilyAgenda = () => {
         }
       `}</style>
 
-      {/* Channel EZ Capture — voice → message/poll/location */}
+      {/* Channel EZ Capture — voice → message/location (polls dropped) */}
       <ChannelEZCapture
         open={channelEZOpen}
         onClose={() => setChannelEZOpen(false)}
         onSendMessage={(text) => { addMessage({ type: "text", content: text }); }}
-        onCreatePoll={(question, options) => { handleCreatePoll(question, options); }}
+        onCreatePoll={() => { /* polls dropped — see familyChannel */ }}
         onShareLocation={() => { shareLocation(); }}
       />
     </div>

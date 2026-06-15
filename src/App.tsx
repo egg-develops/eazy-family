@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
@@ -56,6 +57,7 @@ const PageLoader = () => (
 
 const App = () => (
   <ThemeProvider>
+   <AccessibilityProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -106,6 +108,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+   </AccessibilityProvider>
   </ThemeProvider>
 );
 
