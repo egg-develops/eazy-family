@@ -1747,7 +1747,12 @@
     "guideSignInRequired": "Please sign in to use the guide.",
     "guideError": "Sorry, I couldn't get an answer right now. Please try again.",
     "aiGuide": "Ask me anything about the app — I'm here to help.",
-    "messageSent": "Message sent to {{name}}"
+    "messageSent": "Message sent to {{name}}",
+    "headerChannel": "Message your family",
+    "subheaderChannel": "Everyone in the channel will see it",
+    "placeholderChannel": "Message your family…",
+    "couldNotSend": "Could not send message",
+    "send": "Send"
   },
   "messaging": {
     "typeMessage": "Type a message...",

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Mic, Sparkles, ChevronLeft, Check } from "lucide-react";
+import { Mic, Sparkles, ChevronLeft, Check, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
@@ -31,6 +31,9 @@ type Step = 'capture' | 'processing' | 'preview' | 'guide';
 interface EZCaptureProps {
   onClose: () => void;
   defaultType?: CaptureType;
+  /** Family Channel: free-text "message" mode — speak/type, posts to the channel
+   *  instead of classifying. Same window as everywhere else (no separate UI). */
+  channelMode?: boolean;
 }
 
 type ParsedEntry = EZParsedEntry;
@@ -140,7 +143,8 @@ const getUserFirstName = (): string => {
   return '';
 };
 
-export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
+export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps) => {
+  const isChannelMode = !!channelMode;
   const { t } = useTranslation();
 
   // Resolve type labels at render time so they follow the active language
@@ -287,7 +291,7 @@ export const EZCapture = ({ onClose, defaultType }: EZCaptureProps) => {
     // Journaling captures long-form thoughts with pauses — keep listening across
     // pauses until the user explicitly stops, instead of cutting off after one
     // utterance the way quick capture does.
-    continuousRef.current = defaultType === 'journal' || type === 'journal';
+    continuousRef.current = defaultType === 'journal' || type === 'journal' || isChannelMode;
     setIntendingToListen(true);
     haptic('light');
 
@@ -535,6 +539,38 @@ STYLE:
     if (isListening) stopListening();
 
     const rawInput = latestTextRef.current.trim();
+
+    // Family Channel mode: post the text straight to the shared channel — no
+    // classification, no guide, no message-intent parsing.
+    if (isChannelMode) {
+      // Resolve the family inline in case the roster effect hasn't loaded yet —
+      // otherwise a quick send would be silently dropped.
+      let fid = familyId;
+      if (!fid && user) {
+        const { data } = await supabase.from('family_members').select('family_id')
+          .eq('user_id', user.id).eq('is_active', true).maybeSingle();
+        fid = data?.family_id ?? null;
+      }
+      if (!user || !fid) {
+        toast({ title: t('ezCapture.couldNotSend', { defaultValue: 'Could not send message' }), variant: 'destructive' });
+        return;
+      }
+      const { data: inserted, error } = await supabase.from('family_messages')
+        .insert({ family_id: fid, sender_id: user.id, type: 'text', content: rawInput })
+        .select('id, family_id, sender_id, content, media_url, type, metadata, created_at').single();
+      if (error || !inserted) {
+        toast({ title: t('ezCapture.couldNotSend', { defaultValue: 'Could not send message' }), variant: 'destructive' });
+        return;
+      }
+      // Tell an open channel to show it immediately (own realtime events are
+      // skipped there, and navigating to the same route won't reload).
+      window.dispatchEvent(new CustomEvent('eazy-channel-message-sent', { detail: inserted }));
+      haptic('light'); setTimeout(() => haptic('light'), 150);
+      onClose();
+      navigate('/app/family-channel');
+      return;
+    }
+
     if (isFeatureHelpQuery(rawInput)) {
       await fetchGuideAnswer(rawInput);
       return;
@@ -767,10 +803,12 @@ STYLE:
   const placeholder = isTranscribing
     ? t('ezCapture.placeholderTranscribing')
     : isListening
-      ? ((isSingleShot && !isJournalMode) ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
-      : isJournalMode
-        ? ''
-        : t('ezCapture.placeholderGuide');
+      ? ((isSingleShot && !isJournalMode && !isChannelMode) ? t('ezCapture.placeholderListeningSingleShot') : t('ezCapture.placeholderListening'))
+      : isChannelMode
+        ? t('ezCapture.placeholderChannel', 'Message your family…')
+        : isJournalMode
+          ? ''
+          : t('ezCapture.placeholderGuide');
 
   return (
     <div
@@ -787,10 +825,14 @@ STYLE:
             <div className="rounded-3xl p-6 space-y-5" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
               <div className="text-center space-y-1">
                 <h2 className="text-2xl font-bold tracking-tight" style={{ color: INK }}>
-                  {isJournalMode ? t('ezCapture.headerJournal', 'Share your thoughts') : t('ezCapture.header')}
+                  {isChannelMode ? t('ezCapture.headerChannel', 'Message your family')
+                    : isJournalMode ? t('ezCapture.headerJournal', 'Share your thoughts')
+                    : t('ezCapture.header')}
                 </h2>
                 <p className="text-sm" style={{ color: MUTED }}>
-                  {isJournalMode ? t('ezCapture.subheaderJournal', 'Your space, your words') : t('ezCapture.subheader')}
+                  {isChannelMode ? t('ezCapture.subheaderChannel', 'Everyone in the channel will see it')
+                    : isJournalMode ? t('ezCapture.subheaderJournal', 'Your space, your words')
+                    : t('ezCapture.subheader')}
                 </p>
               </div>
 
@@ -847,8 +889,8 @@ STYLE:
                     cursor: text.trim() ? 'pointer' : 'not-allowed',
                   }}
                 >
-                  <Sparkles className="w-4 h-4" />
-                  {t('ezCapture.create')}
+                  {isChannelMode ? <Send className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                  {isChannelMode ? t('ezCapture.send', { defaultValue: 'Send' }) : t('ezCapture.create')}
                 </button>
               </div>
             </div>

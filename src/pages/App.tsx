@@ -111,12 +111,9 @@ const AppLayout = () => {
   };
 
   const handleEZTap = () => {
-    if (location.pathname.includes('family-channel')) {
-      // On Family Channel, open the channel attachment tray instead of EZCapture
-      window.dispatchEvent(new CustomEvent('ez-family-channel-tray'));
-    } else {
-      setEzOpen(true);
-    }
+    // Same EZ window everywhere — on the Family Channel it opens in message mode
+    // (see the EZCapture mount below), not a separate component.
+    setEzOpen(true);
   };
 
   const handleEZPointerDown = (e: React.PointerEvent) => {
@@ -513,7 +510,10 @@ const AppLayout = () => {
 
 
       {/* EZ Capture Overlay */}
-      {ezOpen && <ErrorBoundary><EZCapture onClose={() => setEzOpen(false)} defaultType={
+      {ezOpen && <ErrorBoundary><EZCapture onClose={() => setEzOpen(false)}
+        channelMode={currentPath.includes('family-channel')}
+        defaultType={
+        currentPath.includes('family-channel') ? 'journal' :
         currentPath.includes('/lists') && new URLSearchParams(window.location.search).get('tab') === 'shopping' ? 'shopping' :
         currentPath.includes('/lists') ? 'task' :
         currentPath.includes('/calendar') ? 'event' :

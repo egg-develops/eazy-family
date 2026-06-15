@@ -1747,7 +1747,12 @@
     "guideSignInRequired": "Accedi per usare la guida.",
     "guideError": "Spiacente, non ho trovato una risposta. Riprova.",
     "aiGuide": "Chiedimi qualsiasi cosa sull'app — sono qui per aiutarti.",
-    "messageSent": "Messaggio inviato a {{name}}"
+    "messageSent": "Messaggio inviato a {{name}}",
+    "headerChannel": "Messaggio alla famiglia",
+    "subheaderChannel": "Tutti nel canale lo vedranno",
+    "placeholderChannel": "Messaggio alla tua famiglia…",
+    "couldNotSend": "Impossibile inviare il messaggio",
+    "send": "Invia"
   },
   "messaging": {
     "typeMessage": "Scrivi un messaggio...",

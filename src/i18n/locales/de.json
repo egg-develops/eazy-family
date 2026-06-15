@@ -1747,7 +1747,12 @@
     "guideSignInRequired": "Bitte melde dich an, um den Guide zu nutzen.",
     "guideError": "Entschuldigung, ich konnte gerade keine Antwort finden. Bitte versuche es erneut.",
     "aiGuide": "Frag mich alles über die App — ich helfe gerne.",
-    "messageSent": "Nachricht an {{name}} gesendet"
+    "messageSent": "Nachricht an {{name}} gesendet",
+    "headerChannel": "Familie benachrichtigen",
+    "subheaderChannel": "Alle im Kanal sehen es",
+    "placeholderChannel": "Nachricht an die Familie…",
+    "couldNotSend": "Nachricht konnte nicht gesendet werden",
+    "send": "Senden"
   },
   "messaging": {
     "typeMessage": "Nachricht eingeben...",
