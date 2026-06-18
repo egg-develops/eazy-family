@@ -63,6 +63,7 @@ const Privacy = () => {
               <li><strong>Why we access it:</strong> Solely to display your upcoming events inside the Eazy Family app, alongside your family's shared events and tasks.</li>
               <li><strong>How we store it:</strong> Events are cached temporarily in your account to render the calendar view. We do not store your Google Calendar data permanently on our servers beyond your active session.</li>
               <li><strong>We do not:</strong> use your Google Calendar data for advertising, share it with third parties, transfer it to any other service, or use it for any purpose other than displaying it to you within the app.</li>
+              <li><strong>AI / machine learning:</strong> We do not use your Google Workspace API data, including your Google Calendar data, to develop, improve, or train generalized or non-personalized artificial-intelligence or machine-learning models. Calendar data is used only to render your own calendar view within the app and is never used to train any model.</li>
               <li><strong>Revoking access:</strong> You can disconnect Google Calendar at any time from the Calendar settings inside the app, or by visiting your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">Google Account permissions</a> and removing Eazy Family.</li>
             </ul>
             <Separator className="my-4" />
