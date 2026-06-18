@@ -258,9 +258,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                     SAVE CHF {nativeAnnualSavings}
                   </span>
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.annual')}</p>
-                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>{nativeAnnualMonthly}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')} · {nativeAnnualPrice}/yr</p>
+                  {/* Billed amount is the primary, most conspicuous price (Apple 3.1.2(c)) */}
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>{nativeAnnualPrice}<span className="text-xs font-normal">/yr</span></p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')}</p>
+                  {/* Calculated per-month price — subordinate in size + position */}
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>≈ {nativeAnnualMonthly}/mo</p>
                 </button>
                 <button
                   onClick={() => setBillingCycle('monthly')}
@@ -330,9 +332,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                     SAVE CHF {ANNUAL_SAVINGS}
                   </span>
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.annual')}</p>
-                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_MONTHLY}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.perMonth')}</p>
-                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')} · CHF {ANNUAL_PRICE}/yr</p>
+                  {/* Billed amount is the primary, most conspicuous price (Apple 3.1.2(c)) */}
+                  <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>CHF {ANNUAL_PRICE}<span className="text-xs font-normal">/yr</span></p>
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.billedAnnually')}</p>
+                  {/* Calculated per-month price — subordinate in size + position */}
+                  <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>≈ CHF {ANNUAL_MONTHLY}/mo</p>
                 </button>
                 <button
                   onClick={() => setBillingCycle('monthly')}
