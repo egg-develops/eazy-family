@@ -95,9 +95,19 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const nativeAnnualMonthly   = annualPkg
     ? `${annualPkg.product.currencyCode} ${(annualPkg.product.price / 12).toFixed(2)}`
     : `CHF ${ANNUAL_MONTHLY}`;
-  const nativeAnnualSavings   = annualPkg
-    ? Math.round(MONTHLY_PRICE * 12 - annualPkg.product.price)
+  // Savings must be in the SAME currency as the displayed prices. Derive the symbol
+  // from the annual priceString (e.g. "$44.99" → "$") and compute against the native
+  // monthly price — never mix a hardcoded CHF monthly with a native annual price.
+  const annualSymbol = annualPkg
+    ? (annualPkg.product.priceString.replace(/[\d.,\s ]/g, '') || annualPkg.product.currencyCode)
+    : 'CHF';
+  const annualSymbolSep = /[A-Za-z]$/.test(annualSymbol) ? ' ' : '';
+  const nativeAnnualSavingsValue = (annualPkg && monthlyPkg)
+    ? Math.round(monthlyPkg.product.price * 12 - annualPkg.product.price)
     : ANNUAL_SAVINGS;
+  const nativeAnnualSavings   = (annualPkg && monthlyPkg)
+    ? `${annualSymbol}${annualSymbolSep}${nativeAnnualSavingsValue}`
+    : `CHF ${ANNUAL_SAVINGS}`;
 
   // Product ID to pass to Apple's sheet — only the plan the user selected
   const selectedNativeProductId = billingCycle === 'monthly'
@@ -254,9 +264,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
                     background: billingCycle === 'annual' ? '#FDF3EE' : 'hsl(var(--card))',
                   }}
                 >
-                  <span className="self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mb-2" style={{ background: '#964735' }}>
-                    SAVE CHF {nativeAnnualSavings}
-                  </span>
+                  {nativeAnnualSavingsValue > 0 && (
+                    <span className="self-start text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white mb-2" style={{ background: '#964735' }}>
+                      SAVE {nativeAnnualSavings}
+                    </span>
+                  )}
                   <p className="text-xs font-semibold" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('upgrade.annual')}</p>
                   {/* Billed amount is the primary, most conspicuous price (Apple 3.1.2(c)) */}
                   <p className="text-xl font-bold mt-1 leading-none" style={{ color: 'hsl(var(--foreground))' }}>{nativeAnnualPrice}<span className="text-xs font-normal">/yr</span></p>
