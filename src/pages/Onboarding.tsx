@@ -244,50 +244,6 @@ const Onboarding = () => {
     }
   };
 
-  // ── Guest / skip-account flows (Apple Guideline 5.1.1v) ───────────────────
-  const [skipLoading, setSkipLoading] = useState(false);
-
-  const handleSkipAccount = async () => {
-    if (skipLoading) return;
-    setSkipLoading(true);
-    const guestData = {
-      userName: authName.trim() || 'Guest',
-      location: state.location,
-      language: state.language,
-      userInitials: authName.trim()
-        ? authName.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-        : 'GU',
-    };
-    localStorage.setItem('eazy-family-onboarding', JSON.stringify(guestData));
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('eazy-needs-onboarding');
-    try {
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
-      // onAuthStateChange fires SIGNED_IN → user becomes truthy → Onboarding redirects to /app
-    } catch {
-      // Anonymous sign-in unavailable — navigate directly; the app handles unauthenticated state
-      navigate('/app');
-    } finally {
-      setSkipLoading(false);
-    }
-  };
-
-  const handleRestorePurchase = async () => {
-    localStorage.setItem('eazy-family-onboarding', JSON.stringify({
-      userName: 'Guest',
-      language: state.language,
-      userInitials: 'GU',
-    }));
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('eazy-needs-onboarding');
-    try {
-      await supabase.auth.signInAnonymously();
-    } catch {
-      navigate('/app');
-    }
-  };
-
   // ── Finish ─────────────────────────────────────────────────────────────────
   const finish = () => {
     if (locationInput || state.location) {
@@ -367,7 +323,7 @@ const Onboarding = () => {
         {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
         {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
         {screen === 5 && <VoiceDemoScreen state={state} set={set} next={() => go(8, 'fwd')} />}
-        {screen === 8 && <FeaturesScreen next={next} back={back} onRestore={handleRestorePurchase} />}
+        {screen === 8 && <FeaturesScreen next={next} back={back} />}
         {screen === 9 && (
           <AccountScreen
             name={authName} setName={setAuthName}
@@ -376,8 +332,6 @@ const Onboarding = () => {
             loading={authLoading2} error={authError}
             onError={setAuthError}
             onSubmit={handleSignUp}
-            onSkip={handleSkipAccount}
-            skipDisabled={skipLoading}
           />
         )}
         {screen === 10 && (
@@ -605,7 +559,7 @@ const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next:
 };
 
 // ── SCREEN 8 — Features (final slide before account) ─────────────────────────
-const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () => void; onRestore: () => void }) => {
+const FeaturesScreen = ({ next, back }: { next: () => void; back: () => void }) => {
   const { t } = useTranslation();
   const FEATURES = [
     { emoji: '🎤', text: t('onboarding.paywall.voiceFeature') },
@@ -654,12 +608,12 @@ const FeaturesScreen = ({ next, back, onRestore }: { next: () => void; back: () 
 // ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
-  loading, error, onError, onSubmit, onSkip, skipDisabled,
+  loading, error, onError, onSubmit,
 }: {
   name: string; setName: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   password: string; setPassword: (v: string) => void;
-  loading: boolean; error: string; onError: (msg: string) => void; onSubmit: () => void; onSkip: () => void; skipDisabled?: boolean;
+  loading: boolean; error: string; onError: (msg: string) => void; onSubmit: () => void;
 }) => {
   const oauthBrowserOpen = useRef(false);
 
@@ -787,14 +741,6 @@ const AccountScreen = ({
         {t('onboarding.accountScreen.alreadyHave')}{' '}
         <a href="/auth" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>{t('onboarding.accountScreen.signIn')}</a>
       </p>
-
-      <button
-        onClick={onSkip}
-        disabled={skipDisabled}
-        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: skipDisabled ? 'default' : 'pointer', padding: '4px 0', textDecoration: 'underline', fontFamily: SANS, opacity: skipDisabled ? 0.6 : 1 }}
-      >
-        {skipDisabled ? t('onboarding.accountScreen.pleaseWait') : t('onboarding.accountScreen.skipAccount')}
-      </button>
     </div>
   );
 };
