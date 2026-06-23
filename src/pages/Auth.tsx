@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,8 @@ import { error as logError } from '@/lib/logger';
 import { z } from 'zod';
 import { Gift } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
 const TC = '#964735';
 const TL = '#D97B66';
@@ -70,6 +72,62 @@ const Auth = () => {
       } catch {}
     }
   }, [searchParams]);
+
+  // Close the in-app browser when a native OAuth (Google) round-trip completes.
+  const oauthBrowserOpen = useRef(false);
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' && oauthBrowserOpen.current) {
+        oauthBrowserOpen.current = false;
+        Browser.close().catch(() => {});
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Continue with Apple — native uses an identity token + nonce (Supabase validates
+  // the nonce: SHA-256 hash to Apple, raw value to the token exchange). Mirrors the
+  // working flow in Onboarding so returning Apple users can sign back in here too.
+  const handleAppleSignIn = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const rawNonce = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
+        const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce));
+        const hashedNonce = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+        const options: SignInWithAppleOptions = {
+          clientId: 'eazy.family.app',
+          redirectURI: 'https://jfztyhuagxruhawchfem.supabase.co/auth/v1/callback',
+          scopes: 'name email',
+          nonce: hashedNonce,
+        };
+        const result = await SignInWithApple.authorize(options);
+        const idToken = result.response.identityToken;
+        if (!idToken) throw new Error('No identity token received');
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken, nonce: rawNonce });
+        if (error) throw error;
+      } catch (err: any) {
+        const code = err?.error ?? err?.message ?? '';
+        if (code === 'canceled' || code.includes('AuthorizationError error 1001')) return;
+        logError('Apple sign-in error:', err);
+        toast({ title: t('auth.error'), description: t('auth.somethingWrong'), variant: 'destructive' });
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'apple', options: { redirectTo: `${window.location.origin}/app` } });
+      if (error) toast({ title: t('auth.error'), description: t('auth.somethingWrong'), variant: 'destructive' });
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'eazy-family://app', skipBrowserRedirect: true } });
+      if (error) { toast({ title: t('auth.error'), description: t('auth.somethingWrong'), variant: 'destructive' }); return; }
+      if (data?.url) { oauthBrowserOpen.current = true; await Browser.open({ url: data.url, presentationStyle: 'popover' }); }
+    } else {
+      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+      if (error) toast({ title: t('auth.error'), description: t('auth.somethingWrong'), variant: 'destructive' });
+    }
+  };
 
   if (!authLoading && user) return <Navigate to="/app" replace />;
 
@@ -318,6 +376,28 @@ const Auth = () => {
               {loading ? t('common.loading') : isSignUp ? t('auth.signUp') : t('auth.signIn')}
             </button>
           </form>
+
+          {/* Social sign-in */}
+          <div className="flex items-center gap-2.5 py-1">
+            <div className="flex-1 h-px" style={{ background: BORDER }} />
+            <span className="text-xs" style={{ color: MUTED }}>{t('auth.or', 'or')}</span>
+            <div className="flex-1 h-px" style={{ background: BORDER }} />
+          </div>
+
+          <div className="space-y-2.5">
+            <button type="button" onClick={handleAppleSignIn}
+              className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+              style={{ background: '#000', color: '#fff' }}>
+              <svg width="16" height="16" viewBox="0 0 814 1000" fill="white"><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49.1 191.4-49.1zM553.5 54.4c-21.2 23.7-58.6 42.8-91.3 42.8-3.9 0-7.7-.4-11.6-1-1.3-3.5-1.9-7.1-1.9-10.6 0-24.4 10.7-50.5 30.4-68.7 26.4-24.4 68-42.8 105-44.1 1.3 4.2 1.9 8.4 1.9 13.5 0 24.4-9.7 49.1-32.5 68.1z"/></svg>
+              {t('onboarding.accountScreen.withApple')}
+            </button>
+            <button type="button" onClick={handleGoogleSignIn}
+              className="w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+              style={{ background: CARD, color: INK, border: `1.5px solid ${BORDER}` }}>
+              <svg width="16" height="16" viewBox="0 0 488 512"><path fill="#4285F4" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg>
+              {t('onboarding.accountScreen.withGoogle')}
+            </button>
+          </div>
 
           <div className="pt-1 space-y-2" style={{ borderTop: `1px solid ${DIVIDER}` }}>
             <button type="button" onClick={() => setIsSignUp(!isSignUp)}
