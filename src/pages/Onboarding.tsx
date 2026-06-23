@@ -720,15 +720,22 @@ const AccountScreen = ({
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
               try {
+                // Supabase validates the nonce: send the SHA-256 hash to Apple,
+                // and the raw value to the token exchange. Without this, Supabase
+                // rejects the Apple ID token ("nonce missing/invalid").
+                const rawNonce = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
+                const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce));
+                const hashedNonce = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
                 const options: SignInWithAppleOptions = {
                   clientId: 'eazy.family.app',
                   redirectURI: 'https://jfztyhuagxruhawchfem.supabase.co/auth/v1/callback',
                   scopes: 'name email',
+                  nonce: hashedNonce,
                 };
                 const result = await SignInWithApple.authorize(options);
                 const idToken = result.response.identityToken;
                 if (!idToken) throw new Error('No identity token received');
-                const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken });
+                const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken, nonce: rawNonce });
                 if (error) throw error;
               } catch (err: any) {
                 const code = err?.error ?? err?.message ?? '';
