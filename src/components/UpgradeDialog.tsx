@@ -16,6 +16,12 @@ import { useTranslation } from "react-i18next";
 const isNative = Capacitor.isNativePlatform();
 const platform = Capacitor.getPlatform();
 
+// Module cache: StoreKit offerings rarely change within a session, so fetch
+// once and reuse. The paywall is prefetched on mount and seeds its state from
+// here, so opening the Upgrade sheet shows prices instantly instead of waiting
+// on a StoreKit round-trip every time.
+let cachedRcOfferings: RCPackage[] | null = null;
+
 // Known App Store product IDs — used when RC offerings fail to load so the
 // native subscription sheet can still open and show real prices from the store.
 const IOS_FALLBACK_PRODUCT_IDS = ['EZ.Family.Monthly', 'EZ.Family.Annual'];
@@ -37,7 +43,7 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
-  const [rcPackages, setRcPackages] = useState<RCPackage[]>([]);
+  const [rcPackages, setRcPackages] = useState<RCPackage[]>(cachedRcOfferings ?? []);
   const [isLoadingOfferings, setIsLoadingOfferings] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
   const [offeringsErrorMsg, setOfferingsErrorMsg] = useState<string | null>(null);
@@ -50,32 +56,49 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     return () => { mountedRef.current = false; };
   }, []);
 
-  const fetchOfferings = useCallback(async () => {
+  // silent = background refresh/prefetch: don't toggle the loading/error UI
+  // (the dialog may be closed, or already showing cached prices).
+  const fetchOfferings = useCallback(async (silent = false) => {
     if (!isNative) return;
-    setIsLoadingOfferings(true);
-    setOfferingsError(false);
-    setOfferingsErrorMsg(null);
+    if (!silent) {
+      setIsLoadingOfferings(true);
+      setOfferingsError(false);
+      setOfferingsErrorMsg(null);
+    }
     try {
       const pkgs = await getRCOfferings();
       if (!pkgs || pkgs.length === 0) throw new Error('No offerings returned');
+      cachedRcOfferings = pkgs;
       if (mountedRef.current) setRcPackages(pkgs);
     } catch (err) {
       logError('getRCOfferings failed:', {
         error: err,
         diagnostics: getRCDiagnostics(),
       });
-      if (mountedRef.current) {
+      if (!silent && mountedRef.current) {
         setOfferingsError(true);
         setRcPackages([]);
         setOfferingsErrorMsg(err instanceof Error ? err.message : String(err));
       }
     } finally {
-      if (mountedRef.current) setIsLoadingOfferings(false);
+      if (!silent && mountedRef.current) setIsLoadingOfferings(false);
     }
   }, []);
 
+  // Warm the cache on mount so the first open is instant.
   useEffect(() => {
-    if (open) fetchOfferings();
+    if (isNative && !cachedRcOfferings) fetchOfferings(true);
+  }, [fetchOfferings]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (cachedRcOfferings?.length) {
+      // Show cached prices immediately, refresh quietly in the background.
+      setRcPackages(cachedRcOfferings);
+      fetchOfferings(true);
+    } else {
+      fetchOfferings();
+    }
   }, [open, fetchOfferings]);
 
   // Already paid (not a trial) — nothing to upgrade
