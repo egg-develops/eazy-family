@@ -35,6 +35,16 @@ const CARD = "hsl(var(--card))";
 const INK = "hsl(var(--foreground))";
 const MAX_MESSAGES = 200;
 
+// Module-level cache so re-entering the channel paints instantly instead of
+// re-running 4 sequential queries on every mount (the "slow going back to the
+// channel" lag). State hydrates from this synchronously; the load effect then
+// refreshes it in the background.
+const channelCache: {
+  familyId: string | null;
+  messages: ChannelMessage[];
+  authors: Record<string, ChannelAuthor>;
+} = { familyId: null, messages: [], authors: {} };
+
 function getUserIdentity() {
   try {
     const s = localStorage.getItem("eazy-family-onboarding");
@@ -316,10 +326,11 @@ const FamilyAgenda = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Messages — shared via the family_messages table (loaded + realtime below)
-  const [messages, setMessages] = useState<ChannelMessage[]>([]);
-  const [familyId, setFamilyId] = useState<string | null>(null);
-  const [authors, setAuthors] = useState<Record<string, ChannelAuthor>>({});
+  // Messages — shared via the family_messages table (loaded + realtime below).
+  // Seed from the module cache so re-entering the channel renders immediately.
+  const [messages, setMessages] = useState<ChannelMessage[]>(channelCache.messages);
+  const [familyId, setFamilyId] = useState<string | null>(channelCache.familyId);
+  const [authors, setAuthors] = useState<Record<string, ChannelAuthor>>(channelCache.authors);
 
   // Input
   const [text, setText] = useState("");
@@ -363,6 +374,7 @@ const FamilyAgenda = () => {
       const fid = mine?.family_id;
       if (cancelled || !fid) return;
       setFamilyId(fid);
+      channelCache.familyId = fid;
 
       // Author lookup: member full_name + profile display_name, stable colour.
       const { data: members } = await supabase
@@ -375,6 +387,7 @@ const FamilyAgenda = () => {
       const authorMap = buildAuthors(members ?? [], profiles ?? []);
       if (cancelled) return;
       setAuthors(authorMap);
+      channelCache.authors = authorMap;
 
       const { data: rows } = await supabase
         .from('family_messages')
@@ -383,7 +396,9 @@ const FamilyAgenda = () => {
         .order('created_at', { ascending: true })
         .limit(MAX_MESSAGES);
       if (cancelled) return;
-      setMessages((rows ?? []).map(r => rowToChannelMessage(r as FamilyMessageRow, authorMap, user.id)));
+      const mapped = (rows ?? []).map(r => rowToChannelMessage(r as FamilyMessageRow, authorMap, user.id));
+      setMessages(mapped);
+      channelCache.messages = mapped;
 
       // Realtime: append inserts from OTHER members (mine are already optimistic).
       channel = supabase

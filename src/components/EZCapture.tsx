@@ -246,6 +246,31 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
     } catch { return null; }
   };
 
+  // Resolve family id + roster on demand. The mount effect that loads them is
+  // async, so a quick capture can fire before it finishes — which would make
+  // resolveAssignees see an empty roster and silently drop the assignment
+  // (task lands in the personal list with no pill). Always go through this
+  // before resolving assignees so "assign to X" works regardless of timing.
+  const ensureRoster = async (): Promise<{ famId: string | null; members: FamilyMemberLite[] }> => {
+    if (familyId && familyMembers.length) return { famId: familyId, members: familyMembers };
+    if (!user) return { famId: familyId, members: familyMembers };
+    try {
+      const { data: mine } = await supabase.from('family_members').select('family_id')
+        .eq('user_id', user.id).eq('is_active', true).maybeSingle();
+      const famId = mine?.family_id ?? familyId ?? null;
+      if (!famId) return { famId: null, members: familyMembers };
+      const { data } = await supabase.from('family_members').select('user_id, full_name')
+        .eq('family_id', famId).eq('is_active', true);
+      const members = (data ?? []).filter(m => m.user_id)
+        .map(m => ({ user_id: m.user_id as string, name: m.full_name || '' }));
+      if (!familyId) setFamilyId(famId);
+      if (!familyMembers.length && members.length) setFamilyMembers(members);
+      return { famId, members: members.length ? members : familyMembers };
+    } catch {
+      return { famId: familyId, members: familyMembers };
+    }
+  };
+
   useEffect(() => {
     if (!text.trim() || userLockedType) return;
     const t = isSwissGermanLocale() ? normalizeCHDE(text, getDbRules()) : text;
@@ -580,13 +605,14 @@ STYLE:
     // but only when X resolves to a real family member (else fall through to the
     // normal capture so we don't message nobody).
     const msgIntent = parseMessageIntent(rawInput);
-    if (msgIntent && user && familyId) {
-      const ids = resolveAssignees([msgIntent.to], familyMembers, { userId: user.id, name: userName });
-      if (ids.length) {
-        const recipient = familyMembers.find(fm => fm.user_id === ids[0]);
+    if (msgIntent && user) {
+      const { famId, members } = await ensureRoster();
+      const ids = famId ? resolveAssignees([msgIntent.to], members, { userId: user.id, name: userName }) : [];
+      if (famId && ids.length) {
+        const recipient = members.find(fm => fm.user_id === ids[0]);
         const recipientName = (recipient?.name || msgIntent.to).split(' ')[0];
         const { error } = await supabase.from('family_messages').insert({
-          family_id: familyId, sender_id: user.id, type: 'text',
+          family_id: famId, sender_id: user.id, type: 'text',
           content: `@${recipientName} ${msgIntent.body}`,
         });
         if (!error) {
@@ -705,12 +731,15 @@ STYLE:
 
       } else if (entryType === 'task') {
         if (!user || !session) return;
-        const assignedUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName });
+        const { famId, members } = parsed.assignees?.length
+          ? await ensureRoster()
+          : { famId: familyId, members: familyMembers };
+        const assignedUserIds = resolveAssignees(parsed.assignees, members, { userId: user.id, name: userName });
         // Assigning to another member → drop it into a shared family list so the
         // assignee can see it and it shows with their pill.
         const assignedToOthers = assignedUserIds.some(id => id !== user.id);
-        const parentId = (assignedToOthers && familyId) ? await ensureFamilyTaskList(familyId, user.id) : null;
-        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId, parentId });
+        const parentId = (assignedToOthers && famId) ? await ensureFamilyTaskList(famId, user.id) : null;
+        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId, parentId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
@@ -722,10 +751,14 @@ STYLE:
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) return;
+        const needRoster = entryType === 'shopping' && !!parsed.assignees?.length;
+        const { famId, members } = needRoster
+          ? await ensureRoster()
+          : { famId: familyId, members: familyMembers };
         const assignedUserIds = entryType === 'shopping'
-          ? resolveAssignees(parsed.assignees, familyMembers, { userId: user.id, name: userName })
+          ? resolveAssignees(parsed.assignees, members, { userId: user.id, name: userName })
           : [];
-        const rows = buildShoppingCaptureRows(parsed, user.id, { assignedUserIds, familyId });
+        const rows = buildShoppingCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
