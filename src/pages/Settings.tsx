@@ -219,8 +219,11 @@ const Settings = () => {
   // Re-hydrate from cloud
   useEffect(() => {
     const handler = async () => {
-      const lang = localStorage.getItem('eazy-family-language');
-      if (lang) { setLanguage(lang); await i18n.changeLanguage(lang); }
+      // Default to 'en' when the key was cleared (new account with no saved
+      // language) so the UI follows the reconcile instead of staying on the
+      // previous user's language until a reload.
+      const lang = localStorage.getItem('eazy-family-language') || 'en';
+      setLanguage(lang); await i18n.changeLanguage(lang);
       const cfg = localStorage.getItem('eazy-family-home-config');
       if (cfg) { try { const parsed = JSON.parse(cfg); setHomeConfig(p => ({ ...p, ...parsed })); if (parsed.appTitle !== undefined) setAppTitleDraft(parsed.appTitle ?? ''); } catch {} }
       setAppleSynced(localStorage.getItem('eazy-apple-calendar-enabled') === 'true');
