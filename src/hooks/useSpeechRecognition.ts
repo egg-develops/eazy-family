@@ -12,7 +12,7 @@ import { voiceService } from "@/services/VoiceService";
 export type SpeechRecognitionOptions = {
   lang?: string;
   onResult: (transcript: string, isFinal: boolean) => void;
-  onError?: (error: string) => void;
+  onError?: (error: string, detail?: string) => void;
   onEnd?: () => void;
 };
 
@@ -32,7 +32,7 @@ export const useSpeechRecognition = () => {
     const unsubResult = voiceService.onResult((transcript, isFinal) =>
       optsRef.current?.onResult(transcript, isFinal)
     );
-    const unsubError = voiceService.onError((err) => optsRef.current?.onError?.(err));
+    const unsubError = voiceService.onError((err, detail) => optsRef.current?.onError?.(err, detail));
     const unsubEnd = voiceService.onEnd(() => optsRef.current?.onEnd?.());
 
     // Sync initial state in case it changed before subscription

@@ -26,7 +26,9 @@ import { error as logError } from "@/lib/logger";
  */
 
 export type VoiceResultCallback = (transcript: string, isFinal: boolean) => void;
-export type VoiceErrorCallback = (error: string) => void;
+// `detail` is an optional human-readable diagnostic (device/plugin reason) shown
+// to the user and logged — turns a silent "voice never works" into a readable why.
+export type VoiceErrorCallback = (error: string, detail?: string) => void;
 export type VoiceEndCallback = () => void;
 export type VoiceStateCallback = (state: { isListening: boolean; isTranscribing: boolean }) => void;
 
@@ -119,8 +121,11 @@ class VoiceServiceImpl {
   private emitResult(transcript: string, isFinal: boolean) {
     this.resultCbs.forEach((cb) => cb(transcript, isFinal));
   }
-  private emitError(err: string) {
-    this.errorCbs.forEach((cb) => cb(err));
+  private emitError(err: string, detail?: string) {
+    // Always log (logError writes even in production → visible in adb logcat /
+    // remote console), and pass the detail to subscribers for on-screen display.
+    logError(`[VoiceService] error=${err}${detail ? ` detail=${detail}` : ''} platform=${Capacitor.getPlatform()}`);
+    this.errorCbs.forEach((cb) => cb(err, detail));
   }
   private emitEnd() {
     this.endCbs.forEach((cb) => cb());
@@ -289,18 +294,31 @@ class VoiceServiceImpl {
         } else {
           const { speechRecognition } = await SpeechRecognition.requestPermissions();
           if (speechRecognition !== "granted") {
-            this.emitError("not-allowed");
+            this.emitError(
+              "not-allowed",
+              `permission '${speechRecognition}' after request (was '${current}'). Enable Microphone for this app in system Settings.`
+            );
             return;
           }
           nativePermissionGranted = true;
         }
         const { available } = await SpeechRecognition.available();
         if (!available) {
-          this.emitError("not-supported");
+          // Most common Android dead-end: no on-device recognition service —
+          // e.g. the Google app / "Speech Recognition & Synthesis" is disabled
+          // or missing on this ROM, so SpeechRecognizer.isRecognitionAvailable()
+          // is false. Mic permission being granted does NOT fix this.
+          this.emitError(
+            "not-supported",
+            `SpeechRecognition.available() = false on ${Capacitor.getPlatform()}. The device has no speech-recognition service enabled (check Google app / "Speech Recognition & Synthesis" is installed & enabled).`
+          );
           return;
         }
-      } catch {
-        this.emitError("not-supported");
+      } catch (e: any) {
+        this.emitError(
+          "not-supported",
+          `availability/permission check threw: ${e?.message ?? e}`
+        );
         return;
       }
     }
@@ -312,6 +330,13 @@ class VoiceServiceImpl {
     let partialHandle: any = null;
     let stateHandle: any = null;
     let cleanedUp = false;
+    // Diagnostics: did the recognizer actually engage, and did it ever return
+    // anything? "Started but never produced a partial" is the fingerprint of the
+    // Android "mic looks active but nothing happens" dead-end (no-match, or the
+    // online recognizer with no network).
+    let engineStarted = false;
+    let gotPartial = false;
+    const isAndroid = Capacitor.getPlatform() === "android";
 
     const cleanup = () => {
       if (cleanedUp) return;
@@ -329,16 +354,31 @@ class VoiceServiceImpl {
       (data: { matches: string[] }) => {
         if (!this.nativeActive || cleanedUp) return;
         const transcript = data.matches?.[0] ?? "";
-        if (transcript) this.emitResult(transcript, false);
+        if (transcript) {
+          gotPartial = true;
+          this.emitResult(transcript, false);
+        }
       }
     );
 
     stateHandle = await SpeechRecognition.addListener(
       "listeningState",
       (data: { status: "started" | "stopped" }) => {
+        if (data.status === "started") engineStarted = true;
         if (data.status === "stopped" && !cleanedUp) {
+          const startedButEmpty = engineStarted && !gotPartial;
           cleanup();
-          if (this.nativeActive) this.emitEnd();
+          if (this.nativeActive) {
+            // Surface the silent Android failure: the recognizer started and
+            // stopped without ever transcribing a word.
+            if (isAndroid && startedButEmpty) {
+              this.emitError(
+                "no-result",
+                "Recognizer ran but returned no speech. If you spoke, the device's speech service may have errored (no-match) or the online recognizer had no network."
+              );
+            }
+            this.emitEnd();
+          }
         }
       }
     );
@@ -359,9 +399,11 @@ class VoiceServiceImpl {
     } catch (e: any) {
       if (!cleanedUp) {
         cleanup();
-        const msg = (e?.message ?? "").toLowerCase();
+        const raw = e?.message ?? String(e);
+        const msg = raw.toLowerCase();
         this.emitError(
-          msg.includes("permiss") || msg.includes("denied") ? "not-allowed" : "unknown"
+          msg.includes("permiss") || msg.includes("denied") ? "not-allowed" : "unknown",
+          `SpeechRecognition.start() failed: ${raw}`
         );
       }
     }

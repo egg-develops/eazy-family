@@ -342,30 +342,38 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
           }
           setTextTracked(full);
         },
-        onError: (error) => {
+        onError: (error, detail) => {
           if (error === 'not-allowed') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: t('ezCapture.micDenied'), description: t('ezCapture.micDeniedDesc') });
+            toast({ title: t('ezCapture.micDenied'), description: detail || t('ezCapture.micDeniedDesc') });
             return;
           }
           if (error === 'not-supported') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: t('ezCapture.voiceUnavailable') });
+            toast({ title: t('ezCapture.voiceUnavailable'), description: detail });
+            return;
+          }
+          if (error === 'no-result') {
+            // Recognizer engaged but returned nothing (Android dead-end). Surface
+            // the reason instead of failing silently; don't auto-retry into a loop.
+            shouldRestartRef.current = false;
+            setIntendingToListen(false);
+            toast({ title: t('ezCapture.voiceError'), description: detail || t('ezCapture.voiceErrorDesc') });
             return;
           }
           if (error === 'transcription-failed') {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: t('ezCapture.transcriptionFailed'), description: t('ezCapture.transcriptionFailedDesc') });
+            toast({ title: t('ezCapture.transcriptionFailed'), description: detail || t('ezCapture.transcriptionFailedDesc') });
             return;
           }
           consecutiveFailsRef.current++;
           if (consecutiveFailsRef.current >= 3) {
             shouldRestartRef.current = false;
             setIntendingToListen(false);
-            toast({ title: t('ezCapture.voiceError'), description: t('ezCapture.voiceErrorDesc') });
+            toast({ title: t('ezCapture.voiceError'), description: detail || t('ezCapture.voiceErrorDesc') });
           }
         },
         onEnd: () => {
