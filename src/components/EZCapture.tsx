@@ -80,7 +80,15 @@ const LANG_NAMES: Record<string, string> = {
 };
 
 const getUserLocale = (): string => {
-  const saved = localStorage.getItem('i18nextLng') || navigator.language || 'en';
+  // Must read the SAME key the language Settings toggle writes
+  // (`eazy-family-language`) — otherwise the speech recognizer stays pinned to
+  // en-US while the rest of the app is in the user's language, producing
+  // phonetic-English garbage for non-English speech.
+  const saved =
+    localStorage.getItem('eazy-family-language') ||
+    localStorage.getItem('i18nextLng') ||
+    navigator.language ||
+    'en';
   const base = saved.split('-')[0];
   return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
 };

@@ -40,15 +40,31 @@ export async function loadCloudPreferences(userId: string) {
     const cloudData = (data?.data ?? {}) as Record<string, unknown>;
     const loadedKeys: string[] = [];
 
-    // Cloud → localStorage only. Never push local state up — that happens
-    // explicitly via cloudSet() when the user makes a change.
-    for (const [key, value] of Object.entries(cloudData)) {
+    const applyValue = (key: string, value: unknown) => {
+      if (localStorage.getItem('_local_' + key)) return; // changed this session — keep
       if (value !== null && value !== undefined) {
-        if (localStorage.getItem('_local_' + key)) continue;
         const stored = typeof value === 'string' ? value : JSON.stringify(value);
-        localStorage.setItem(key, stored);
+        if (localStorage.getItem(key) !== stored) {
+          localStorage.setItem(key, stored);
+          loadedKeys.push(key);
+        }
+      } else if (localStorage.getItem(key) !== null) {
+        // The new user has NO value for this synced key — clear any leftover
+        // value so they never inherit the PREVIOUS account's setting (this
+        // additive-only gap was the cross-account "settings bleed", e.g. a
+        // prior user's language sticking after switching accounts).
+        localStorage.removeItem(key);
         loadedKeys.push(key);
       }
+    };
+
+    // Reconcile EVERY synced key authoritatively: present in cloud → apply;
+    // absent from cloud → clear. Cloud → localStorage only; local changes are
+    // pushed up explicitly via cloudSet().
+    for (const key of SYNC_KEYS) applyValue(key, cloudData[key]);
+    // Apply any legacy cloud keys outside the current SYNC_KEYS set (set-only).
+    for (const [key, value] of Object.entries(cloudData)) {
+      if (!SYNC_KEYS.has(key)) applyValue(key, value);
     }
 
     // Notify components so they re-read from localStorage
