@@ -177,8 +177,15 @@ export function computeShoppingPredictions(
  */
 export function cleanPurchaseItem(raw: string): string {
   const deCommanded = raw
-    .replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
-    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '');
+    // Leading command verbs — EN + DE + FR + IT + ES + PT
+    .replace(/^(please\s+|bitte\s+|s'il te plaît\s+|per favore\s+|por favor\s+)?(add|buy|get|pick up|grab|i need|we need|put|kauf(?:e)?|hol(?:e)?|besorg(?:e)?|wir brauchen|ich brauche|achète|acheter|prends|il faut|compra(?:re)?|prendi|serve|necesito|necesitamos|compra(?:r)?|preciso(?: de)?|precisamos(?: de)?)\s+/i, '')
+    // Trailing list destinations — EN + DE + FR + IT + ES + PT
+    .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '')
+    .replace(/\s+(auf|zur?)\s+(die\s+|meine\s+|unsere\s+)?(einkaufs)?liste\s*$/i, '')
+    .replace(/\s+(à|sur)\s+(ma|notre|la)\s+liste(\s+de\s+courses)?\s*$/i, '')
+    .replace(/\s+(alla|sulla)\s+(mia\s+|nostra\s+)?lista(\s+della\s+spesa)?\s*$/i, '')
+    .replace(/\s+(a|en)\s+(mi|nuestra|la)\s+lista(\s+de\s+(la\s+)?compras?)?\s*$/i, '')
+    .replace(/\s+(à|na)\s+(minha\s+|nossa\s+)?lista(\s+de\s+compras)?\s*$/i, '');
   const cleaned = normalizeItemName(deCommanded);
   if (!cleaned || cleaned.split(' ').length > 4) return '';
   return cleaned;
@@ -188,16 +195,27 @@ export function cleanPurchaseItem(raw: string): string {
 
 export type ShoppingCategory = 'Produce' | 'Dairy' | 'Meat' | 'Bakery' | 'Household' | 'Baby' | 'Drinks' | 'Other';
 
+// Keyword sets cover EN + DE + FR + IT + ES + PT — a German "Milch" must land
+// in Dairy exactly like the English "milk", or every non-English list collapses
+// into "Other". Substring matching (no \b) mirrors the original behaviour and
+// avoids JS \b breaking next to accented characters.
 export function guessShoppingCategory(title: string): ShoppingCategory {
   const t = title.toLowerCase();
+  // Compound items whose FIRST word would win the wrong category — check before
+  // the per-category keyword sweeps ("peanut butter" is not Dairy, "banana
+  // bread" is not Produce, "egg noodles" are not Dairy).
+  if (/peanut butter|erdnussbutter|beurre de cacahu|burro di arachidi|mantequilla de man[íi]|manteiga de amendoim/.test(t)) return 'Other';
+  if (/(banana|zucchini|pumpkin)\s*(bread|brot)|egg noodle|eiernudel/.test(t)) return 'Bakery';
   // Check Drinks before Produce so "orange juice", "apple juice" → Drinks not Produce
-  if (/\bjuice\b|water|coffee|tea|beer|wine|soda|drink|beverage|smoothie/.test(t)) return 'Drinks';
-  if (/apple|banana|orange|lemon|lime|lettuce|tomato|carrot|spinach|kale|fruit|vegetable|avocado|onion|garlic|potato|pepper|celery|cucumber/.test(t)) return 'Produce';
-  if (/\bmilk\b|cheese|yogurt|butter|cream|egg|dairy|oat milk|almond milk|soy milk/.test(t)) return 'Dairy';
-  if (/chicken|beef|pork|lamb|fish|salmon|tuna|shrimp|meat|turkey|ham|bacon|sausage/.test(t)) return 'Meat';
-  if (/bread|bagel|muffin|cake|pastry|croissant|oatmeal|oat|cereal|granola|flour|rice|pasta|noodle/.test(t)) return 'Bakery';
-  if (/paper|soap|detergent|cleaning|towel|toilet|sponge|trash|bag|foil|wrap|wipe/.test(t)) return 'Household';
-  if (/diaper|formula|baby|puree/.test(t)) return 'Baby';
+  // Short drink words are word-bounded — unbounded they hijack other items:
+  // "watermelon"→water, "erdbeeren"→beer, "schweinefleisch"→wein, "aguacate"→agua.
+  if (/\bjuice\b|\bwater\b|coffee|\btea\b|\bbeer\b|wine|soda|drink|beverage|smoothie|saft|\bwasser\b|kaffee|\btee\b|\bbier\b|\bwein\b|\bjus\b|\beau\b|café|thé|bière|\bvin\b|succo|acqua|caffè|birra|\bvino\b|jugo|zumo|\bagua\b|cerveza|\bsumo\b|suco|cerveja/.test(t)) return 'Drinks';
+  if (/apple|banana|orange|lemon|lime|lettuce|tomato|carrot|spinach|kale|fruit|vegetable|avocado|onion|garlic|potato|pepper|celery|cucumber|apfel|äpfel|banane|zitrone|salat|tomate|karotte|möhre|spinat|obst|gemüse|zwiebel|knoblauch|kartoffel|paprika|gurke|pomme|citron|salade|carotte|épinard|légume|oignon|\bail\b|poivron|concombre|mela|mele|arancia|limone|insalata|pomodor|carota|spinaci|frutta|verdura|cipolla|aglio|patata|peperone|cetriolo|manzana|plátano|naranja|limón|lechuga|zanahoria|espinaca|fruta|cebolla|\bajo\b|pimiento|pepino|maçã|laranja|limão|alface|cenoura|espinafre|legume|cebola|alho|batata|berr(?:y|ies)|strawberr|blueberr|raspberr|grape|pear|peach|mango|broccoli|cauliflower|mushroom|beere|erdbeer|traube|birne|pfirsich|brokkoli|blumenkohl|pilz|champignon|fraise|framboise|myrtille|raisin|poire|pêche|brocoli|fragola|lampone|mirtillo|\buva\b|pera|pesca|fungh|fresa|frambuesa|arándano|melocotón|brócoli|champiñón|morango|framboesa|mirtilo|pêra|pêssego|brócolo|cogumelo|melon|melone|melón|melão|pastèque|sandía|melancia|eggplant|aubergine|melanzan|berenjena|beringela|laitue/.test(t)) return 'Produce';
+  if (/\bmilk\b|cheese|yogurt|butter|cream|\begg\b|eggs\b|dairy|oat milk|almond milk|soy milk|milch|käse|joghurt|sahne|quark|eier|\bei\b|\blait\b|fromage|yaourt|beurre|crème|œuf|\blatte\b|formaggio|burro|panna|uov[oa]|leche|queso|yogur|mantequilla|\bnata\b|huevo|\bleite\b|queijo|iogurte|manteiga|ovos?\b/.test(t)) return 'Dairy';
+  if (/chicken|beef|pork|\blamb\b|\bfish\b|salmon|tuna|shrimp|\bmeat\b|turkey|\bham\b|bacon|sausage|hähnchen|huhn|rind|schwein|lamm|fisch|lachs|thunfisch|fleisch|\bpute\b|schinken|speck|wurst|poulet|bœuf|porc|agneau|poisson|saumon|\bthon\b|viande|dinde|jambon|saucisse|pollo|manzo|maiale|agnello|pesce|salmone|tonno|\bcarne\b|tacchino|prosciutto|pancetta|salsiccia|cerdo|cordero|pescado|salmón|atún|pavo|jamón|tocino|salchicha|frango|porco|cordeiro|peixe|salmão|atum|\bperu\b|presunto/.test(t)) return 'Meat';
+  if (/bread|bagel|muffin|cake|pastry|croissant|oatmeal|\boat\b|cereal|granola|flour|\brice\b|\bpasta\b|noodle|brot|brötchen|kuchen|gebäck|müsli|mehl|\breis\b|nudel|\bpain\b|gâteau|pâtisserie|céréale|farine|\briz\b|pâtes|\bpane\b|torta|cereali|farina|\briso\b|\bpan\b|pastel|harina|arroz|pão|bolo|cereais|farinha|\bmassa\b/.test(t)) return 'Bakery';
+  if (/paper|soap|detergent|cleaning|towel|toilet|sponge|trash|\bbag\b|foil|wrap|wipe|papier|seife|waschmittel|putzmittel|handtuch|klopapier|schwamm|müll|savon|lessive|nettoyant|serviette|éponge|poubelle|carta igienica|sapone|detersivo|asciugamano|spugna|spazzatura|papel|jabón|detergente|toalla|esponja|basura|sabão|toalha|esponja|lixo|toothpaste|toothbrush|shampoo|deodorant|zahnpasta|zahnbürste|deo|dentifrice|brosse à dents|dentifricio|spazzolino|pasta de dientes|cepillo de dientes|desodorante|pasta de dentes|escova de dentes/.test(t)) return 'Household';
+  if (/diaper|formula|baby|puree|windel|babynahrung|couche|bébé|pannolino|neonato|pañal|bebé|fralda|bebê/.test(t)) return 'Baby';
   return 'Other';
 }
 
@@ -205,11 +223,12 @@ export function guessShoppingCategory(title: string): ShoppingCategory {
 
 export type TaskCategory = 'Kids' | 'Admin' | 'Home' | 'Personal';
 
+// Same multilingual coverage as guessShoppingCategory — EN + DE + FR + IT + ES + PT.
 export function guessTaskCategory(title: string): TaskCategory {
   const lower = title.toLowerCase();
-  if (/school|homework|lesson|class|pick up|drop off|practice|kid|child|son|daughter/.test(lower)) return 'Kids';
-  if (/budget|bill|review|admin|account|insurance|tax|bank|report/.test(lower)) return 'Admin';
-  if (/clean|laundry|water|plant|groceries|cook|kitchen|garden|fix|repair|furnace|filter/.test(lower)) return 'Home';
+  if (/school|homework|lesson|class|pick up|drop off|practice|kid|child|son|daughter|schule|hausaufgabe|unterricht|abholen|kind|sohn|tochter|école|devoirs|leçon|enfant|fils|fille|scuola|compiti|lezione|bambin|figli[oa]|escuela|colegio|deberes|niñ[oa]|hij[oa]|escola|trabalhos de casa|criança|filh[oa]/.test(lower)) return 'Kids';
+  if (/budget|bill|review|admin|account|insurance|tax|bank|report|rechnung|versicherung|steuer|konto|facture|assurance|impôt|banque|fattura|assicurazione|tasse|banca|factura|seguro|impuesto|banco|fatura|imposto/.test(lower)) return 'Admin';
+  if (/clean|laundry|water|plant|groceries|cook|kitchen|garden|fix|repair|furnace|filter|putz|wäsche|gieß|pflanze|einkauf|koch|küche|garten|reparier|ménage|lessive|arros|plante|courses|cuisin|jardin|répar|puli|bucato|annaffi|pianta|spesa|cucin|giardino|ripar|limpi|colada|reg[aá]|planta|cocin|jardín|repar|limp[ae]|roupa|jardim|cozinh|consert/.test(lower)) return 'Home';
   return 'Personal';
 }
 

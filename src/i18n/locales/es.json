@@ -1144,7 +1144,13 @@
     "everyone": "Todos",
     "parentsOnly": "Solo padres",
     "assignTo": "Asignar a",
-    "newList": "Nueva lista"
+    "newList": "Nueva lista",
+    "categories": {
+      "Kids": "Niños",
+      "Admin": "Administración",
+      "Home": "Hogar",
+      "Personal": "Personal"
+    }
   },
   "shopping": {
     "title": "Compras",

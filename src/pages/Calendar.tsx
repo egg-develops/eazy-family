@@ -21,7 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import { error as logError } from "@/lib/logger";
 import { openInMaps } from "@/lib/maps";
-import * as chrono from "chrono-node";
+import { parseDatesLocalized } from "@/lib/localeChrono";
+import { getSpeechLocale } from "@/lib/speechLocale";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -902,20 +903,17 @@ const Calendar = () => {
   };
 
   const startCalendarVoice = () => {
-    const langMap: Record<string, string> = { de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT' };
-    const lang = langMap[i18n.language.split('-')[0]] || 'en-US';
-
     calendarSpeech.start({
-      lang,
+      lang: getSpeechLocale(),
       onResult: (transcript, isFinal) => {
         if (!isFinal || !transcript.trim()) return;
 
-        // Parse date/time from transcript
-        const parsed = chrono.parse(transcript, new Date(), { forwardDate: true });
+        // Parse date/time from transcript — in the user's language
+        const parsed = parseDatesLocalized(transcript, new Date(), { forwardDate: true });
         const dateResult = parsed[0]?.start.date();
         const titleText = parsed.length > 0
-          ? transcript.replace(parsed[0].text, "").replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim()
-          : transcript.replace(/^\s*(add|create|schedule|set up|put|book)\s*/i, "").trim();
+          ? transcript.replace(parsed[0].text, "").replace(/^\s*(add|create|schedule|set up|put|book|füge?|erstelle?|plane?|trag(?:e)? ein|ajoute(?:r)?|crée(?:r)?|planifie(?:r)?|mets|aggiungi|crea|pianifica|metti|añade|añadir|agrega(?:r)?|crea(?:r)?|planifica(?:r)?|pon|adiciona(?:r)?|cria(?:r)?|agenda(?:r)?|coloca(?:r)?)\s*/i, "").trim()
+          : transcript.replace(/^\s*(add|create|schedule|set up|put|book|füge?|erstelle?|plane?|trag(?:e)? ein|ajoute(?:r)?|crée(?:r)?|planifie(?:r)?|mets|aggiungi|crea|pianifica|metti|añade|añadir|agrega(?:r)?|crea(?:r)?|planifica(?:r)?|pon|adiciona(?:r)?|cria(?:r)?|agenda(?:r)?|coloca(?:r)?)\s*/i, "").trim();
 
         resetEventForm();
         setEventTitle(titleText || transcript);
@@ -946,15 +944,13 @@ const Calendar = () => {
   const stopCalendarVoice = () => calendarSpeech.stop();
 
   const startTitleVoice = () => {
-    const langMap: Record<string, string> = { de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT' };
-    const lang = langMap[i18n.language.split('-')[0]] || 'en-US';
     setIsTitleListening(true);
     calendarSpeech.start({
-      lang,
+      lang: getSpeechLocale(),
       onResult: (transcript) => {
         if (!transcript.trim()) return;
         const clean = transcript
-          .replace(/^\s*(add|create|schedule|book|put)\s*/i, '')
+          .replace(/^\s*(add|create|schedule|set up|put|book|füge?|erstelle?|plane?|trag(?:e)? ein|ajoute(?:r)?|crée(?:r)?|planifie(?:r)?|mets|aggiungi|crea|pianifica|metti|añade|añadir|agrega(?:r)?|crea(?:r)?|planifica(?:r)?|pon|adiciona(?:r)?|cria(?:r)?|agenda(?:r)?|coloca(?:r)?)\s*/i, '')
           .trim();
         if (dialogTab === 'event') setEventTitle(clean || transcript);
         else setReminderTitle(clean || transcript);

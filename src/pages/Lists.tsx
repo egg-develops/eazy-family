@@ -71,7 +71,7 @@ const guessTaskCat = guessTaskCategory;
 
 const parseShoppingItems = (text: string): string[] =>
   text
-    .split(/,|;|&|\band\b|\balso\b|\bund\b|\bet\b|\be\b/i)
+    .split(/,|;|&|\band\b|\balso\b|\bund\b|\bet\b|\be\b|\by\b/i)
     .map(s => s.replace(/^(please\s+)?(add|buy|get|pick up|grab|i need|we need|put)\s+/i, '')
                .replace(/\s+to\s+(my|our|the)\s+(shopping\s+)?list\s*$/i, '').trim())
     .filter(s => s.length > 1);
@@ -494,7 +494,7 @@ const Lists = () => {
                   {Object.entries(groupByTaskCategory(taskItems)).map(([cat, catTasks]) => (
                     <div key={cat}>
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{cat}</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: MUTED }}>{t(`todos.categories.${cat}`, cat)}</h3>
                         <span className="text-xs" style={{ color: MUTED }}>
                           {catTasks.length} {catTasks.length !== 1 ? t('todos.tasksPlural') : t('todos.tasks')}
                         </span>

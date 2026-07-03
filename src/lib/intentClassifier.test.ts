@@ -211,3 +211,92 @@ describe('regression – 2026-06-11 EZ button → wrong destination', () => {
   it('"dinner with the team at 7pm" → event (not hijacked)', () =>
     expect(guardAIType('event', 'dinner with the team at 7pm', '2026-06-12', '19:00')).toBe('event'));
 });
+
+// ── classifyText – multilingual (FR / IT / ES / PT) ──────────────────────────
+// The deterministic fallback must recognise all six app languages, not just
+// EN + DE — it is what users get when the AI parse fails or times out.
+
+describe('classifyText – reminder (FR/IT/ES/PT)', () => {
+  it('FR rappelle-moi',   () => expect(classifyText("rappelle-moi d'appeler maman")).toBe('reminder'));
+  it("FR n'oublie pas",   () => expect(classifyText("n'oublie pas le loyer")).toBe('reminder'));
+  it('IT ricordami',      () => expect(classifyText('ricordami di chiamare la mamma')).toBe('reminder'));
+  it('ES recuérdame',     () => expect(classifyText('recuérdame llamar a mamá')).toBe('reminder'));
+  it('ES no olvides',     () => expect(classifyText('no olvides pagar el alquiler')).toBe('reminder'));
+  it('PT lembra-me',      () => expect(classifyText('lembra-me de ligar à mãe')).toBe('reminder'));
+});
+
+describe('classifyText – journal (FR/IT/ES/PT)', () => {
+  it('FR je me sens',     () => expect(classifyText('je me sens fier aujourd\'hui')).toBe('journal'));
+  it('IT mi sento',       () => expect(classifyText('mi sento felice')).toBe('journal'));
+  it('ES me siento',      () => expect(classifyText('me siento orgullosa')).toBe('journal'));
+  it('PT sinto-me',       () => expect(classifyText('sinto-me feliz')).toBe('journal'));
+});
+
+describe('classifyText – event (FR/IT/ES/PT date words)', () => {
+  it('FR demain',         () => expect(classifyText('dentiste demain 15h')).toBe('event'));
+  it('FR rendez-vous',    () => expect(classifyText('rendez-vous chez le médecin')).toBe('event'));
+  it('IT domani',         () => expect(classifyText('dentista domani')).toBe('event'));
+  it('IT compleanno',     () => expect(classifyText('compleanno di Luca sabato')).toBe('event'));
+  it('ES cita',           () => expect(classifyText('cita con el dentista el lunes')).toBe('event'));
+  it('PT amanhã',         () => expect(classifyText('dentista amanhã')).toBe('event'));
+});
+
+describe('classifyText – shopping stays shopping in FR/IT/ES/PT', () => {
+  it('FR acheter',        () => expect(classifyText('acheter du lait')).toBe('shopping'));
+  it('IT comprare',       () => expect(classifyText('comprare il latte')).toBe('shopping'));
+  it('ES mi lista',       () => expect(classifyText('añadir vino a mi lista')).toBe('shopping_personal'));
+  it('PT nossa lista',    () => expect(classifyText('adicionar leite à nossa lista')).toBe('shopping'));
+});
+
+// ── classifyText – reported misclassifications (2026-07-02 audit round 2) ────
+
+describe('classifyText – obvious tasks no longer classified as events', () => {
+  it('take out the trash',        () => expect(classifyText('take out the trash')).toBe('task'));
+  it('take out the trash tomorrow (still task)', () => expect(classifyText('take out the trash tomorrow')).toBe('task'));
+  it('pay the electricity bill',  () => expect(classifyText('pay the electricity bill')).toBe('task'));
+  it('iron the shirts',           () => expect(classifyText('iron the shirts')).toBe('task'));
+  it('feed the cat',              () => expect(classifyText('feed the cat')).toBe('task'));
+  it('DE Müll rausbringen',       () => expect(classifyText('Müll rausbringen')).toBe('task'));
+  it('DE Rechnung bezahlen',      () => expect(classifyText('Rechnung bezahlen')).toBe('task'));
+  it('FR payer la facture',       () => expect(classifyText('payer la facture')).toBe('task'));
+  it('IT pagare la bolletta',     () => expect(classifyText('pagare la bolletta')).toBe('task'));
+  it('ES sacar la basura',        () => expect(classifyText('sacar la basura')).toBe('task'));
+  it('PT tirar o lixo',           () => expect(classifyText('tirar o lixo')).toBe('task'));
+  it('ambiguous input defaults to task, not event', () =>
+    expect(classifyText('new tires for the car')).toBe('task'));
+  it('dated input still an event', () => expect(classifyText('team dinner friday 7pm')).toBe('event'));
+});
+
+describe('classifyText / guardAIType – personal scope (declined German forms)', () => {
+  it('DE "zu meiner Liste" → shopping_personal', () =>
+    expect(classifyText('Milch zu meiner Liste hinzufügen')).toBe('shopping_personal'));
+  it('DE "auf meine Liste" → shopping_personal', () =>
+    expect(classifyText('Milch auf meine Liste')).toBe('shopping_personal'));
+  it('DE "zu unserer Liste" → shopping (shared)', () =>
+    expect(classifyText('Milch zu unserer Liste hinzufügen')).toBe('shopping'));
+  it('EN "for myself" → shopping_personal', () =>
+    expect(classifyText('buy protein bars for myself')).toBe('shopping_personal'));
+  it('guard: AI shopping + "zu meiner Liste" → shopping_personal', () =>
+    expect(guardAIType('shopping', 'Milch zu meiner Liste hinzufügen', null, null)).toBe('shopping_personal'));
+});
+
+describe('guardAIType – new task verbs override event', () => {
+  it('AI event + take out the trash tomorrow (no time) → task', () =>
+    expect(guardAIType('event', 'take out the trash tomorrow', '2026-07-03', null)).toBe('task'));
+  it('AI event + pay bills (no time) → task', () =>
+    expect(guardAIType('event', 'pay the bills this week', '2026-07-05', null)).toBe('task'));
+});
+
+// ── Accent-boundary regressions: JS \b is ASCII-only, so "para mí" and
+// "à minha lista" never matched until the lookaround rewrite ────────────────
+
+describe('classifyText – accented personal-scope phrases', () => {
+  it('ES "para mí" → shopping_personal', () =>
+    expect(classifyText('añade vino para mí')).toBe('shopping_personal'));
+  it('PT "à minha lista" → shopping_personal', () =>
+    expect(classifyText('adicionar leite à minha lista')).toBe('shopping_personal'));
+  it('FR "à 15h" is an event signal', () =>
+    expect(classifyText('médecin à 15h')).toBe('event'));
+  it('IT "lunedì" is an event signal', () =>
+    expect(classifyText('dentista lunedì')).toBe('event'));
+});

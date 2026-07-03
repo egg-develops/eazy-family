@@ -39,7 +39,7 @@ serve(async (req) => {
       );
     }
 
-    const { messages, context, systemPrompt: systemPromptOverride } = await req.json();
+    const { messages, context, systemPrompt: systemPromptOverride, temperature } = await req.json();
 
     if (!Array.isArray(messages)) {
       return new Response(
@@ -89,6 +89,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         max_tokens: 1024,
+        // Structured-extraction callers (EZ capture) pass temperature 0 for
+        // deterministic JSON; conversational callers omit it (API default).
+        ...(typeof temperature === 'number' && temperature >= 0 && temperature <= 1
+          ? { temperature }
+          : {}),
         system: systemPrompt,
         messages: messages.map((m: { role: string; content: string }) => ({
           role: m.role === 'assistant' ? 'assistant' : 'user',

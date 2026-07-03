@@ -8,7 +8,9 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import * as chrono from "chrono-node";
+import { de as dfDe, fr as dfFr, it as dfIt, es as dfEs, pt as dfPt, enGB as dfEnGB, type Locale } from "date-fns/locale";
+import { parseDatesLocalized } from "@/lib/localeChrono";
+import { getSpeechLocale, getAppLanguageLabel, getAppLanguage, getAppBaseLanguage } from "@/lib/speechLocale";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
 import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
@@ -19,6 +21,8 @@ import {
   buildCalendarCaptureItem,
   buildShoppingCaptureRows,
   buildTaskCaptureRows,
+  dropAssigneesMentionedInTitle,
+  extractAssignmentIntent,
   isFeatureHelpQuery,
   parseMessageIntent,
   resolveAssignees,
@@ -64,40 +68,19 @@ const AI_KEY: Record<CaptureType, string> = {
   journal:           'aiJournal',
 };
 
-const LOCALE_TO_LANG: Record<string, string> = {
-  en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', pt: 'pt-PT',
-  'en-US': 'en-US', 'en-GB': 'en-GB',
-  'de-DE': 'de-DE', 'de-CH': 'de-CH', 'de-AT': 'de-DE',
-  'fr-FR': 'fr-FR', 'fr-CH': 'fr-FR', 'fr-BE': 'fr-FR',
-  'it-IT': 'it-IT', 'it-CH': 'it-IT',
-  'es-ES': 'es-ES', 'es-MX': 'es-MX', 'es-US': 'es-US',
-  'pt-PT': 'pt-PT', 'pt-BR': 'pt-BR',
-};
+// Speech locale + language label come from the shared helpers in
+// src/lib/speechLocale.ts — the single source of truth for the user's
+// language across every voice surface.
+const getUserLocale = getSpeechLocale;
+const getUserLanguageLabel = getAppLanguageLabel;
 
-const LANG_NAMES: Record<string, string> = {
-  en: 'English', de: 'German', 'de-CH': 'Swiss German',
-  fr: 'French', it: 'Italian', es: 'Spanish', pt: 'Portuguese',
+// date-fns locale for the preview screen, so dates render in the user's
+// language (and 24h time outside English) instead of hardcoded US English.
+const DF_LOCALES: Record<string, Locale> = {
+  de: dfDe, fr: dfFr, it: dfIt, es: dfEs, pt: dfPt, 'en-GB': dfEnGB,
 };
-
-const getUserLocale = (): string => {
-  // Must read the SAME key the language Settings toggle writes
-  // (`eazy-family-language`) — otherwise the speech recognizer stays pinned to
-  // en-US while the rest of the app is in the user's language, producing
-  // phonetic-English garbage for non-English speech.
-  const saved =
-    localStorage.getItem('eazy-family-language') ||
-    localStorage.getItem('i18nextLng') ||
-    navigator.language ||
-    'en';
-  const base = saved.split('-')[0];
-  return LOCALE_TO_LANG[saved] || LOCALE_TO_LANG[base] || 'en-US';
-};
-
-const getUserLanguageLabel = (): string => {
-  const saved = localStorage.getItem('eazy-family-language') ||
-    (localStorage.getItem('i18nextLng') || 'en').split('-')[0];
-  return LANG_NAMES[saved] || 'English';
-};
+const getDateFnsLocale = (): Locale | undefined =>
+  DF_LOCALES[getAppLanguage()] ?? DF_LOCALES[getAppBaseLanguage()];
 
 const cleanCaptureTitle = (raw: string): string => {
   let s = raw
@@ -442,7 +425,7 @@ JSON fields:
 - time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
-- assignees: array of first names of who should do it, or null. Extract from phrases like "assign to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title.
+- assignees: array of first names of who should do it, or null. Extract ONLY from explicit delegation phrases: "assign to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
 - reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
@@ -465,6 +448,9 @@ Return ONLY the raw JSON object.`;
         body: JSON.stringify({
           messages: [{ role: 'user', content: isSwissGermanLocale() ? normalizeCHDE(latestTextRef.current.trim(), getDbRules()) : latestTextRef.current.trim() }],
           systemPrompt: systemContext,
+          // Structured extraction must be deterministic — the same utterance
+          // should always parse to the same JSON.
+          temperature: 0,
         }),
       });
 
@@ -653,9 +639,17 @@ STYLE:
       if (result.type && !userLockedType) setType(result.type);
 
       let cleanedTitle = cleanCaptureTitle(result.title);
+      // The AI is told to strip assignment phrases from the title, but if one
+      // slips through ("fix shelf and assign to Sofia"), pull it out and merge
+      // the name into assignees instead of saving it as part of the title.
+      const residualAssign = extractAssignmentIntent(cleanedTitle);
+      if (residualAssign.names.length) {
+        cleanedTitle = residualAssign.cleaned || cleanedTitle;
+        result.assignees = Array.from(new Set([...(result.assignees ?? []), ...residualAssign.names]));
+      }
       let resolvedDate = result.date;
       const now = new Date();
-      const residualDate = chrono.parse(cleanedTitle, now)[0];
+      const residualDate = parseDatesLocalized(cleanedTitle, now)[0];
       if (residualDate) {
         resolvedDate = format(residualDate.start.date(), 'yyyy-MM-dd');
         cleanedTitle = (
@@ -671,8 +665,12 @@ STYLE:
       setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
       parseSnapshotRef.current = { rawInput, aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
     } else {
-      const raw = processText;
-      const chronoParsed = chrono.parse(raw, new Date())[0];
+      // AI unavailable/timed out — extract the assignment deterministically so
+      // "fix the shelf and assign to Sofia" still assigns instead of leaving
+      // the phrase in the title with no assignee.
+      const assignment = extractAssignmentIntent(processText);
+      const raw = assignment.cleaned || processText;
+      const chronoParsed = parseDatesLocalized(raw, new Date(), { forwardDate: true })[0];
       const fallbackDate = chronoParsed ? format(chronoParsed.start.date(), 'yyyy-MM-dd') : null;
       const fallbackHour = chronoParsed?.start.get('hour');
       const fallbackMin = chronoParsed?.start.get('minute') ?? 0;
@@ -696,7 +694,9 @@ STYLE:
         type: fallbackType,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
         date: fallbackDate, time: correctedTime, endTime: null,
-        location: null, assignees: null, reminder: null,
+        location: null,
+        assignees: assignment.names.length ? assignment.names : null,
+        reminder: null,
         notes: null, mood: null,
       });
     }
@@ -717,7 +717,13 @@ STYLE:
 
       if (entryType === 'event' || entryType === 'reminder') {
         const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
-        const attendeeUserIds = resolveAssignees(parsed.assignees, familyMembers, { userId: user?.id ?? '', name: userName });
+        // Resolve the roster inline — the mount effect may not have loaded it
+        // yet, and resolving from empty state silently drops attendees
+        // ("dinner with Sofia" → no attendee). Same rule as the task path.
+        const { members: eventMembers } = parsed.assignees?.length
+          ? await ensureRoster()
+          : { members: familyMembers };
+        const attendeeUserIds = resolveAssignees(parsed.assignees, eventMembers, { userId: user?.id ?? '', name: userName });
         const eventDraft = buildCalendarCaptureItem(parsed, {
           id: crypto.randomUUID(),
           now: new Date(),
@@ -746,11 +752,15 @@ STYLE:
         onClose(); navigate('/app/calendar');
 
       } else if (entryType === 'task') {
-        if (!user || !session) return;
-        const { famId, members } = parsed.assignees?.length
+        if (!user || !session) { setIsSubmitting(false); return; }
+        // A name still in the title means the task is ABOUT that person ("call
+        // Sofia"), not assigned to them — assigning would silently move a
+        // personal task into the shared family list.
+        const guardedAssignees = dropAssigneesMentionedInTitle(parsed.assignees, parsed.title);
+        const { famId, members } = guardedAssignees?.length
           ? await ensureRoster()
           : { famId: familyId, members: familyMembers };
-        const assignedUserIds = resolveAssignees(parsed.assignees, members, { userId: user.id, name: userName });
+        const assignedUserIds = resolveAssignees(guardedAssignees, members, { userId: user.id, name: userName });
         // Assigning to another member → drop it into a shared family list so the
         // assignee can see it and it shows with their pill.
         const assignedToOthers = assignedUserIds.some(id => id !== user.id);
@@ -766,7 +776,7 @@ STYLE:
         onClose(); navigate(parentId ? '/app/lists?tab=tasks' : '/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
-        if (!user || !session) return;
+        if (!user || !session) { setIsSubmitting(false); return; }
         const needRoster = entryType === 'shopping' && !!parsed.assignees?.length;
         const { famId, members } = needRoster
           ? await ensureRoster()
@@ -837,8 +847,11 @@ STYLE:
     if (!date) return null;
     try {
       const d = new Date(`${date}T${time || '00:00'}`);
-      if (time) return format(d, 'EEE, MMM d · h:mm a');
-      return format(d, 'EEE, MMM d');
+      const locale = getDateFnsLocale();
+      // 12h clock only for English — every other supported language uses 24h.
+      const timePattern = getAppBaseLanguage() === 'en' ? 'h:mm a' : 'HH:mm';
+      if (time) return format(d, `EEE, MMM d · ${timePattern}`, { locale });
+      return format(d, 'EEE, MMM d', { locale });
     } catch { return date; }
   };
 

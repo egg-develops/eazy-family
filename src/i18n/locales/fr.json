@@ -1142,7 +1142,13 @@
     "everyone": "Tout le monde",
     "parentsOnly": "Parents uniquement",
     "assignTo": "Assigner à",
-    "newList": "Nouvelle liste"
+    "newList": "Nouvelle liste",
+    "categories": {
+      "Kids": "Enfants",
+      "Admin": "Administratif",
+      "Home": "Maison",
+      "Personal": "Personnel"
+    }
   },
   "shopping": {
     "title": "Courses",
