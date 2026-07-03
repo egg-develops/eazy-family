@@ -93,6 +93,23 @@ describe('parseMessageIntent', () => {
   });
 });
 
+describe('resolveAssignees — fuzzy name matching', () => {
+  const members: FamilyMemberLite[] = [
+    { user_id: 'u-sofia', name: 'Sofia Müller' },
+    { user_id: 'u-leo',   name: 'Leo Müller' },
+  ];
+  const self = { userId: 'u-self', name: 'Alex Müller' };
+
+  it('"Sophia" resolves to Sofia (edit distance 1)', () =>
+    expect(resolveAssignees(['Sophia'], members, self)).toEqual(['u-sofia']));
+
+  it('"Leo" resolves exactly (no fuzzy needed)', () =>
+    expect(resolveAssignees(['Leo'], members, self)).toEqual(['u-leo']));
+
+  it('"Mia" (4 chars, no member named Mia) → empty', () =>
+    expect(resolveAssignees(['Mia'], members, self)).toEqual([]));
+});
+
 describe('resolveAssignees', () => {
   const members: FamilyMemberLite[] = [
     { user_id: 'u-mia', name: 'Mia Rivera' },
@@ -395,6 +412,10 @@ describe('extractAssignmentIntent', () => {
   it('ES: "dile a Sofia que riegue las plantas"', () => {
     expect(extractAssignmentIntent('dile a Sofia que riegue las plantas'))
       .toEqual({ names: ['Sofia'], cleaned: 'riegue las plantas' });
+  });
+  it('PT: "envia uma mensagem para Sofia"', () => {
+    const r = extractAssignmentIntent('add task and assign it Sofia');
+    expect(r.names).toContain('Sofia');
   });
   it('no assignment → names empty, text untouched', () => {
     expect(extractAssignmentIntent('call Sofia about dinner plans'))

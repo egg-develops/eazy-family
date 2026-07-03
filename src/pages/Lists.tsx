@@ -4,7 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import {
   CheckSquare, Users, Plus, Check, Trash2, X,
-  Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw, Pencil,
+  Search, ChevronDown, ChevronRight, ClipboardList, Sparkles, RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -663,7 +663,11 @@ const Lists = () => {
                             maxLength={60}
                           />
                         ) : (
-                          <p className="font-semibold text-sm truncate" style={{ color: INK }}>{list.title}</p>
+                          <p
+                            className="font-semibold text-sm truncate cursor-text"
+                            style={{ color: INK }}
+                            onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }}
+                          >{list.title}</p>
                         )}
                         <div className="flex items-center gap-2">
                           <p className="text-xs" style={{ color: MUTED }}>
@@ -677,9 +681,6 @@ const Lists = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <button onClick={e => { e.stopPropagation(); setEditingListTitle(list.title); setEditingListId(list.id); setExpandedLists(prev => new Set([...prev, list.id])); }} className="w-9 h-9 flex items-center justify-center rounded-xl opacity-50 transition-opacity active:opacity-100">
-                          <Pencil className="w-4 h-4" style={{ color: MUTED }} />
-                        </button>
                         <button onClick={e => { e.stopPropagation(); deleteItem(list.id); }} className="w-9 h-9 flex items-center justify-center rounded-xl opacity-50 transition-opacity active:opacity-100">
                           <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                         </button>
@@ -707,46 +708,51 @@ const Lists = () => {
                                   />
                                 ) : (
                                   <span
-                                    className="flex-1 text-sm"
+                                    className="flex-1 text-sm cursor-text"
                                     style={{ color: item.completed ? MUTED : INK, textDecoration: item.completed ? 'line-through' : 'none' }}
+                                    onClick={() => !item.completed && startEditing(item)}
                                   >
                                     {item.title}
                                   </span>
                                 )}
-                                {!item.completed && editingItemId !== item.id && (
-                                  <button onClick={() => startEditing(item)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-40 transition-opacity active:opacity-100 flex-shrink-0">
-                                    <Pencil className="w-3.5 h-3.5" style={{ color: MUTED }} />
-                                  </button>
-                                )}
-                                {/* Multi-assignee pills */}
-                                <div className="flex items-center gap-1 flex-shrink-0 flex-wrap">
-                                  {(item.assigned_to_users ?? []).slice(0, 3).map(uid => {
-                                    const m = familyMembers.find(fm => fm.user_id === uid);
-                                    const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
-                                    return (
-                                      <span key={uid}
-                                        className="flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold flex-shrink-0"
-                                        style={{ background: '#EEF4F0', color: '#44664F' }}
-                                        title={m?.full_name || name}
-                                      >
-                                        {m?.photo
-                                          ? <img src={m.photo} className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0" alt="" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                          : <span className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0" style={{ background: '#8FB399' }}>
-                                              {name.charAt(0).toUpperCase()}
-                                            </span>
-                                        }
-                                        {name}
-                                      </span>
-                                    );
-                                  })}
-                                  <button
-                                    onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
-                                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                    style={{ background: (item.assigned_to_users?.length ?? 0) > 0 ? 'transparent' : MUTEDBG, color: MUTED, border: `1px dashed ${MUTED}` }}
-                                    title="Assign">
-                                    +
-                                  </button>
-                                </div>
+                                {/* Assignee avatar(s) — tap to open assign picker.
+                                    Shows stacked avatars when assigned, subtle empty
+                                    circle when unassigned. Replaces separate pills +
+                                    dashed "+" button (ambiguous, wastes space). */}
+                                <button
+                                  onClick={() => setAssigningItemId(isAssigning ? null : item.id)}
+                                  className="flex items-center flex-shrink-0"
+                                  title="Assign"
+                                >
+                                  {(item.assigned_to_users?.length ?? 0) > 0 ? (
+                                    <div className="flex -space-x-1.5">
+                                      {(item.assigned_to_users ?? []).slice(0, 3).map(uid => {
+                                        const m = familyMembers.find(fm => fm.user_id === uid);
+                                        const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
+                                        return m?.photo ? (
+                                          <img key={uid} src={m.photo}
+                                            className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                                            style={{ outline: `2px solid ${CARD}` }}
+                                            alt={name}
+                                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                          />
+                                        ) : (
+                                          <span key={uid}
+                                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+                                            style={{ background: '#8FB399', outline: `2px solid ${CARD}` }}
+                                          >
+                                            {name.charAt(0).toUpperCase()}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <span
+                                      className="w-7 h-7 rounded-full flex-shrink-0"
+                                      style={{ border: `1.5px dashed ${BORDER}` }}
+                                    />
+                                  )}
+                                </button>
                                 <button onClick={() => deleteItem(item.id)} className="w-8 h-8 flex items-center justify-center rounded-lg opacity-50 transition-opacity active:opacity-100 flex-shrink-0">
                                   <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                                 </button>

@@ -34,11 +34,25 @@ export interface FamilyMemberLite {
 /** First word, lowercased — for first-name matching. */
 const firstName = (n: string): string => n.trim().toLowerCase().split(/\s+/)[0] || '';
 
+/** Levenshtein distance — used for fuzzy name matching (e.g. "Sophia" ↔ "Sofia"). */
+function editDist(a: string, b: string): number {
+  if (Math.abs(a.length - b.length) > 2) return 99;
+  const dp: number[][] = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return dp[a.length][b.length];
+}
+
 /**
  * Resolve parsed assignee names (first names from the voice query) to family
- * member user ids. Matches on first name, case-insensitive. "me"/"myself"/"I"
- * and the user's own first name resolve to self. Unmatched names are dropped.
- * Deduplicated, order-preserving.
+ * member user ids. Exact first-name match first; falls back to edit-distance ≤ 1
+ * for names ≥ 4 chars so "Sophia" resolves to "Sofia", "Leo" to "Léo", etc.
+ * "me"/"myself"/"I" and the user's own first name resolve to self.
+ * Unmatched names are dropped. Deduplicated, order-preserving.
  */
 export function resolveAssignees(
   names: string[] | null | undefined,
@@ -56,8 +70,21 @@ export function resolveAssignees(
       add(self.userId);
       continue;
     }
-    const match = members.find(m => firstName(m.name) === fn);
-    if (match) add(match.user_id);
+    const exact = members.find(m => firstName(m.name) === fn);
+    if (exact) { add(exact.user_id); continue; }
+    // Fuzzy fallback: handles voice pronunciation variants.
+    // Threshold scales with name length:
+    //   ≥ 5 chars both sides → allow 2 edits ("Sophia" ↔ "Sofia")
+    //   ≥ 3 chars both sides → allow 1 edit  ("Leo" ↔ "Léo")
+    if (fn.length >= 3) {
+      const fuzzy = members.find(m => {
+        const mfn = firstName(m.name);
+        if (mfn.length < 3) return false;
+        const threshold = fn.length >= 5 && mfn.length >= 5 ? 2 : 1;
+        return editDist(mfn, fn) <= threshold;
+      });
+      if (fuzzy) add(fuzzy.user_id);
+    }
   }
   return out;
 }
