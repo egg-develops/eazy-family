@@ -45,11 +45,28 @@ Deno.serve(async (req) => {
     return new Response("Bad request", { status: 400 });
   }
 
+  // Validate the Telegram webhook secret when configured (set via
+  // setWebhook secret_token) — rejects forged updates outright.
+  const webhookSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+  if (webhookSecret && req.headers.get("X-Telegram-Bot-Api-Secret-Token") !== webhookSecret) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const message = update?.message || update?.edited_message;
   if (!message?.text) return new Response("OK", { status: 200 });
 
   const chatId = message.chat.id;
   const userText = message.text;
+
+  // This is the owner's private COO bot: only the configured chat may talk to
+  // it. Without this gate, ANY Telegram user (or anyone posting fake updates
+  // with the public anon key) could burn the Anthropic key and read the
+  // internal project context baked into the system prompt. Check BEFORE the
+  // AI call so unauthorized traffic costs nothing.
+  const allowedChatId = Deno.env.get("TELEGRAM_CHAT_ID");
+  if (!allowedChatId || String(chatId) !== String(allowedChatId)) {
+    return new Response("OK", { status: 200 });
+  }
 
   // Acknowledge quickly (Telegram expects response within 5s)
   const responsePromise = (async () => {

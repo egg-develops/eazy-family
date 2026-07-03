@@ -19,6 +19,7 @@ const SYNC_KEYS = new Set([
   'eazy-morning-digest-email',
   'eazy-rituals-list',
   'eazy-large-tap-targets',
+  'eazy-timezone',
 ]);
 
 let _userId: string | null = null;
@@ -74,6 +75,16 @@ export async function loadCloudPreferences(userId: string) {
         window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
       }
     }
+
+    // Keep the device timezone synced up — the morning digest uses it to
+    // compute "today" and format event times for THIS user (falls back to
+    // Europe/Zurich server-side when absent).
+    try {
+      const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (deviceTz && cloudData['eazy-timezone'] !== deviceTz) {
+        cloudSet('eazy-timezone', deviceTz);
+      }
+    } catch { /* best-effort */ }
   } catch {
     // Non-fatal — app works with local values
   }

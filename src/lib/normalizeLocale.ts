@@ -48,8 +48,8 @@ export function normalizeCHDE(text: string, dbRules: DbDialectRule[] = []): stri
   s = s.replace(/\bhüt(?:ige?n?)?\b/gi, 'heute');
   s = s.replace(/\bmornig[e]?\b/gi, 'morgen');
   s = s.replace(/\bmorn\b/gi, 'morgen');  // "morn" alone, not inside another word
-  s = s.replace(/\büberismorn\b/gi, 'übermorgen');
-  s = s.replace(/\büberisch(?:nächt)?\b/gi, 'übermorgen');
+  s = s.replace(/(?<!\p{L})überismorn(?!\p{L})/giu, 'übermorgen');
+  s = s.replace(/(?<!\p{L})überisch(?:nächt)?(?!\p{L})/giu, 'übermorgen');
   s = s.replace(/\bgschtert\b/gi, 'gestern');
   s = s.replace(/\bgeschter\b/gi, 'gestern');
   s = s.replace(/\bnächschti(?:u)?\b/gi, 'nächste');
@@ -84,12 +84,14 @@ export function normalizeCHDE(text: string, dbRules: DbDialectRule[] = []): stri
   s = s.replace(/\bluege\b/gi, 'anschauen');
   s = s.replace(/\bfiire\b/gi, 'feiern');
 
-  // List scope markers — map to Standard German so isPersonalScope() works
+  // List scope markers — map to Standard German so isPersonalScope() works.
+  // NB: JS \b is ASCII-only — patterns STARTING with ü need (?<!\p{L}) + /u
+  // or they never match (see reference-js-word-boundary-ascii).
   s = s.replace(/\bmini\s+(einkaufs)?list[e]?\b/gi, 'meine Liste');
   s = s.replace(/\bmine\s+(einkaufs)?list[e]?\b/gi, 'meine Liste');
-  s = s.replace(/\büsi\s+(einkaufs)?list[e]?\b/gi, 'unsere Liste');
-  s = s.replace(/\büseri\s+(einkaufs)?list[e]?\b/gi, 'unsere Liste');
-  s = s.replace(/\büsere\s+(einkaufs)?list[e]?\b/gi, 'unsere Liste');
+  s = s.replace(/(?<!\p{L})üsi\s+(einkaufs)?list[e]?\b/giu, 'unsere Liste');
+  s = s.replace(/(?<!\p{L})üseri\s+(einkaufs)?list[e]?\b/giu, 'unsere Liste');
+  s = s.replace(/(?<!\p{L})üsere\s+(einkaufs)?list[e]?\b/giu, 'unsere Liste');
 
   // Common nouns that matter for parsing context
   s = s.replace(/\bNatel\b/g, 'Handy');
