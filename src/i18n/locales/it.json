@@ -1142,7 +1142,13 @@
     "everyone": "Tutti",
     "parentsOnly": "Solo genitori",
     "assignTo": "Assegna a",
-    "newList": "Nuova lista"
+    "newList": "Nuova lista",
+    "categories": {
+      "Kids": "Bambini",
+      "Admin": "Amministrazione",
+      "Home": "Casa",
+      "Personal": "Personale"
+    }
   },
   "shopping": {
     "title": "Spesa",

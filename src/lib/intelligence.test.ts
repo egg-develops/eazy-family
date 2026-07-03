@@ -322,7 +322,7 @@ describe('guessShoppingCategory', () => {
   it('orange juice → Drinks', () => expect(guessShoppingCategory('orange juice')).toBe('Drinks'));
 
   // Other
-  it('toothbrush → Other',    () => expect(guessShoppingCategory('toothbrush')).toBe('Other'));
+  it('toothbrush → Household (was Other)', () => expect(guessShoppingCategory('toothbrush')).toBe('Household'));
   it('unknown → Other',       () => expect(guessShoppingCategory('widget')).toBe('Other'));
 });
 
@@ -460,4 +460,59 @@ describe('filterTasksByTime', () => {
     expect(filterTasksByTime(tasks, 'upcoming', NOW)).toHaveLength(1);
     expect(filterTasksByTime(tasks, 'complete', NOW)).toHaveLength(1);
   });
+});
+
+// ── Multilingual category heuristics ─────────────────────────────────────────
+
+describe('guessShoppingCategory – multilingual', () => {
+  it('DE Milch → Dairy',        () => expect(guessShoppingCategory('Milch')).toBe('Dairy'));
+  it('DE Äpfel → Produce',      () => expect(guessShoppingCategory('Äpfel')).toBe('Produce'));
+  it('DE Hähnchen → Meat',      () => expect(guessShoppingCategory('Hähnchen')).toBe('Meat'));
+  it('DE Brot → Bakery',        () => expect(guessShoppingCategory('Brot')).toBe('Bakery'));
+  it('DE Waschmittel → Household', () => expect(guessShoppingCategory('Waschmittel')).toBe('Household'));
+  it('FR fromage → Dairy',      () => expect(guessShoppingCategory('fromage')).toBe('Dairy'));
+  it('FR pain → Bakery',        () => expect(guessShoppingCategory('pain')).toBe('Bakery'));
+  it('FR jus d\'orange → Drinks', () => expect(guessShoppingCategory("jus d'orange")).toBe('Drinks'));
+  it('IT latte → Dairy',        () => expect(guessShoppingCategory('latte')).toBe('Dairy'));
+  it('IT pomodori → Produce',   () => expect(guessShoppingCategory('pomodori')).toBe('Produce'));
+  it('ES leche → Dairy',        () => expect(guessShoppingCategory('leche')).toBe('Dairy'));
+  it('ES pañales → Baby',       () => expect(guessShoppingCategory('pañales')).toBe('Baby'));
+  it('PT pão → Bakery',         () => expect(guessShoppingCategory('pão')).toBe('Bakery'));
+  it('PT queijo → Dairy',       () => expect(guessShoppingCategory('queijo')).toBe('Dairy'));
+  it('EN unchanged: milk → Dairy', () => expect(guessShoppingCategory('milk')).toBe('Dairy'));
+  it('EN unchanged: orange juice → Drinks', () => expect(guessShoppingCategory('orange juice')).toBe('Drinks'));
+});
+
+describe('guessTaskCategory – multilingual', () => {
+  it('DE Hausaufgaben → Kids',  () => expect(guessTaskCategory('Hausaufgaben kontrollieren')).toBe('Kids'));
+  it('DE Rechnung → Admin',     () => expect(guessTaskCategory('Rechnung bezahlen')).toBe('Admin'));
+  it('DE Wäsche → Home',        () => expect(guessTaskCategory('Wäsche machen')).toBe('Home'));
+  it('FR école → Kids',         () => expect(guessTaskCategory("chercher les enfants à l'école")).toBe('Kids'));
+  it('FR facture → Admin',      () => expect(guessTaskCategory('payer la facture')).toBe('Admin'));
+  it('IT giardino → Home',      () => expect(guessTaskCategory('sistemare il giardino')).toBe('Home'));
+  it('ES deberes → Kids',       () => expect(guessTaskCategory('revisar los deberes')).toBe('Kids'));
+  it('PT cozinha → Home',       () => expect(guessTaskCategory('limpar a cozinha')).toBe('Home'));
+  it('fallback → Personal',     () => expect(guessTaskCategory('meditar')).toBe('Personal'));
+});
+
+describe('cleanPurchaseItem – multilingual command stripping', () => {
+  it('DE kauf Milch',           () => expect(cleanPurchaseItem('kauf Milch')).toBe('milch'));
+  it('DE Milch auf die Einkaufsliste', () => expect(cleanPurchaseItem('Milch auf die Einkaufsliste')).toBe('milch'));
+  it('FR achète du lait',       () => expect(cleanPurchaseItem('achète du lait')).toBe('du lait'));
+  it('IT compra il latte',      () => expect(cleanPurchaseItem('compra il latte')).toBe('il latte'));
+  it('ES necesito pan',         () => expect(cleanPurchaseItem('necesito pan')).toBe('pan'));
+  it('PT preciso de leite',     () => expect(cleanPurchaseItem('preciso de leite')).toBe('leite'));
+  it('EN unchanged',            () => expect(cleanPurchaseItem('buy milk')).toBe('milk'));
+});
+
+describe('guessShoppingCategory – compound items (reported miscategorizations)', () => {
+  it('peanut butter is not Dairy',   () => expect(guessShoppingCategory('peanut butter')).toBe('Other'));
+  it('banana bread is Bakery',       () => expect(guessShoppingCategory('banana bread')).toBe('Bakery'));
+  it('egg noodles are Bakery',       () => expect(guessShoppingCategory('egg noodles')).toBe('Bakery'));
+  it('plain butter still Dairy',     () => expect(guessShoppingCategory('butter')).toBe('Dairy'));
+  it('strawberries → Produce',       () => expect(guessShoppingCategory('strawberries')).toBe('Produce'));
+  it('DE Erdbeeren → Produce',       () => expect(guessShoppingCategory('Erdbeeren')).toBe('Produce'));
+  it('toothpaste → Household',       () => expect(guessShoppingCategory('toothpaste')).toBe('Household'));
+  it('DE Zahnpasta → Household',     () => expect(guessShoppingCategory('Zahnpasta')).toBe('Household'));
+  it('FR champignons → Produce',     () => expect(guessShoppingCategory('champignons')).toBe('Produce'));
 });

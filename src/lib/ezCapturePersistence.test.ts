@@ -3,6 +3,8 @@ import {
   buildCalendarCaptureItem,
   buildShoppingCaptureRows,
   buildTaskCaptureRows,
+  dropAssigneesMentionedInTitle,
+  extractAssignmentIntent,
   isFamilyCalendarIntent,
   isFeatureHelpQuery,
   parseMessageIntent,
@@ -245,5 +247,161 @@ describe('family calendar intent', () => {
   it('requires an explicit family/shared calendar phrase', () => {
     expect(isFamilyCalendarIntent('Add dinner to our family calendar')).toBe(true);
     expect(isFamilyCalendarIntent('Dinner with my family tomorrow')).toBe(false);
+  });
+});
+
+// ── parseMessageIntent – multilingual ────────────────────────────────────────
+
+describe('parseMessageIntent – DE/FR/IT/ES/PT', () => {
+  it('DE schick X eine Nachricht', () => {
+    expect(parseMessageIntent('Schick Sofia eine Nachricht, dass ich später komme'))
+      .toEqual({ to: 'Sofia', body: 'ich später komme' });
+  });
+  it('DE sag X, dass', () => {
+    expect(parseMessageIntent('Sag Sofia, dass das Essen fertig ist'))
+      .toEqual({ to: 'Sofia', body: 'das Essen fertig ist' });
+  });
+  it('DE "sag X, sie soll" is NOT a message (assignment)', () => {
+    expect(parseMessageIntent('Sag Sofia, sie soll den Tisch decken')).toBeNull();
+  });
+  it('FR envoie un message à X', () => {
+    expect(parseMessageIntent("Envoie un message à Sofia que je rentre tard"))
+      .toEqual({ to: 'Sofia', body: 'je rentre tard' });
+  });
+  it('FR dis à X que', () => {
+    expect(parseMessageIntent('Dis à Sofia que le dîner est prêt'))
+      .toEqual({ to: 'Sofia', body: 'le dîner est prêt' });
+  });
+  it('IT manda un messaggio a X', () => {
+    expect(parseMessageIntent('Manda un messaggio a Sofia che arrivo tardi'))
+      .toEqual({ to: 'Sofia', body: 'arrivo tardi' });
+  });
+  it('ES envía un mensaje a X', () => {
+    expect(parseMessageIntent('Envía un mensaje a Sofia que llego tarde'))
+      .toEqual({ to: 'Sofia', body: 'llego tarde' });
+  });
+  it('ES dile a X que', () => {
+    expect(parseMessageIntent('Dile a Sofia que la cena está lista'))
+      .toEqual({ to: 'Sofia', body: 'la cena está lista' });
+  });
+  it('PT envia uma mensagem para X', () => {
+    expect(parseMessageIntent('Envia uma mensagem para a Sofia que chego tarde'))
+      .toEqual({ to: 'Sofia', body: 'chego tarde' });
+  });
+  it('EN "tell X to" still NOT a message (assignment)', () => {
+    expect(parseMessageIntent('Tell Sofia to set the table')).toBeNull();
+  });
+});
+
+// ── buildShoppingCaptureRows – locale-aware "and" splitting ──────────────────
+
+describe('buildShoppingCaptureRows – multilingual item splitting', () => {
+  const base = { type: 'shopping' as const, date: null, time: null, endTime: null,
+    location: null, assignees: null, reminder: null, notes: null, mood: null };
+
+  it('DE: "Milch und Brot" → two items', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'Milch und Brot' }, 'u1', { lang: 'de' });
+    expect(rows.map(r => r.title)).toEqual(['Milch', 'Brot']);
+  });
+  it('FR: "lait et pain" → two items', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'lait et pain' }, 'u1', { lang: 'fr' });
+    expect(rows.map(r => r.title)).toEqual(['lait', 'pain']);
+  });
+  it('IT: "latte e pane" → two items', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'latte e pane' }, 'u1', { lang: 'it' });
+    expect(rows.map(r => r.title)).toEqual(['latte', 'pane']);
+  });
+  it('ES: "leche y pan" → two items', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'leche y pan' }, 'u1', { lang: 'es' });
+    expect(rows.map(r => r.title)).toEqual(['leche', 'pan']);
+  });
+  it('PT: "leite e pão" → two items', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'leite e pão' }, 'u1', { lang: 'pt' });
+    expect(rows.map(r => r.title)).toEqual(['leite', 'pão']);
+  });
+  it('EN: "vitamin E" is NOT split (conjunction is locale-scoped)', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'vitamin E' }, 'u1', { lang: 'en' });
+    expect(rows.map(r => r.title)).toEqual(['vitamin E']);
+  });
+  it('EN: "milk and bread" still splits', () => {
+    const rows = buildShoppingCaptureRows({ ...base, title: 'milk and bread' }, 'u1', { lang: 'en' });
+    expect(rows.map(r => r.title)).toEqual(['milk', 'bread']);
+  });
+});
+
+// ── extractAssignmentIntent ──────────────────────────────────────────────────
+
+describe('extractAssignmentIntent', () => {
+  it('EN: "fix broken shelf and assign to Sofia"', () => {
+    expect(extractAssignmentIntent('fix broken shelf and assign to Sofia'))
+      .toEqual({ names: ['Sofia'], cleaned: 'fix broken shelf' });
+  });
+  it('EN: "assign it to Sofia" mid-sentence', () => {
+    expect(extractAssignmentIntent('water the plants, assign it to Sofia'))
+      .toEqual({ names: ['Sofia'], cleaned: 'water the plants,' });
+  });
+  it('EN: "tell Sofia to walk the dog"', () => {
+    expect(extractAssignmentIntent('tell Sofia to walk the dog'))
+      .toEqual({ names: ['Sofia'], cleaned: 'walk the dog' });
+  });
+  it('EN: "ask Sofia to set the table"', () => {
+    expect(extractAssignmentIntent('ask Sofia to set the table'))
+      .toEqual({ names: ['Sofia'], cleaned: 'set the table' });
+  });
+  it('DE: "Repariere das Regal und weise es Sofia zu"', () => {
+    expect(extractAssignmentIntent('Repariere das Regal und weise es Sofia zu'))
+      .toEqual({ names: ['Sofia'], cleaned: 'Repariere das Regal' });
+  });
+  it('DE: "Sofia soll den Tisch decken"', () => {
+    expect(extractAssignmentIntent('Sofia soll den Tisch decken'))
+      .toEqual({ names: ['Sofia'], cleaned: 'den Tisch decken' });
+  });
+  it('FR: "demande à Sofia de ranger le salon"', () => {
+    expect(extractAssignmentIntent('demande à Sofia de ranger le salon'))
+      .toEqual({ names: ['Sofia'], cleaned: 'ranger le salon' });
+  });
+  it('IT: "chiedi a Sofia di apparecchiare"', () => {
+    expect(extractAssignmentIntent('chiedi a Sofia di apparecchiare'))
+      .toEqual({ names: ['Sofia'], cleaned: 'apparecchiare' });
+  });
+  it('ES: "dile a Sofia que riegue las plantas"', () => {
+    expect(extractAssignmentIntent('dile a Sofia que riegue las plantas'))
+      .toEqual({ names: ['Sofia'], cleaned: 'riegue las plantas' });
+  });
+  it('no assignment → names empty, text untouched', () => {
+    expect(extractAssignmentIntent('call Sofia about dinner plans'))
+      .toEqual({ names: [], cleaned: 'call Sofia about dinner plans' });
+  });
+  it('"get ready to go" is not an assignment', () => {
+    expect(extractAssignmentIntent('get ready to go'))
+      .toEqual({ names: [], cleaned: 'get ready to go' });
+  });
+});
+
+// ── dropAssigneesMentionedInTitle ────────────────────────────────────────────
+
+describe('dropAssigneesMentionedInTitle', () => {
+  it('drops assignee whose name is in the title ("call Sofia")', () => {
+    expect(dropAssigneesMentionedInTitle(['Sofia'], 'call Sofia')).toBeNull();
+  });
+  it('keeps assignee not mentioned in the title', () => {
+    expect(dropAssigneesMentionedInTitle(['Sofia'], 'fix broken shelf')).toEqual(['Sofia']);
+  });
+  it('mixed: keeps only unmentioned names', () => {
+    expect(dropAssigneesMentionedInTitle(['Sofia', 'Alex'], 'pick up Sofia from school')).toEqual(['Alex']);
+  });
+  it('case-insensitive match', () => {
+    expect(dropAssigneesMentionedInTitle(['sofia'], 'Call Sofia about the plumber')).toBeNull();
+  });
+  it('null/empty passthrough', () => {
+    expect(dropAssigneesMentionedInTitle(null, 'anything')).toBeNull();
+    expect(dropAssigneesMentionedInTitle([], 'anything')).toEqual([]);
+  });
+});
+
+describe('extractAssignmentIntent – accented names', () => {
+  it('assign to José (accent-final name)', () => {
+    expect(extractAssignmentIntent('fix the fence and assign to José'))
+      .toEqual({ names: ['José'], cleaned: 'fix the fence' });
   });
 });

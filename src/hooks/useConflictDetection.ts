@@ -58,9 +58,14 @@ export function useConflictDetection() {
     };
 
     detect();
-    // Recompute once cloud preferences hydrate the calendar after login.
+    // Recompute once cloud preferences hydrate the calendar after login, and
+    // whenever the calendar changes (EZ capture / Calendar page dispatch this).
     window.addEventListener('eazy-prefs-loaded', detect);
-    return () => window.removeEventListener('eazy-prefs-loaded', detect);
+    window.addEventListener('eazy-calendar-updated', detect);
+    return () => {
+      window.removeEventListener('eazy-prefs-loaded', detect);
+      window.removeEventListener('eazy-calendar-updated', detect);
+    };
   }, [user]);
 
   return { conflicts, loading };
