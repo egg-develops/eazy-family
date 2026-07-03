@@ -11,9 +11,9 @@ const LOCALE_MAP: Record<Lang, string> = {
 const UI: Record<Lang, {
   greeting: string; subline: string; scheduleLabel: string; tasksLabel: string;
   stuckLabel: string; stuckHint: string; noEvents: string; noTasks: string;
-  conflicts: string; overlap: string; quietMoment: string; quietBody: string;
+  conflicts: string; conflictsPlural: string; overlap: string; quietMoment: string; quietBody: string;
   openApp: string; manageDigest: string; privacy: string; subject: (name: string) => string;
-  allDay: string;
+  allDay: string; eventWord: string; eventsWord: string; taskWord: string; tasksWord: string;
 }> = {
   en: {
     greeting: 'Good morning',
@@ -25,6 +25,8 @@ const UI: Record<Lang, {
     noEvents: 'Nothing scheduled — enjoy the breathing room.',
     noTasks: "Nothing open — you're ahead of it.",
     conflicts: 'Schedule Conflict',
+    conflictsPlural: 'Schedule Conflicts',
+    eventWord: 'event', eventsWord: 'events', taskWord: 'open task', tasksWord: 'open tasks',
     overlap: 'overlaps',
     quietMoment: 'A quiet moment:',
     quietBody: "The small things — a hug, a shared meal, five minutes without a screen — those are the ones they'll remember. Whatever today holds, you're already giving them that.",
@@ -44,6 +46,8 @@ const UI: Record<Lang, {
     noEvents: 'Nichts geplant — genieß die Ruhe.',
     noTasks: 'Nichts offen — du bist bestens vorbereitet.',
     conflicts: 'Terminkonflikt',
+    conflictsPlural: 'Terminkonflikte',
+    eventWord: 'Termin', eventsWord: 'Termine', taskWord: 'offene Aufgabe', tasksWord: 'offene Aufgaben',
     overlap: 'überschneidet sich mit',
     quietMoment: 'Ein stiller Moment:',
     quietBody: 'Die kleinen Dinge — eine Umarmung, ein gemeinsames Essen, fünf Minuten ohne Bildschirm — das sind die Momente, an die sie sich erinnern werden. Was auch immer heute kommt, du gibst ihnen das bereits.',
@@ -63,6 +67,8 @@ const UI: Record<Lang, {
     noEvents: 'Rien de prévu — profite de cette liberté.',
     noTasks: "Rien en cours — tu as de l'avance.",
     conflicts: 'Conflit de planning',
+    conflictsPlural: 'Conflits de planning',
+    eventWord: 'événement', eventsWord: 'événements', taskWord: 'tâche ouverte', tasksWord: 'tâches ouvertes',
     overlap: 'chevauche',
     quietMoment: 'Un moment de calme :',
     quietBody: "Les petites choses — un câlin, un repas partagé, cinq minutes sans écran — ce sont celles dont ils se souviendront. Quoi que la journée apporte, tu leur donnes déjà ça.",
@@ -82,6 +88,8 @@ const UI: Record<Lang, {
     noEvents: 'Niente in programma — goditi lo spazio.',
     noTasks: "Niente in sospeso — sei avanti.",
     conflicts: 'Conflitto di orario',
+    conflictsPlural: 'Conflitti di orario',
+    eventWord: 'evento', eventsWord: 'eventi', taskWord: 'attività aperta', tasksWord: 'attività aperte',
     overlap: 'si sovrappone a',
     quietMoment: 'Un momento di quiete:',
     quietBody: "Le piccole cose — un abbraccio, un pasto condiviso, cinque minuti senza schermo — sono quelle che ricorderanno. Qualunque cosa accada oggi, stai già dando loro questo.",
@@ -101,6 +109,8 @@ const UI: Record<Lang, {
     noEvents: 'Nada programado — disfruta del espacio.',
     noTasks: 'Nada pendiente — vas por delante.',
     conflicts: 'Conflicto de horario',
+    conflictsPlural: 'Conflictos de horario',
+    eventWord: 'evento', eventsWord: 'eventos', taskWord: 'tarea abierta', tasksWord: 'tareas abiertas',
     overlap: 'se superpone con',
     quietMoment: 'Un momento tranquilo:',
     quietBody: "Las pequeñas cosas — un abrazo, una comida compartida, cinco minutos sin pantalla — son las que recordarán. Pase lo que pase hoy, ya les estás dando eso.",
@@ -120,6 +130,8 @@ const UI: Record<Lang, {
     noEvents: 'Nada agendado — aproveita o espaço.',
     noTasks: 'Nada em aberto — estás adiantado.',
     conflicts: 'Conflito de horário',
+    conflictsPlural: 'Conflitos de horário',
+    eventWord: 'evento', eventsWord: 'eventos', taskWord: 'tarefa aberta', tasksWord: 'tarefas abertas',
     overlap: 'sobrepõe-se a',
     quietMoment: 'Um momento tranquilo:',
     quietBody: "As pequenas coisas — um abraço, uma refeição partilhada, cinco minutos sem ecrã — são as que vão lembrar. Independentemente do que hoje traga, já lhes estás a dar isso.",
@@ -136,6 +148,129 @@ function getLang(raw: unknown): Lang {
   return (['en','de','fr','it','es','pt'] as Lang[]).includes(s as Lang) ? (s as Lang) : 'en';
 }
 
+// ── "A quiet moment" pool ─────────────────────────────────────────────────────
+// Rotated by day-of-year so the closing thought varies daily instead of
+// repeating the same paragraph in every email. ui.quietBody stays as entry 0.
+const QUIET_MOMENTS: Record<Lang, string[]> = {
+  en: [
+    "The small things — a hug, a shared meal, five minutes without a screen — those are the ones they'll remember. Whatever today holds, you're already giving them that.",
+    "Nobody remembers a perfectly managed day. They remember that you laughed together at breakfast. Aim for that.",
+    "You don't need more hours — just a few minutes where nothing else is allowed in. Find five of them today.",
+    "Kids don't wait for the big moments. They're watching the small ones: how you say hello, how you say goodnight.",
+    "A calm parent is worth more than a finished to-do list. If something has to slip today, let it be the right thing.",
+    "Being there beats being perfect. Today, presence is the plan.",
+    "The days feel long and the years short. One real conversation today is enough to make it count.",
+    "Let one thing stay unfinished today — and spend that time simply being with them.",
+  ],
+  de: [
+    "Die kleinen Dinge — eine Umarmung, ein gemeinsames Essen, fünf Minuten ohne Bildschirm — das sind die Momente, an die sie sich erinnern werden. Was auch immer heute kommt, du gibst ihnen das bereits.",
+    "Niemand erinnert sich an einen perfekt organisierten Tag. Aber daran, dass ihr beim Frühstück zusammen gelacht habt. Darauf kommt es an.",
+    "Du brauchst nicht mehr Stunden — nur ein paar Minuten, in denen nichts anderes Platz hat. Finde heute fünf davon.",
+    "Kinder warten nicht auf die großen Momente. Sie sehen die kleinen: wie du Hallo sagst, wie du Gute Nacht sagst.",
+    "Ein gelassenes Elternteil ist mehr wert als eine abgehakte Liste. Wenn heute etwas liegen bleibt, dann das Richtige.",
+    "Da sein schlägt perfekt sein. Heute ist Präsenz der Plan.",
+    "Die Tage fühlen sich lang an, die Jahre kurz. Ein echtes Gespräch heute reicht, damit der Tag zählt.",
+    "Lass heute eine Sache unerledigt — und verbringe die Zeit einfach mit ihnen.",
+  ],
+  fr: [
+    "Les petites choses — un câlin, un repas partagé, cinq minutes sans écran — ce sont celles dont ils se souviendront. Quoi que la journée apporte, tu leur donnes déjà ça.",
+    "Personne ne se souvient d'une journée parfaitement organisée. Mais d'avoir ri ensemble au petit-déjeuner, oui. Vise ça.",
+    "Tu n'as pas besoin de plus d'heures — juste de quelques minutes où rien d'autre n'a le droit d'entrer. Trouves-en cinq aujourd'hui.",
+    "Les enfants n'attendent pas les grands moments. Ils regardent les petits : comment tu dis bonjour, comment tu dis bonne nuit.",
+    "Un parent serein vaut plus qu'une liste terminée. Si quelque chose doit attendre aujourd'hui, que ce soit la bonne chose.",
+    "Être là vaut mieux qu'être parfait. Aujourd'hui, la présence est le plan.",
+    "Les journées semblent longues, les années courtes. Une vraie conversation aujourd'hui suffit à donner du sens à la journée.",
+    "Laisse une chose inachevée aujourd'hui — et passe ce temps simplement avec eux.",
+  ],
+  it: [
+    "Le piccole cose — un abbraccio, un pasto condiviso, cinque minuti senza schermo — sono quelle che ricorderanno. Qualunque cosa accada oggi, stai già dando loro questo.",
+    "Nessuno ricorda una giornata perfettamente organizzata. Ricordano che avete riso insieme a colazione. Punta a quello.",
+    "Non ti servono più ore — solo qualche minuto in cui nient'altro può entrare. Trovane cinque oggi.",
+    "I bambini non aspettano i grandi momenti. Guardano i piccoli: come dici ciao, come dici buonanotte.",
+    "Un genitore sereno vale più di una lista completata. Se oggi qualcosa deve saltare, che sia la cosa giusta.",
+    "Esserci batte essere perfetti. Oggi il piano è la presenza.",
+    "Le giornate sembrano lunghe, gli anni brevi. Una conversazione vera oggi basta a dare valore alla giornata.",
+    "Lascia una cosa in sospeso oggi — e usa quel tempo semplicemente per stare con loro.",
+  ],
+  es: [
+    "Las pequeñas cosas — un abrazo, una comida compartida, cinco minutos sin pantalla — son las que recordarán. Pase lo que pase hoy, ya les estás dando eso.",
+    "Nadie recuerda un día perfectamente organizado. Recuerdan que os reísteis juntos en el desayuno. Apunta a eso.",
+    "No necesitas más horas — solo unos minutos donde no entre nada más. Encuentra cinco hoy.",
+    "Los niños no esperan los grandes momentos. Miran los pequeños: cómo saludas, cómo das las buenas noches.",
+    "Un padre tranquilo vale más que una lista terminada. Si algo tiene que quedar sin hacer hoy, que sea lo correcto.",
+    "Estar presente vale más que ser perfecto. Hoy, el plan es la presencia.",
+    "Los días se hacen largos y los años cortos. Una conversación de verdad hoy basta para que el día cuente.",
+    "Deja una cosa sin terminar hoy — y usa ese tiempo simplemente para estar con ellos.",
+  ],
+  pt: [
+    "As pequenas coisas — um abraço, uma refeição partilhada, cinco minutos sem ecrã — são as que vão lembrar. Independentemente do que hoje traga, já lhes estás a dar isso.",
+    "Ninguém se lembra de um dia perfeitamente organizado. Lembram-se de terem rido juntos ao pequeno-almoço. Aponta para isso.",
+    "Não precisas de mais horas — só de alguns minutos onde mais nada pode entrar. Encontra cinco hoje.",
+    "As crianças não esperam pelos grandes momentos. Reparam nos pequenos: como dizes olá, como dizes boa noite.",
+    "Um pai tranquilo vale mais do que uma lista concluída. Se algo tiver de ficar por fazer hoje, que seja a coisa certa.",
+    "Estar presente vale mais do que ser perfeito. Hoje, o plano é a presença.",
+    "Os dias parecem longos e os anos curtos. Uma conversa a sério hoje chega para o dia valer a pena.",
+    "Deixa uma coisa por acabar hoje — e usa esse tempo simplesmente para estar com eles.",
+  ],
+};
+
+function pickQuietMoment(lang: Lang, date: Date): string {
+  const pool = QUIET_MOMENTS[lang] ?? QUIET_MOMENTS.en;
+  const dayOfYear = Math.floor(
+    (date.getTime() - Date.UTC(date.getUTCFullYear(), 0, 0)) / 86400000
+  );
+  return pool[dayOfYear % pool.length];
+}
+
+// ── Per-user timezone ─────────────────────────────────────────────────────────
+// The app syncs the device timezone into user_preferences as `eazy-timezone`.
+// Fall back to Europe/Zurich (the original hardcoded behaviour) when absent.
+function getUserTimezone(data: Record<string, unknown> | null | undefined): string {
+  const tz = String(data?.["eazy-timezone"] ?? "").trim();
+  if (tz) {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: tz });
+      return tz;
+    } catch { /* invalid tz string — fall through */ }
+  }
+  return "Europe/Zurich";
+}
+
+// ── User calendar from the prefs blob ─────────────────────────────────────────
+// The user's REAL calendar lives in localStorage `eazy-family-calendar-items`,
+// cloud-synced into user_preferences. The Supabase `events` table is the
+// separate community-events feature and is NEVER written by the Calendar page —
+// reading it meant every digest said "Nothing scheduled" and conflict warnings
+// never fired.
+type CalItem = {
+  title: string;
+  start_date: string;
+  end_date?: string | null;
+  all_day: boolean;
+  location?: string | null;
+  type?: string;
+};
+
+function parseCalendarItems(data: Record<string, unknown> | null | undefined): CalItem[] {
+  try {
+    const raw = data?.["eazy-family-calendar-items"];
+    const arr = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((i: Record<string, unknown>) => i && typeof i.title === "string" && typeof i.startDate === "string")
+      .map((i: Record<string, unknown>) => ({
+        title: i.title as string,
+        start_date: i.startDate as string,
+        end_date: (i.endDate as string) ?? null,
+        all_day: i.allDay === true,
+        location: (i.location as string) ?? null,
+        type: (i.type as string) ?? "event",
+      }));
+  } catch {
+    return [];
+  }
+}
+
 // ── Batch config ──────────────────────────────────────────────────────────────
 // Each invocation processes one batch then self-invokes for the next.
 // 75 users × ~3s each (DB + Anthropic + email) ≈ 225s, well within 400s limit.
@@ -145,15 +280,24 @@ const BATCH_SIZE = 75;
 serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   const cronSecret = Deno.env.get("CRON_SECRET");
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // A missing CRON_SECRET must fail closed — the old `if (cronSecret && …)`
+  // guard left the endpoint publicly triggerable when the env var was unset.
+  if (!cronSecret) {
+    return new Response("CRON_SECRET not configured", { status: 500 });
+  }
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  // offset is 0 on the first (cron) call, incremented by self-invocation
+  // offset is 0 on the first (cron) call, incremented by self-invocation.
+  // test_user_id (authed callers only) processes a single user — for safely
+  // verifying the digest without mailing every opted-in user.
   let offset = 0;
+  let testUserId: string | null = null;
   try {
     const body = await req.json().catch(() => ({}));
     offset = Number(body?.offset ?? 0) || 0;
+    testUserId = typeof body?.test_user_id === "string" ? body.test_user_id : null;
   } catch { /* first call has no body */ }
 
   const supabase = createClient(
@@ -170,18 +314,7 @@ serve(async (req) => {
   // Without this, every opted-in user's private data is sent to the same chat.
   const TELEGRAM_ADMIN_USER_ID = Deno.env.get("TELEGRAM_ADMIN_USER_ID");
 
-  // Date range for today in Europe/Zurich
   const now = new Date();
-  const zurichOffset = getZurichOffsetMs(now);
-  const zurichNow = new Date(now.getTime() + zurichOffset);
-  const todayStartZurich = new Date(Date.UTC(
-    zurichNow.getUTCFullYear(), zurichNow.getUTCMonth(), zurichNow.getUTCDate()
-  ));
-  const todayEndZurich = new Date(todayStartZurich.getTime() + 86400000);
-  const weekAheadZurich = new Date(todayStartZurich.getTime() + 7 * 86400000);
-  const todayStartUTC = new Date(todayStartZurich.getTime() - zurichOffset);
-  const todayEndUTC = new Date(todayEndZurich.getTime() - zurichOffset);
-  const weekAheadUTC = new Date(weekAheadZurich.getTime() - zurichOffset);
 
   const { data: prefRows, error: prefErr } = await supabase
     .from("user_preferences")
@@ -193,9 +326,12 @@ serve(async (req) => {
 
   const isTruthy = (v: unknown) => v === true || v === "true";
 
-  const allDigestUsers = (prefRows ?? []).filter(
+  let allDigestUsers = (prefRows ?? []).filter(
     (row) => isTruthy(row.data?.["eazy-morning-digest"])
   );
+  if (testUserId) {
+    allDigestUsers = allDigestUsers.filter((row) => row.user_id === testUserId);
+  }
 
   if (allDigestUsers.length === 0) {
     return new Response(JSON.stringify({ sent: 0, reason: "no opt-ins" }), {
@@ -225,6 +361,17 @@ serve(async (req) => {
     const ui = UI[lang];
     const locale = LOCALE_MAP[lang];
 
+    // Per-user timezone: "today" starts when it starts for THIS user, not in Zurich.
+    const tz = getUserTimezone(data);
+    const tzOffset = getTzOffsetMs(now, tz);
+    const tzNow = new Date(now.getTime() + tzOffset);
+    const todayStartLocal = new Date(Date.UTC(
+      tzNow.getUTCFullYear(), tzNow.getUTCMonth(), tzNow.getUTCDate()
+    ));
+    const todayStartUTC = new Date(todayStartLocal.getTime() - tzOffset);
+    const todayEndUTC = new Date(todayStartUTC.getTime() + 86400000);
+    const weekAheadUTC = new Date(todayStartUTC.getTime() + 7 * 86400000);
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("email, full_name")
@@ -242,22 +389,45 @@ serve(async (req) => {
 
     const SENDER_EMAIL = "hello@eazy.family";
 
-    const [eventsRes, tasksRes, staleTasksRes, upcomingEventsRes] = await Promise.all([
-      supabase
-        .from("events")
-        .select("title, start_date, end_date, all_day, location")
-        .eq("user_id", user_id)
-        .gte("start_date", todayStartUTC.toISOString())
-        .lt("start_date", todayEndUTC.toISOString())
-        .order("start_date"),
+    // Calendar comes from the synced prefs blob (the app's real calendar store)
+    const calendarItems = parseCalendarItems(data);
+    const todayEvents = calendarItems
+      .filter(e => {
+        const start = new Date(e.start_date);
+        return start >= todayStartUTC && start < todayEndUTC;
+      })
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
+    // Conflicts: timed, non-reminder items over the next 7 days (incl. today)
+    const conflictWindow = calendarItems.filter(e => {
+      if (e.all_day || e.type === "reminder") return false;
+      const start = new Date(e.start_date);
+      return start >= todayStartUTC && start < weekAheadUTC;
+    });
+    const conflicts = detectConflicts(conflictWindow);
+
+    const [ownTasksRes, assignedTasksRes, staleTasksRes] = await Promise.all([
+      // Own open tasks — excluding shopping AND shared list CONTAINERS
+      // (type='shared' with no parent_id is a list header like "Family To-Dos 🏡",
+      // not a task; it showed up as an eternal open task).
       supabase
         .from("tasks")
-        .select("title, due_date, updated_at")
+        .select("id, title, due_date, updated_at")
         .eq("user_id", user_id)
         .eq("completed", false)
         .not("type", "ilike", "shopping%")
+        .or("type.neq.shared,parent_id.not.is.null")
         .order("due_date", { ascending: true })
         .limit(8),
+      // Tasks ASSIGNED to this user by other family members — the most
+      // digest-worthy tasks of all, previously invisible (creator-only filter).
+      supabase
+        .from("tasks")
+        .select("id, title, due_date, updated_at")
+        .eq("completed", false)
+        .contains("assigned_to_users", [user_id])
+        .neq("user_id", user_id)
+        .order("due_date", { ascending: true })
+        .limit(5),
       supabase
         .from("tasks")
         .select("title, updated_at")
@@ -267,29 +437,23 @@ serve(async (req) => {
         .lte("updated_at", new Date(Date.now() - 7 * 86400000).toISOString())
         .order("updated_at")
         .limit(3),
-      supabase
-        .from("events")
-        .select("title, start_date, end_date, all_day, location")
-        .eq("user_id", user_id)
-        .gte("start_date", todayEndUTC.toISOString())
-        .lt("start_date", weekAheadUTC.toISOString())
-        .eq("all_day", false)
-        .order("start_date")
-        .limit(20),
     ]);
 
-    const todayEvents = eventsRes.data ?? [];
-    const openTasks = tasksRes.data ?? [];
+    const seenTaskIds = new Set<string>();
+    const openTasks = [...(assignedTasksRes.data ?? []), ...(ownTasksRes.data ?? [])]
+      .filter(t => {
+        if (seenTaskIds.has(t.id)) return false;
+        seenTaskIds.add(t.id);
+        return true;
+      })
+      .slice(0, 8);
     const staleTasks = staleTasksRes.data ?? [];
-    const upcomingEvents = upcomingEventsRes.data ?? [];
-
-    type EvtRow = { title: string; start_date: string; end_date?: string | null };
-    const conflicts = detectConflicts(upcomingEvents as EvtRow[]);
 
     const firstName = profile.full_name?.split(" ")[0] || "there";
-    const dayLabel = zurichNow.toLocaleDateString(locale, {
-      weekday: "long", month: "long", day: "numeric", timeZone: "Europe/Zurich",
+    const dayLabel = now.toLocaleDateString(locale, {
+      weekday: "long", month: "long", day: "numeric", timeZone: tz,
     });
+    const quiet = pickQuietMoment(lang, tzNow);
 
     let aiNarrative = "";
     if (ANTHROPIC_API_KEY) {
@@ -303,8 +467,17 @@ serve(async (req) => {
         conflicts,
         lang,
         locale,
+        tz,
       });
     }
+
+    // Subject varies with the day's content instead of repeating the same line
+    const subjectParts: string[] = [];
+    if (todayEvents.length) subjectParts.push(`${todayEvents.length} ${todayEvents.length === 1 ? ui.eventWord : ui.eventsWord}`);
+    if (openTasks.length) subjectParts.push(`${openTasks.length} ${openTasks.length === 1 ? ui.taskWord : ui.tasksWord}`);
+    const subject = subjectParts.length
+      ? `${ui.greeting}, ${firstName} ☀️ — ${subjectParts.join(" · ")}`
+      : ui.subject(firstName);
 
     let userSent = false;
 
@@ -317,7 +490,7 @@ serve(async (req) => {
     // user's digest to the owner's chat whenever the env var was unset.
     const isAdminUser = !!TELEGRAM_ADMIN_USER_ID && user_id === TELEGRAM_ADMIN_USER_ID;
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID && isAdminUser) {
-      const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale });
+      const msg = buildTelegramMessage({ firstName, dayLabel, todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale, tz });
       const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -335,8 +508,7 @@ serve(async (req) => {
     // ── Email (SendGrid preferred, Brevo fallback) ────────────────────────
     const emailEnabled = isTruthy(data?.["eazy-morning-digest-email"]);
     if (emailEnabled && recipientEmail) {
-      const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, ui, locale });
-      const subject = ui.subject(firstName);
+      const html = buildDigestEmail({ firstName, dayLabel, events: todayEvents, tasks: openTasks.slice(0, 6), staleTasks, conflicts, aiNarrative, quiet, ui, locale, tz, lang });
 
       if (SENDGRID_API_KEY) {
         const sgRes = await fetch("https://api.sendgrid.com/v3/mail/send", {
@@ -350,6 +522,10 @@ serve(async (req) => {
             from: { email: SENDER_EMAIL, name: "Eazy.Family" },
             subject,
             content: [{ type: "text/html", value: html }],
+            headers: {
+              "List-Unsubscribe": "<https://eazy.family/app/settings>",
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
           }),
         });
         if (sgRes.ok || sgRes.status === 202) {
@@ -368,6 +544,7 @@ serve(async (req) => {
             to: [{ email: recipientEmail, name: firstName }],
             subject,
             htmlContent: html,
+            headers: { "List-Unsubscribe": "<https://eazy.family/app/settings>" },
           }),
         });
         if (brevoRes.ok) {
@@ -393,16 +570,16 @@ serve(async (req) => {
 });
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
-function getZurichOffsetMs(date: Date): number {
+function getTzOffsetMs(date: Date, tz: string): number {
   const utcStr = date.toLocaleString("en-US", { timeZone: "UTC" });
-  const zurichStr = date.toLocaleString("en-US", { timeZone: "Europe/Zurich" });
-  return new Date(zurichStr).getTime() - new Date(utcStr).getTime();
+  const tzStr = date.toLocaleString("en-US", { timeZone: tz });
+  return new Date(tzStr).getTime() - new Date(utcStr).getTime();
 }
 
-function formatEventTime(isoStr: string, allDay: boolean, locale: string, allDayLabel: string): string {
+function formatEventTime(isoStr: string, allDay: boolean, locale: string, allDayLabel: string, tz: string): string {
   if (allDay) return allDayLabel;
   return new Date(isoStr).toLocaleTimeString(locale, {
-    hour: "2-digit", minute: "2-digit", timeZone: "Europe/Zurich",
+    hour: "2-digit", minute: "2-digit", timeZone: tz,
   });
 }
 
@@ -438,13 +615,14 @@ async function generateAINarrative(ctx: {
   conflicts: ConflictPair[];
   lang: Lang;
   locale: string;
+  tz: string;
 }): Promise<string> {
-  const { apiKey, firstName, dayLabel, todayEvents, openTasks, staleTasks, conflicts, lang, locale } = ctx;
+  const { apiKey, firstName, dayLabel, todayEvents, openTasks, staleTasks, conflicts, lang, locale, tz } = ctx;
 
   const context = [
     `Family member: ${firstName}`,
     `Date: ${dayLabel}`,
-    `Today's events (${todayEvents.length}): ${todayEvents.map(e => `${e.title} at ${formatEventTime(e.start_date, e.all_day, locale, 'all day')}${e.location ? ` @ ${e.location}` : ''}`).join(', ') || 'none'}`,
+    `Today's events (${todayEvents.length}): ${todayEvents.map(e => `${e.title} at ${formatEventTime(e.start_date, e.all_day, locale, 'all day', tz)}${e.location ? ` @ ${e.location}` : ''}`).join(', ') || 'none'}`,
     `Open tasks (${openTasks.length}): ${openTasks.slice(0, 5).map(t => t.title).join(', ') || 'none'}`,
     staleTasks.length > 0 ? `Stale tasks (untouched 7+ days): ${staleTasks.map(t => t.title).join(', ')}` : '',
     conflicts.length > 0 ? `Schedule conflicts: ${conflicts.map(c => `"${c.titleA}" overlaps "${c.titleB}"`).join(', ')}` : '',
@@ -491,8 +669,9 @@ function buildTelegramMessage(ctx: {
   aiNarrative: string;
   ui: typeof UI[Lang];
   locale: string;
+  tz: string;
 }): string {
-  const { firstName, dayLabel, todayEvents, tasks, staleTasks, conflicts, aiNarrative, ui, locale } = ctx;
+  const { firstName, dayLabel, todayEvents, tasks, staleTasks, conflicts, aiNarrative, ui, locale, tz } = ctx;
   const lines: string[] = [];
 
   lines.push(`☀️ <b>${ui.greeting}, ${firstName}!</b>`);
@@ -505,7 +684,7 @@ function buildTelegramMessage(ctx: {
 
   if (conflicts.length > 0) {
     lines.push('');
-    lines.push(`⚠️ <b>${ui.conflicts}${conflicts.length > 1 ? 's' : ''}</b>`);
+    lines.push(`⚠️ <b>${conflicts.length > 1 ? ui.conflictsPlural : ui.conflicts}</b>`);
     for (const c of conflicts) {
       lines.push(`  · <b>${c.titleA}</b> ${ui.overlap} <b>${c.titleB}</b>`);
     }
@@ -517,7 +696,7 @@ function buildTelegramMessage(ctx: {
     lines.push(`  ${ui.noEvents}`);
   } else {
     for (const e of todayEvents) {
-      const time = formatEventTime(e.start_date, e.all_day, locale, ui.allDay);
+      const time = formatEventTime(e.start_date, e.all_day, locale, ui.allDay, tz);
       const loc = e.location ? ` · 📍 ${e.location}` : '';
       lines.push(`  ${time}  <b>${e.title}</b>${loc}`);
     }
@@ -557,39 +736,43 @@ function buildDigestEmail(ctx: {
   staleTasks: Array<{ title: string; updated_at: string }>;
   conflicts: ConflictPair[];
   aiNarrative: string;
+  quiet: string;
   ui: typeof UI[Lang];
   locale: string;
+  tz: string;
+  lang: Lang;
 }): string {
-  const { firstName, dayLabel, events, tasks, staleTasks, conflicts, aiNarrative, ui, locale } = ctx;
+  const { firstName, dayLabel, events, tasks, staleTasks, conflicts, aiNarrative, quiet, ui, locale, tz, lang } = ctx;
 
+  // Table-based rows — display:flex is unsupported in Outlook desktop.
   const eventsHtml =
     events.length === 0
       ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">${ui.noEvents}</p>`
-      : events.map(e => `
-        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px">
-          <div style="width:52px;flex-shrink:0;text-align:right;color:#964735;font-size:12px;font-weight:600;padding-top:2px;line-height:1.4">
-            ${formatEventTime(e.start_date, e.all_day, locale, ui.allDay)}
-          </div>
-          <div style="flex:1;border-left:2px solid #DAC1BB;padding-left:12px">
+      : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${events.map(e => `
+        <tr>
+          <td width="56" valign="top" align="right" style="color:#964735;font-size:12px;font-weight:600;padding:0 0 12px;line-height:1.4;white-space:nowrap">
+            ${formatEventTime(e.start_date, e.all_day, locale, ui.allDay, tz)}
+          </td>
+          <td valign="top" style="border-left:2px solid #DAC1BB;padding:0 0 12px 12px">
             <div style="color:#1C1C18;font-size:14px;font-weight:600;line-height:1.4">${e.title}</div>
             ${e.location ? `<div style="color:#7A6660;font-size:12px;margin-top:2px">📍 ${e.location}</div>` : ""}
-          </div>
-        </div>`).join("");
+          </td>
+        </tr>`).join("")}</table>`;
 
   const tasksHtml =
     tasks.length === 0
       ? `<p style="color:#7A6660;font-size:14px;margin:0;font-style:italic">${ui.noTasks}</p>`
-      : tasks.map(t => `
-        <div style="display:flex;align-items:center;margin-bottom:10px">
-          <div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #DAC1BB;flex-shrink:0;background:#FAF7F3;margin-right:12px"></div>
-          <span style="color:#1C1C18;font-size:14px">${t.title}</span>
-        </div>`).join("");
+      : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${tasks.map(t => `
+        <tr>
+          <td width="28" valign="top" style="padding:0 0 10px;color:#DAC1BB;font-size:14px;line-height:1.5">◯</td>
+          <td valign="top" style="padding:0 0 10px;color:#1C1C18;font-size:14px;line-height:1.5">${t.title}</td>
+        </tr>`).join("")}</table>`;
 
   const conflictsHtml = conflicts.length === 0 ? "" : `
     <div style="background:#FFF8F0;border:1px solid #EDCFB8;border-radius:16px;padding:16px 20px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="margin-bottom:10px">
         <span style="font-size:14px">⚠️</span>
-        <span style="color:#C4621A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.conflicts}${conflicts.length > 1 ? 's' : ''}</span>
+        <span style="color:#C4621A;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">&nbsp;${conflicts.length > 1 ? ui.conflictsPlural : ui.conflicts}</span>
       </div>
       ${conflicts.map(c => `
         <div style="margin-bottom:6px">
@@ -601,7 +784,7 @@ function buildDigestEmail(ctx: {
 
   const staleHtml = staleTasks.length === 0 ? "" : `
     <div style="background:#F9F6F2;border:1px solid #DAC1BB;border-radius:16px;padding:16px 20px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="margin-bottom:10px">
         <span style="color:#7A6660;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">⏳ ${ui.stuckLabel}</span>
       </div>
       ${staleTasks.map(t => `<div style="color:#7A6660;font-size:13px;margin-bottom:4px">· ${t.title}</div>`).join("")}
@@ -618,7 +801,7 @@ function buildDigestEmail(ctx: {
     </div>`;
 
   return `<!DOCTYPE html>
-<html lang="${LOCALE_MAP[getLangFromUI(ui)].split('-')[0]}">
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -637,24 +820,22 @@ function buildDigestEmail(ctx: {
     ${staleHtml}
 
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;margin-bottom:16px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#964735;flex-shrink:0;margin-right:10px"></div>
-        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.scheduleLabel}</span>
+      <div style="margin-bottom:16px">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#964735;margin-right:10px"></span><span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.scheduleLabel}</span>
       </div>
       ${eventsHtml}
     </div>
 
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px;margin-bottom:12px">
-      <div style="display:flex;align-items:center;margin-bottom:16px">
-        <div style="width:8px;height:8px;border-radius:50%;background:#44664F;flex-shrink:0;margin-right:10px"></div>
-        <span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.tasksLabel}</span>
+      <div style="margin-bottom:16px">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#44664F;margin-right:10px"></span><span style="color:#1C1C18;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">${ui.tasksLabel}</span>
       </div>
       ${tasksHtml}
     </div>
 
     <div style="background:#EEF4F0;border:1px solid #C8DDD0;border-radius:20px;padding:20px;margin-bottom:24px">
       <p style="color:#44664F;font-size:13px;line-height:1.7;margin:0">
-        <strong style="color:#2D4F38">${ui.quietMoment}</strong> ${ui.quietBody}
+        <strong style="color:#2D4F38">${ui.quietMoment}</strong> ${quiet}
       </p>
     </div>
 
@@ -674,12 +855,4 @@ function buildDigestEmail(ctx: {
   </div>
 </body>
 </html>`;
-}
-
-// Helper to get lang code from a UI object (for html lang attribute)
-function getLangFromUI(ui: typeof UI[Lang]): Lang {
-  for (const [k, v] of Object.entries(UI)) {
-    if (v === ui) return k as Lang;
-  }
-  return 'en';
 }
