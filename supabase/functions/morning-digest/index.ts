@@ -570,6 +570,15 @@ serve(async (req) => {
 });
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
+// Escape user-authored strings (event/task titles, locations) before HTML
+// interpolation. Titles can come from OTHER family members (assigned tasks),
+// so this is cross-user injection, not just self-injection.
+function esc(s: string | null | undefined): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 function getTzOffsetMs(date: Date, tz: string): number {
   const utcStr = date.toLocaleString("en-US", { timeZone: "UTC" });
   const tzStr = date.toLocaleString("en-US", { timeZone: tz });
@@ -686,7 +695,7 @@ function buildTelegramMessage(ctx: {
     lines.push('');
     lines.push(`⚠️ <b>${conflicts.length > 1 ? ui.conflictsPlural : ui.conflicts}</b>`);
     for (const c of conflicts) {
-      lines.push(`  · <b>${c.titleA}</b> ${ui.overlap} <b>${c.titleB}</b>`);
+      lines.push(`  · <b>${esc(c.titleA)}</b> ${ui.overlap} <b>${esc(c.titleB)}</b>`);
     }
   }
 
@@ -697,8 +706,8 @@ function buildTelegramMessage(ctx: {
   } else {
     for (const e of todayEvents) {
       const time = formatEventTime(e.start_date, e.all_day, locale, ui.allDay, tz);
-      const loc = e.location ? ` · 📍 ${e.location}` : '';
-      lines.push(`  ${time}  <b>${e.title}</b>${loc}`);
+      const loc = e.location ? ` · 📍 ${esc(e.location)}` : '';
+      lines.push(`  ${time}  <b>${esc(e.title)}</b>${loc}`);
     }
   }
 
@@ -708,7 +717,7 @@ function buildTelegramMessage(ctx: {
     lines.push(`  ${ui.noTasks}`);
   } else {
     for (const t of tasks) {
-      lines.push(`  · ${t.title}`);
+      lines.push(`  · ${esc(t.title)}`);
     }
   }
 
@@ -716,7 +725,7 @@ function buildTelegramMessage(ctx: {
     lines.push('');
     lines.push(`⏳ <b>${ui.stuckLabel}</b>`);
     for (const t of staleTasks) {
-      lines.push(`  · ${t.title}`);
+      lines.push(`  · ${esc(t.title)}`);
     }
     lines.push(`  <i>${ui.stuckHint}</i>`);
   }
@@ -754,8 +763,8 @@ function buildDigestEmail(ctx: {
             ${formatEventTime(e.start_date, e.all_day, locale, ui.allDay, tz)}
           </td>
           <td valign="top" style="border-left:2px solid #DAC1BB;padding:0 0 12px 12px">
-            <div style="color:#1C1C18;font-size:14px;font-weight:600;line-height:1.4">${e.title}</div>
-            ${e.location ? `<div style="color:#7A6660;font-size:12px;margin-top:2px">📍 ${e.location}</div>` : ""}
+            <div style="color:#1C1C18;font-size:14px;font-weight:600;line-height:1.4">${esc(e.title)}</div>
+            ${e.location ? `<div style="color:#7A6660;font-size:12px;margin-top:2px">📍 ${esc(e.location)}</div>` : ""}
           </td>
         </tr>`).join("")}</table>`;
 
@@ -765,7 +774,7 @@ function buildDigestEmail(ctx: {
       : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${tasks.map(t => `
         <tr>
           <td width="28" valign="top" style="padding:0 0 10px;color:#DAC1BB;font-size:14px;line-height:1.5">◯</td>
-          <td valign="top" style="padding:0 0 10px;color:#1C1C18;font-size:14px;line-height:1.5">${t.title}</td>
+          <td valign="top" style="padding:0 0 10px;color:#1C1C18;font-size:14px;line-height:1.5">${esc(t.title)}</td>
         </tr>`).join("")}</table>`;
 
   const conflictsHtml = conflicts.length === 0 ? "" : `
@@ -776,9 +785,9 @@ function buildDigestEmail(ctx: {
       </div>
       ${conflicts.map(c => `
         <div style="margin-bottom:6px">
-          <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleA}</span>
+          <span style="color:#1C1C18;font-size:13px;font-weight:600">${esc(c.titleA)}</span>
           <span style="color:#C4621A;font-size:13px"> ${ui.overlap} </span>
-          <span style="color:#1C1C18;font-size:13px;font-weight:600">${c.titleB}</span>
+          <span style="color:#1C1C18;font-size:13px;font-weight:600">${esc(c.titleB)}</span>
         </div>`).join("")}
     </div>`;
 
@@ -787,17 +796,17 @@ function buildDigestEmail(ctx: {
       <div style="margin-bottom:10px">
         <span style="color:#7A6660;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">⏳ ${ui.stuckLabel}</span>
       </div>
-      ${staleTasks.map(t => `<div style="color:#7A6660;font-size:13px;margin-bottom:4px">· ${t.title}</div>`).join("")}
+      ${staleTasks.map(t => `<div style="color:#7A6660;font-size:13px;margin-bottom:4px">· ${esc(t.title)}</div>`).join("")}
       <p style="color:#7A6660;font-size:12px;margin:8px 0 0;font-style:italic">${ui.stuckHint}</p>
     </div>`;
 
   const aiBlock = aiNarrative ? `
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px 24px 20px;margin-bottom:12px">
-      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${firstName} ☀️</h1>
+      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${esc(firstName)} ☀️</h1>
       <p style="color:#7A6660;font-size:14px;line-height:1.7;margin:0">${aiNarrative}</p>
     </div>` : `
     <div style="background:#FFFFFF;border:1px solid #DAC1BB;border-radius:20px;padding:24px 24px 20px;margin-bottom:12px">
-      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${firstName} ☀️</h1>
+      <h1 style="color:#1C1C18;font-size:22px;margin:0 0 8px;font-weight:700;line-height:1.2">${ui.greeting}, ${esc(firstName)} ☀️</h1>
     </div>`;
 
   return `<!DOCTYPE html>

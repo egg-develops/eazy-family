@@ -1,12 +1,39 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import en from './locales/en.json';
-import enGB from './locales/en-GB.json';
-import de from './locales/de.json';
-import fr from './locales/fr.json';
-import it from './locales/it.json';
-import es from './locales/es.json';
-import pt from './locales/pt.json';
+
+// Only English (the fallback) is bundled statically. The other languages are
+// code-split and loaded on demand — bundling all 7 locale JSONs put ~660 KB of
+// translations in the entry chunk, 6/7 of it dead weight for any given user.
+const LOADERS: Record<string, () => Promise<{ default: Record<string, unknown> }>> = {
+  'en-GB': () => import('./locales/en-GB.json'),
+  de: () => import('./locales/de.json'),
+  fr: () => import('./locales/fr.json'),
+  it: () => import('./locales/it.json'),
+  es: () => import('./locales/es.json'),
+  pt: () => import('./locales/pt.json'),
+};
+
+/** Bundle key for a language code: "de-CH" uses the "de" bundle. */
+function bundleFor(lng: string): string {
+  if (lng === 'en-GB') return 'en-GB';
+  return lng.split('-')[0];
+}
+
+/** Load a language's translations if not already present. Safe to call repeatedly. */
+export async function loadLocale(lng: string): Promise<void> {
+  const key = bundleFor(lng);
+  const loader = LOADERS[key];
+  if (!loader || i18n.hasResourceBundle(key, 'translation')) return;
+  try {
+    const mod = await loader();
+    // en-GB only carries overrides — layer it over the full en bundle.
+    const data = key === 'en-GB' ? { ...en, ...mod.default } : mod.default;
+    i18n.addResourceBundle(key, 'translation', data, true, true);
+  } catch {
+    // Chunk failed to load (offline / stale deploy) — English fallback applies.
+  }
+}
 
 function detectLng(): string {
   const stored = localStorage.getItem('eazy-family-language');
@@ -22,27 +49,29 @@ function detectLng(): string {
   return 'en';
 }
 
+const initialLng = detectLng();
+
 i18n
   .use(initReactI18next)
   .init({
     resources: {
       en: { translation: en },
-      'en-GB': { translation: { ...en, ...enGB } },
-      de: { translation: de },
-      'de-CH': { translation: de },
-      fr: { translation: fr },
-      it: { translation: it },
-      es: { translation: es },
-      pt: { translation: pt },
     },
-    lng: detectLng(),
+    lng: initialLng,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
     },
     react: {
       useSuspense: false,
+      // Re-render when a lazily-loaded bundle is added, not only on language change.
+      bindI18nStore: 'added',
     },
   });
+
+// Load the active language's bundle (no-op for en). Any changeLanguage —
+// Settings, LanguageSwitcher, prefs hydration — triggers the same load.
+void loadLocale(initialLng);
+i18n.on('languageChanged', (lng) => { void loadLocale(lng); });
 
 export default i18n;

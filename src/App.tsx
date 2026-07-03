@@ -12,12 +12,10 @@ import { AccessibilityProvider } from "./contexts/AccessibilityContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AcceptInvite from "./pages/AcceptInvite";
 import JoinFamily from "./pages/JoinFamily";
-import Onboarding from "./pages/Onboarding";
 import Splash from "./pages/Splash";
 import OutlookCallback from "./pages/OutlookCallback";
 import AppLayout from "./pages/App";
@@ -39,6 +37,10 @@ const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>)
     )
   );
 
+// Admin (dashboard, admin-only) and Onboarding (one-time flow) don't belong in
+// the entry chunk every user downloads.
+const Admin = lazyWithRetry(() => import("./pages/Admin"));
+const Onboarding = lazyWithRetry(() => import("./pages/Onboarding"));
 const Calendar = lazyWithRetry(() => import("./pages/Calendar"));
 const Lists = lazyWithRetry(() => import("./pages/Lists"));
 const Rituals = lazyWithRetry(() => import("./pages/Rituals"));
@@ -71,7 +73,7 @@ const App = () => (
               {/* Auth + Onboarding */}
               <Route path="/auth" element={<ErrorBoundary><Auth /></ErrorBoundary>} />
               <Route path="/auth/reset-password" element={<ErrorBoundary><ResetPassword /></ErrorBoundary>} />
-              <Route path="/onboarding" element={<ErrorBoundary><Onboarding /></ErrorBoundary>} />
+              <Route path="/onboarding" element={<ErrorBoundary><Suspense fallback={<PageLoader />}><Onboarding /></Suspense></ErrorBoundary>} />
               
               {/* Welcome splash — shown to new users before onboarding */}
               <Route path="/splash" element={<Splash />} />
@@ -100,7 +102,7 @@ const App = () => (
               </Route>
               
               {/* Admin Dashboard */}
-              <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+              <Route path="/admin" element={<AdminRoute><Suspense fallback={<PageLoader />}><Admin /></Suspense></AdminRoute>} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
