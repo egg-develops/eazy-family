@@ -13,7 +13,7 @@ import { parseDatesLocalized } from "@/lib/localeChrono";
 import { getSpeechLocale, getAppLanguageLabel, getAppLanguage, getAppBaseLanguage } from "@/lib/speechLocale";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
-import { classifyText, guardAIType, type CaptureType } from "@/lib/intentClassifier";
+import { classifyText, guardAIType, isSharedTaskDestination, type CaptureType } from "@/lib/intentClassifier";
 import { initialLockedType } from "@/lib/ezCaptureType";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
@@ -98,8 +98,8 @@ const cleanCaptureTitle = (raw: string): string => {
     .replace(/^(por\s+favor\s+)?(adicionar|criar|agendar|colocar|lembra-me\s+de?)\s+/i, '')
     // EN: leading type words
     .replace(/^(an?\s+)?(task|reminder|event|note|appointment)\s*(to\s+|:\s*|for\s+)?/i, '')
-    // EN: trailing list destinations
-    .replace(/\s+(on|to|in)\s+(my\s+|our\s+|the\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|list)\b.*/i, '')
+    // EN: trailing list destinations (incl. "to our shared to-do list", "our task list")
+    .replace(/\s+(on|to|in)\s+(my\s+|our\s+|the\s+|shared\s+)?(calendar|schedule|shopping\s+list|grocery\s+list|to-?do\s+list|task\s+list|list)\b.*/i, '')
     // DE: trailing list destinations
     .replace(/\s+(auf\s+(die|meine|unsere)\s+)?(einkaufsliste|liste|kalender)\b.*/i, '')
     // FR: trailing list destinations
@@ -425,7 +425,7 @@ JSON fields:
 - time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
-- assignees: array of first names of who should do it, or null. Extract ONLY from explicit delegation phrases: "assign to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
+- assignees: array of first names of who should do it, or null. Extract ONLY from explicit delegation phrases: "assign to X", "assign it X", "assign it to X", "assign this to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
 - reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
@@ -757,15 +757,19 @@ STYLE:
         // Sofia"), not assigned to them — assigning would silently move a
         // personal task into the shared family list.
         const guardedAssignees = dropAssigneesMentionedInTitle(parsed.assignees, parsed.title);
-        const { famId, members } = guardedAssignees?.length
+        // "our shared to-do list", "family task list" etc. → shared even without
+        // a specific assignee, so the task lands in the family list and is visible
+        // to all members (not hidden behind creator-only RLS).
+        const rawForShared = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+        const isExplicitSharedDest = isSharedTaskDestination(rawForShared);
+        const { famId, members } = (guardedAssignees?.length || isExplicitSharedDest)
           ? await ensureRoster()
           : { famId: familyId, members: familyMembers };
         const assignedUserIds = resolveAssignees(guardedAssignees, members, { userId: user.id, name: userName });
-        // Assigning to another member → drop it into a shared family list so the
-        // assignee can see it and it shows with their pill.
         const assignedToOthers = assignedUserIds.some(id => id !== user.id);
-        const parentId = (assignedToOthers && famId) ? await ensureFamilyTaskList(famId, user.id) : null;
-        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId, parentId });
+        const needsSharedList = assignedToOthers || isExplicitSharedDest;
+        const parentId = (needsSharedList && famId) ? await ensureFamilyTaskList(famId, user.id) : null;
+        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId, parentId, isExplicitlyShared: isExplicitSharedDest });
         const { error } = await supabase.from('tasks').insert(rows);
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);

@@ -69,6 +69,9 @@ export interface TaskCaptureOptions {
   parentId?: string | null;
   /** Base app language ("de", "fr", …) — defaults to the stored app language. */
   lang?: string;
+  /** Input explicitly named a shared/family destination ("our to-do list") even
+   *  without a named assignee — routes the task to the family shared list. */
+  isExplicitlyShared?: boolean;
 }
 
 const AND_BY_LANG: Record<string, string> = {
@@ -103,13 +106,12 @@ export function buildTaskCaptureRows(
     : null;
 
   const assignees = options.assignedUserIds ?? [];
-  // If assigned to anyone other than the creator, it must be a SHARED family
-  // task — a personal task ('task') is only visible to its creator, so the
-  // assignee would never see it (RLS). It also lands as an ITEM inside a shared
-  // list (parentId) so it renders as a row with an assignee pill, not as an
-  // empty list header. Needs a family + a parent list to share into.
+  // Shared when: assigned to another family member (always), OR the user
+  // explicitly named a shared/family destination in the input ("our to-do list").
+  // Personal tasks ('task') are only visible to their creator under RLS, so any
+  // of these conditions requires type='shared' + family_id + parent_id.
   const hasOthers = assignees.some(id => id !== userId);
-  const isShared = hasOthers && !!options.familyId && !!options.parentId;
+  const isShared = (hasOthers || !!options.isExplicitlyShared) && !!options.familyId && !!options.parentId;
 
   return entry.title
     .split(/[,;\n]/)
@@ -218,9 +220,10 @@ export function extractAssignmentIntent(raw: string): { names: string[]; cleaned
   let cleaned = raw;
   const names: string[] = [];
 
-  // Trailing/inline "…(and) assign (it/this) to X" — EN + DE + FR + IT + ES + PT
+  // Trailing/inline "…(and) assign (it/this) [to] X" — EN + DE + FR + IT + ES + PT
+  // "to" is optional: users say "assign it Sophia" as often as "assign it to Sophia".
   const assignForms: RegExp[] = [
-    /\s*(?:\band\b\s+)?\bassign(?:ed)?\s+(?:it\s+|this\s+)?to\s+(\p{L}+)/giu,
+    /\s*(?:\band\b\s+)?\bassign(?:ed)?\s+(?:it\s+|this\s+)?(?:to\s+)?(\p{L}+)/giu,
     /\s*(?:\bund\b\s+)?\bweise?\s+(?:es\s+|das\s+|sie\s+)?(\p{L}+)\s+zu\b/giu,
     /\s*(?:\bund\b\s+)?\ban\s+(\p{L}+)\s+zuweisen\b/giu,
     /\s*(?:\bet\b\s+)?\bassigne(?:-le|-la)?\s+[àa]\s+(\p{L}+)/giu,

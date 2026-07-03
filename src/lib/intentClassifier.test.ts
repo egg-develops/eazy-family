@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyText, guardAIType } from './intentClassifier';
+import { classifyText, guardAIType, isSharedTaskDestination } from './intentClassifier';
 
 // ── classifyText – shared shopping (default / "our") ────────────────────────
 
@@ -144,6 +144,18 @@ describe('regression – voice command misclassifications', () => {
 
   it('"create a task to fix the sink" → task', () =>
     expect(classifyText('create a task to fix the sink')).toBe('task'));
+});
+
+// Reported: "add fix broken shelf to our shared to-do list and assign it Sophia"
+// → "our shared to-do list" was not recognised as a shared destination
+describe('isSharedTaskDestination', () => {
+  it('"our shared to-do list" → true',     () => expect(isSharedTaskDestination('add fix broken shelf to our shared to-do list')).toBe(true));
+  it('"our to-do list" → true',            () => expect(isSharedTaskDestination('add task to our to-do list')).toBe(true));
+  it('"family task list" → true',          () => expect(isSharedTaskDestination('put it in the family task list')).toBe(true));
+  it('"shared tasks" → true',              () => expect(isSharedTaskDestination('add to shared tasks')).toBe(true));
+  it('"our tasks" → true',                 () => expect(isSharedTaskDestination('add to our tasks')).toBe(true));
+  it('"my list" → false (personal)',       () => expect(isSharedTaskDestination('add milk to my list')).toBe(false));
+  it('no list signal → false',             () => expect(isSharedTaskDestination('fix the shelf')).toBe(false));
 });
 
 describe('regression – guardAIType 00:00 not treated as specific time', () => {

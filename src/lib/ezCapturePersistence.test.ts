@@ -39,6 +39,28 @@ describe('EZ Capture task persistence rows', () => {
       { title: 'pay electricity', type: 'task', user_id: 'user-1', completed: false, due_date: new Date('2026-06-15T09:30').toISOString() },
     ]);
   });
+
+  // Regression: "our shared to-do list" should route to shared family list
+  // even when no specific assignee is named — isExplicitlyShared carries that signal.
+  it('isExplicitlyShared → type shared when familyId + parentId provided', () => {
+    const rows = buildTaskCaptureRows(
+      entry({ type: 'task', title: 'Fix broken shelf' }),
+      'user-1',
+      { isExplicitlyShared: true, familyId: 'fam-1', parentId: 'parent-1' },
+    );
+    expect(rows[0].type).toBe('shared');
+    expect(rows[0].family_id).toBe('fam-1');
+    expect(rows[0].visible_to).toBe('family');
+  });
+
+  it('isExplicitlyShared false → stays personal task without assignees', () => {
+    const rows = buildTaskCaptureRows(
+      entry({ type: 'task', title: 'Fix broken shelf' }),
+      'user-1',
+      { isExplicitlyShared: false, familyId: 'fam-1', parentId: 'parent-1' },
+    );
+    expect(rows[0].type).toBe('task');
+  });
 });
 
 describe('parseMessageIntent', () => {
@@ -335,6 +357,12 @@ describe('extractAssignmentIntent', () => {
   it('EN: "fix broken shelf and assign to Sofia"', () => {
     expect(extractAssignmentIntent('fix broken shelf and assign to Sofia'))
       .toEqual({ names: ['Sofia'], cleaned: 'fix broken shelf' });
+  });
+  // Regression: user said "assign it Sophia" (no "to") — was not extracted
+  it('EN: "assign it Sophia" without "to"', () => {
+    const r = extractAssignmentIntent('fix broken shelf and assign it Sophia');
+    expect(r.names).toContain('Sophia');
+    expect(r.cleaned).not.toContain('assign');
   });
   it('EN: "assign it to Sofia" mid-sentence', () => {
     expect(extractAssignmentIntent('water the plants, assign it to Sofia'))

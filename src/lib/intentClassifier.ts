@@ -6,8 +6,10 @@ export type CaptureType = 'event' | 'task' | 'shopping' | 'shopping_personal' | 
 // Uses lookarounds instead of \b: JS \b is ASCII-only, so "para mí\b" and
 // "à minha lista" NEVER matched — Spanish/Portuguese personal scope was dead.
 const MY_LIST = /(?<!\p{L})(my (own )?(shopping list|grocery list|groceries|list)|for me(?!\p{L})|for myself|personal list|meine[rn]? (eigenen? )?(einkaufsliste|liste|einkäufe)|für mich|ma (propre )?(liste|liste de courses|liste des courses)|mes (courses|achats)|pour moi|mia (lista|lista della spesa)|alla mia lista|per me(?!\p{L})|mi (propia )?(lista|lista de compras|lista de la compra)|a mi lista|para mí|minha (própria )?(lista|lista de compras)|à minha lista|para mim)(?!\p{L})/iu;
-// "our/family/shared" signals → shared list (EN + DE + FR + IT + ES + PT)
-const OUR_LIST = /\b(our (shopping list|grocery list|groceries|list)|family (list|shopping)|shared list|unsere[rn]? (einkaufsliste|liste|einkäufe)|familienliste|gemeinsame[rn]? liste|notre (liste|liste de courses)|liste (familiale|commune|partagée)|nostra (lista|lista della spesa)|lista (di famiglia|condivisa|familiare)|nuestra (lista|lista de compras)|lista (familiar|compartida)|nossa (lista|lista de compras)|lista da família|lista compartilhada)\b/i;
+// "our/family/shared" signals → shared list (EN + DE + FR + IT + ES + PT).
+// Also covers "our shared to-do list", "our task list", "shared to-do list" etc.
+// so that task destination keywords route to the family list even without an assignee.
+const OUR_LIST = /\b(our (shopping list|grocery list|groceries|list|to-?dos?|to-?do list|task list|tasks)|family (list|shopping|to-?dos?|task list|tasks)|shared (list|to-?do list|task list|tasks)|unsere[rn]? (einkaufsliste|liste|aufgaben|einkäufe)|familienliste|gemeinsame[rn]? liste|notre (liste|liste de courses)|liste (familiale|commune|partagée)|nostra (lista|lista della spesa)|lista (di famiglia|condivisa|familiare)|nuestra (lista|lista de compras)|lista (familiar|compartida)|nossa (lista|lista de compras)|lista da família|lista compartilhada)\b/i;
 // Generic shopping triggers (no scope signal) — EN + DE + FR + IT + ES + PT
 const BUY_VERBS = /\b(buy|get|grab|pick up|kaufen|einkaufen|besorgen|mitbringen|holen|acheter|prendre|courses|faire les courses|comprare|prendere|fare la spesa|comprar|ir de compras|ir às compras)\b/i;
 const ADD_TO_LIST = /\b(add|put)\b.+\b(shopping list|grocery list|groceries|list)\b|(?:auf die|zur|zu (?:meiner|unserer|der)|auf meine|auf unsere|in (?:meine|unsere|die))\s+(?:einkaufsliste|liste)\b|(?:einkaufsliste|liste)\s+(?:hinzufügen|setzen)|(?:ajouter|mettre|rajouter)\b.+\b(liste|courses)\b|(?:à ma liste|sur ma liste|à notre liste|sur la liste)\b|(?:aggiungere|aggiungi|mettere|metti)\b.+\b(lista|spesa)\b|(?:alla mia lista|sulla lista|alla lista)\b|(?:añadir|añade|poner|pon|agregar|agrega)\b.+\b(lista|compras)\b|(?:a mi lista|en la lista)\b|(?:adicionar|adiciona|colocar|coloca|pôr|põe)\b.+\b(lista|compras)\b|(?:à minha lista|na lista)\b/i;
@@ -86,6 +88,16 @@ export function classifyText(text: string): CaptureType {
   // scheduled anyway — a task is the actionable default. (Defaulting to
   // 'event' was how "new tires for the car" ended up on the calendar.)
   return 'task';
+}
+
+/**
+ * Returns true when the input explicitly names a shared/family task list as the
+ * destination — e.g. "our shared to-do list", "family task list". Used by
+ * EZCapture to route tasks to the family list even when no specific assignee is
+ * named.
+ */
+export function isSharedTaskDestination(text: string): boolean {
+  return OUR_LIST.test(text);
 }
 
 /**
