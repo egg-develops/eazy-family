@@ -146,7 +146,7 @@ const FamilyAgendaView = () => {
         .filter(e => {
           if (!e.attendees?.length) return false;
           const d = new Date(e.startDate);
-          return d >= now && d <= cutoffDate;
+          return d >= startOfDay(now) && d <= cutoffDate;
         })
         .map(e => ({
           id: `ev-${e.id}`,

@@ -59,7 +59,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { Capacitor } from "@capacitor/core";
 import { voiceService } from "@/services/VoiceService";
-import { format, addDays, isToday, isTomorrow } from "date-fns";
+import { format, addDays, startOfDay, isToday, isTomorrow } from "date-fns";
 import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 
 const getAppTitle = () => { try { const c = JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'); return c.appTitle || 'Eazy.Family'; } catch { return 'Eazy.Family'; } };
@@ -1182,13 +1182,13 @@ const AppHome = () => {
                 <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
               </div>
               {todayEvts.map((e, i) => (
-                <div key={e.id} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
+                <button key={e.id} onClick={() => navigate('/app/calendar')} className="w-full flex items-center gap-3 px-4 py-3 text-left" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
                   <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
                     <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           );
@@ -1237,7 +1237,7 @@ const AppHome = () => {
           .filter(e => {
             if (!e.attendees?.length) return false;
             const d = new Date(e.startDate);
-            return d >= now && d <= cutoff;
+            return d >= startOfDay(now) && d <= cutoff;
           })
           .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
           .slice(0, 5);
@@ -1252,7 +1252,7 @@ const AppHome = () => {
               agendaEvents.map((ev, i) => {
                 const d = new Date(ev.startDate);
                 return (
-                  <button key={ev.id || i} onClick={() => navigate('/app/calendar')}
+                  <button key={ev.id || i} onClick={() => navigate('/app/calendar?date=' + format(d, 'yyyy-MM-dd'))}
                     className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
                     style={{ borderBottom: i < agendaEvents.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
                     <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: ev.color || '#964735' }}>

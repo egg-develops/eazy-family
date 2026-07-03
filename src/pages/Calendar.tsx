@@ -581,6 +581,19 @@ const Calendar = () => {
     }
   }, []);
 
+  // Jump to a specific date when navigated with ?date=YYYY-MM-DD
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dateStr = params.get('date');
+    if (dateStr) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        setSelectedDate(d);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, []);
+
   // Handle OAuth callbacks (Google + Outlook)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
