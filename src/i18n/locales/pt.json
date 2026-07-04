@@ -479,6 +479,7 @@
     "moduleTasks": "Tarefas principais",
     "moduleFamily": "Canal familiar",
     "moduleGallery": "Galeria de fotos",
+    "moduleStaleTasks": "Tarefas atrasadas",
     "appTour": {
       "title": "Tour da app",
       "featureSlides": "Diapositivos de funcionalidades",

@@ -480,6 +480,7 @@
     "moduleFamily": "Familienkanal",
     "moduleFamilyAgenda": "Familienagenda",
     "moduleGallery": "Fotogalerie",
+    "moduleStaleTasks": "Überfällige Aufgaben",
     "appTour": {
       "title": "App-Tour",
       "featureSlides": "Features Tour",

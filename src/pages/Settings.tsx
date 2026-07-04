@@ -43,6 +43,7 @@ interface HomeConfig {
   showFamilyChannel?: boolean;
   showGallery?: boolean;
   showFamilyAgenda?: boolean;
+  showStaleTasks?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -77,6 +78,18 @@ const EZ_DEFAULTS = [
   { path: '/app/rituals', labelKey: 'nav.rituals' },
   { path: '/app/settings', labelKey: 'nav.settings' },
 ];
+
+const HOME_MODULE_DEFS = [
+  { key: 'gallery',       configKey: 'showGallery',       labelKey: 'settings.moduleGallery' },
+  { key: 'rituals',       configKey: 'showRituals',       labelKey: 'settings.moduleRituals' },
+  { key: 'familyAgenda',  configKey: 'showFamilyAgenda',  labelKey: 'settings.moduleFamilyAgenda' },
+  { key: 'familyChannel', configKey: 'showFamilyChannel', labelKey: 'settings.moduleFamily' },
+  { key: 'calendar',      configKey: 'showCalendar',      labelKey: 'settings.moduleCalendar' },
+  { key: 'tasks',         configKey: 'showTasks',         labelKey: 'settings.moduleTasks' },
+  { key: 'staleTasks',    configKey: 'showStaleTasks',    labelKey: 'settings.moduleStaleTasks' },
+] as const;
+
+const DEFAULT_HOME_MODULE_ORDER = HOME_MODULE_DEFS.map(d => d.key);
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-xs font-semibold uppercase tracking-wide px-1 mb-1.5" style={{ color: MUTED }}>{children}</p>
@@ -176,6 +189,27 @@ const Settings = () => {
   const ezDragOverRef = useRef<number | null>(null);
   const ezItemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const orderedEzItems = ezMenuOrder.map(p => EZ_DEFAULTS.find(i => i.path === p) ?? EZ_DEFAULTS[0]);
+
+  // Homepage module order
+  const [homeModuleOrder, setHomeModuleOrder] = useState<string[]>(() => {
+    try {
+      const s = localStorage.getItem('eazy-home-module-order');
+      if (s) {
+        const saved: string[] = JSON.parse(s);
+        const missing = DEFAULT_HOME_MODULE_ORDER.filter(k => !saved.includes(k));
+        return [...saved, ...missing];
+      }
+    } catch {}
+    return [...DEFAULT_HOME_MODULE_ORDER];
+  });
+  const [homeDragIndex, setHomeDragIndex] = useState<number | null>(null);
+  const [homeDragOver, setHomeDragOver] = useState<number | null>(null);
+  const homeDragIndexRef = useRef<number | null>(null);
+  const homeDragOverRef = useRef<number | null>(null);
+  const homeItemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const orderedHomeModules = homeModuleOrder
+    .map(key => HOME_MODULE_DEFS.find(d => d.key === key))
+    .filter((d): d is typeof HOME_MODULE_DEFS[number] => !!d);
 
   const handleRestorePurchases = async () => {
     setRestoringPurchases(true);
@@ -348,16 +382,6 @@ const Settings = () => {
   ];
   const currentLang = LANG_OPTIONS.find(l => l.value === language) || LANG_OPTIONS[0];
 
-
-  const MODULE_OPTIONS = [
-    { key: 'showWeather', labelKey: 'settings.moduleWeather' },
-    { key: 'showCalendar', labelKey: 'settings.moduleCalendar' },
-    { key: 'showRituals', labelKey: 'settings.moduleRituals' },
-    { key: 'showTasks', labelKey: 'settings.moduleTasks' },
-    { key: 'showFamilyChannel', labelKey: 'settings.moduleFamily' },
-    { key: 'showFamilyAgenda', labelKey: 'settings.moduleFamilyAgenda' },
-    { key: 'showGallery', labelKey: 'settings.moduleGallery' },
-  ] as const;
 
   return (
     <div className="space-y-5 py-2 pb-8" style={{ overscrollBehavior: 'contain' }}>
@@ -630,13 +654,78 @@ const Settings = () => {
               style={{ color: TC, width: 'auto', maxWidth: 130, fontWeight: 500 }}
             />
           </div>
-          {MODULE_OPTIONS.map((m, i) => (
-            <Row
+          {/* Weather toggle — always first, not reorderable (it's a pill, not a card) */}
+          <Row
+            title={t('settings.moduleWeather')}
+            right={<Tog checked={homeConfig.showWeather !== false} onChange={v => saveHomeConfig({ showWeather: v })} />}
+          />
+          {/* Reorderable card modules */}
+          {orderedHomeModules.map((m, i) => (
+            <div
               key={m.key}
-              title={t(m.labelKey)}
-              right={<Tog checked={(homeConfig as any)[m.key] !== false} onChange={v => saveHomeConfig({ [m.key]: v })} />}
-              last={i === MODULE_OPTIONS.length - 1}
-            />
+              ref={el => { homeItemRefs.current[i] = el; }}
+              className="flex items-center gap-3 px-4 py-3"
+              style={{
+                borderBottom: i < orderedHomeModules.length - 1 ? `1px solid ${BORDER}` : 'none',
+                background: homeDragOver === i && homeDragIndex !== i ? '#FDF3EE' : 'transparent',
+                opacity: homeDragIndex === i ? 0.35 : 1,
+                transition: 'background 0.1s, opacity 0.1s',
+              }}
+            >
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
+                <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(m.labelKey)[0]}</span>
+              </div>
+              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(m.labelKey)}</p>
+              <Tog checked={(homeConfig as any)[m.configKey] !== false} onChange={v => saveHomeConfig({ [m.configKey]: v })} />
+              <div
+                className="p-1 touch-none ml-1"
+                style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
+                onPointerDown={e => {
+                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                  homeDragIndexRef.current = i;
+                  homeDragOverRef.current = i;
+                  setHomeDragIndex(i);
+                  setHomeDragOver(i);
+                }}
+                onPointerMove={e => {
+                  if (homeDragIndexRef.current === null) return;
+                  const y = e.clientY;
+                  let newOver = homeDragIndexRef.current;
+                  homeItemRefs.current.forEach((ref, idx) => {
+                    if (!ref) return;
+                    const r = ref.getBoundingClientRect();
+                    if (y >= r.top && y <= r.bottom) newOver = idx;
+                  });
+                  if (newOver !== homeDragOverRef.current) {
+                    homeDragOverRef.current = newOver;
+                    setHomeDragOver(newOver);
+                  }
+                }}
+                onPointerUp={() => {
+                  const from = homeDragIndexRef.current;
+                  const to = homeDragOverRef.current;
+                  if (from !== null && to !== null && from !== to) {
+                    const next = [...homeModuleOrder];
+                    const [moved] = next.splice(from, 1);
+                    next.splice(to, 0, moved);
+                    setHomeModuleOrder(next);
+                    localStorage.setItem('eazy-home-module-order', JSON.stringify(next));
+                    window.dispatchEvent(new Event('eazy-home-module-order-changed'));
+                  }
+                  homeDragIndexRef.current = null;
+                  homeDragOverRef.current = null;
+                  setHomeDragIndex(null);
+                  setHomeDragOver(null);
+                }}
+                onPointerCancel={() => {
+                  homeDragIndexRef.current = null;
+                  setHomeDragIndex(null);
+                  setHomeDragOver(null);
+                }}
+              >
+                <GripVertical className="w-5 h-5" />
+              </div>
+            </div>
           ))}
         </Card_>
       </div>

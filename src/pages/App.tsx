@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalTutorial } from "@/components/GlobalTutorial";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
@@ -558,6 +558,7 @@ interface HomeConfig {
   showFamilyChannel?: boolean;
   showGallery?: boolean;
   showFamilyAgenda?: boolean;
+  showStaleTasks?: boolean;
   topNotifications: string[];
   quickActions: string[];
   iconImage?: string;
@@ -565,6 +566,8 @@ interface HomeConfig {
   headerImages?: string[];
   appTitle?: string;
 }
+
+const DEFAULT_HOME_MODULE_ORDER = ['gallery', 'rituals', 'familyAgenda', 'familyChannel', 'calendar', 'tasks', 'staleTasks'];
 
 interface HomeCalendarEvent {
   id: string;
@@ -830,6 +833,33 @@ const AppHome = () => {
     return () => window.removeEventListener('eazy-home-config-updated', handler);
   }, []);
 
+  const [homeModuleOrder, setHomeModuleOrder] = useState<string[]>(() => {
+    try {
+      const s = localStorage.getItem('eazy-home-module-order');
+      if (s) {
+        const saved: string[] = JSON.parse(s);
+        const missing = DEFAULT_HOME_MODULE_ORDER.filter(k => !saved.includes(k));
+        return [...saved, ...missing];
+      }
+    } catch {}
+    return [...DEFAULT_HOME_MODULE_ORDER];
+  });
+
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const s = localStorage.getItem('eazy-home-module-order');
+        if (s) {
+          const saved: string[] = JSON.parse(s);
+          const missing = DEFAULT_HOME_MODULE_ORDER.filter(k => !saved.includes(k));
+          setHomeModuleOrder([...saved, ...missing]);
+        }
+      } catch {}
+    };
+    window.addEventListener('eazy-home-module-order-changed', handler);
+    return () => window.removeEventListener('eazy-home-module-order-changed', handler);
+  }, []);
+
   // Fetch pending task count independently (no user ID needed, RLS handles scoping)
   useEffect(() => {
     supabase.from('tasks').select('*', { count: 'exact', head: true })
@@ -976,6 +1006,199 @@ const AppHome = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, [galleryImages.length]);
+
+  const renderHomeModule = (key: string) => {
+    switch (key) {
+      case 'gallery':
+        return homeConfig.showGallery !== false && (
+          galleryImages.length > 0 ? (
+            <div
+              className="rounded-2xl overflow-hidden relative aspect-video"
+              style={{ border: '1px solid hsl(var(--border))' }}
+              onClick={() => setShowGalleryDialog(true)}
+            >
+              <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
+              {galleryImages.length > 1 && (
+                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                  {galleryImages.map((_, i) => (
+                    <div key={i} className="rounded-full" style={{ width: i === carouselIndex % galleryImages.length ? '16px' : '5px', height: '5px', background: i === carouselIndex % galleryImages.length ? '#fff' : 'rgba(255,255,255,0.5)', transition: 'all 0.3s ease' }} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <button onClick={() => setShowGalleryDialog(true)} className="group w-full rounded-2xl flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5" style={{ border: '1px solid #DAC1BB', background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF3EE 100%)', boxShadow: '0 8px 24px rgba(150,71,53,0.08)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105" style={{ background: '#FFDAD3', color: '#964735' }}>
+                  <ImagePlus className="w-5 h-5" />
+                </div>
+                <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('home.addPhotos')}</p>
+              </div>
+              <Plus className="w-4 h-4" style={{ color: '#964735' }} />
+            </button>
+          )
+        );
+
+      case 'rituals':
+        return homeConfig.showRituals !== false && (
+          <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))' }}>
+            <div className="space-y-0.5">
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.ritualsSection')}</p>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
+                {(() => {
+                  const completed: string[] = (() => { try { const stored = localStorage.getItem('eazy-completed-rituals-today'); if (!stored) return []; const parsed = JSON.parse(stored); if (Array.isArray(parsed)) return parsed; if (parsed.date === new Date().toDateString()) return parsed.ids || []; return []; } catch { return []; } })();
+                  const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
+                  return `${completed.length}/${total.length || 5} ${t('rituals.done')}`;
+                })()}
+              </p>
+            </div>
+            <button onClick={() => navigate('/app/rituals')} className="px-4 py-2 rounded-full text-sm font-semibold text-white flex-shrink-0" style={{ background: '#964735' }}>{t('rituals.title')}</button>
+          </div>
+        );
+
+      case 'familyAgenda':
+        return homeConfig.showFamilyAgenda !== false && (() => {
+          const now = new Date();
+          const cutoff = addDays(now, 60);
+          const rawEvents: any[] = (() => { try { return JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); } catch { return []; } })();
+          const agendaEvents = rawEvents.filter(e => { if (!e.attendees?.length) return false; const d = new Date(e.startDate); return d >= startOfDay(now) && d <= cutoff; }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).slice(0, 5);
+          const dateLabel = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : fmt(d, 'EEE, MMM d');
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyAgenda')}</p>
+                <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+              </div>
+              {agendaEvents.length > 0 ? agendaEvents.map((ev, i) => {
+                const d = new Date(ev.startDate);
+                return (
+                  <button key={ev.id || i} onClick={() => navigate('/app/calendar?date=' + format(d, 'yyyy-MM-dd'))} className="w-full px-4 py-2.5 flex items-center gap-3 text-left" style={{ borderBottom: i < agendaEvents.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: ev.color || '#964735' }}>{ev.title.slice(0, 1).toUpperCase()}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{dateLabel(d)}{ev.allDay ? '' : ` · ${fmt(d, 'p')}`}</p>
+                    </div>
+                  </button>
+                );
+              }) : (
+                <div className="px-4 py-5 text-center">
+                  <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noSharedEvents')}</p>
+                  <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openFamilyPage')}</button>
+                </div>
+              )}
+            </div>
+          );
+        })();
+
+      case 'familyChannel':
+        return homeConfig.showFamilyChannel !== false && (() => {
+          type ChannelMsg = { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string };
+          let recentMsgs: ChannelMsg[] = [];
+          try { const all: ChannelMsg[] = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]'); recentMsgs = all.slice(-3).reverse(); } catch { /* ignore */ }
+          const msgPreview = (m: ChannelMsg) => m.type === 'text' ? (m.content || '') : m.type === 'voice' ? t('home.voiceMessage') : m.type === 'image' ? t('home.photoMessage') : m.type === 'location' ? t('home.locationMessage') : m.type === 'poll' ? t('home.pollMessage') : m.type === 'document' ? t('home.documentMessage') : t('home.newMessage');
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyChannel')}</p>
+                <button onClick={() => navigate('/app/family-channel')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
+              </div>
+              {recentMsgs.length > 0 ? recentMsgs.map((msg, i) => (
+                <button key={i} onClick={() => navigate('/app/family-channel')} className="w-full px-4 py-2.5 flex items-center gap-3 text-left" style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: msg.authorColor || '#964735' }}>{msg.authorInitials}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{msg.authorName}</p>
+                    <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{msgPreview(msg)}</p>
+                  </div>
+                  <p className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(new Date(msg.timestamp), 'p')}</p>
+                </button>
+              )) : (
+                <div className="px-4 py-5 text-center">
+                  <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noMessages')}</p>
+                  <button onClick={() => navigate('/app/family-channel')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
+                </div>
+              )}
+            </div>
+          );
+        })();
+
+      case 'calendar':
+        return homeConfig.showCalendar !== false && (() => {
+          const now = new Date();
+          const todayStr = now.toDateString();
+          const todayEvts = calendarEvents.filter(e => e.startDate.toDateString() === todayStr).sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+          if (todayEvts.length > 0) {
+            return (
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
+                  <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
+                </div>
+                {todayEvts.map((e, i) => (
+                  <button key={e.id} onClick={() => navigate('/app/calendar')} className="w-full flex items-center gap-3 px-4 py-3 text-left" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
+                    <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            );
+          }
+          const upcoming = calendarEvents.filter(e => e.startDate > now).sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
+          if (upcoming) {
+            return (
+              <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
+                <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : fmt(upcoming.startDate, 'EEE MMM d')} · {fmt(upcoming.startDate, 'p')}</p>
+              </button>
+            );
+          }
+          return (
+            <div className="rounded-2xl p-4" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
+              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noEventsToday')}</p>
+              <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
+            </div>
+          );
+        })();
+
+      case 'tasks':
+        return homeConfig.showTasks !== false && (
+          <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
+              <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+            </div>
+            <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
+          </div>
+        );
+
+      case 'staleTasks':
+        return homeConfig.showStaleTasks !== false && staleTasks.length > 0 && (
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+              <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.overdueTasks')}</p>
+              <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+            </div>
+            {staleTasks.slice(0, 3).map((task, i) => (
+              <button key={task.id} onClick={() => navigate('/app/lists')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
+                <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : 'hsl(var(--border))' }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{task.title}</p>
+                  <p className="text-xs" style={{ color: task.isEscalated ? '#C4621A' : '#7A6660' }}>{task.isEscalated ? t('home.stuckFor') : t('home.noActivityFor')} {task.daysSinceUpdate}d{task.isEscalated ? ` ${t('home.delegateOrDrop')}` : ''}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-4 pb-4">
@@ -1155,9 +1378,7 @@ const AppHome = () => {
         </div>
       )}
 
-      {/* AI Intelligence Cards */}
-
-      {/* Conflict Alert */}
+      {/* Conflict Alert — always visible at top when present, not user-reorderable */}
       {conflicts.length > 0 && (
         <div className="rounded-2xl overflow-hidden" style={{ background: '#FFF8F0', border: '1px solid #EDCFB8' }}>
           <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
@@ -1176,215 +1397,10 @@ const AppHome = () => {
         </div>
       )}
 
-      {/* Stale Task Escalation */}
-      {staleTasks.length > 0 && (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-          <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-            <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
-            <p className="text-xs font-bold uppercase tracking-wide flex-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.overdueTasks')}</p>
-            <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
-          </div>
-          {staleTasks.slice(0, 3).map((task, i) => (
-            <button key={task.id} onClick={() => navigate('/app/lists')} className="w-full px-4 py-3 text-left flex items-center gap-3" style={{ borderBottom: i < Math.min(staleTasks.length, 3) - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
-              <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: task.isEscalated ? '#C4621A' : 'hsl(var(--border))' }} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{task.title}</p>
-                <p className="text-xs" style={{ color: task.isEscalated ? '#C4621A' : '#7A6660' }}>
-                  {task.isEscalated ? t('home.stuckFor') : t('home.noActivityFor')} {task.daysSinceUpdate}d{task.isEscalated ? ` ${t('home.delegateOrDrop')}` : ''}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Today's Rituals card */}
-      {homeConfig.showRituals !== false && <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))' }}>
-        <div className="space-y-0.5">
-          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.ritualsSection')}</p>
-          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>
-            {(() => {
-              const completed: string[] = (() => {
-                try {
-                  const stored = localStorage.getItem('eazy-completed-rituals-today');
-                  if (!stored) return [];
-                  const parsed = JSON.parse(stored);
-                  if (Array.isArray(parsed)) return parsed; // old format
-                  if (parsed.date === new Date().toDateString()) return parsed.ids || [];
-                  return []; // stale — different day
-                } catch { return []; }
-              })();
-              const total: unknown[] = (() => { try { const s = localStorage.getItem('eazy-rituals-list'); return s ? JSON.parse(s) : []; } catch { return []; } })();
-              const totalCount = total.length || 5;
-              return `${completed.length}/${totalCount} ${t('rituals.done')}`;
-            })()}
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/app/rituals')}
-          className="px-4 py-2 rounded-full text-sm font-semibold text-white flex-shrink-0"
-          style={{ background: '#964735' }}
-        >
-          {t('rituals.title')}
-        </button>
-      </div>}
-
-      {/* Family Agenda */}
-      {homeConfig.showFamilyAgenda !== false && (() => {
-        const now = new Date();
-        const cutoff = addDays(now, 60);
-        const rawEvents: any[] = (() => { try { return JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); } catch { return []; } })();
-        const agendaEvents = rawEvents
-          .filter(e => {
-            if (!e.attendees?.length) return false;
-            const d = new Date(e.startDate);
-            return d >= startOfDay(now) && d <= cutoff;
-          })
-          .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-          .slice(0, 5);
-        const dateLabel = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : fmt(d, 'EEE, MMM d');
-        return (
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyAgenda')}</p>
-              <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
-            </div>
-            {agendaEvents.length > 0 ? (
-              agendaEvents.map((ev, i) => {
-                const d = new Date(ev.startDate);
-                return (
-                  <button key={ev.id || i} onClick={() => navigate('/app/calendar?date=' + format(d, 'yyyy-MM-dd'))}
-                    className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
-                    style={{ borderBottom: i < agendaEvents.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: ev.color || '#964735' }}>
-                      {ev.title.slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{dateLabel(d)}{ev.allDay ? '' : ` · ${fmt(d, 'p')}`}</p>
-                    </div>
-                  </button>
-                );
-              })
-            ) : (
-              <div className="px-4 py-5 text-center">
-                <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noSharedEvents')}</p>
-                <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openFamilyPage')}</button>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* Family Channel */}
-      {homeConfig.showFamilyChannel !== false && (() => {
-        type ChannelMsg = { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string };
-        let recentMsgs: ChannelMsg[] = [];
-        try {
-          const all: ChannelMsg[] = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]');
-          recentMsgs = all.slice(-3).reverse();
-        } catch { /* ignore */ }
-        const msgPreview = (m: ChannelMsg) =>
-          m.type === 'text' ? (m.content || '') :
-          m.type === 'voice' ? t('home.voiceMessage') :
-          m.type === 'image' ? t('home.photoMessage') :
-          m.type === 'location' ? t('home.locationMessage') :
-          m.type === 'poll' ? t('home.pollMessage') :
-          m.type === 'document' ? t('home.documentMessage') : t('home.newMessage');
-        return (
-          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyChannel')}</p>
-              <button onClick={() => navigate('/app/family-channel')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
-            </div>
-            {recentMsgs.length > 0 ? (
-              recentMsgs.map((msg, i) => (
-                <button key={i} onClick={() => navigate('/app/family-channel')}
-                  className="w-full px-4 py-2.5 flex items-center gap-3 text-left"
-                  style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: msg.authorColor || '#964735' }}>
-                    {msg.authorInitials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{msg.authorName}</p>
-                    <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{msgPreview(msg)}</p>
-                  </div>
-                  <p className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {fmt(new Date(msg.timestamp), 'p')}
-                  </p>
-                </button>
-              ))
-            ) : (
-              <div className="px-4 py-5 text-center">
-                <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noMessages')}</p>
-                <button onClick={() => navigate('/app/family-channel')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* Today / Next Up */}
-      {homeConfig.showCalendar !== false && (() => {
-        const now = new Date();
-        const todayStr = now.toDateString();
-        const todayEvts = calendarEvents
-          .filter(e => e.startDate.toDateString() === todayStr)
-          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-
-        if (todayEvts.length > 0) {
-          return (
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
-                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
-              </div>
-              {todayEvts.map((e, i) => (
-                <button key={e.id} onClick={() => navigate('/app/calendar')} className="w-full flex items-center gap-3 px-4 py-3 text-left" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
-                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
-                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          );
-        }
-
-        const upcoming = calendarEvents
-          .filter(e => e.startDate > now)
-          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
-        if (upcoming) {
-          return (
-            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
-              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : fmt(upcoming.startDate, 'EEE MMM d')} · {fmt(upcoming.startDate, 'p')}
-              </p>
-            </button>
-          );
-        }
-        return (
-          <div className="rounded-2xl p-4" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
-            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noEventsToday')}</p>
-            <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
-          </div>
-        );
-      })()}
-
-      {/* Top Tasks */}
-      {homeConfig.showTasks !== false && (
-      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
-          <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
-        </div>
-        <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
-      </div>
-      )}
+      {/* Reorderable homepage modules */}
+      {homeModuleOrder.map(key => (
+        <Fragment key={key}>{renderHomeModule(key)}</Fragment>
+      ))}
 
     </div>
   );

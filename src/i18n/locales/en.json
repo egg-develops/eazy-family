@@ -484,6 +484,7 @@
     "moduleFamily": "Family Channel",
     "moduleFamilyAgenda": "Family Agenda",
     "moduleGallery": "Photo Gallery",
+    "moduleStaleTasks": "Overdue Tasks",
     "appTour": {
       "title": "App Tour",
       "featureSlides": "Features Tour",
