@@ -125,7 +125,7 @@ const AppLayout = () => {
     swipeStartYRef.current = e.clientY;
     haptic('tap');
     try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
-    // Long hold → enter drag mode
+    // Long hold → enter drag mode; release without move → EZ Capture
     longPressTimer.current = setTimeout(() => {
       if (!isSwipeMenuRef.current) {
         isDragModeRef.current = true;
@@ -211,9 +211,9 @@ const AppLayout = () => {
       prevActiveIndexRef.current = -1;
       isSwipeMenuRef.current = false;
     } else {
-      // Tap → EZ Capture (or channel tray on Family Channel)
-      haptic('capture');
-      handleEZTap();
+      // Tap → radial nav menu
+      haptic('heavy');
+      openMenu();
     }
   };
 
