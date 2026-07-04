@@ -207,6 +207,8 @@ const Settings = () => {
   const homeDragIndexRef = useRef<number | null>(null);
   const homeDragOverRef = useRef<number | null>(null);
   const homeItemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const ezContainerRef = useRef<HTMLDivElement>(null);
+  const homeContainerRef = useRef<HTMLDivElement>(null);
   const orderedHomeModules = homeModuleOrder
     .map(key => HOME_MODULE_DEFS.find(d => d.key === key))
     .filter((d): d is typeof HOME_MODULE_DEFS[number] => !!d);
@@ -264,6 +266,112 @@ const Settings = () => {
     };
     window.addEventListener('eazy-prefs-loaded', handler);
     return () => window.removeEventListener('eazy-prefs-loaded', handler);
+  }, []);
+
+  // Native non-passive touch drag for EZ Button list (React touch handlers are passive in 17+)
+  useEffect(() => {
+    const el = ezContainerRef.current;
+    if (!el) return;
+    let from: number | null = null;
+    let to: number | null = null;
+    const start = (e: TouchEvent) => {
+      const grip = (e.target as HTMLElement).closest('[data-ez-grip]');
+      if (!grip) return;
+      e.preventDefault();
+      const item = (e.target as HTMLElement).closest<HTMLElement>('[data-ez-item]');
+      if (!item) return;
+      const idx = parseInt(item.dataset.ezItem ?? '', 10);
+      if (isNaN(idx)) return;
+      from = idx; to = idx;
+      setEzDragIndex(idx); setEzDragOver(idx);
+    };
+    const move = (e: TouchEvent) => {
+      if (from === null) return;
+      e.preventDefault();
+      const y = e.touches[0].clientY;
+      el.querySelectorAll<HTMLElement>('[data-ez-item]').forEach((item, idx) => {
+        const r = item.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) to = idx;
+      });
+      setEzDragOver(to!);
+    };
+    const end = () => {
+      if (from !== null && to !== null && from !== to) {
+        setEzMenuOrder(prev => {
+          const next = [...prev];
+          const [moved] = next.splice(from!, 1);
+          next.splice(to!, 0, moved);
+          localStorage.setItem('eazy-ez-menu-order', JSON.stringify(next));
+          window.dispatchEvent(new Event('ez-prefs-changed'));
+          return next;
+        });
+      }
+      from = null; to = null;
+      setEzDragIndex(null); setEzDragOver(null);
+    };
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
+  }, []);
+
+  // Native non-passive touch drag for Homepage Modules list
+  useEffect(() => {
+    const el = homeContainerRef.current;
+    if (!el) return;
+    let from: number | null = null;
+    let to: number | null = null;
+    const start = (e: TouchEvent) => {
+      const grip = (e.target as HTMLElement).closest('[data-home-grip]');
+      if (!grip) return;
+      e.preventDefault();
+      const item = (e.target as HTMLElement).closest<HTMLElement>('[data-home-item]');
+      if (!item) return;
+      const idx = parseInt(item.dataset.homeItem ?? '', 10);
+      if (isNaN(idx)) return;
+      from = idx; to = idx;
+      setHomeDragIndex(idx); setHomeDragOver(idx);
+    };
+    const move = (e: TouchEvent) => {
+      if (from === null) return;
+      e.preventDefault();
+      const y = e.touches[0].clientY;
+      el.querySelectorAll<HTMLElement>('[data-home-item]').forEach((item, idx) => {
+        const r = item.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) to = idx;
+      });
+      setHomeDragOver(to!);
+    };
+    const end = () => {
+      if (from !== null && to !== null && from !== to) {
+        setHomeModuleOrder(prev => {
+          const next = [...prev];
+          const [moved] = next.splice(from!, 1);
+          next.splice(to!, 0, moved);
+          localStorage.setItem('eazy-home-module-order', JSON.stringify(next));
+          window.dispatchEvent(new Event('eazy-home-module-order-changed'));
+          return next;
+        });
+      }
+      from = null; to = null;
+      setHomeDragIndex(null); setHomeDragOver(null);
+    };
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchmove', move, { passive: false });
+    el.addEventListener('touchend', end);
+    el.addEventListener('touchcancel', end);
+    return () => {
+      el.removeEventListener('touchstart', start);
+      el.removeEventListener('touchmove', move);
+      el.removeEventListener('touchend', end);
+      el.removeEventListener('touchcancel', end);
+    };
   }, []);
 
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
@@ -555,11 +663,12 @@ const Settings = () => {
       {/* ── EZ Button ── */}
       <div className="space-y-2">
         <SectionLabel>EZ Button</SectionLabel>
-        <Card_>
+        <div ref={ezContainerRef}>
           {orderedEzItems.map((item, i) => (
             <div
               key={item.path}
               ref={el => { ezItemRefs.current[i] = el; }}
+              data-ez-item={String(i)}
               className="flex items-center gap-3 px-4 py-3.5"
               style={{
                 borderBottom: `1px solid ${BORDER}`,
@@ -573,11 +682,11 @@ const Settings = () => {
               </div>
               <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(item.labelKey)}</p>
               <div
+                data-ez-grip="true"
                 className="p-1 touch-none"
                 style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
-                onTouchStart={e => e.preventDefault()}
                 onPointerDown={e => {
-                  e.preventDefault();
+                  if (e.pointerType === 'touch') return;
                   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                   ezDragIndexRef.current = i;
                   ezDragOverRef.current = i;
@@ -585,7 +694,7 @@ const Settings = () => {
                   setEzDragOver(i);
                 }}
                 onPointerMove={e => {
-                  if (ezDragIndexRef.current === null) return;
+                  if (e.pointerType === 'touch' || ezDragIndexRef.current === null) return;
                   const y = e.clientY;
                   let newOver = ezDragIndexRef.current;
                   ezItemRefs.current.forEach((ref, idx) => {
@@ -598,7 +707,8 @@ const Settings = () => {
                     setEzDragOver(newOver);
                   }
                 }}
-                onPointerUp={() => {
+                onPointerUp={e => {
+                  if (e.pointerType === 'touch') return;
                   const from = ezDragIndexRef.current;
                   const to = ezDragOverRef.current;
                   if (from !== null && to !== null && from !== to) {
@@ -614,7 +724,8 @@ const Settings = () => {
                   setEzDragIndex(null);
                   setEzDragOver(null);
                 }}
-                onPointerCancel={() => {
+                onPointerCancel={e => {
+                  if (e.pointerType === 'touch') return;
                   ezDragIndexRef.current = null;
                   setEzDragIndex(null);
                   setEzDragOver(null);
@@ -624,6 +735,7 @@ const Settings = () => {
               </div>
             </div>
           ))}
+        </div>
           <Row
             icon={<div className="w-4 h-4 rounded-full" style={{ background: '#964735' }} />}
             title={t('settings.ez.iconOnly')}
@@ -662,75 +774,80 @@ const Settings = () => {
             right={<Tog checked={homeConfig.showWeather !== false} onChange={v => saveHomeConfig({ showWeather: v })} />}
           />
           {/* Reorderable card modules */}
-          {orderedHomeModules.map((m, i) => (
-            <div
-              key={m.key}
-              ref={el => { homeItemRefs.current[i] = el; }}
-              className="flex items-center gap-3 px-4 py-3"
-              style={{
-                borderBottom: i < orderedHomeModules.length - 1 ? `1px solid ${BORDER}` : 'none',
-                background: homeDragOver === i && homeDragIndex !== i ? '#FDF3EE' : 'transparent',
-                opacity: homeDragIndex === i ? 0.35 : 1,
-                transition: 'background 0.1s, opacity 0.1s',
-              }}
-            >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(m.labelKey)[0]}</span>
-              </div>
-              <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(m.labelKey)}</p>
-              <Tog checked={(homeConfig as any)[m.configKey] !== false} onChange={v => saveHomeConfig({ [m.configKey]: v })} />
+          <div ref={homeContainerRef}>
+            {orderedHomeModules.map((m, i) => (
               <div
-                className="p-1 touch-none ml-1"
-                style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
-                onTouchStart={e => e.preventDefault()}
-                onPointerDown={e => {
-                  e.preventDefault();
-                  (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-                  homeDragIndexRef.current = i;
-                  homeDragOverRef.current = i;
-                  setHomeDragIndex(i);
-                  setHomeDragOver(i);
-                }}
-                onPointerMove={e => {
-                  if (homeDragIndexRef.current === null) return;
-                  const y = e.clientY;
-                  let newOver = homeDragIndexRef.current;
-                  homeItemRefs.current.forEach((ref, idx) => {
-                    if (!ref) return;
-                    const r = ref.getBoundingClientRect();
-                    if (y >= r.top && y <= r.bottom) newOver = idx;
-                  });
-                  if (newOver !== homeDragOverRef.current) {
-                    homeDragOverRef.current = newOver;
-                    setHomeDragOver(newOver);
-                  }
-                }}
-                onPointerUp={() => {
-                  const from = homeDragIndexRef.current;
-                  const to = homeDragOverRef.current;
-                  if (from !== null && to !== null && from !== to) {
-                    const next = [...homeModuleOrder];
-                    const [moved] = next.splice(from, 1);
-                    next.splice(to, 0, moved);
-                    setHomeModuleOrder(next);
-                    localStorage.setItem('eazy-home-module-order', JSON.stringify(next));
-                    window.dispatchEvent(new Event('eazy-home-module-order-changed'));
-                  }
-                  homeDragIndexRef.current = null;
-                  homeDragOverRef.current = null;
-                  setHomeDragIndex(null);
-                  setHomeDragOver(null);
-                }}
-                onPointerCancel={() => {
-                  homeDragIndexRef.current = null;
-                  setHomeDragIndex(null);
-                  setHomeDragOver(null);
+                key={m.key}
+                ref={el => { homeItemRefs.current[i] = el; }}
+                data-home-item={String(i)}
+                className="flex items-center gap-3 px-4 py-3"
+                style={{
+                  borderBottom: i < orderedHomeModules.length - 1 ? `1px solid ${BORDER}` : 'none',
+                  background: homeDragOver === i && homeDragIndex !== i ? '#FDF3EE' : 'transparent',
+                  opacity: homeDragIndex === i ? 0.35 : 1,
+                  transition: 'background 0.1s, opacity 0.1s',
                 }}
               >
-                <GripVertical className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
+                  <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(m.labelKey)[0]}</span>
+                </div>
+                <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(m.labelKey)}</p>
+                <Tog checked={(homeConfig as any)[m.configKey] !== false} onChange={v => saveHomeConfig({ [m.configKey]: v })} />
+                <div
+                  data-home-grip="true"
+                  className="p-1 touch-none ml-1"
+                  style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
+                  onPointerDown={e => {
+                    if (e.pointerType === 'touch') return;
+                    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+                    homeDragIndexRef.current = i;
+                    homeDragOverRef.current = i;
+                    setHomeDragIndex(i);
+                    setHomeDragOver(i);
+                  }}
+                  onPointerMove={e => {
+                    if (e.pointerType === 'touch' || homeDragIndexRef.current === null) return;
+                    const y = e.clientY;
+                    let newOver = homeDragIndexRef.current;
+                    homeItemRefs.current.forEach((ref, idx) => {
+                      if (!ref) return;
+                      const r = ref.getBoundingClientRect();
+                      if (y >= r.top && y <= r.bottom) newOver = idx;
+                    });
+                    if (newOver !== homeDragOverRef.current) {
+                      homeDragOverRef.current = newOver;
+                      setHomeDragOver(newOver);
+                    }
+                  }}
+                  onPointerUp={e => {
+                    if (e.pointerType === 'touch') return;
+                    const from = homeDragIndexRef.current;
+                    const to = homeDragOverRef.current;
+                    if (from !== null && to !== null && from !== to) {
+                      const next = [...homeModuleOrder];
+                      const [moved] = next.splice(from, 1);
+                      next.splice(to, 0, moved);
+                      setHomeModuleOrder(next);
+                      localStorage.setItem('eazy-home-module-order', JSON.stringify(next));
+                      window.dispatchEvent(new Event('eazy-home-module-order-changed'));
+                    }
+                    homeDragIndexRef.current = null;
+                    homeDragOverRef.current = null;
+                    setHomeDragIndex(null);
+                    setHomeDragOver(null);
+                  }}
+                  onPointerCancel={e => {
+                    if (e.pointerType === 'touch') return;
+                    homeDragIndexRef.current = null;
+                    setHomeDragIndex(null);
+                    setHomeDragOver(null);
+                  }}
+                >
+                  <GripVertical className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </Card_>
       </div>
 
