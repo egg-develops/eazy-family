@@ -575,7 +575,9 @@ const Settings = () => {
               <div
                 className="p-1 touch-none"
                 style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
+                onTouchStart={e => e.preventDefault()}
                 onPointerDown={e => {
+                  e.preventDefault();
                   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                   ezDragIndexRef.current = i;
                   ezDragOverRef.current = i;
@@ -680,7 +682,9 @@ const Settings = () => {
               <div
                 className="p-1 touch-none ml-1"
                 style={{ color: '#C4AEA8', cursor: 'grab', touchAction: 'none' }}
+                onTouchStart={e => e.preventDefault()}
                 onPointerDown={e => {
+                  e.preventDefault();
                   (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
                   homeDragIndexRef.current = i;
                   homeDragOverRef.current = i;

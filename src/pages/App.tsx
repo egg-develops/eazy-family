@@ -1287,49 +1287,6 @@ const AppHome = () => {
         )}
       </div>
 
-      {/* Gallery */}
-      {homeConfig.showGallery !== false && (
-        galleryImages.length > 0 ? (
-          <div
-            className="rounded-2xl overflow-hidden relative aspect-video"
-            style={{ border: '1px solid hsl(var(--border))' }}
-            onClick={() => setShowGalleryDialog(true)}
-          >
-            <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
-            {galleryImages.length > 1 && (
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                {galleryImages.map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-full"
-                    style={{
-                      width: i === carouselIndex % galleryImages.length ? '16px' : '5px',
-                      height: '5px',
-                      background: i === carouselIndex % galleryImages.length ? '#fff' : 'rgba(255,255,255,0.5)',
-                      transition: 'all 0.3s ease',
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowGalleryDialog(true)}
-            className="group w-full rounded-2xl flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5"
-            style={{ border: '1px solid #DAC1BB', background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF3EE 100%)', boxShadow: '0 8px 24px rgba(150,71,53,0.08)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105" style={{ background: '#FFDAD3', color: '#964735' }}>
-                <ImagePlus className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('home.addPhotos')}</p>
-            </div>
-            <Plus className="w-4 h-4" style={{ color: '#964735' }} />
-          </button>
-        )
-      )}
-
       {/* Feature Tour Banner */}
       {showTourBanner && (
         <div
