@@ -663,7 +663,8 @@ const Settings = () => {
       {/* ── EZ Button ── */}
       <div className="space-y-2">
         <SectionLabel>EZ Button</SectionLabel>
-        <div ref={ezContainerRef}>
+        <Card_>
+          <div ref={ezContainerRef}>
           {orderedEzItems.map((item, i) => (
             <div
               key={item.path}
@@ -735,7 +736,7 @@ const Settings = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
           <Row
             icon={<div className="w-4 h-4 rounded-full" style={{ background: '#964735' }} />}
             title={t('settings.ez.iconOnly')}
