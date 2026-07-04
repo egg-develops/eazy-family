@@ -83,6 +83,7 @@ const AppLayout = () => {
     try { const s = localStorage.getItem('eazy-ez-menu-order'); return s ? JSON.parse(s) : null; } catch { return null; }
   });
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const menuOpenRef = useRef(false);
   const isSwipeMenuRef = useRef(false);
   const isDragModeRef = useRef(false);
   const dragMovedRef = useRef(false);
@@ -117,6 +118,20 @@ const AppLayout = () => {
   };
 
   const handleEZPointerDown = (e: React.PointerEvent) => {
+    if (menuOpenRef.current) {
+      // Menu is open — this touch scrolls through items or toggles the menu off.
+      isSwipeMenuRef.current = true;
+      isDragModeRef.current = false;
+      dragMovedRef.current = false;
+      currentPointerYRef.current = e.clientY;
+      currentPointerXRef.current = e.clientX;
+      swipeStartYRef.current = e.clientY;
+      longPressOriginYRef.current = e.clientY;
+      prevActiveIndexRef.current = -1;
+      haptic('light');
+      try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+      return;
+    }
     isSwipeMenuRef.current = false;
     isDragModeRef.current = false;
     dragMovedRef.current = false;
@@ -205,13 +220,15 @@ const AppLayout = () => {
       if (activeMenuIndex >= 0) {
         haptic('tap');
         navigate(orderedMenuItems[activeMenuIndex].path);
+      } else {
+        haptic('light'); // dismiss / toggle off with no item selected
       }
       closeMenu();
       setActiveMenuIndex(-1);
       prevActiveIndexRef.current = -1;
       isSwipeMenuRef.current = false;
     } else {
-      // Tap → radial nav menu
+      // Tap on closed menu → open
       haptic('heavy');
       openMenu();
     }
@@ -235,6 +252,9 @@ const AppLayout = () => {
       longPressTimer.current = null;
     }
   };
+
+  // Keep menuOpenRef in sync so pointer handlers always read the current value.
+  useEffect(() => { menuOpenRef.current = menuOpen; }, [menuOpen]);
 
   // Mark interaction as ready after 600ms — prevents false swipe detection
   // during initial hydration and auth state re-renders.
@@ -1044,6 +1064,49 @@ const AppHome = () => {
         )}
       </div>
 
+      {/* Gallery */}
+      {homeConfig.showGallery !== false && (
+        galleryImages.length > 0 ? (
+          <div
+            className="rounded-2xl overflow-hidden relative aspect-video"
+            style={{ border: '1px solid hsl(var(--border))' }}
+            onClick={() => setShowGalleryDialog(true)}
+          >
+            <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
+            {galleryImages.length > 1 && (
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+                {galleryImages.map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full"
+                    style={{
+                      width: i === carouselIndex % galleryImages.length ? '16px' : '5px',
+                      height: '5px',
+                      background: i === carouselIndex % galleryImages.length ? '#fff' : 'rgba(255,255,255,0.5)',
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowGalleryDialog(true)}
+            className="group w-full rounded-2xl flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5"
+            style={{ border: '1px solid #DAC1BB', background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF3EE 100%)', boxShadow: '0 8px 24px rgba(150,71,53,0.08)' }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105" style={{ background: '#FFDAD3', color: '#964735' }}>
+                <ImagePlus className="w-5 h-5" />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('home.addPhotos')}</p>
+            </div>
+            <Plus className="w-4 h-4" style={{ color: '#964735' }} />
+          </button>
+        )
+      )}
+
       {/* Feature Tour Banner */}
       {showTourBanner && (
         <div
@@ -1166,68 +1229,6 @@ const AppHome = () => {
         </button>
       </div>}
 
-      {/* Today / Next Up */}
-      {homeConfig.showCalendar !== false && (() => {
-        const now = new Date();
-        const todayStr = now.toDateString();
-        const todayEvts = calendarEvents
-          .filter(e => e.startDate.toDateString() === todayStr)
-          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-
-        if (todayEvts.length > 0) {
-          return (
-            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
-                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
-              </div>
-              {todayEvts.map((e, i) => (
-                <button key={e.id} onClick={() => navigate('/app/calendar')} className="w-full flex items-center gap-3 px-4 py-3 text-left" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
-                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
-                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          );
-        }
-
-        const upcoming = calendarEvents
-          .filter(e => e.startDate > now)
-          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
-        if (upcoming) {
-          return (
-            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
-              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : fmt(upcoming.startDate, 'EEE MMM d')} · {fmt(upcoming.startDate, 'p')}
-              </p>
-            </button>
-          );
-        }
-        return (
-          <div className="rounded-2xl p-4" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
-            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noEventsToday')}</p>
-            <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
-          </div>
-        );
-      })()}
-
-      {/* Top Tasks */}
-      {homeConfig.showTasks !== false && (
-      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
-          <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
-        </div>
-        <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
-      </div>
-      )}
-
       {/* Family Agenda */}
       {homeConfig.showFamilyAgenda !== false && (() => {
         const now = new Date();
@@ -1323,48 +1324,68 @@ const AppHome = () => {
         );
       })()}
 
-      {/* Gallery */}
-      {homeConfig.showGallery !== false && (
-        galleryImages.length > 0 ? (
-          <div
-            className="rounded-2xl overflow-hidden relative aspect-video"
-            style={{ border: '1px solid hsl(var(--border))' }}
-            onClick={() => setShowGalleryDialog(true)}
-          >
-            <img src={galleryImages[carouselIndex % galleryImages.length]} alt="Family" className="w-full h-full object-cover" />
-            {galleryImages.length > 1 && (
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                {galleryImages.map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-full"
-                    style={{
-                      width: i === carouselIndex % galleryImages.length ? '16px' : '5px',
-                      height: '5px',
-                      background: i === carouselIndex % galleryImages.length ? '#fff' : 'rgba(255,255,255,0.5)',
-                      transition: 'all 0.3s ease',
-                    }}
-                  />
-                ))}
+      {/* Today / Next Up */}
+      {homeConfig.showCalendar !== false && (() => {
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const todayEvts = calendarEvents
+          .filter(e => e.startDate.toDateString() === todayStr)
+          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+
+        if (todayEvts.length > 0) {
+          return (
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
+                <button onClick={() => navigate('/app/calendar')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('nav.calendar')}</button>
               </div>
-            )}
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowGalleryDialog(true)}
-            className="group w-full rounded-2xl flex items-center justify-between gap-4 p-4 transition-all hover:-translate-y-0.5"
-            style={{ border: '1px solid #DAC1BB', background: 'linear-gradient(135deg, #FFFFFF 0%, #FDF3EE 100%)', boxShadow: '0 8px 24px rgba(150,71,53,0.08)' }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105" style={{ background: '#FFDAD3', color: '#964735' }}>
-                <ImagePlus className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{t('home.addPhotos')}</p>
+              {todayEvts.map((e, i) => (
+                <button key={e.id} onClick={() => navigate('/app/calendar')} className="w-full flex items-center gap-3 px-4 py-3 text-left" style={{ borderBottom: i < todayEvts.length - 1 ? '1px solid hsl(var(--border))' : 'none', background: 'hsl(var(--card))' }}>
+                  <div className="w-1 h-8 rounded-full flex-shrink-0" style={{ background: e.itemType === 'task' ? '#6E8FE5' : '#964735' }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
+                    <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(e.startDate, 'p')}</p>
+                  </div>
+                </button>
+              ))}
             </div>
-            <Plus className="w-4 h-4" style={{ color: '#964735' }} />
-          </button>
-        )
+          );
+        }
+
+        const upcoming = calendarEvents
+          .filter(e => e.startDate > now)
+          .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
+        if (upcoming) {
+          return (
+            <button onClick={() => navigate('/app/calendar')} className="w-full rounded-2xl p-4 text-left" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.nextUp')}</p>
+              <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{upcoming.title}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {upcoming.startDate.toDateString() === todayStr ? t('calendar.today') : fmt(upcoming.startDate, 'EEE MMM d')} · {fmt(upcoming.startDate, 'p')}
+              </p>
+            </button>
+          );
+        }
+        return (
+          <div className="rounded-2xl p-4" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+            <p className="text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.today')}</p>
+            <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noEventsToday')}</p>
+            <button onClick={() => navigate('/app/calendar')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openCalendar')}</button>
+          </div>
+        );
+      })()}
+
+      {/* Top Tasks */}
+      {homeConfig.showTasks !== false && (
+      <div data-tutorial="home-tasks" className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+          <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.topTasks')}</p>
+          <button onClick={() => navigate('/app/lists')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.viewAll')}</button>
+        </div>
+        <QuickToDos navigate={navigate} initialTasks={initialQuickTasks} />
+      </div>
       )}
+
     </div>
   );
 };
