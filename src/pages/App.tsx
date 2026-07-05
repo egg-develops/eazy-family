@@ -321,10 +321,13 @@ const AppLayout = () => {
     { label: t('nav.settings'), icon: Settings, path: '/app/settings' },
   ];
 
-  // Apply saved order from Settings
-  const orderedMenuItems = ezMenuOrder
+  // Apply saved order from Settings. The menu column is rendered flex-col-reverse
+  // (index 0 sits at the bottom, next to the button), so reverse the array to make
+  // the visible top-to-bottom order match the Settings list order.
+  const orderedMenuItems = (ezMenuOrder
     ? (ezMenuOrder.map(p => menuItems.find(m => m.path === p)).filter(Boolean) as MenuItem[])
-    : menuItems;
+    : menuItems
+  ).slice().reverse();
 
   useEffect(() => {
     try {

@@ -673,14 +673,15 @@ const Settings = () => {
               className="flex items-center gap-3 px-4 py-3.5"
               style={{
                 borderBottom: `1px solid ${BORDER}`,
-                background: ezDragOver === i && ezDragIndex !== i ? '#FDF3EE' : 'transparent',
-                opacity: ezDragIndex === i ? 0.35 : 1,
-                transition: 'background 0.1s, opacity 0.1s',
+                background: ezDragIndex === i || (ezDragOver === i && ezDragIndex !== i) ? '#FDF3EE' : 'transparent',
+                boxShadow: ezDragIndex === i ? 'inset 0 0 0 2.5px #964735' : 'none',
+                borderRadius: ezDragIndex === i ? '14px' : 0,
+                transform: ezDragIndex === i ? 'scale(1.02)' : 'none',
+                position: 'relative',
+                zIndex: ezDragIndex === i ? 1 : 0,
+                transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
               }}
             >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(item.labelKey)[0]}</span>
-              </div>
               <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(item.labelKey)}</p>
               <div
                 data-ez-grip="true"
@@ -784,14 +785,15 @@ const Settings = () => {
                 className="flex items-center gap-3 px-4 py-3"
                 style={{
                   borderBottom: i < orderedHomeModules.length - 1 ? `1px solid ${BORDER}` : 'none',
-                  background: homeDragOver === i && homeDragIndex !== i ? '#FDF3EE' : 'transparent',
-                  opacity: homeDragIndex === i ? 0.35 : 1,
-                  transition: 'background 0.1s, opacity 0.1s',
+                  background: homeDragIndex === i || (homeDragOver === i && homeDragIndex !== i) ? '#FDF3EE' : 'transparent',
+                  boxShadow: homeDragIndex === i ? 'inset 0 0 0 2.5px #964735' : 'none',
+                  borderRadius: homeDragIndex === i ? '14px' : 0,
+                  transform: homeDragIndex === i ? 'scale(1.02)' : 'none',
+                  position: 'relative',
+                  zIndex: homeDragIndex === i ? 1 : 0,
+                  transition: 'background 0.1s, box-shadow 0.1s, transform 0.1s',
                 }}
               >
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
-                  <span className="text-sm font-bold" style={{ color: '#964735' }}>{t(m.labelKey)[0]}</span>
-                </div>
                 <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t(m.labelKey)}</p>
                 <Tog checked={(homeConfig as any)[m.configKey] !== false} onChange={v => saveHomeConfig({ [m.configKey]: v })} />
                 <div
