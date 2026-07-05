@@ -1,8 +1,9 @@
 // Bump this on every release that must invalidate stale clients. The activate
 // handler purges every cache whose name !== CACHE_NAME, so bumping guarantees
 // old precached shells/assets are dropped. (v5→v6: 2026-06-11, stale JS was
-// serving pre-fix EZ-button code to web users.)
-const CACHE_NAME = 'eazy-family-v6';
+// serving pre-fix EZ-button code to web users. v6→v7: 2026-07-05, caches were
+// poisoned with SPA-rewrite HTML stored under chunk URLs → reload loops.)
+const CACHE_NAME = 'eazy-family-v7';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -59,19 +60,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Static assets (JS/CSS/images): cache-first, update in background
+  // Static assets (JS/CSS/images): cache-first, update in background.
+  // CRITICAL: after a deploy, requests for old chunk hashes get SPA-rewritten
+  // to index.html with status 200. Caching that HTML under the .js URL poisons
+  // the cache and every subsequent import fails → reload loop. So (a) never
+  // cache a text/html response under an asset URL, and (b) ignore any already
+  // poisoned cached entry.
   const isStatic = url.pathname.match(/\.(js|css|png|ico|svg|woff2?|ttf)$/);
   if (isStatic) {
     event.respondWith(
       caches.match(event.request).then(cached => {
+        const cachedIsPoisoned = cached &&
+          (cached.headers.get('content-type') || '').includes('text/html');
         const networkFetch = fetch(event.request).then(response => {
-          if (response.status === 200) {
+          const type = response.headers.get('content-type') || '';
+          if (response.status === 200 && !type.includes('text/html')) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          } else if (cachedIsPoisoned) {
+            caches.open(CACHE_NAME).then(cache => cache.delete(event.request));
           }
           return response;
         });
-        return cached || networkFetch;
+        return (cached && !cachedIsPoisoned) ? cached : networkFetch;
       })
     );
     return;

@@ -25,16 +25,35 @@ import About from "./pages/About";
 import Download from "./pages/Download";
 import NotFound from "./pages/NotFound";
 
-// Lazy load heavy pages — retry on chunk-load failure, then force reload
-// (iOS WebView can return stale chunks with wrong MIME type after an app update)
+// Lazy load heavy pages — retry on chunk-load failure, then force ONE reload
+// (iOS WebView can return stale chunks with wrong MIME type after an app update;
+// on web a stale SW cache can serve HTML under a chunk URL after a deploy).
+// The reload is guarded: at most one per minute per tab, and SW + CacheStorage
+// are purged first so the reload actually fetches fresh assets. If the chunk
+// still fails after that, the error propagates to the ErrorBoundary instead of
+// looping reloads forever.
 const lazyWithRetry = (fn: () => Promise<{ default: React.ComponentType<any> }>) =>
   lazy(() =>
-    fn().catch(() =>
-      fn().catch(() => {
+    fn()
+      .catch(() => fn())
+      .catch(async (err) => {
+        const KEY = 'eazy-chunk-reload-at';
+        const last = Number(sessionStorage.getItem(KEY) || '0');
+        if (Date.now() - last < 60_000) throw err;
+        sessionStorage.setItem(KEY, String(Date.now()));
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister()));
+          }
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+        } catch { /* best effort — reload regardless */ }
         window.location.reload();
         return new Promise<never>(() => {});
       })
-    )
   );
 
 // Admin (dashboard, admin-only) and Onboarding (one-time flow) don't belong in
