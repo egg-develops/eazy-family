@@ -31,6 +31,11 @@ serve(async (req) => {
         access_type: 'offline',
         prompt: 'consent',
         state: 'google_calendar_sync',
+        // Force the consent screen UI into English regardless of the signed-in
+        // Google account's locale. Google's OAuth verification team requires the
+        // demo video to show the consent screen in English so the scope text is
+        // reviewable; without this it renders in the account language.
+        hl: 'en',
       });
 
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
