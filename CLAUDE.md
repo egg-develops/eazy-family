@@ -241,6 +241,13 @@ commit, whether to add i18n keys to all locales — these have known answers abo
   Terminal** (the embedded `!` runner shows no GUI window).
 - **iOS bundle freshness check:** `npm run ios:check`.
 
+### Engagement history
+Dated narrative reports of completed work live in `docs/`. Read the most recent for
+context on what was recently changed and why (root cause → fix → verification):
+- `docs/fable5-audit-2026-07.md` — EZ button + homepage overhaul, grip-drag,
+  the SW reload-loop incident, the `tsc` no-op discovery, Google OAuth English
+  consent (late June – 8 Jul 2026).
+
 When something non-obvious bites you and the fix isn't derivable from the code,
 record it in the user's memory (`/Users/hq/.claude/projects/-Users-hq/memory/`) and
 add a line to `MEMORY.md` — that's how this manual stays current.
