@@ -242,11 +242,13 @@ commit, whether to add i18n keys to all locales — these have known answers abo
 - **iOS bundle freshness check:** `npm run ios:check`.
 
 ### Engagement history
-Dated narrative reports of completed work live in `docs/`. Read the most recent for
-context on what was recently changed and why (root cause → fix → verification):
-- `docs/fable5-audit-2026-07.md` — EZ button + homepage overhaul, grip-drag,
-  the SW reload-loop incident, the `tsc` no-op discovery, Google OAuth English
-  consent (late June – 8 Jul 2026).
+Narrative reports of completed work live in `docs/`. Read these for context on what
+was changed and why (root cause → fix → verification):
+- `docs/eazy-family-complete-history.md` — **the full engineering history** of the
+  project (auth/store, EZ capture + smart logic, UI system, delivery incidents,
+  security hardening, Google OAuth). Start here.
+- `docs/fable5-audit-2026-07.md` — narrower dated audit for the late-June–8-Jul-2026
+  engagement (a subset of the history above).
 
 When something non-obvious bites you and the fix isn't derivable from the code,
 record it in the user's memory (`/Users/hq/.claude/projects/-Users-hq/memory/`) and
