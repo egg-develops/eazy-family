@@ -79,6 +79,21 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
     across devices.
 - **Lazy pages:** heavy screens are `lazyWithRetry(() => import(...))` in
   `src/App.tsx`. Keep new heavy pages out of the entry chunk.
+- **Voice/locale single source of truth:** every `speech.start()` gets its locale
+  from `src/lib/speechLocale.ts` (`getSpeechLocale`, reads `eazy-family-language`);
+  every date parse goes through `src/lib/localeChrono.ts` (`parseDatesLocalized`,
+  per-language chrono with EN fallback). Per-file language maps or default-English
+  chrono are a recurring bug — always route through these.
+- **Native config is easy to miss and untested by JS:** Android speech needs
+  `RECORD_AUDIO` **plus** a `<queries><intent><action
+  android:name="android.speech.RecognitionService"/></intent></queries>` block in
+  `AndroidManifest.xml`; location sharing needs `ACCESS_*_LOCATION`. Maps open via
+  `src/lib/maps.ts` `openInMaps` (iOS `_system`; Android `@capacitor/browser`).
+- **Translations are UTF-8 literals** (`ensure_ascii=False` JSON), not `\uXXXX`.
+- **The Capacitor CLI is patched** via `patches/@capacitor+cli+8.0.2.patch`
+  (patch-package, runs on `postinstall`) to clamp the emitted iOS platform. Do NOT
+  hand-edit generated native files (`Package.swift`) — regenerate the patch if
+  Capacitor is upgraded.
 - **Git:** feature work → descriptive commit whose body states **root cause + why
   the fix works**. CI appends its own versionCode-bump commits.
 
@@ -119,9 +134,11 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
    `text/html` under a `.js`/`.css` URL; bump `CACHE_NAME` when shipping SW logic.**
 7. **Using `\b` in a regex for accented-language text.** JS `\b` is ASCII-only, so
    it fails on `é`, `ü`, etc. → **Use `(?<!\p{L})…(?!\p{L})` with the `/u` flag.**
-8. **Reading calendar/conflict data from a Supabase `events` table.** Calendar
-   events live in localStorage `eazy-family-calendar-items` (§4). → **Know the
-   persistence split before writing a query.**
+8. **Reading calendar/conflict data from a Supabase `events` table.** That table is
+   the separate community/local-events feature; the user's real calendar is
+   localStorage `eazy-family-calendar-items` (§4). This exact bug made conflict
+   detection *and* the morning digest silently dead. → **Know the persistence split
+   before writing a query; calendar data is localStorage, not `events`.**
 9. **Reading the speech/voice locale from `i18nextLng`.** Wrong key. → **Read
    `eazy-family-language`.**
 10. **Making cloud-preference load non-authoritative.** If load doesn't clear keys
@@ -148,6 +165,28 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
     `eazy.family.app`, which must be in Supabase's Client IDs (not just the
     `.signin` Services ID); the native flow needs a nonce. → **Add the bundle id to
     Supabase Client IDs.**
+18. **Seeding `userLockedType` from `defaultType` in `EZCapture`.** A non-null lock
+    suppresses the classifier, the AI parse, and the type badge — so every Home-orb
+    capture hard-locked to `event` ("add bananas to my list" → calendar). →
+    **`defaultType` seeds only the starting type; `userLockedType` stays null
+    (auto-classify) unless the user deliberately sets it (see `ezCaptureType.ts`).**
+19. **Concluding an EZ/classifier bug is fixed because unit tests pass.** The tests
+    call `classifyText`/`guardAIType` directly and never exercise the component's
+    type lock or the async roster load — so green tests + a correct script repro did
+    NOT mean the in-app flow worked. → **Reproduce EZ bugs in the actual UI, or via
+    the live `eazy-chat` edge fn with the review session, across languages.**
+20. **Hand-editing `Package.swift` (or lowering the widget's iOS target) to fix a
+    `cap sync` break.** It regenerates on every sync. → **The durable fix is the
+    patch-package patch (§4); regenerate it if Capacitor is upgraded.**
+21. **Building an overlay, opened by a tap, whose backdrop closes on click.** The
+    originating tap's synthesized `click` (fires ~ms after `touchend`) lands on the
+    freshly-mounted full-screen backdrop and self-dismisses it in the same frame. →
+    **Ignore backdrop close-clicks within ~400ms of mount (see `EZCapture`
+    `openedAtRef`).**
+22. **Wiping `~/Library/Caches/*` to "clean" a build.** It corrupts the SwiftPM /
+    Gradle artifact caches ("xcframework.zip already exists"). → **Scope it:
+    `rm -rf ~/Library/Caches/org.swift.swiftpm` + delete `Package.resolved`; for
+    Gradle, `gradlew --stop` then `rm -rf ~/.gradle/caches`.**
 
 ---
 
@@ -179,6 +218,24 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
 - [ ] RLS impact is stated (who can now SELECT/INSERT/UPDATE/DELETE).
 - [ ] Cross-member visibility was reasoned about ("does the other family member see
       this?").
+
+**An EZ capture / classifier change is done when:**
+- [ ] It was reproduced and re-verified **in the actual UI** (or via the live
+      `eazy-chat` fn with the review session) — not only in `intentClassifier.test.ts`.
+- [ ] `userLockedType` / `defaultType` behavior was checked (auto-classify still
+      works from the Home orb).
+- [ ] Multilingual phrasing was tested (en + at least one of de/fr/es/it/pt), and any
+      new regex uses `\p{L}` boundaries, not `\b`.
+- [ ] The failing utterance was added to `intentClassifier.test.ts`.
+
+**A store submission is ready when:**
+- [ ] A manual **cold-path** pass was done on the EXACT build (TestFlight/APK, not a
+      dev build): fresh install + a brand-new account per provider (de-authorize
+      Apple first), and Apple / Google / email / **guest** sign-in all succeed.
+- [ ] The paywall loads prices and a **sandbox purchase** completes; the billed
+      amount is the most conspicuous price.
+- [ ] The Apple client secret in Supabase is not near its ≤6-month expiry.
+- [ ] The build number / versionCode exceeds the latest one already consumed.
 
 **A store/OAuth review artifact is done when:**
 - [ ] It satisfies each numbered requirement in the reviewer's message explicitly.
@@ -240,6 +297,12 @@ commit, whether to add i18n keys to all locales — these have known answers abo
 - **Record Google OAuth demo:** `node scripts/record-google-oauth.mjs` **from a real
   Terminal** (the embedded `!` runner shows no GUI window).
 - **iOS bundle freshness check:** `npm run ios:check`.
+- **CI failures that are NOT your code (don't patch source for these):**
+  iOS *"a required agreement is missing/expired"* → only the Account Holder can sign
+  it in App Store Connect (propagation takes 15–60 min); *altool reports failure
+  after `UPLOAD SUCCEEDED`* (Apple 500 on the status poll) → check TestFlight before
+  re-running, the build usually landed; *"job not acquired by runner"* → GitHub
+  capacity, just `gh run rerun <id> --failed`.
 
 ### Engagement history
 Narrative reports of completed work live in `docs/`. Read these for context on what
