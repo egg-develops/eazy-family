@@ -26,11 +26,26 @@ dist-ssr
 # Build artifacts
 *.ipa
 *.dSYM.zip
+build/
+*.aab
+*.apks
 fastlane/report.xml
 fastlane/README.md
-.claude/
 android/app/keystore.jks
 fastlane/google-play-key.json
 .vercel
 android/app/keystore.jks
 .env
+
+# Captured media (test/marketing output — not source)
+recordings/
+screenshots/raw/
+screenshots/raw-ipad/
+screenshots/framed/
+screenshots/framed-ipad/
+screenshots/video/
+screenshots/video-raw/
+
+# Local Claude Code state — ignore everything except committed skills
+.claude/*
+!.claude/skills/
