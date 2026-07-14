@@ -863,7 +863,8 @@
     "billedMonthly": "Facturado mensualmente",
     "perMonth": "/mes",
     "retryLoad": "Toca para reintentar",
-    "offeringsErrorHint": "No se pueden cargar los planes. Comprueba tu conexión e inténtalo de nuevo."
+    "offeringsErrorHint": "No se pueden cargar los planes. Comprueba tu conexión e inténtalo de nuevo.",
+    "autoRenewNote": "Las suscripciones se renuevan automáticamente a menos que se cancelen al menos 24 horas antes de que termine el período actual. Gestiona o cancela cuando quieras en los ajustes de tu cuenta."
   },
   "family": {
     "title": "Perfil familiar",

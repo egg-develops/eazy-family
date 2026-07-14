@@ -861,7 +861,8 @@
     "billedMonthly": "Fatturato mensilmente",
     "perMonth": "/mese",
     "retryLoad": "Tocca per riprovare",
-    "offeringsErrorHint": "Impossibile caricare i piani. Controlla la connessione e riprova."
+    "offeringsErrorHint": "Impossibile caricare i piani. Controlla la connessione e riprova.",
+    "autoRenewNote": "Gli abbonamenti si rinnovano automaticamente se non vengono annullati almeno 24 ore prima della fine del periodo in corso. Gestisci o annulla quando vuoi nelle impostazioni del tuo account."
   },
   "family": {
     "title": "Profilo famiglia",

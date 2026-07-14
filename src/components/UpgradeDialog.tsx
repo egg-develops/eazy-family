@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { getRCDiagnostics, getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, type RCPackage } from "@/lib/revenuecat";
 import { useTranslation } from "react-i18next";
 
@@ -407,6 +408,23 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
           >
             {t('upgrade.maybeLater')}
           </button>
+
+          {/* Required subscription disclosure + functional legal links (Apple 3.1.2) */}
+          <p className="text-[10px] leading-snug text-center px-2 pt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            {t('upgrade.autoRenewNote')}
+          </p>
+          <div className="flex justify-center gap-5 pb-1">
+            <button
+              onClick={() => Browser.open({ url: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/' })}
+              className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              {t('settings.premium.termsOfUse')}
+            </button>
+            <button
+              onClick={() => Browser.open({ url: 'https://eazy.family/privacy' })}
+              className="text-[11px] underline" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              {t('settings.premium.privacyPolicy')}
+            </button>
+          </div>
 
         </div>
       </DialogContent>

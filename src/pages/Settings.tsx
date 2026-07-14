@@ -997,8 +997,14 @@ const Settings = () => {
             icon={<Shield className="w-4 h-4" style={{ color: MUTED }} />}
             title={t('settings.privacy.privacyPolicy')}
             right={<Arrow />}
-            last
             onClick={() => navigate('/privacy')}
+          />
+          <Row
+            icon={<ExternalLink className="w-4 h-4" style={{ color: MUTED }} />}
+            title={t('settings.premium.termsOfUse')}
+            right={<Arrow />}
+            last
+            onClick={() => Browser.open({ url: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/' })}
           />
         </Card_>
       </div>

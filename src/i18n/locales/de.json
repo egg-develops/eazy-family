@@ -861,7 +861,8 @@
     "billedMonthly": "Monatliche Abrechnung",
     "perMonth": "/Monat",
     "retryLoad": "Zum Wiederholen tippen",
-    "offeringsErrorHint": "Pläne konnten nicht geladen werden. Verbindung prüfen und erneut versuchen."
+    "offeringsErrorHint": "Pläne konnten nicht geladen werden. Verbindung prüfen und erneut versuchen.",
+    "autoRenewNote": "Abonnements verlängern sich automatisch, sofern sie nicht mindestens 24 Stunden vor Ablauf des aktuellen Zeitraums gekündigt werden. Verwalten oder kündigen jederzeit in deinen Kontoeinstellungen."
   },
   "family": {
     "title": "Familienprofil",

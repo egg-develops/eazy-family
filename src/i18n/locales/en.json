@@ -861,7 +861,8 @@
     "billedMonthly": "Billed monthly",
     "perMonth": "/month",
     "retryLoad": "Tap to retry",
-    "offeringsErrorHint": "Unable to load plans. Check your connection and try again."
+    "offeringsErrorHint": "Unable to load plans. Check your connection and try again.",
+    "autoRenewNote": "Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Manage or cancel anytime in your account settings."
   },
   "family": {
     "title": "Family Profile",
