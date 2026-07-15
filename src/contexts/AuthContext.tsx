@@ -233,6 +233,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (error) {
               logError('Profile upsert failed', error.message);
             }
+            // Auto-provision a family so the family features work out of the box.
+            // Idempotent; skip while the user is joining an existing family via an
+            // invite link (that flow creates the membership itself).
+            if (!localStorage.getItem('pending-invite-code')) {
+              supabase.rpc('ensure_user_has_family').then(({ error: famErr }) => {
+                if (famErr) logError('ensure_user_has_family failed', famErr.message);
+              });
+            }
           });
         }
       }
