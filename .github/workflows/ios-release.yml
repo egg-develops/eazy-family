@@ -1,0 +1,125 @@
+name: iOS Release (App Store)
+
+# Manual, deliberate production release. Uploads a build and submits it for
+# App Store review. Apple review (~1 day) still applies; with auto_release off
+# you click "Release" in App Store Connect once approved.
+on:
+  workflow_dispatch:
+    inputs:
+      marketing_version:
+        description: 'App Store version to release, e.g. 1.0.2 (MUST be higher than the last released version — Apple closes the previous version''s train).'
+        required: true
+      release_notes:
+        description: '"What''s New" text for this version (applied to all listing locales). Leave blank to keep the notes already in the repo.'
+        required: false
+        default: ''
+      auto_release:
+        description: 'Release to the App Store automatically once Apple approves (otherwise you release manually).'
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: write   # to commit the version + release-notes bump back to main
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set marketing version
+        env:
+          VERSION: ${{ inputs.marketing_version }}
+        run: |
+          sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = ${VERSION};/g" ios/App/App.xcodeproj/project.pbxproj
+          echo "MARKETING_VERSION set to ${VERSION}:"
+          grep MARKETING_VERSION ios/App/App.xcodeproj/project.pbxproj
+
+      - name: Set release notes
+        if: ${{ inputs.release_notes != '' }}
+        env:
+          NOTES: ${{ inputs.release_notes }}
+        run: |
+          for dir in fastlane/metadata/ios/*/; do
+            if [ -f "$dir/release_notes.txt" ]; then
+              printf '%s' "$NOTES" > "$dir/release_notes.txt"
+              echo "Wrote release notes to $dir"
+            fi
+          done
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build web app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_REVENUECAT_IOS_KEY: ${{ secrets.VITE_REVENUECAT_IOS_KEY }}
+          VITE_REVENUECAT_ANDROID_KEY: ${{ secrets.VITE_REVENUECAT_ANDROID_KEY }}
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Patch Package.swift for Xcode compatibility
+        run: |
+          sed -i '' 's/\.iOS(\.v18)/\.iOS(\.v17)/g' ios/App/CapApp-SPM/Package.swift
+          grep "platforms" ios/App/CapApp-SPM/Package.swift
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/App/CapApp-SPM/Package.resolved') }}
+          restore-keys: ${{ runner.os }}-spm-
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -disablePackageRepositoryCache \
+            | grep -E "error:|warning:|Resolve|Fetch|Checkout" || true
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: gem install fastlane
+
+      - name: Write API key
+        run: |
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" | base64 --decode > fastlane/AuthKey_4H662N6NAJ.p8
+
+      - name: Configure git credentials for Match
+        run: git config --global url."https://x-access-token:${{ secrets.MATCH_GIT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Run Fastlane release
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          AUTO_RELEASE: ${{ inputs.auto_release }}
+        run: fastlane ios release
+
+      - name: Commit version + release notes back to main
+        env:
+          VERSION: ${{ inputs.marketing_version }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add ios/App/App.xcodeproj/project.pbxproj fastlane/metadata/ios || true
+          git commit -m "release: iOS ${VERSION} submitted to App Store [skip ci]" || echo "nothing to commit"
+          git pull --rebase --autostash origin main
+          git push
