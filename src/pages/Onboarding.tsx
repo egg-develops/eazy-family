@@ -208,7 +208,7 @@ const Onboarding = () => {
   if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
 
   const progress = progressFor(screen);
-  const showBack = screen >= 2;
+  const showBack = screen >= 1; // include the Language screen so it isn't a dead-end
 
   // ── Slide animation style ──────────────────────────────────────────────────
   const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9

@@ -243,12 +243,14 @@ export default function Index() {
               >
                 {t('website.hero.meetOrbe')}
               </button>
-              <button
-                onClick={() => navigate("/onboarding?fresh=true")}
-                style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
+              <a
+                href="https://apps.apple.com/app/id6765778216"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s", textDecoration: "none", display: "inline-block" }}
               >
                 {t('website.hero.downloadApp')}
-              </button>
+              </a>
             </div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 20 }}>
               {([t('website.hero.check1'), t('website.hero.check2'), t('website.hero.check3')] as string[]).map(item => (
