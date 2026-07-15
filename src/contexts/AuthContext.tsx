@@ -21,7 +21,7 @@ function enforceUserBoundary(userId: string) {
 import { syncWidgetToken, clearWidgetToken } from "@/plugins/widgetBridge";
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
-import { configureRC, identifyRCUser, resetRCUser, getRCIsPremium, getRCIsTrial, getRCTrialDaysLeft } from '@/lib/revenuecat';
+import { configureRC, identifyRCUser, resetRCUser, getRCIsPremium, getRCIsTrial, getRCTrialDaysLeft, getRCPremiumUntil } from '@/lib/revenuecat';
 
 
 // Dev bypass - set to true to skip authentication
@@ -75,10 +75,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const refreshNativeSubscriptionState = async () => {
+  const refreshNativeSubscriptionState = async (userId?: string) => {
     const [premium, trial, daysLeft] = await Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]);
-    setIsPremium(premium);
-    setIsTrial(trial);
+
+    let uid = userId;
+    if (!uid) {
+      try { uid = (await supabase.auth.getUser()).data.user?.id; } catch { /* ignore */ }
+    }
+
+    // Family premium sharing: sync THIS user's real entitlement expiry to the
+    // server (client is authoritative — the RC webhook is unreliable), then, if
+    // this user isn't individually premium, check whether any active member of
+    // their family is currently paying and, if so, grant premium.
+    let familyPremium = false;
+    if (uid) {
+      try {
+        const until = premium ? await getRCPremiumUntil() : null;
+        await supabase.rpc('set_my_premium_until', { _until: until ? until.toISOString() : null });
+      } catch (e) { logError('[premium] set_my_premium_until failed:', e); }
+      if (!premium) {
+        try {
+          const { data } = await supabase.rpc('family_has_active_premium', { _user_id: uid });
+          familyPremium = data === true;
+        } catch (e) { logError('[premium] family_has_active_premium failed:', e); }
+      }
+    }
+
+    setIsPremium(premium || familyPremium);
+    // A family-granted member has full access, not their own trial.
+    setIsTrial(premium ? trial : (familyPremium ? false : trial));
     setTrialDaysLeft(daysLeft);
   };
 
@@ -91,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchSubscriptionTier(user.id);
     }
     if (Capacitor.isNativePlatform()) {
-      await refreshNativeSubscriptionState();
+      await refreshNativeSubscriptionState(user?.id);
     }
   };
 
@@ -120,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Re-check RevenueCat entitlement so trial expirations that
             // occurred while the app was backgrounded are caught immediately.
             if (Capacitor.isNativePlatform()) {
-              await refreshNativeSubscriptionState();
+              await refreshNativeSubscriptionState(session.user.id);
             }
           } else {
             // Only sign out if we got a definitive null (not a network failure)
@@ -154,7 +179,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (Capacitor.isNativePlatform()) {
               await rcReady; // ensure configure() has completed before logIn()
               await identifyRCUser(session.user.id);
-              await refreshNativeSubscriptionState();
+              await refreshNativeSubscriptionState(session.user.id);
             }
           }
           return;
@@ -172,13 +197,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               syncWidgetToken(session.access_token, session.user.id);
             }
             if (Capacitor.isNativePlatform()) {
-              rcReady.then(() => identifyRCUser(session.user.id)).then(() =>
-                Promise.all([getRCIsPremium(), getRCIsTrial(), getRCTrialDaysLeft()]).then(([premium, trial, daysLeft]) => {
-                  setIsPremium(premium);
-                  setIsTrial(trial);
-                  setTrialDaysLeft(daysLeft);
-                })
-              );
+              rcReady
+                .then(() => identifyRCUser(session.user.id))
+                .then(() => refreshNativeSubscriptionState(session.user.id));
             }
           }
         } else {

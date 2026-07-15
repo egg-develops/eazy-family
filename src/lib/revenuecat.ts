@@ -92,6 +92,22 @@ export async function getRCIsTrial(): Promise<boolean> {
   }
 }
 
+/** Expiration of the active premium entitlement, or null if not premium.
+ *  A lifetime / no-expiry entitlement returns a far-future date. Used to sync
+ *  the user's real entitlement to the server for family premium sharing. */
+export async function getRCPremiumUntil(): Promise<Date | null> {
+  if (!isNative) return null;
+  try {
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    const entitlement = customerInfo.entitlements.active[ENTITLEMENT];
+    if (!entitlement) return null;
+    const millis = (entitlement as any).expirationDateMillis as number | null | undefined;
+    return millis ? new Date(millis) : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000);
+  } catch {
+    return null;
+  }
+}
+
 /** Returns whole days remaining in the current trial, or null if not determinable. */
 export async function getRCTrialDaysLeft(): Promise<number | null> {
   if (!isNative) return null;
