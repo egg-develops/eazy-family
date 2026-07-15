@@ -228,7 +228,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               share_email: false,
               share_phone: false,
             },
-            { onConflict: 'user_id' }
+            // Create-only: don't overwrite an existing profile on every sign-in
+            // (that reset display_name / share_email / share_phone customizations).
+            { onConflict: 'user_id', ignoreDuplicates: true }
           ).then(({ error }) => {
             if (error) {
               logError('Profile upsert failed', error.message);
