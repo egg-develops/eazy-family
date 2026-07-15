@@ -120,6 +120,7 @@ const Lists = () => {
   // ── Shopping state ────────────────────────────────────────────────────────────
   const [newShoppingItem, setNewShoppingItem] = useState('');
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [qtyEditId, setQtyEditId] = useState<string | null>(null); // which row's qty stepper is expanded
   const { predictions } = useShoppingPredictions();
   const [dismissedPredictions, setDismissedPredictions] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem('eazy-dismissed-predictions') || '[]')); } catch { return new Set(); }
@@ -906,13 +907,30 @@ const Lists = () => {
                       <span className="flex-1 min-w-0 text-[15px] cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
                     {scope === 'shared' && renderAssigneePills(item.assigned_to_users)}
-                    <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '3px 8px', gap: '4px' }}>
-                      <button onClick={() => updateQty(item.id, -1)}
-                        style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>−</button>
-                      <span className="text-sm font-semibold" style={{ color: INK, minWidth: '18px', textAlign: 'center' }}>{getQty(item.id)}</span>
-                      <button onClick={() => updateQty(item.id, 1)}
-                        style={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>+</button>
-                    </div>
+                    {/* Qty: compact tappable chip by default (frees the row for the name);
+                        expands to a stepper only for the tapped row. */}
+                    {qtyEditId === item.id ? (
+                      <div className="flex items-center rounded-full flex-shrink-0" style={{ background: MUTEDBG, padding: '2px 4px', gap: '2px' }}>
+                        <button onClick={() => updateQty(item.id, -1)}
+                          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>−</button>
+                        <button onClick={() => setQtyEditId(null)} className="text-sm font-semibold" style={{ color: INK, minWidth: '18px', textAlign: 'center' }}>{getQty(item.id)}</button>
+                        <button onClick={() => updateQty(item.id, 1)}
+                          style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: MUTED, fontSize: '18px', lineHeight: 1 }}>+</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setQtyEditId(item.id)}
+                        className="flex-shrink-0 rounded-full text-sm font-semibold flex items-center justify-center"
+                        style={{
+                          minWidth: 26, height: 26, padding: '0 8px',
+                          background: getQty(item.id) > 1 ? MUTEDBG : 'transparent',
+                          color: getQty(item.id) > 1 ? INK : MUTED,
+                        }}
+                        aria-label="Quantity"
+                      >
+                        {getQty(item.id) > 1 ? `×${getQty(item.id)}` : '1'}
+                      </button>
+                    )}
                     <button onClick={() => deleteItem(item.id)} className="flex-shrink-0 flex items-center justify-center opacity-50 active:opacity-100" style={{ width: 32, height: 32 }}>
                       <Trash2 className="w-4 h-4" style={{ color: MUTED }} />
                     </button>

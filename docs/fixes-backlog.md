@@ -1,0 +1,40 @@
+# Eazy.Family — fixes backlog
+
+How this works: add items under **Open** (one line each is fine — a screen, what's
+wrong, and ideally what "good" looks like). I move them to **Done** with the commit
+once shipped, and leave notes on anything that needs a decision. Pasting a list in
+chat works too; I'll fold it in here.
+
+Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
+
+---
+
+## Open
+
+### Family Channel
+- [~] **Manual message entry is a poor experience.** Needs specifics — is it the
+  input being cramped/awkward, keyboard covering it, no send affordance, or the
+  compose flow itself? Tell me the exact pain and the ideal, and I'll redesign the
+  composer. (Composer is `FamilyAgenda.tsx` ~772.)
+- [ ] **EZ button overlaps the channel** (in the way of the message input). Fix:
+  hide or reposition the floating EZ button on the Family Channel screen (it's
+  already conditionally handled per-route in `App.tsx`; add channel to the
+  suppressed/raised set, or dock the composer clear of it).
+- [ ] **Long-press-to-move the EZ button doesn't work** ("above the threshold").
+  Investigate the reposition gesture in `App.tsx` (`handleEZPointerDown/Move/Up`,
+  `isDragModeRef`) — likely a drag threshold or a top/safe-area clamp preventing
+  moving it up past the composer. Relates to the item above.
+- [ ] **Delete messages via swipe-left** (mirror the journal entries pattern in
+  `Rituals.tsx` — touch handlers + reveal a delete button, translateX). Needs a
+  delete on the `family_messages` table with RLS allowing author/family delete.
+
+### Shopping
+- [x] **Qty pill too large → item-name truncation.** Replaced the always-on
+  `− N +` pill with a compact tappable qty chip (shows `1` subtly / `×N` when >1)
+  that expands to the stepper only for the tapped row. Frees ~60px per row for the
+  name. — `Lists.tsx`
+
+---
+
+## Done
+- 2026-07-15 Shopping qty chip (see above).
