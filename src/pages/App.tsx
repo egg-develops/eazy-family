@@ -73,6 +73,9 @@ const AppLayout = () => {
   const [ezOpen, setEzOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  // Hide the EZ button while a text field is focused (keyboard up) — e.g. the
+  // Family Channel composer — so it never sits on top of what you're typing.
+  const [typing, setTyping] = useState(false);
   const [activeMenuIndex, setActiveMenuIndex] = useState(-1);
   const [isDragMode, setIsDragMode] = useState(false);
   const [buttonPos, setButtonPos] = useState<{ left: number; bottom: number } | null>(() => {
@@ -256,6 +259,23 @@ const AppLayout = () => {
   // Keep menuOpenRef in sync so pointer handlers always read the current value.
   useEffect(() => { menuOpenRef.current = menuOpen; }, [menuOpen]);
 
+  // Track text-field focus so the EZ button hides while typing (composer, inputs).
+  useEffect(() => {
+    const isTextField = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      if (!el) return false;
+      return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable === true;
+    };
+    const onFocusIn = (e: FocusEvent) => { if (isTextField(e.target)) { setTyping(true); setMenuOpen(false); } };
+    const onFocusOut = (e: FocusEvent) => { if (isTextField(e.target)) setTyping(false); };
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    return () => {
+      document.removeEventListener('focusin', onFocusIn);
+      document.removeEventListener('focusout', onFocusOut);
+    };
+  }, []);
+
   // Mark interaction as ready after 600ms — prevents false swipe detection
   // during initial hydration and auth state re-renders.
   useEffect(() => {
@@ -409,13 +429,16 @@ const AppLayout = () => {
         />
       )}
 
-      {/* EZ Button + menu */}
+      {/* EZ Button + menu — hidden while typing so it never covers the composer */}
       <div
+        data-ez-button
         className="fixed z-50"
-        style={buttonPos
-          ? { bottom: `${buttonPos.bottom}px`, left: `${buttonPos.left}px`, transition: isDragMode ? 'none' : 'left 0.25s ease, bottom 0.25s ease' }
-          : { bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }
-        }
+        style={{
+          ...(buttonPos
+            ? { bottom: `${buttonPos.bottom}px`, left: `${buttonPos.left}px`, transition: isDragMode ? 'none' : 'left 0.25s ease, bottom 0.25s ease' }
+            : { bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)' }),
+          display: typing ? 'none' : undefined,
+        }}
       >
         <div className="relative flex items-center justify-center">
           {/* Menu items — above button, bottom-to-top */}

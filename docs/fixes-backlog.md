@@ -16,10 +16,10 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
   input being cramped/awkward, keyboard covering it, no send affordance, or the
   compose flow itself? Tell me the exact pain and the ideal, and I'll redesign the
   composer. (Composer is `FamilyAgenda.tsx` ~772.)
-- [ ] **EZ button overlaps the channel** (in the way of the message input). Fix:
-  hide or reposition the floating EZ button on the Family Channel screen (it's
-  already conditionally handled per-route in `App.tsx`; add channel to the
-  suppressed/raised set, or dock the composer clear of it).
+- [x] **EZ button overlaps the channel composer.** Now hidden globally whenever a
+  text field is focused (keyboard up), so it never covers what you're typing —
+  covers the channel composer and every other input. `App.tsx` `typing` state +
+  focusin/focusout. Verified with emulated touch.
 - [ ] **Long-press-to-move the EZ button doesn't work** ("above the threshold").
   Investigate the reposition gesture in `App.tsx` (`handleEZPointerDown/Move/Up`,
   `isDragModeRef`) — likely a drag threshold or a top/safe-area clamp preventing
@@ -37,4 +37,5 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
 ---
 
 ## Done
-- 2026-07-15 Shopping qty chip (see above).
+- 2026-07-15 Shopping qty chip.
+- 2026-07-15 Hide EZ button while typing (channel composer + all inputs).
