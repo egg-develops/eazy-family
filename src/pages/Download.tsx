@@ -46,18 +46,19 @@ export default function Download() {
 
         {/* App store buttons */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* iOS */}
-          <div className="rounded-2xl p-6 text-center space-y-4 opacity-50" style={CARD}>
-            <Apple className="w-10 h-10 mx-auto" style={{ color: "#DAC1BB" }} />
+          {/* iOS — live on the App Store */}
+          <a href="https://apps.apple.com/app/id6765778216" target="_blank" rel="noopener noreferrer"
+            className="rounded-2xl p-6 text-center space-y-4 block transition-transform hover:-translate-y-0.5" style={CARD}>
+            <Apple className="w-10 h-10 mx-auto" style={{ color: "#964735" }} />
             <div>
               <p className="font-medium text-sm" style={HEADING}>{t("website.download.iosLabel")}</p>
               <p className="text-xs mt-1" style={SUBTLE}>{t("website.download.iosSub")}</p>
             </div>
-            <div className="px-4 py-2 rounded-xl text-xs font-medium border"
-              style={{ borderColor: "#EBE8E2", color: "#7A6660" }}>
+            <div className="px-4 py-2 rounded-xl text-xs font-medium text-white"
+              style={{ background: "#964735" }}>
               App Store
             </div>
-          </div>
+          </a>
 
           {/* Android */}
           <div className="rounded-2xl p-6 text-center space-y-4 opacity-50" style={CARD}>

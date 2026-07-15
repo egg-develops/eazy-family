@@ -452,7 +452,7 @@ export default function Index() {
               <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>{t('website.howItWorks.downloadSub')}</div>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.appStore')}</button>
+              <a href="https://apps.apple.com/app/id6765778216" target="_blank" rel="noopener noreferrer" style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: T.primary, background: "#fff", border: `1px solid rgba(150,71,53,0.4)`, padding: "9px 16px", borderRadius: "9999px", cursor: "pointer", textDecoration: "none", display: "inline-block" }}>{t('website.howItWorks.appStore')}</a>
               <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.googlePlay')}</button>
               <button onClick={() => navigate("/onboarding?fresh=true")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.howItWorks.getStartedWeb')}</button>
             </div>
