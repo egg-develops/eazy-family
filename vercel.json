@@ -3,13 +3,6 @@
   "framework": "vite",
   "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps",
-  "redirects": [
-    {
-      "source": "/download",
-      "destination": "/onboarding",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
