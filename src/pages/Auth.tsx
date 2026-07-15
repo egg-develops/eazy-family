@@ -231,6 +231,14 @@ const Auth = () => {
           toast({ title: t('auth.error'), description: msg || t('auth.somethingWrong'), variant: "destructive" });
         }
       } else if (isSignUp) {
+        // If they arrived via a family invite link, complete the join instead of
+        // dropping them into solo onboarding — otherwise the pending code is lost
+        // and the new member never joins the family (or inherits its subscription).
+        const pendingInvite = localStorage.getItem('pending-invite-code');
+        if (pendingInvite) {
+          navigate(`/join-family?code=${pendingInvite}`);
+          return;
+        }
         localStorage.setItem('eazy-needs-onboarding', '1');
         navigate('/onboarding');
       }
