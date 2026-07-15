@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { error as logError } from "@/lib/logger";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
-import { getRCDiagnostics, getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, type RCPackage } from "@/lib/revenuecat";
+import { getRCDiagnostics, getRCOfferings, restoreRCPurchases, presentSubscriptionStore, purchaseRCPackage, syncRCPurchases, type RCPackage } from "@/lib/revenuecat";
 import { useTranslation } from "react-i18next";
 
 const isNative = Capacitor.isNativePlatform();
@@ -164,6 +164,10 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
         purchased = await presentSubscriptionStore([selectedNativeProductId]);
       }
       if (purchased) {
+        // iOS buys via direct StoreKit 2 (presentSubscriptionStore), which does
+        // NOT inform RevenueCat. Sync the receipt so RevenueCat records the
+        // subscriber and activates the 'premium' entitlement the app gates on.
+        try { await syncRCPurchases(); } catch { /* non-fatal */ }
         try { await refreshSubscription(); } catch { /* non-fatal */ }
         setOpen(false);
       }

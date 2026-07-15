@@ -213,6 +213,19 @@ export async function restoreRCPurchases(): Promise<boolean> {
   return ENTITLEMENT in customerInfo.entitlements.active;
 }
 
+/** Push the device's StoreKit purchases into RevenueCat. REQUIRED after a direct
+ *  StoreKit 2 purchase (presentSubscriptionStore) — otherwise RevenueCat never
+ *  learns about it, so the 'premium' entitlement stays inactive and the buyer
+ *  appears nowhere in the RevenueCat dashboard despite having paid. */
+export async function syncRCPurchases(): Promise<void> {
+  if (!isNative) return;
+  try {
+    await Purchases.syncPurchases();
+  } catch (err) {
+    logError('[RevenueCat] syncPurchases failed:', err);
+  }
+}
+
 // Triggers a direct StoreKit 2 purchase for the given product ID.
 // Returns true if the purchase was completed successfully.
 export async function presentSubscriptionStore(productIds: string[]): Promise<boolean> {
