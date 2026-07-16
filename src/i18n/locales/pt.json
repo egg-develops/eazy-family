@@ -510,7 +510,7 @@
       "upgradeTitle": "Atualizar para Family Premium",
       "upgradeDesc": "Membros ilimitados, IA, sincronização & mais",
       "upgradeBtn": "Atualizar para Premium",
-      "onTrialTitle": "Você está no período de teste gratuito",
+      "onTrialTitle": "Estás no período de teste gratuito",
       "onTrialDesc": "Atualize para manter o acesso completo após o teste — calendários compartilhados, listas, assistente IA, rituais e mais.",
       "freeTrial": "Teste gratuito",
       "active": "Ativo",
@@ -691,7 +691,7 @@
     "location": "Localização",
     "time": "Hora",
     "searchPlaceholder": "Pesquisar eventos...",
-    "youAreHere": "Você está aqui"
+    "youAreHere": "Estás aqui"
   },
   "memories": {
     "title": "Memórias",
@@ -806,7 +806,7 @@
     "listFirstItem": "Publica o teu primeiro artigo",
     "popularCategories": "Categorias populares",
     "createListing": "Criar um anúncio",
-    "whatAreSelling": "O que você está vendendo?",
+    "whatAreSelling": "O que estás a vender?",
     "describeItem": "Descreva o item...",
     "conditionNew": "Novo",
     "conditionLikeNew": "Como novo",
@@ -916,7 +916,7 @@
     "error": "Erro",
     "errorDesc": "Não foi possível aceitar o convite. O link pode ter expirado ou ser inválido.",
     "invalidLink": "Link de convite inválido",
-    "addedToFamily": "Você foi adicionado/a à família"
+    "addedToFamily": "Foste adicionado/a à família"
   },
   "joinFamily": {
     "title": "Aderir a uma família",
@@ -934,7 +934,7 @@
     "invalidCodeFormatDesc": "Os códigos de convite só podem conter letras e números",
     "unableToJoin": "Não foi possível entrar",
     "welcomeToFamily": "Bem-vindo/a à família! 🎉",
-    "youveJoined": "Você entrou em {{familyName}}",
+    "youveJoined": "Entraste em {{familyName}}",
     "failedToJoin": "Falha ao entrar na família. Tente novamente."
   },
   "auth": {
@@ -1010,7 +1010,7 @@
     "dismiss": "Descartar",
     "ok": "OK",
     "parseError": "Não foi possível analisar — revise abaixo:",
-    "didYouMean": "Você quis dizer:",
+    "didYouMean": "Quiseste dizer:",
     "couldNotSave": "Não foi possível salvar. Tente novamente.",
     "voiceNotSupported": "Não suportado",
     "voiceInputNotSupported": "A entrada de voz não é suportada neste navegador.",
@@ -1707,7 +1707,7 @@
     "fieldWith": "Com",
     "fieldReminder": "Lembrete",
     "fieldMood": "Humor",
-    "didYouMean": "Você quis dizer",
+    "didYouMean": "Quiseste dizer:",
     "switch": "Trocar",
     "confirmSave": "Confirmar e Salvar",
     "typeEvent": "Evento",
