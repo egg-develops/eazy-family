@@ -53,7 +53,7 @@ jobs:
           DB_URL="$(python3 - <<'PY'
           import os, re, sys
           from urllib.parse import quote
-          url = os.environ["DB_URL"]
+          url = os.environ["DB_URL"].strip().strip('"').strip("'")
           # Direct-form secrets are rewritten to the session pooler. The regex is
           # deliberately greedy on the password so unencoded specials (#, @, $)
           # cannot split the URL; the password is then percent-encoded properly.
@@ -82,6 +82,13 @@ jobs:
             exit 1
           fi
           export DB_URL
+          # Sanitized target (never the password) so misconfigured secrets are
+          # diagnosable from the log.
+          python3 - <<'PY'
+          import os, re
+          m = re.match(r"^\w+://([^:@/]*)(?::[^@]*)?@([^:/@]+)(?::(\d+))?/(\S*)$", os.environ["DB_URL"])
+          print("Connection target:", f"user={m.group(1)} host={m.group(2)} port={m.group(3) or '5432'} db={m.group(4)}" if m else "unrecognized URL shape")
+          PY
           STAMP="$(date -u +%F)"
           pg_dump "${DB_URL}" -Fc --no-owner --no-privileges -f "db-backup-${STAMP}.dump"
           gzip -9 "db-backup-${STAMP}.dump"
