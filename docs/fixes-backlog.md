@@ -24,9 +24,9 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
   Investigate the reposition gesture in `App.tsx` (`handleEZPointerDown/Move/Up`,
   `isDragModeRef`) — likely a drag threshold or a top/safe-area clamp preventing
   moving it up past the composer. Relates to the item above.
-- [ ] **Delete messages via swipe-left** (mirror the journal entries pattern in
-  `Rituals.tsx` — touch handlers + reveal a delete button, translateX). Needs a
-  delete on the `family_messages` table with RLS allowing author/family delete.
+- [x] **Delete messages via swipe-left.** Swipe your own message left to reveal a
+  delete button (journal-style). Added author-deletes-own RLS on family_messages,
+  optimistic remove + realtime DELETE handling. `FamilyAgenda.tsx`.
 
 ### Shopping
 - [x] **Qty pill too large → item-name truncation.** Replaced the always-on
@@ -39,3 +39,5 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
 ## Done
 - 2026-07-15 Shopping qty chip.
 - 2026-07-15 Hide EZ button while typing (channel composer + all inputs).
+- 2026-07-16 i18n: German→informal du (146), Portuguese você→tu fixes.
+- 2026-07-16 Swipe-left to delete your own channel messages.

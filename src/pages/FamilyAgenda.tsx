@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import {
   Mic, MicOff, X, Plus, MapPin, FileText,
-  Image, Play, ChevronLeft, Send,
+  Image, Play, ChevronLeft, Send, Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -332,6 +332,45 @@ const FamilyAgenda = () => {
   const [familyId, setFamilyId] = useState<string | null>(channelCache.familyId);
   const [authors, setAuthors] = useState<Record<string, ChannelAuthor>>(channelCache.authors);
 
+  // Swipe-left-to-delete for your own messages (mirrors the journal pattern).
+  const DELETE_W = 72;
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const swipeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const swipeTouch = useRef<{ startX: number; id: string; el: HTMLDivElement } | null>(null);
+  const resetSwipe = (id: string) => {
+    const el = swipeRefs.current.get(id);
+    if (el) { el.style.transition = 'transform 0.2s ease'; el.style.transform = 'translateX(0)'; }
+  };
+  const onSwipeStart = (e: React.TouchEvent, id: string) => {
+    if (openSwipeId && openSwipeId !== id) { resetSwipe(openSwipeId); setOpenSwipeId(null); }
+    const el = swipeRefs.current.get(id);
+    if (el) swipeTouch.current = { startX: e.touches[0].clientX, id, el };
+  };
+  const onSwipeMove = (e: React.TouchEvent) => {
+    if (!swipeTouch.current) return;
+    const { startX, id, el } = swipeTouch.current;
+    const base = openSwipeId === id ? -DELETE_W : 0;
+    const x = Math.min(0, Math.max(e.touches[0].clientX - startX + base, -DELETE_W));
+    el.style.transition = 'none';
+    el.style.transform = `translateX(${x}px)`;
+  };
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    if (!swipeTouch.current) return;
+    const { startX, id, el } = swipeTouch.current;
+    const delta = e.changedTouches[0].clientX - startX;
+    el.style.transition = 'transform 0.2s ease';
+    if (delta < -40) { el.style.transform = `translateX(-${DELETE_W}px)`; setOpenSwipeId(id); }
+    else { el.style.transform = 'translateX(0)'; if (openSwipeId === id) setOpenSwipeId(null); }
+    swipeTouch.current = null;
+  };
+  const deleteMessage = async (id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+    setOpenSwipeId(null);
+    channelCache.messages = channelCache.messages.filter(m => m.id !== id);
+    const { error } = await supabase.from('family_messages').delete().eq('id', id);
+    if (error) toast({ title: t('common.error'), variant: 'destructive' });
+  };
+
   // Input
   const [text, setText] = useState("");
 
@@ -407,6 +446,10 @@ const FamilyAgenda = () => {
           const row = payload.new as FamilyMessageRow;
           if (row.sender_id === user.id) return;
           setMessages(prev => prev.some(m => m.id === row.id) ? prev : [...prev, rowToChannelMessage(row, authorMap, user.id)]);
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'family_messages', filter: `family_id=eq.${fid}` }, (payload) => {
+          const oldId = (payload.old as { id?: string })?.id;
+          if (oldId) setMessages(prev => prev.filter(m => m.id !== oldId));
         })
         .subscribe();
     })();
@@ -666,13 +709,36 @@ const FamilyAgenda = () => {
             </div>
             <div className="space-y-3">
               {group.messages.map(msg => (
-                <MessageRow
-                  key={msg.id}
-                  msg={msg}
-                  onImageExpand={setPreviewUrl}
-                  t={t}
-                  fmt={fmt}
-                />
+                msg.isMe && msg.type !== 'event' ? (
+                  <div key={msg.id} className="relative overflow-hidden">
+                    {/* Delete — revealed by swiping the message left */}
+                    <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center rounded-2xl"
+                      style={{ width: DELETE_W, background: '#C0392B' }}>
+                      <button onClick={() => deleteMessage(msg.id)} aria-label={t('common.delete')}
+                        className="w-full h-full flex items-center justify-center">
+                        <Trash2 className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                    <div
+                      data-msg-swipe={msg.id}
+                      ref={el => { if (el) swipeRefs.current.set(msg.id, el); else swipeRefs.current.delete(msg.id); }}
+                      style={{ background: BG, willChange: 'transform' }}
+                      onTouchStart={e => onSwipeStart(e, msg.id)}
+                      onTouchMove={onSwipeMove}
+                      onTouchEnd={onSwipeEnd}
+                    >
+                      <MessageRow msg={msg} onImageExpand={setPreviewUrl} t={t} fmt={fmt} />
+                    </div>
+                  </div>
+                ) : (
+                  <MessageRow
+                    key={msg.id}
+                    msg={msg}
+                    onImageExpand={setPreviewUrl}
+                    t={t}
+                    fmt={fmt}
+                  />
+                )
               ))}
             </div>
           </div>
