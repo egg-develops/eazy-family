@@ -48,7 +48,9 @@
       "chat": "Gruppenchat und gute Vorsätze",
       "calendars": "Eine Mischung aus verschiedenen Kalendern",
       "notes": "Notiz-Apps und Haftnotizen",
-      "wing": "Ehrlich gesagt? Wir improvisieren"
+      "wing": "Ehrlich gesagt? Wir improvisieren",
+      "cta": "Weiter",
+      "meeting": "Ein wöchentliches Familientreffen"
     },
     "familySize": {
       "title": "Wer soll noch synchronisiert werden?",
@@ -111,7 +113,7 @@
     },
     "paywall": {
       "title": "Alles, was eure Familie braucht.",
-      "trialSub": "14 Tage kostenlos · Voller Zugang · Jederzeit kündbar",
+      "trialSub": "14 Tage kostenlos testen, danach Monatsabo · Jederzeit kündbar",
       "cta": "Loslegen →",
       "alreadyHave": "Hast du bereits ein Konto?",
       "signIn": "Anmelden",
@@ -119,7 +121,8 @@
       "listsFeature": "Gemeinsame Aufgaben und Einkaufslisten",
       "digestFeature": "Morgen-Digest – tägliches Briefing für eure Familie",
       "conflictsFeature": "Sofortige Konflikterkennung und smarte Vorschläge",
-      "familyFeature": "Lade die ganze Familie ein – immer synchron"
+      "familyFeature": "Lade die ganze Familie ein – immer synchron",
+      "syncFeature": "Deine Familie immer im Einklang. Das Leben etwas leichter."
     },
     "accountScreen": {
       "title": "Erstelle euren Familienbereich.",

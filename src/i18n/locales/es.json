@@ -48,7 +48,9 @@
       "chat": "Chat grupal y buenas intenciones",
       "calendars": "Una mezcla de diferentes calendarios",
       "notes": "Apps de notas y post-its",
-      "wing": "¿Honestamente? Improvisamos"
+      "wing": "¿Honestamente? Improvisamos",
+      "cta": "Continuar",
+      "meeting": "Una reunión semanal"
     },
     "familySize": {
       "title": "¿Quién más necesita estar sincronizado?",
@@ -111,7 +113,7 @@
     },
     "paywall": {
       "title": "Todo lo que tu familia necesita.",
-      "trialSub": "14 días de prueba gratuita · Acceso completo · Cancela cuando quieras",
+      "trialSub": "Prueba gratis de 14 días y luego suscripción mensual · Cancela cuando quieras",
       "cta": "Empezar →",
       "alreadyHave": "¿Ya tienes una cuenta?",
       "signIn": "Iniciar sesión",
@@ -119,7 +121,8 @@
       "listsFeature": "Tareas y listas de compras compartidas",
       "digestFeature": "Morning Digest — resumen diario para tu familia",
       "conflictsFeature": "Detección instantánea de conflictos y sugerencias inteligentes",
-      "familyFeature": "Invita a toda tu familia — siempre sincronizada"
+      "familyFeature": "Invita a toda tu familia — siempre sincronizada",
+      "syncFeature": "Tu familia siempre sincronizada. La vida un poco más fácil."
     },
     "accountScreen": {
       "title": "Crea tu espacio familiar.",
@@ -1467,7 +1470,9 @@
       "feature4": "IA de voz completa — EZ Button y asistente",
       "feature5": "Un mes gratis por cada familia que refieras",
       "startTrial": "Comienza tu prueba gratuita →",
-      "cancelNote": "Cancela antes del día 14 y no se te cobrará."
+      "cancelNote": "Cancela antes del día 14 y no se te cobrará.",
+      "feature6": "Rituales y diario: tu espacio privado para reflexionar",
+      "feature7": "Resumen matutino: diario y por correo"
     },
     "cta": {
       "eyebrow": "Únete a Eazy.Family",

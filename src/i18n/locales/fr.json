@@ -48,7 +48,9 @@
       "chat": "Groupe chat et bonnes intentions",
       "calendars": "Un mélange de différents agendas",
       "notes": "Apps de notes et post-its",
-      "wing": "Honnêtement ? On improvise"
+      "wing": "Honnêtement ? On improvise",
+      "cta": "Continuer",
+      "meeting": "Une réunion hebdomadaire"
     },
     "familySize": {
       "title": "Qui d'autre doit être synchronisé ?",
@@ -111,7 +113,7 @@
     },
     "paywall": {
       "title": "Tout ce dont votre famille a besoin.",
-      "trialSub": "14 jours d'essai gratuit · Accès complet · Annulez quand vous voulez",
+      "trialSub": "Essai gratuit de 14 jours, puis abonnement mensuel · Annulable à tout moment",
       "cta": "Commencer →",
       "alreadyHave": "Vous avez déjà un compte ?",
       "signIn": "Se connecter",
@@ -119,7 +121,8 @@
       "listsFeature": "Tâches et listes de courses partagées",
       "digestFeature": "Morning Digest — briefing quotidien pour votre famille",
       "conflictsFeature": "Détection instantanée des conflits et suggestions intelligentes",
-      "familyFeature": "Invitez toute votre famille — toujours synchronisée"
+      "familyFeature": "Invitez toute votre famille — toujours synchronisée",
+      "syncFeature": "Votre famille toujours synchronisée. La vie un peu plus simple."
     },
     "accountScreen": {
       "title": "Créez votre espace familial.",
