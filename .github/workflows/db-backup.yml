@@ -41,6 +41,9 @@ jobs:
           # if the secret holds the direct string it is rewritten to the
           # session pooler (same credentials, user becomes postgres.<ref>).
           POOLER_HOST: aws-1-eu-central-1.pooler.supabase.com
+          # Set per repo copy: the pooler requires the tenant-qualified user
+          # (postgres.<ref>); this fixes secrets pasted with a plain user.
+          PROJECT_REF: jfztyhuagxruhawchfem
         run: |
           set -euo pipefail
           if [ -z "${DB_URL}" ]; then
@@ -64,6 +67,9 @@ jobs:
                   f"postgresql://{quote(f'{user}.{ref}', safe='')}:{quote(password, safe='')}"
                   f"@{os.environ['POOLER_HOST']}:5432/{dbname or 'postgres'}"
               )
+          elif ".pooler.supabase.com" in url and "://postgres:" in url:
+              # pooler host with an unqualified user: qualify with the repo's ref
+              url = url.replace("://postgres:", f"://postgres.{os.environ['PROJECT_REF']}:", 1)
           elif "@db." in url:
               # Looks direct but did not parse — refuse rather than risk a
               # malformed URL echoing credential fragments in tool errors.
