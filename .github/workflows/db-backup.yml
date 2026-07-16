@@ -1,0 +1,151 @@
+# Nightly database backup — free bridge until Supabase Pro.
+# Self-contained template: copy this file verbatim into another repo and set
+# that repo's own SUPABASE_DB_URL secret (session pooler string; port 5432
+# direct is IPv6-only on Supabase and unreachable from GitHub runners).
+# Credentials and artifacts never cross repos.
+name: db-backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      verify_restore:
+        description: "Also restore the fresh dump into a scratch Postgres to prove it works"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install postgresql-client-17 (server is PG 17; client must match or exceed)
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "${GITHUB_PATH}"
+
+      - name: Dump database
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          # Session pooler host for this Supabase project's region. Direct
+          # db.<ref>.supabase.co is IPv6-only and unreachable from runners;
+          # if the secret holds the direct string it is rewritten to the
+          # session pooler (same credentials, user becomes postgres.<ref>).
+          POOLER_HOST: aws-1-eu-central-1.pooler.supabase.com
+        run: |
+          set -euo pipefail
+          if [ -z "${DB_URL}" ]; then
+            echo "::error::SUPABASE_DB_URL secret is not set."
+            exit 1
+          fi
+          DB_URL="$(python3 - <<'PY'
+          import os, re, sys
+          from urllib.parse import quote
+          url = os.environ["DB_URL"]
+          # Direct-form secrets are rewritten to the session pooler. The regex is
+          # deliberately greedy on the password so unencoded specials (#, @, $)
+          # cannot split the URL; the password is then percent-encoded properly.
+          m = re.match(
+              r"^postgres(?:ql)?://([^:/@]+):(.+)@db\.([a-z0-9]{15,})\.supabase\.co(?::\d+)?/(.*)$",
+              url,
+          )
+          if m:
+              user, password, ref, dbname = m.groups()
+              url = (
+                  f"postgresql://{quote(f'{user}.{ref}', safe='')}:{quote(password, safe='')}"
+                  f"@{os.environ['POOLER_HOST']}:5432/{dbname or 'postgres'}"
+              )
+          elif "@db." in url:
+              # Looks direct but did not parse — refuse rather than risk a
+              # malformed URL echoing credential fragments in tool errors.
+              print("UNPARSEABLE")
+          print(url) if "@db." not in url or m else None
+          PY
+          )"
+          if [ "${DB_URL}" = "UNPARSEABLE" ] || [ -z "${DB_URL}" ]; then
+            echo "::error::SUPABASE_DB_URL looks like a direct connection string but could not be parsed. Re-enter it as the session pooler string."
+            exit 1
+          fi
+          export DB_URL
+          STAMP="$(date -u +%F)"
+          pg_dump "${DB_URL}" -Fc --no-owner --no-privileges -f "db-backup-${STAMP}.dump"
+          gzip -9 "db-backup-${STAMP}.dump"
+          SIZE="$(stat -c%s "db-backup-${STAMP}.dump.gz")"
+          echo "Backup size: ${SIZE} bytes"
+          if [ "${SIZE}" -lt 102400 ]; then
+            echo "::error::Backup is under the 100 KB sanity threshold (${SIZE} bytes) — treating as failure."
+            exit 1
+          fi
+          echo "STAMP=${STAMP}" >> "${GITHUB_ENV}"
+
+      - name: Upload artifact (30-day retention)
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: db-backup-*.dump.gz
+          retention-days: 30
+          if-no-files-found: error
+
+  # Optional proof: restore the dump just taken into a scratch Postgres.
+  # Never touches production; run via workflow_dispatch with verify_restore.
+  restore-test:
+    needs: backup
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_restore }}
+    runs-on: ubuntu-latest
+    services:
+      scratch:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: scratch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Install postgresql-client-17
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "${GITHUB_PATH}"
+
+      - name: Download today's artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: db-backup-*
+
+      - name: Restore into scratch Postgres
+        env:
+          PGPASSWORD: scratch
+        run: |
+          set -euo pipefail
+          FILE="$(find . -name 'db-backup-*.dump.gz' | head -1)"
+          gunzip "${FILE}"
+          DUMP="${FILE%.gz}"
+          createdb -h localhost -U postgres scratch_restore
+          # Supabase dumps reference roles/extensions a vanilla Postgres lacks;
+          # those errors are expected. We assert on restored table count instead.
+          pg_restore -h localhost -U postgres -d scratch_restore --no-owner --no-privileges "${DUMP}" || true
+          TABLES="$(psql -h localhost -U postgres -d scratch_restore -tAc "select count(*) from pg_tables where schemaname = 'public';")"
+          ROWS="$(psql -h localhost -U postgres -d scratch_restore -tAc "select coalesce(sum(n_live_tup), 0) from pg_stat_user_tables where schemaname = 'public';")"
+          echo "Restored public tables: ${TABLES}; approximate rows: ${ROWS}"
+          if [ "${TABLES}" -lt 5 ]; then
+            echo "::error::Restore produced fewer than 5 public tables — dump is not restorable."
+            exit 1
+          fi
