@@ -347,7 +347,9 @@ const Lists = () => {
     return groups;
   };
 
-  const sharedLists = items.filter(i => i.type === 'shared' && !i.parent_id);
+  const sharedLists = items.filter(i =>
+    i.type === 'shared' && !i.parent_id &&
+    (!searchQuery || i.title.toLowerCase().includes(searchQuery.toLowerCase())));
   const getListItems = (listId: string) => {
     const all = items.filter(i => i.parent_id === listId);
     if (assigneeFilter === 'all') return all;
@@ -573,13 +575,25 @@ const Lists = () => {
           {/* ── Shared task lists ── */}
           {scope === 'shared' && (
             <div className="space-y-3">
+              {/* Search + add on one row (matches Personal; + opens New List) */}
               <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: MUTED }} />
+                  <input
+                    placeholder={t('todos.searchPlaceholder')}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none"
+                    style={{ background: MUTEDBG, border: `1px solid ${BORDER}`, color: INK }}
+                  />
+                </div>
                 <button
                   onClick={() => setIsAddOpen(true)}
-                  className="ml-auto flex items-center px-4 py-2 rounded-full text-xs font-semibold"
+                  aria-label={t('todos.newList')}
+                  className="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center"
                   style={{ background: ACCENT, color: '#fff' }}
                 >
-                  {t('todos.newList')}
+                  <Plus className="w-5 h-5" />
                 </button>
               </div>
 
