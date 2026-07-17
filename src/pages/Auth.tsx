@@ -104,8 +104,18 @@ const Auth = () => {
         const result = await SignInWithApple.authorize(options);
         const idToken = result.response.identityToken;
         if (!idToken) throw new Error('No identity token received');
-        const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken, nonce: rawNonce });
+        // Apple returns the name ONLY on the first authorization (not in the JWT).
+        // Capture it now or it's lost forever → the profile falls back to the
+        // relay-email prefix as a "name".
+        const appleName = [result.response.givenName, result.response.familyName].filter(Boolean).join(' ').trim();
+        const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken, nonce: rawNonce });
         if (error) throw error;
+        if (appleName && data?.user) {
+          await supabase.from('profiles').upsert(
+            { user_id: data.user.id, email: data.user.email, full_name: appleName, display_name: appleName },
+            { onConflict: 'user_id' }
+          );
+        }
       } catch (err: any) {
         const code = err?.error ?? err?.message ?? '';
         if (code === 'canceled' || code.includes('AuthorizationError error 1001')) return;

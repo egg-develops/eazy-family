@@ -156,6 +156,10 @@ const Settings = () => {
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('eazy-display-name') || "");
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
+  // Apple "Hide My Email" yields relay addresses (…@privaterelay.appleid.com)
+  // whose prefix is meaningless — never use it as a name fallback.
+  const emailPrefix = (user?.email && !user.email.includes('privaterelay.appleid.com'))
+    ? user.email.split('@')[0] : '';
   const [userEmail, setUserEmail] = useState(() => user?.email || '');
 
   // AI & Privacy
@@ -522,7 +526,7 @@ const Settings = () => {
               )}
               <Row
                 icon={<User className="w-4 h-4" style={{ color: MUTED }} />}
-                title={displayName || user?.email?.split('@')[0] || 'You'}
+                title={displayName || emailPrefix || t('settings.addYourName')}
                 subtitle={t('settings.primaryAccount')}
               />
               <Row
@@ -863,7 +867,7 @@ const Settings = () => {
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: BG }}>
               <User className="w-5 h-5" style={{ color: MUTED }} />
             </div>
-            <div className="flex-1 min-w-0" onClick={() => { if (!editingName) { setNameDraft(displayName || user?.email?.split('@')[0] || ''); setEditingName(true); } }}>
+            <div className="flex-1 min-w-0" onClick={() => { if (!editingName) { setNameDraft(displayName || emailPrefix || ''); setEditingName(true); } }}>
               <p className="text-sm font-medium" style={{ color: INK }}>{t('settings.profileName')}</p>
               {editingName ? (
                 <input
@@ -878,17 +882,17 @@ const Settings = () => {
                   className="text-xs outline-none bg-transparent w-full mt-0.5"
                   style={{ color: TC }}
                   maxLength={32}
-                  placeholder={user?.email?.split('@')[0] || 'Your name'}
+                  placeholder={t('settings.addYourName')}
                 />
               ) : (
                 <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-                  {displayName || user?.email?.split('@')[0] || ''}
+                  {displayName || emailPrefix || t('settings.addYourName')}
                 </p>
               )}
             </div>
             {!editingName && (
               <button
-                onClick={() => { setNameDraft(displayName || user?.email?.split('@')[0] || ''); setEditingName(true); }}
+                onClick={() => { setNameDraft(displayName || emailPrefix || ''); setEditingName(true); }}
                 className="text-sm font-semibold flex-shrink-0"
                 style={{ color: TC }}
               >
@@ -902,7 +906,7 @@ const Settings = () => {
             {homeConfig.iconImage
               ? <img src={homeConfig.iconImage} alt="Profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" style={{ border: `2px solid ${BORDER}` }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               : <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-white" style={{ background: '#D97B66' }}>
-                  {(displayName || userEmail || 'EF').slice(0, 2).toUpperCase()}
+                  {(displayName || emailPrefix || 'EF').slice(0, 2).toUpperCase()}
                 </div>
             }
             <p className="flex-1 text-sm font-medium" style={{ color: INK }}>{t('settings.profilePhoto')}</p>

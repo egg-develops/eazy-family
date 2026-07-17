@@ -541,7 +541,8 @@
     "nameSaveFailed": "No se pudo guardar el nombre",
     "accountDeleted": "Cuenta eliminada",
     "accountDeletedDesc": "Tu cuenta de Eazy.Family y todos sus datos asociados han sido eliminados.",
-    "moduleFamilyAgenda": "Agenda familiar"
+    "moduleFamilyAgenda": "Agenda familiar",
+    "addYourName": "Añade tu nombre"
   },
   "privacySettings": {
     "title": "Configuración de privacidad",

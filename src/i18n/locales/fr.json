@@ -539,7 +539,8 @@
     "save": "Enregistrer",
     "nameSaveFailed": "Impossible de sauvegarder le nom",
     "accountDeleted": "Compte supprimé",
-    "accountDeletedDesc": "Votre compte Eazy.Family et toutes les données associées ont été supprimés."
+    "accountDeletedDesc": "Votre compte Eazy.Family et toutes les données associées ont été supprimés.",
+    "addYourName": "Ajoutez votre nom"
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",

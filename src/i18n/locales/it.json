@@ -539,7 +539,8 @@
     "save": "Salva",
     "nameSaveFailed": "Impossibile salvare il nome",
     "accountDeleted": "Account eliminato",
-    "accountDeletedDesc": "Il tuo account Eazy.Family e tutti i dati associati sono stati eliminati."
+    "accountDeletedDesc": "Il tuo account Eazy.Family e tutti i dati associati sono stati eliminati.",
+    "addYourName": "Aggiungi il tuo nome"
   },
   "privacySettings": {
     "title": "Impostazioni privacy",
