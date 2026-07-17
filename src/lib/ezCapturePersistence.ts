@@ -34,6 +34,14 @@ export interface FamilyMemberLite {
 /** First word, lowercased — for first-name matching. */
 const firstName = (n: string): string => n.trim().toLowerCase().split(/\s+/)[0] || '';
 
+/** Length of the shared leading prefix — for nickname/short-form matching. */
+function commonPrefixLen(a: string, b: string): number {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a[i] === b[i]) i++;
+  return i;
+}
+
 /** Levenshtein distance — used for fuzzy name matching (e.g. "Sophia" ↔ "Sofia"). */
 function editDist(a: string, b: string): number {
   if (Math.abs(a.length - b.length) > 2) return 99;
@@ -72,19 +80,34 @@ export function resolveAssignees(
     }
     const exact = members.find(m => firstName(m.name) === fn);
     if (exact) { add(exact.user_id); continue; }
+    let matched: FamilyMemberLite | undefined;
     // Fuzzy fallback: handles voice pronunciation variants.
     // Threshold scales with name length:
     //   ≥ 5 chars both sides → allow 2 edits ("Sophia" ↔ "Sofia")
     //   ≥ 3 chars both sides → allow 1 edit  ("Leo" ↔ "Léo")
     if (fn.length >= 3) {
-      const fuzzy = members.find(m => {
+      matched = members.find(m => {
         const mfn = firstName(m.name);
         if (mfn.length < 3) return false;
         const threshold = fn.length >= 5 && mfn.length >= 5 ? 2 : 1;
         return editDist(mfn, fn) <= threshold;
       });
-      if (fuzzy) add(fuzzy.user_id);
     }
+    // Nickname / short form via a strong shared prefix ("Cathi" → "Catharina",
+    // "Ben" → "Benjamin"). Require ≥3 shared chars covering ≥60% of the shorter
+    // name, and an UNAMBIGUOUS best match, so a small family roster doesn't
+    // mis-assign (ties are skipped rather than guessed).
+    if (!matched && fn.length >= 3) {
+      const cands = members
+        .map(m => {
+          const mfn = firstName(m.name);
+          return { m, cp: commonPrefixLen(mfn, fn), shorter: Math.min(mfn.length, fn.length) };
+        })
+        .filter(c => c.cp >= 3 && c.cp >= c.shorter * 0.6)
+        .sort((a, b) => b.cp - a.cp);
+      if (cands.length === 1 || (cands.length > 1 && cands[0].cp > cands[1].cp)) matched = cands[0].m;
+    }
+    if (matched) add(matched.user_id);
   }
   return out;
 }

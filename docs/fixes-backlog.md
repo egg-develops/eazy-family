@@ -42,3 +42,4 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
 - 2026-07-16 i18n: German→informal du (146), Portuguese você→tu fixes.
 - 2026-07-16 Swipe-left to delete your own channel messages.
 - 2026-07-17 Capture Apple Sign-in name; relay-email name fallback (no more garbage names).
+- 2026-07-17 Voice assignment: nickname/short-form assignee matching (Cathi→Catharina).

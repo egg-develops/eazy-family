@@ -110,6 +110,29 @@ describe('resolveAssignees — fuzzy name matching', () => {
     expect(resolveAssignees(['Mia'], members, self)).toEqual([]));
 });
 
+describe('resolveAssignees — nickname / short-form matching', () => {
+  const members: FamilyMemberLite[] = [
+    { user_id: 'u-cat', name: 'Catharina' },
+    { user_id: 'u-ben', name: 'Benjamin Ray' },
+  ];
+  const self = { userId: 'u-self', name: 'Ermias' };
+
+  it('"Cathi" resolves to Catharina (shared prefix)', () =>
+    expect(resolveAssignees(['Cathi'], members, self)).toEqual(['u-cat']));
+  it('"Cat" resolves to Catharina', () =>
+    expect(resolveAssignees(['Cat'], members, self)).toEqual(['u-cat']));
+  it('"Ben" resolves to Benjamin', () =>
+    expect(resolveAssignees(['Ben'], members, self)).toEqual(['u-ben']));
+  it('ambiguous prefix is skipped (no mis-assignment)', () => {
+    const two: FamilyMemberLite[] = [
+      { user_id: 'a', name: 'Catharina' }, { user_id: 'b', name: 'Catherine' },
+    ];
+    expect(resolveAssignees(['Cathi'], two, self)).toEqual([]);
+  });
+  it('unrelated name does not match', () =>
+    expect(resolveAssignees(['Tom'], members, self)).toEqual([]));
+});
+
 describe('resolveAssignees', () => {
   const members: FamilyMemberLite[] = [
     { user_id: 'u-mia', name: 'Mia Rivera' },
