@@ -401,6 +401,14 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
       const dayOfWeek = format(new Date(), 'EEEE');
       const isSwissDE = isSwissGermanLocale();
       const userLanguage = getUserLanguageLabel();
+      // Give the parser the family roster so it can resolve a spoken assignee to
+      // the right member — handling nicknames and speech mis-hearings the local
+      // string matcher can't ("Cathi"/"Katrina" → "Catharina").
+      const { members: roster } = await ensureRoster();
+      const rosterNames = roster.map(m => (m.name || '').trim()).filter(Boolean);
+      const rosterHint = rosterNames.length
+        ? ` The family members are: ${rosterNames.join(', ')}. Match the spoken assignee to the CLOSEST family member from this list — allowing for nicknames ("Cathi" → "Catharina") and likely speech mis-hearings ("Katrina" → "Catharina") — and return that member's EXACT name as written here. Return null if no family member is a plausible match.`
+        : '';
       const langHint = isSwissDE
         ? `Swiss German (dialect pre-normalized to Standard German). Keep the title in German — do not translate to English.`
         : `${userLanguage}. Parse date/time expressions correctly for this language. Keep the title in the user's language — do not translate to English.`;
@@ -425,7 +433,7 @@ JSON fields:
 - time: "HH:MM" 24h or null.
 - endTime: "HH:MM" 24h or null
 - location: string or null
-- assignees: array of first names of who should do it, or null. Extract ONLY from explicit delegation phrases: "assign to X", "assign it X", "assign it to X", "assign this to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}). Use ONLY the person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
+- assignees: array of the assignee's name, or null. Extract ONLY from explicit delegation phrases: "assign to X", "assign it X", "assign it to X", "assign this to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}).${rosterHint} Use ONLY the (matched) person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
 - reminder: human-readable string or null
 - notes: string or null
 - mood: string or null (journal only)
