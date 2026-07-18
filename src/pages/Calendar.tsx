@@ -7,7 +7,7 @@ import { ParticleButton } from "@/components/ui/particle-button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings, AlignLeft, Paperclip } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ChevronLeft, ChevronRight, Plus, X, RefreshCw, Check, Loader2, Building2, Copy, ExternalLink, Mic, MicOff, Sparkles, LayoutGrid, Search, Settings, AlignLeft, Paperclip, CheckSquare, Users } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfWeek, endOfWeek, addDays, subDays } from "date-fns";
 import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -811,6 +811,33 @@ const Calendar = () => {
   };
 
   const allItems = [...items, ...googleEvents, ...outlookEvents, ...appleEvents];
+
+  // Lightweight "up next" strip: soonest-first upcoming events (family + personal)
+  // and open reminders for the week ahead. A quick glance — tap a card to open it;
+  // no "view all" (the full family hub lives on the Family Page).
+  const agendaWindowStart = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+  const agendaWindowEnd = addDays(new Date(), 7);
+  const itemAgendaDate = (item: CalendarItem): Date | null =>
+    item.type === 'event' ? item.startDate : (item.dueDate ?? null);
+  const upcomingAgenda = allItems
+    .filter(item => {
+      if (item.type === 'reminder' && item.completed) return false;
+      const d = itemAgendaDate(item);
+      return !!d && d >= agendaWindowStart && d <= agendaWindowEnd;
+    })
+    .sort((a, b) => (itemAgendaDate(a)!.getTime()) - (itemAgendaDate(b)!.getTime()))
+    .slice(0, 8);
+
+  const agendaDayChip = (d: Date): string =>
+    isToday(d) ? t('calendar.today')
+    : isSameDay(d, addDays(new Date(), 1)) ? t('calendar.tomorrow')
+    : fmt(d, 'EEE');
+
+  const openAgendaItem = (item: CalendarItem) => {
+    const d = itemAgendaDate(item);
+    if (d) setSelectedDate(new Date(d));
+    if (!(item.type === 'event' && item.id.startsWith('apple-device-'))) handleEditItem(item);
+  };
 
   const getItemsForDate = (date: Date) => {
     return allItems.filter(item => {
@@ -1707,14 +1734,11 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Family Agenda section */}
+      {/* Agenda — quick glance at the week ahead (family + personal) */}
       {calendarView !== 'year' && (
         <div className="mt-5 px-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.familyAgenda')}</h2>
-            <button onClick={() => navigate('/app/family-agenda')} className="text-xs font-semibold" style={{ color: '#964735' }}>
-              {t('calendar.viewAll')}
-            </button>
+            <h2 className="font-bold text-lg" style={{ color: 'hsl(var(--foreground))' }}>{t('calendar.agenda')}</h2>
           </div>
           <div
             className="flex gap-3 overflow-x-auto pb-2"
@@ -1723,25 +1747,40 @@ const Calendar = () => {
             onTouchMove={e => e.stopPropagation()}
             onTouchEnd={e => e.stopPropagation()}
           >
-            {allItems.filter(i => i.type === 'event' && (i as Event).attendees?.length).slice(0, 5).map((item) => {
-              const ev = item as Event;
-              const initials = ev.title.slice(0, 1).toUpperCase();
+            {upcomingAgenda.map((item) => {
+              const isEvent = item.type === 'event';
+              const when = itemAgendaDate(item)!;
+              const isFamily = isEvent && !!(item as Event).attendees?.length;
+              const accent = isEvent ? ((item as Event).color || '#964735') : '#6E8FE5';
+              const Icon = isEvent ? CalendarIcon : CheckSquare;
+              const timeStr = isEvent && (item as Event).allDay ? t('calendar.allDayLabel') : fmt(when, 'p');
               return (
-                <div key={ev.id} className="flex-shrink-0 w-36 rounded-2xl p-3 space-y-1" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                      style={{ background: ev.color || '#964735' }}>
-                      {initials}
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => openAgendaItem(item)}
+                  className="flex-shrink-0 w-40 rounded-2xl p-3 space-y-1.5 text-left transition-transform active:scale-[0.98]"
+                  style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}1A` }}>
+                      <Icon className="w-4 h-4" style={{ color: accent }} />
                     </div>
-                    <span className="text-xs font-medium truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.title.split(' ')[0]}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                      style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}>
+                      {agendaDayChip(when)}
+                    </span>
                   </div>
-                  <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</p>
-                  <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{ev.allDay ? t('calendar.allDayLabel') : fmt(ev.startDate, 'p')}</p>
-                </div>
+                  <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{item.title}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{timeStr}</span>
+                    {isFamily && <Users className="w-3 h-3 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />}
+                  </div>
+                </button>
               );
             })}
-            {allItems.filter(i => i.type === 'event' && (i as Event).attendees?.length).length === 0 && (
-              <div className="w-36 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed hsl(var(--border))' }}>
+            {upcomingAgenda.length === 0 && (
+              <div className="w-40 rounded-2xl p-3 flex items-center justify-center" style={{ background: 'hsl(var(--muted))', border: '1px dashed hsl(var(--border))' }}>
                 <p className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.noEventsYet')}</p>
               </div>
             )}

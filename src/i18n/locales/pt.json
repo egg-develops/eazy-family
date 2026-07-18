@@ -300,7 +300,9 @@
     "searchEventsPlaceholder": "Pesquisar eventos…",
     "noEventsFound": "Nenhum evento encontrado",
     "familyAgenda": "Agenda familiar",
+    "agenda": "Agenda",
     "noEventsYet": "Ainda sem eventos",
+    "tomorrow": "Amanhã",
     "appleConnected": "Calendário Apple conectado!",
     "appleDisconnected": "Calendário Apple desconectado",
     "permissionDenied": "Permissão negada",
@@ -541,7 +543,7 @@
     "nameSaveFailed": "Não foi possível guardar o nome",
     "accountDeleted": "Conta excluída",
     "accountDeletedDesc": "Sua conta do Eazy.Family e todos os seus dados associados foram excluídos.",
-    "moduleFamilyAgenda": "Agenda familiar",
+    "moduleFamilyAgenda": "Página da família",
     "addYourName": "Adiciona o teu nome"
   },
   "privacySettings": {
@@ -598,7 +600,7 @@
     "addTaskBtn": "Adicionar tarefa",
     "openFamilyPage": "Abrir página da família",
     "noEventsToday": "Sem eventos hoje",
-    "familyAgenda": "Agenda familiar",
+    "familyAgenda": "Página da família",
     "noSharedEvents": "Nenhum evento compartilhado em breve.",
     "openCalendar": "Abrir calendário",
     "channelDesc": "Mensagens privadas da família",
@@ -1297,6 +1299,8 @@
   "familyAgenda": {
     "title": "Canal familiar",
     "settingsComingSoon": "Definições em breve",
+    "pageTitle": "Página da família",
+    "agenda": "Agenda",
     "voiceNotSupported": "A entrada de voz não é suportada neste navegador",
     "micDenied": "Acesso ao microfone negado",
     "micDeniedDesc": "Permite o acesso ao microfone nas definições do navegador.",

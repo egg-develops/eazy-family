@@ -196,7 +196,7 @@ const FamilyAgendaView = () => {
             <ChevronLeft className="w-5 h-5" style={{ color: INK }} />
           </button>
           <p className="flex-1 text-center font-bold text-2xl" style={{ color: INK }}>
-            {t('familyAgenda.title')}
+            {t('familyAgenda.pageTitle')}
           </p>
           <button
             onClick={() => navigate('/app/family-channel')}

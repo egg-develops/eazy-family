@@ -300,7 +300,9 @@
     "searchEventsPlaceholder": "Buscar eventos…",
     "noEventsFound": "No se encontraron eventos",
     "familyAgenda": "Agenda familiar",
+    "agenda": "Agenda",
     "noEventsYet": "Aún no hay eventos",
+    "tomorrow": "Mañana",
     "appleConnected": "¡Calendario Apple conectado!",
     "appleDisconnected": "Calendario Apple desconectado",
     "permissionDenied": "Permiso denegado",
@@ -541,7 +543,7 @@
     "nameSaveFailed": "No se pudo guardar el nombre",
     "accountDeleted": "Cuenta eliminada",
     "accountDeletedDesc": "Tu cuenta de Eazy.Family y todos sus datos asociados han sido eliminados.",
-    "moduleFamilyAgenda": "Agenda familiar",
+    "moduleFamilyAgenda": "Página familiar",
     "addYourName": "Añade tu nombre"
   },
   "privacySettings": {
@@ -598,7 +600,7 @@
     "addTaskBtn": "Añadir tarea",
     "openFamilyPage": "Abrir página familia",
     "noEventsToday": "Sin eventos hoy",
-    "familyAgenda": "Agenda familiar",
+    "familyAgenda": "Página familiar",
     "noSharedEvents": "No hay eventos compartidos próximos.",
     "openCalendar": "Abrir calendario",
     "channelDesc": "Mensajería familiar privada",
@@ -1297,6 +1299,8 @@
   "familyAgenda": {
     "title": "Canal familiar",
     "settingsComingSoon": "Ajustes próximamente",
+    "pageTitle": "Página familiar",
+    "agenda": "Agenda",
     "voiceNotSupported": "La entrada de voz no es compatible con este navegador",
     "micDenied": "Acceso al micrófono denegado",
     "micDeniedDesc": "Permite el acceso al micrófono en la configuración del navegador.",
