@@ -542,7 +542,8 @@
     "nameSaveFailed": "Could not save name",
     "accountDeleted": "Account deleted",
     "accountDeletedDesc": "Your Eazy.Family account and all its associated data have been deleted.",
-    "addYourName": "Add your name"
+    "addYourName": "Add your name",
+    "moduleAgenda": "Agenda"
   },
   "privacySettings": {
     "title": "Privacy Settings",
@@ -622,7 +623,9 @@
     "newMessage": "New message",
     "today": "Today",
     "tomorrow": "Tomorrow",
-    "addPhotos": "Add photos"
+    "addPhotos": "Add photos",
+    "agenda": "Agenda",
+    "noUpcoming": "Nothing coming up this week."
   },
   "common": {
     "add": "Add",

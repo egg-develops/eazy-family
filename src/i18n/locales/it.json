@@ -542,7 +542,8 @@
     "nameSaveFailed": "Impossibile salvare il nome",
     "accountDeleted": "Account eliminato",
     "accountDeletedDesc": "Il tuo account Eazy.Family e tutti i dati associati sono stati eliminati.",
-    "addYourName": "Aggiungi il tuo nome"
+    "addYourName": "Aggiungi il tuo nome",
+    "moduleAgenda": "Agenda"
   },
   "privacySettings": {
     "title": "Impostazioni privacy",
@@ -625,7 +626,9 @@
     "newMessage": "Nuovo messaggio",
     "today": "Oggi",
     "tomorrow": "Domani",
-    "addPhotos": "Aggiungi foto"
+    "addPhotos": "Aggiungi foto",
+    "agenda": "Agenda",
+    "noUpcoming": "Niente in programma questa settimana."
   },
   "common": {
     "add": "Aggiungi",

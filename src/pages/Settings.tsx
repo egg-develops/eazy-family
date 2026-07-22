@@ -82,8 +82,8 @@ const EZ_DEFAULTS = [
 const HOME_MODULE_DEFS = [
   { key: 'gallery',       configKey: 'showGallery',       labelKey: 'settings.moduleGallery' },
   { key: 'rituals',       configKey: 'showRituals',       labelKey: 'settings.moduleRituals' },
+  { key: 'agenda',        configKey: 'showAgenda',        labelKey: 'settings.moduleAgenda' },
   { key: 'familyAgenda',  configKey: 'showFamilyAgenda',  labelKey: 'settings.moduleFamilyAgenda' },
-  { key: 'familyChannel', configKey: 'showFamilyChannel', labelKey: 'settings.moduleFamily' },
   { key: 'calendar',      configKey: 'showCalendar',      labelKey: 'settings.moduleCalendar' },
   { key: 'tasks',         configKey: 'showTasks',         labelKey: 'settings.moduleTasks' },
   { key: 'staleTasks',    configKey: 'showStaleTasks',    labelKey: 'settings.moduleStaleTasks' },

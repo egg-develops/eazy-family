@@ -544,7 +544,8 @@
     "accountDeleted": "Cuenta eliminada",
     "accountDeletedDesc": "Tu cuenta de Eazy.Family y todos sus datos asociados han sido eliminados.",
     "moduleFamilyAgenda": "Página familiar",
-    "addYourName": "Añade tu nombre"
+    "addYourName": "Añade tu nombre",
+    "moduleAgenda": "Agenda"
   },
   "privacySettings": {
     "title": "Configuración de privacidad",
@@ -627,7 +628,9 @@
     "newMessage": "Nuevo mensaje",
     "today": "Hoy",
     "tomorrow": "Mañana",
-    "addPhotos": "Añadir fotos"
+    "addPhotos": "Añadir fotos",
+    "agenda": "Agenda",
+    "noUpcoming": "Nada previsto esta semana."
   },
   "common": {
     "add": "Añadir",

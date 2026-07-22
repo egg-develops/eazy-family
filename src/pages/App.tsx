@@ -584,6 +584,7 @@ interface HomeConfig {
   showFamilyChannel?: boolean;
   showGallery?: boolean;
   showFamilyAgenda?: boolean;
+  showAgenda?: boolean;
   showStaleTasks?: boolean;
   topNotifications: string[];
   quickActions: string[];
@@ -593,7 +594,7 @@ interface HomeConfig {
   appTitle?: string;
 }
 
-const DEFAULT_HOME_MODULE_ORDER = ['gallery', 'rituals', 'familyAgenda', 'familyChannel', 'calendar', 'tasks', 'staleTasks'];
+const DEFAULT_HOME_MODULE_ORDER = ['gallery', 'rituals', 'agenda', 'familyAgenda', 'calendar', 'tasks', 'staleTasks'];
 
 interface HomeCalendarEvent {
   id: string;
@@ -1082,6 +1083,68 @@ const AppHome = () => {
           </div>
         );
 
+      case 'agenda':
+        return homeConfig.showAgenda !== false && (() => {
+          const now = new Date();
+          const winStart = startOfDay(now);
+          const winEnd = addDays(now, 7);
+          const raw: any[] = (() => { try { return JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); } catch { return []; } })();
+          const itemDate = (e: any): Date | null => e.type === 'reminder' ? (e.dueDate ? new Date(e.dueDate) : null) : (e.startDate ? new Date(e.startDate) : null);
+          const upcoming = raw
+            .filter(e => {
+              if (e.type === 'reminder' && e.completed) return false;
+              const d = itemDate(e);
+              return !!d && d >= winStart && d <= winEnd;
+            })
+            .sort((a, b) => itemDate(a)!.getTime() - itemDate(b)!.getTime())
+            .slice(0, 8);
+          const dayChip = (d: Date) => isToday(d) ? t('home.today') : isTomorrow(d) ? t('home.tomorrow') : fmt(d, 'EEE');
+          return (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.agenda')}</p>
+              </div>
+              {upcoming.length > 0 ? (
+                <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {upcoming.map((e, i) => {
+                    const isEvent = e.type !== 'reminder';
+                    const d = itemDate(e)!;
+                    const isFamily = isEvent && !!e.attendees?.length;
+                    const accent = isEvent ? (e.color || '#964735') : '#6E8FE5';
+                    const Icon = isEvent ? Calendar : CheckSquare;
+                    const timeStr = isEvent && e.allDay ? t('calendar.allDayLabel') : fmt(d, 'p');
+                    return (
+                      <button
+                        key={e.id || i}
+                        type="button"
+                        onClick={() => navigate('/app/calendar?date=' + format(d, 'yyyy-MM-dd'))}
+                        className="flex-shrink-0 w-40 rounded-2xl p-3 space-y-1.5 text-left transition-transform active:scale-[0.98]"
+                        style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${accent}1A` }}>
+                            <Icon className="w-4 h-4" style={{ color: accent }} />
+                          </div>
+                          <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}>{dayChip(d)}</span>
+                        </div>
+                        <p className="text-sm font-semibold leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{e.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{timeStr}</span>
+                          {isFamily && <Users className="w-3 h-3 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-2xl px-4 py-5 text-center" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noUpcoming')}</p>
+                </div>
+              )}
+            </div>
+          );
+        })();
+
       case 'familyAgenda':
         return homeConfig.showFamilyAgenda !== false && (() => {
           const now = new Date();
@@ -1110,37 +1173,6 @@ const AppHome = () => {
                 <div className="px-4 py-5 text-center">
                   <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noSharedEvents')}</p>
                   <button onClick={() => navigate('/app/family-agenda')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openFamilyPage')}</button>
-                </div>
-              )}
-            </div>
-          );
-        })();
-
-      case 'familyChannel':
-        return homeConfig.showFamilyChannel !== false && (() => {
-          type ChannelMsg = { authorName: string; authorInitials: string; authorColor: string; content?: string; type: string; timestamp: string };
-          let recentMsgs: ChannelMsg[] = [];
-          try { const all: ChannelMsg[] = JSON.parse(localStorage.getItem('eazy-family-channel-messages') || '[]'); recentMsgs = all.slice(-3).reverse(); } catch { /* ignore */ }
-          const msgPreview = (m: ChannelMsg) => m.type === 'text' ? (m.content || '') : m.type === 'voice' ? t('home.voiceMessage') : m.type === 'image' ? t('home.photoMessage') : m.type === 'location' ? t('home.locationMessage') : m.type === 'poll' ? t('home.pollMessage') : m.type === 'document' ? t('home.documentMessage') : t('home.newMessage');
-          return (
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
-                <p className="font-bold text-sm" style={{ color: 'hsl(var(--foreground))' }}>{t('home.familyChannel')}</p>
-                <button onClick={() => navigate('/app/family-channel')} className="text-xs font-semibold" style={{ color: '#964735' }}>{t('home.open')}</button>
-              </div>
-              {recentMsgs.length > 0 ? recentMsgs.map((msg, i) => (
-                <button key={i} onClick={() => navigate('/app/family-channel')} className="w-full px-4 py-2.5 flex items-center gap-3 text-left" style={{ borderBottom: i < recentMsgs.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: msg.authorColor || '#964735' }}>{msg.authorInitials}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{msg.authorName}</p>
-                    <p className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{msgPreview(msg)}</p>
-                  </div>
-                  <p className="text-xs flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>{fmt(new Date(msg.timestamp), 'p')}</p>
-                </button>
-              )) : (
-                <div className="px-4 py-5 text-center">
-                  <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('home.noMessages')}</p>
-                  <button onClick={() => navigate('/app/family-channel')} className="mt-2 text-xs font-semibold px-3 py-1.5 rounded-full inline-block" style={{ background: 'hsl(var(--muted))', color: '#964735' }}>{t('home.openChannel')}</button>
                 </div>
               )}
             </div>
