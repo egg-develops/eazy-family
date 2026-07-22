@@ -125,6 +125,18 @@ const App = () => (
               {/* Admin Dashboard */}
               <Route path="/admin" element={<AdminRoute><Suspense fallback={<PageLoader />}><Admin /></Suspense></AdminRoute>} />
 
+              {/* Localized marketing routes for SEO (/de, /fr/about, …). Same
+                  components; language is derived from the URL prefix in
+                  i18n/config. Purely additive — the root routes above and all
+                  /app navigation are unchanged (basename stays ""). */}
+              {['de', 'fr', 'it', 'es', 'pt'].flatMap((l) => [
+                <Route key={l} path={`/${l}`} element={<ErrorBoundary><Index /></ErrorBoundary>} />,
+                <Route key={`${l}-about`} path={`/${l}/about`} element={<About />} />,
+                <Route key={`${l}-download`} path={`/${l}/download`} element={<Download />} />,
+                <Route key={`${l}-privacy`} path={`/${l}/privacy`} element={<Privacy />} />,
+                <Route key={`${l}-terms`} path={`/${l}/terms`} element={<Terms />} />,
+              ])}
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

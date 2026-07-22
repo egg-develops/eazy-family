@@ -4,9 +4,16 @@
   "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/de", "destination": "/de/index.html" },
+    { "source": "/de/(.*)", "destination": "/de/index.html" },
+    { "source": "/fr", "destination": "/fr/index.html" },
+    { "source": "/fr/(.*)", "destination": "/fr/index.html" },
+    { "source": "/it", "destination": "/it/index.html" },
+    { "source": "/it/(.*)", "destination": "/it/index.html" },
+    { "source": "/es", "destination": "/es/index.html" },
+    { "source": "/es/(.*)", "destination": "/es/index.html" },
+    { "source": "/pt", "destination": "/pt/index.html" },
+    { "source": "/pt/(.*)", "destination": "/pt/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

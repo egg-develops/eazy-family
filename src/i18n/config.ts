@@ -35,7 +35,18 @@ export async function loadLocale(lng: string): Promise<void> {
   }
 }
 
+// Language subdirectories used for localized SEO (e.g. /de, /fr). Kept in sync
+// with the locale routes in App.tsx and scripts/prerender-locales.mjs.
+export const SEO_LOCALE_PREFIXES = ['de', 'fr', 'it', 'es', 'pt'] as const;
+
 function detectLng(): string {
+  // A localized marketing URL (/de, /fr/about, …) is an explicit language
+  // signal — honour it above any stored preference so shared/crawled locale
+  // links always render in that language.
+  if (typeof window !== 'undefined') {
+    const seg = window.location.pathname.split('/')[1];
+    if ((SEO_LOCALE_PREFIXES as readonly string[]).includes(seg)) return seg;
+  }
   const stored = localStorage.getItem('eazy-family-language');
   if (stored) return stored;
   const nav = (navigator.language || '').toLowerCase();

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender-locales.mjs",
     "build:dev": "vite build --mode development",
     "ios:release": "npm run build && npx cap sync ios",
     "ios:check": "bash scripts/check-ios-bundle-fresh.sh",
