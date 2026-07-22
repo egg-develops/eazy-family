@@ -823,16 +823,17 @@
     "upcomingEvents": "Próximos eventos"
   },
   "referral": {
-    "title": "Recomienda amigos, obtén Premium",
-    "description": "Comparte Eazy.Family y gana 30 días de Premium por cada amigo que se una",
-    "yourCode": "Tu código de referido",
-    "friendsReferred": "Amigos referidos",
-    "daysEarned": "días de Premium ganados",
-    "shareWithFriends": "Compartir con amigos",
+    "title": "Regala 14 días, gana 14 días",
+    "description": "Invita a la familia de un amigo. Cuando se unan con tu código, ambos recibís 14 días de prueba extra.",
+    "yourCode": "Tu código de invitación",
+    "friendsReferred": "amigos unidos",
+    "daysEarned": "días extra ganados",
+    "shareWithFriends": "Compartir invitación",
     "copied": "¡Copiado!",
-    "copiedDesc": "Código de referido copiado al portapapeles",
-    "shareMessage": "¡Únete a mí en Eazy.Family! Usa mi código {code} para obtener 7 días de Premium gratis 🎁",
-    "shareCopiedDesc": "Mensaje para compartir copiado al portapapeles"
+    "copiedDesc": "Código de invitación copiado",
+    "shareMessage": "Únete a mí en Eazy.Family, el organizador familiar con IA. Usa mi enlace y ambos conseguimos 14 días gratis: {{url}}",
+    "shareCopiedDesc": "Invitación copiada",
+    "shareTitle": "Únete a Eazy.Family"
   },
   "upgrade": {
     "title": "Actualizar al Plan Familiar",

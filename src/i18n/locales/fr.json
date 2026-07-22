@@ -821,16 +821,17 @@
     "upcomingEvents": "Événements à venir"
   },
   "referral": {
-    "title": "Parrainez des amis, obtenez Premium",
-    "description": "Partagez Eazy.Family et gagnez 30 jours de Premium pour chaque ami qui s'inscrit",
-    "yourCode": "Votre code de parrainage",
-    "friendsReferred": "Amis parrainés",
-    "daysEarned": "jours de Premium gagnés",
-    "shareWithFriends": "Partager avec des amis",
-    "copied": "Copié!",
-    "copiedDesc": "Code de parrainage copié dans le presse-papiers",
-    "shareMessage": "Rejoignez-moi sur Eazy.Family! Utilisez mon code {code} pour 7 jours de Premium gratuit! 🎁",
-    "shareCopiedDesc": "Message de partage copié dans le presse-papiers"
+    "title": "14 jours offerts, 14 jours reçus",
+    "description": "Invitez la famille d'un ami. Lorsqu'ils rejoignent avec votre code, vous recevez tous les deux 14 jours d'essai bonus.",
+    "yourCode": "Votre code d'invitation",
+    "friendsReferred": "amis inscrits",
+    "daysEarned": "jours bonus gagnés",
+    "shareWithFriends": "Partager l'invitation",
+    "copied": "Copié !",
+    "copiedDesc": "Code d'invitation copié",
+    "shareMessage": "Rejoignez-moi sur Eazy.Family, l'organiseur familial dopé à l'IA. Utilisez mon lien et nous recevons tous les deux 14 jours gratuits : {{url}}",
+    "shareCopiedDesc": "Invitation copiée",
+    "shareTitle": "Rejoindre Eazy.Family"
   },
   "upgrade": {
     "title": "Passer au plan famille",

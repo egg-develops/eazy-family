@@ -18,39 +18,20 @@ export const ReferralSystem = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
-      loadReferralData();
-    }
+    if (user?.id) loadReferralData();
   }, [user?.id]);
 
   const loadReferralData = async () => {
     try {
-      // Get or create referral code from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('referral_code')
-        .eq('user_id', user!.id)
-        .single();
+      // Idempotent server-side code generation (no client race).
+      const { data: code } = await supabase.rpc('get_or_create_my_referral_code');
+      if (code) setReferralCode(code as string);
 
-      if (profile?.referral_code) {
-        setReferralCode(profile.referral_code);
-      } else {
-        // Generate and save a new referral code
-        const newCode = `EAZY${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-        await supabase
-          .from('profiles')
-          .update({ referral_code: newCode })
-          .eq('user_id', user!.id);
-        setReferralCode(newCode);
-      }
-
-      // Count successful referrals
       const { count } = await supabase
         .from('referrals')
         .select('*', { count: 'exact', head: true })
         .eq('referrer_user_id', user!.id)
         .eq('status', 'completed');
-
       setReferralCount(count || 0);
     } catch (error) {
       logError('Error loading referral data:', error);
@@ -59,27 +40,20 @@ export const ReferralSystem = () => {
     }
   };
 
-  const copyReferralCode = () => {
+  const inviteUrl = referralCode ? `https://eazy.family/auth?ref=${referralCode}` : "https://eazy.family";
+
+  const copyCode = () => {
     navigator.clipboard.writeText(referralCode);
-    toast({
-      title: t('referral.copied'),
-      description: t('referral.copiedDesc'),
-    });
+    toast({ title: t('referral.copied'), description: t('referral.copiedDesc') });
   };
 
-  const shareReferral = () => {
-    const shareText = `Join me on Eazy.Family – the smart hub for family life! 🏠 eazy.family`;
+  const shareInvite = async () => {
+    const text = t('referral.shareMessage', { url: inviteUrl });
     if (navigator.share) {
-      navigator.share({
-        title: 'Join Eazy.Family',
-        text: shareText,
-      });
+      try { await navigator.share({ title: t('referral.shareTitle'), text }); } catch { /* dismissed */ }
     } else {
-      navigator.clipboard.writeText(shareText);
-      toast({
-        title: t('referral.copied'),
-        description: t('referral.shareCopiedDesc'),
-      });
+      navigator.clipboard.writeText(text);
+      toast({ title: t('referral.copied'), description: t('referral.shareCopiedDesc') });
     }
   };
 
@@ -90,38 +64,36 @@ export const ReferralSystem = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Gift className="h-5 w-5 text-primary" />
-          Refer Friends
+          {t('referral.title')}
         </CardTitle>
-        <CardDescription>
-          Share Eazy.Family with friends and family
-        </CardDescription>
+        <CardDescription>{t('referral.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg">
-          <p className="text-sm font-medium mb-2">Your Referral Code</p>
+          <p className="text-sm font-medium mb-2">{t('referral.yourCode')}</p>
           <div className="flex gap-2">
             <Input value={referralCode} readOnly className="font-mono text-lg font-bold" />
-            <Button onClick={copyReferralCode} size="icon" aria-label="Copy referral code">
+            <Button onClick={copyCode} size="icon" aria-label={t('referral.copied')}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-          <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium">{referralCount} Friends Referred</p>
+        <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+          <Users className="h-5 w-5 text-primary flex-shrink-0" />
+          <div>
+            <p className="font-medium">{referralCount} {t('referral.friendsReferred')}</p>
+            {referralCount > 0 && (
               <p className="text-sm text-muted-foreground">
-                {referralCount} joined via your link
+                {referralCount * 14} {t('referral.daysEarned')}
               </p>
-            </div>
+            )}
           </div>
         </div>
 
-        <Button onClick={shareReferral} className="w-full gradient-primary text-white border-0">
+        <Button onClick={shareInvite} className="w-full gradient-primary text-white border-0">
           <Share2 className="h-4 w-4 mr-2" />
-          Share with Friends
+          {t('referral.shareWithFriends')}
         </Button>
       </CardContent>
     </Card>

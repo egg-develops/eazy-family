@@ -821,16 +821,17 @@
     "upcomingEvents": "Bevorstehende Ereignisse"
   },
   "referral": {
-    "title": "Freunde empfehlen, Premium erhalten",
-    "description": "Teile Eazy.Family und erhalte 30 Tage Premium für jeden Freund, der beitritt",
-    "yourCode": "Dein Empfehlungscode",
-    "friendsReferred": "Empfohlene Freunde",
-    "daysEarned": "Tage Premium verdient",
-    "shareWithFriends": "Mit Freunden teilen",
+    "title": "14 Tage schenken, 14 Tage erhalten",
+    "description": "Lade die Familie einer Freundin oder eines Freundes ein. Wenn sie mit deinem Code beitreten, bekommt ihr beide 14 Bonus-Testtage.",
+    "yourCode": "Dein Einladungscode",
+    "friendsReferred": "Freunde beigetreten",
+    "daysEarned": "Bonustage erhalten",
+    "shareWithFriends": "Einladung teilen",
     "copied": "Kopiert!",
-    "copiedDesc": "Empfehlungscode in die Zwischenablage kopiert",
-    "shareMessage": "Tritt mir bei Eazy.Family bei! Verwende meinen Code {code} für 7 Tage Premium kostenlos! 🎁",
-    "shareCopiedDesc": "Teilen-Nachricht in Zwischenablage kopiert"
+    "copiedDesc": "Einladungscode kopiert",
+    "shareMessage": "Komm zu Eazy.Family – dem KI-gestützten Familienplaner. Nutze meinen Link und wir bekommen beide 14 Tage gratis: {{url}}",
+    "shareCopiedDesc": "Einladung kopiert",
+    "shareTitle": "Zu Eazy.Family kommen"
   },
   "upgrade": {
     "title": "Auf Familienplan upgraden",

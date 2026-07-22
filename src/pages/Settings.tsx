@@ -29,6 +29,7 @@ import { compressAndUpload, deleteStorageFile } from "@/lib/imageUpload";
 import { error as logError } from "@/lib/logger";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { GuestUpgradeModal } from "@/components/GuestUpgradeModal";
+import { ReferralSystem } from "@/components/ReferralSystem";
 import { restoreRCPurchases } from "@/lib/revenuecat";
 import { Browser } from "@capacitor/browser";
 
@@ -394,18 +395,20 @@ const Settings = () => {
   };
 
   const handleReferFriends = async () => {
-    let refUrl = 'https://eazy.family';
+    let code = '';
     try {
-      const { data } = await supabase.from('profiles').select('referral_code').eq('user_id', user?.id).single();
-      if (data?.referral_code) refUrl = `https://eazy.family?ref=${data.referral_code}`;
-    } catch { /* use base URL */ }
-    const text = `Join me on Eazy.Family – the smart hub for family life! Use my link to get 1 month of Premium free 🎁`;
+      const { data } = await supabase.rpc('get_or_create_my_referral_code');
+      code = (data as string) || '';
+    } catch { /* fall back to base URL */ }
+    // /auth?ref= is where Auth.tsx captures the code; a bare-domain ?ref is lost.
+    const refUrl = code ? `https://eazy.family/auth?ref=${code}` : 'https://eazy.family';
+    const text = t('referral.shareMessage', { url: refUrl });
     if (navigator.share) {
-      navigator.share({ title: 'Eazy.Family', text, url: refUrl }).catch(() => {});
+      navigator.share({ title: t('referral.shareTitle'), text }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(refUrl)
-        .then(() => toast({ title: 'Link copied!', description: refUrl }))
-        .catch(() => toast({ title: 'Share this link', description: refUrl }));
+      navigator.clipboard.writeText(text)
+        .then(() => toast({ title: t('referral.copied'), description: t('referral.shareCopiedDesc') }))
+        .catch(() => toast({ title: t('referral.shareTitle'), description: refUrl }));
     }
   };
 
@@ -556,6 +559,14 @@ const Settings = () => {
           </>
         </Card_>
       </div>
+
+      {/* ── Invite friends (dual-sided trial reward) ── */}
+      {!isGuest && (
+        <div className="space-y-2">
+          <SectionLabel>{t('referral.title')}</SectionLabel>
+          <ReferralSystem />
+        </div>
+      )}
 
       {/* ── App Tour ── */}
       <div className="space-y-2">

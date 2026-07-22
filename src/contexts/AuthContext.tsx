@@ -193,6 +193,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (event === 'SIGNED_IN') {
             enforceUserBoundary(session.user.id);
             identifyUser(session.user.id);
+            // Redeem a referral captured before signup (?ref link). Runs once a
+            // session exists, so it covers email auto-signin, OAuth and delayed
+            // sign-in. Cleared first to avoid retries; the RPC is idempotent.
+            const pendingRef = localStorage.getItem('pending-referral-code');
+            if (pendingRef) {
+              localStorage.removeItem('pending-referral-code');
+              // Fire-and-forget; the bonus lands server-side and surfaces on the
+              // next subscription refresh (app foreground / auth events).
+              supabase.rpc('redeem_referral', { _code: pendingRef }).catch(() => {});
+            }
             localStorage.setItem('eazy-has-signed-in', '1');
             loadCloudPreferences(session.user.id);
             if (session.access_token) {

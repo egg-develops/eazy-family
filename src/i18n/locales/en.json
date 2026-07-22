@@ -818,16 +818,17 @@
     "upcomingEvents": "Upcoming Events"
   },
   "referral": {
-    "title": "Refer Friends, Get Premium",
-    "description": "Share Eazy.Family and earn 30 days of Premium for each friend who joins",
-    "yourCode": "Your Referral Code",
-    "friendsReferred": "Friends Referred",
-    "daysEarned": "days of Premium earned",
-    "shareWithFriends": "Share with Friends",
+    "title": "Give 14 days, get 14 days",
+    "description": "Invite a friend's family. When they join with your code, you both get 14 bonus trial days.",
+    "yourCode": "Your invite code",
+    "friendsReferred": "friends joined",
+    "daysEarned": "bonus days earned",
+    "shareWithFriends": "Share invite",
     "copied": "Copied!",
-    "copiedDesc": "Referral code copied to clipboard",
-    "shareMessage": "Join me on Eazy.Family! Use my code {code} to get 7 days of Premium free! 🎁",
-    "shareCopiedDesc": "Share message copied to clipboard"
+    "copiedDesc": "Invite code copied to clipboard",
+    "shareMessage": "Join me on Eazy.Family — the AI-powered family organizer. Use my link and we both get 14 days free: {{url}}",
+    "shareCopiedDesc": "Invite copied to clipboard",
+    "shareTitle": "Join Eazy.Family"
   },
   "upgrade": {
     "title": "Upgrade to Family Plan",

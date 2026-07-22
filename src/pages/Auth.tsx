@@ -59,6 +59,9 @@ const Auth = () => {
     if (ref) {
       setReferralCode(ref);
       setIsSignUp(true);
+      // Persist so the reward survives to the first session, even for OAuth
+      // signups that never touch the form. AuthContext redeems it on SIGNED_IN.
+      localStorage.setItem('pending-referral-code', ref);
     } else if (signup === 'true') {
       setIsSignUp(true);
       try {
@@ -156,18 +159,14 @@ const Auth = () => {
     }
   };
 
-  const processReferral = async (newUserId: string) => {
-    if (!referralCode.trim() || !referralValid) return;
+  const processReferral = async (_newUserId: string) => {
+    const code = referralCode.trim();
+    if (!code) return;
     try {
-      const { data: referrer } = await supabase
-        .from('profiles').select('user_id').eq('referral_code', referralCode.trim()).single();
-      if (referrer) {
-        await supabase.from('referrals').insert({
-          referrer_user_id: referrer.user_id,
-          referred_user_id: newUserId,
-          referral_code: referralCode.trim(),
-          status: 'completed',
-        });
+      // Server-validated + grants the dual-sided trial bonus. Idempotent: a
+      // second call (e.g. also from AuthContext) returns already_referred.
+      const { data, error } = await supabase.rpc('redeem_referral', { _code: code });
+      if (!error && (data as { ok?: boolean } | null)?.ok) {
         toast({ title: t('auth.referralApplied'), description: t('auth.referralAppliedDesc') });
       }
     } catch (error) {
