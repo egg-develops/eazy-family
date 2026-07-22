@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { haptic } from "@/lib/haptic";
+import { signalPositiveMoment } from "@/lib/reviewPrompt";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -192,8 +193,14 @@ const Lists = () => {
     const { error } = await supabase.from('tasks').update({ completed: !item.completed }).eq('id', id);
     if (error) {
       setItems(prev => prev.map(i => i.id === id ? { ...i, completed: item.completed } : i));
-    } else if (!item.completed && user && item.type.startsWith('shopping')) {
-      logPurchase(user.id, item.title);
+    } else if (!item.completed) {
+      if (user && item.type.startsWith('shopping')) {
+        logPurchase(user.id, item.title);
+      } else {
+        // Completing a to-do is a genuine accomplishment — a good, non-intrusive
+        // moment to (eventually) ask an engaged user for an App Store review.
+        void signalPositiveMoment();
+      }
     }
   };
 
