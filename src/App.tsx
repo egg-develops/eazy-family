@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { RouteAnalytics } from "./components/RouteAnalytics";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -85,6 +86,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToTop />
+          <RouteAnalytics />
           <Routes>
               {/* Public marketing pages — light paper theme (no SplashThemeProvider) */}
               <Route path="/" element={<ErrorBoundary><Index /></ErrorBoundary>} />

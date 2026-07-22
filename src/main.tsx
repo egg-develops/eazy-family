@@ -3,6 +3,9 @@ import App from './App.tsx'
 import './index.css'
 import './i18n/config'
 import { Capacitor } from '@capacitor/core'
+import { initAnalytics } from './lib/analytics'
+
+initAnalytics();
 
 // On native, unregister any previously installed service workers (legacy cleanup)
 // and skip registration — SW fetch interception conflicts with Capacitor's https://localhost bridge on Android

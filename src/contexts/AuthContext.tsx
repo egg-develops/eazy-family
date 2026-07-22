@@ -3,6 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { error as logError } from "@/lib/logger";
+import { identifyUser, resetAnalytics } from "@/lib/analytics";
 import { loadCloudPreferences, setPreferenceUserId, clearLocalPreferences, clearAllLocalUserData } from "@/lib/preferencesSync";
 
 // Wipe the previous account's local data when a DIFFERENT user appears on this
@@ -191,6 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           fetchSubscriptionTier(session.user.id);
           if (event === 'SIGNED_IN') {
             enforceUserBoundary(session.user.id);
+            identifyUser(session.user.id);
             localStorage.setItem('eazy-has-signed-in', '1');
             loadCloudPreferences(session.user.id);
             if (session.access_token) {
@@ -207,6 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setPreferenceUserId(null);
           if (event === 'SIGNED_OUT') {
             clearWidgetToken();
+            resetAnalytics();
             if (Capacitor.isNativePlatform()) {
               resetRCUser().catch(() => {});
               setIsPremium(false);

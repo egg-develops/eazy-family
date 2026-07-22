@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Globe, Apple, Smartphone, CheckCircle, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { track } from "@/lib/analytics";
 import { PublicNav } from "@/components/PublicNav";
 
 const HEADING = { color: "#1C1C18" };
@@ -48,6 +49,7 @@ export default function Download() {
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* iOS — live on the App Store */}
           <a href="https://apps.apple.com/app/id6765778216" target="_blank" rel="noopener noreferrer"
+            onClick={() => track('app_store_click', { location: 'download_page' })}
             className="rounded-2xl p-6 text-center space-y-4 block transition-transform hover:-translate-y-0.5" style={CARD}>
             <Apple className="w-10 h-10 mx-auto" style={{ color: "#964735" }} />
             <div>
