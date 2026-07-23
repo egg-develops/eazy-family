@@ -82,6 +82,12 @@ const CONTENT = {
       'Family trip was great, all the planning was worth it. A few things we could have done without but in the end all good.',
       'Need to get back on my evening routine, it really affects my next day. Compared to the last two weeks when I was feeling amazing.',
     ],
+    shopping: ['Bananas', 'Cherry tomatoes', 'Organic whole milk', 'Free-range eggs', 'Cheddar cheese', 'Chicken breast', 'Sourdough bread', 'Coffee beans', 'Orange juice', 'Dish soap', 'Baby wipes', 'Pasta'],
+    shared: [
+      { title: 'Book family holiday', day: 3 },
+      { title: 'Sign school permission slip', day: 1 },
+      { title: 'Buy birthday gift for Emma', day: 5 },
+    ],
     orb: 'Create a task to plan anniversary dinner and add flowers and cake to our shopping list.',
     dismiss: ['Skip', "Let's go"],
   },
@@ -105,6 +111,12 @@ const CONTENT = {
     journal: [
       'Der Familienausflug war toll, die ganze Planung hat sich gelohnt. Ein paar Dinge hätten wir weglassen können, aber am Ende alles gut.',
       'Ich muss wieder zu meiner Abendroutine finden — sie beeinflusst meinen nächsten Tag enorm. Verglichen mit den letzten zwei Wochen, als ich mich großartig fühlte.',
+    ],
+    shopping: ['Bananen', 'Kirschtomaten', 'Bio-Vollmilch', 'Freilandeier', 'Cheddar-Käse', 'Hähnchenbrust', 'Sauerteigbrot', 'Kaffeebohnen', 'Orangensaft', 'Spülmittel', 'Feuchttücher', 'Nudeln'],
+    shared: [
+      { title: 'Familienurlaub buchen', day: 3 },
+      { title: 'Einverständniserklärung Schule unterschreiben', day: 1 },
+      { title: 'Geburtstagsgeschenk für Emma kaufen', day: 5 },
     ],
     orb: 'Erstelle eine Aufgabe, um das Jahrestag-Dinner zu planen, und füge Blumen und Kuchen zur Einkaufsliste hinzu.',
     dismiss: ['Überspringen', "Los geht's", 'Weiter', 'Fertig'],
@@ -142,15 +154,35 @@ async function seedData() {
     memberIds = (updatedMembers || []).filter(m => m.user_id !== userId).map(m => m.user_id);
   }
 
+  // Personal to-dos
   await sb.from('tasks').delete().eq('user_id', userId).eq('type', 'task');
   for (let i = 0; i < C.tasks.length; i++) {
     const sharedWith = memberIds.length > 0 ? [memberIds[i % memberIds.length]] : null;
     await sb.from('tasks').insert({ title: C.tasks[i], type: 'task', user_id: userId, completed: false, shared_with: sharedWith });
   }
 
-  const calendarEvents = C.cal.map(e => ({
+  // Personal shopping list (the default "Persönlich" tab reads shopping_personal)
+  await sb.from('tasks').delete().eq('user_id', userId).in('type', ['shopping', 'shopping_personal']);
+  for (const title of (C.shopping || [])) {
+    await sb.from('tasks').insert({ title, type: 'shopping_personal', user_id: userId, completed: false });
+  }
+
+  // Shared family tasks (Family Page reads type='shared' with a due_date, ≤60d out)
+  await sb.from('tasks').delete().eq('user_id', userId).eq('type', 'shared');
+  for (const s of (C.shared || [])) {
+    const assignee = memberIds.length > 0 ? memberIds[(s.day) % memberIds.length] : null;
+    await sb.from('tasks').insert({
+      title: s.title, type: 'shared', user_id: userId, completed: false,
+      due_date: evISO(s.day, 9, 0), assigned_to: assignee, family_id: familyId || null,
+    });
+  }
+
+  // Attendees make events show up on the Family Page (it filters attendees?.length).
+  const attendeePool = ['Sarah', 'Liam', 'Zoe', 'Tom'];
+  const calendarEvents = C.cal.map((e, i) => ({
     id: e.id, title: e.title, startDate: evISO(e.day, e.h, e.m || 0), endDate: evISO(e.day, e.h, (e.m || 0) + e.dur),
     allDay: false, ...(e.location ? { location: e.location } : {}), type: 'event', color: e.color,
+    attendees: attendeePool.slice(0, 2 + (i % 2)),
   }));
   await sb.rpc('upsert_preference', { p_user_id: userId, p_key: 'eazy-family-calendar-items', p_value: calendarEvents });
 
@@ -231,8 +263,9 @@ async function emulateSafeArea(page) {
 }
 
 async function seedCalendar(page) {
+  const pool = ['Sarah', 'Liam', 'Zoe', 'Tom'];
   await page.evaluate((events) => localStorage.setItem('eazy-family-calendar-items', JSON.stringify(events)),
-    C.cal.map(e => ({ id: e.id, title: e.title, startDate: evISO(e.day, e.h, e.m || 0), endDate: evISO(e.day, e.h, (e.m || 0) + e.dur), allDay: false, ...(e.location ? { location: e.location } : {}), type: 'event', color: e.color })));
+    C.cal.map((e, i) => ({ id: e.id, title: e.title, startDate: evISO(e.day, e.h, e.m || 0), endDate: evISO(e.day, e.h, (e.m || 0) + e.dur), allDay: false, ...(e.location ? { location: e.location } : {}), type: 'event', color: e.color, attendees: pool.slice(0, 2 + (i % 2)) })));
 }
 
 async function seedRitualsAndJournal(page) {
