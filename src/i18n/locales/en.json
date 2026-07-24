@@ -1442,7 +1442,7 @@
       "downloadTitle": "Download Eazy.",
       "platformSub": "Available on Web · iOS & Android coming soon · English, German, French, Italian",
       "downloadSub": "Available on Web · iOS & Android coming soon · English, German, French, Italian",
-      "appStore": "App Store — coming soon",
+      "appStore": "App Store",
       "googlePlay": "Google Play — coming soon",
       "getStartedWeb": "Get started on Web →"
     },
@@ -1534,6 +1534,44 @@
       "referralPrompt2": "Share your link and get a free month when they subscribe.",
       "copyLink": "Copy your link →",
       "shareLink": "Share your link →"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Common questions",
+      "items": [
+        {
+          "q": "Does Eazy.Family offer a free trial?",
+          "a": "Yes — you get a 14-day free trial with full access to all features."
+        },
+        {
+          "q": "What devices does it work on?",
+          "a": "iOS (iPhone & iPad) and any web browser. Download from the App Store or use it at eazy.family. Android is coming soon."
+        },
+        {
+          "q": "Does it sync with Google, Apple, or Outlook calendars?",
+          "a": "Yes. Connect your existing calendars and see everything in one view without switching apps."
+        },
+        {
+          "q": "How do I invite my family?",
+          "a": "After signing up, go to the Family section and share an invite link. Family members get their own login and see the shared space instantly."
+        },
+        {
+          "q": "Can I use it without creating an account?",
+          "a": "Yes — you can explore the app as a guest and create an account when you are ready to sync across devices or invite your family."
+        },
+        {
+          "q": "Is our family data private?",
+          "a": "Your data is stored securely and never shared or sold. Only your invited family members can see your shared content."
+        },
+        {
+          "q": "What languages is it available in?",
+          "a": "English, German, French, Italian, Spanish, and Portuguese."
+        },
+        {
+          "q": "Can I use voice input?",
+          "a": "Yes. Say things like \"Add milk to the shopping list\" or \"Dentist Thursday at 3pm\" — Eazy handles the rest."
+        }
+      ]
     }
   },
   "helpCenter": {

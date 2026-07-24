@@ -144,7 +144,13 @@ const Onboarding = () => {
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
 
-  const saved = searchParams.get('fresh') ? { screen: 0, state: EMPTY } : load();
+  // Seed the onboarding language from the active UI language (set by the /de,
+  // /fr… marketing URL or a stored preference) so the flow continues in it
+  // instead of resetting to English.
+  const initialLang = (i18n.language || '').split('-')[0];
+  const saved = searchParams.get('fresh')
+    ? { screen: 0, state: { ...EMPTY, language: initialLang } }
+    : load();
   const [screen, setScreen] = useState(saved.screen);
   const [dir, setDir] = useState<'fwd' | 'back'>('fwd');
   const [state, setState] = useState<OBState>(saved.state);

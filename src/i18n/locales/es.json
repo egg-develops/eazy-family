@@ -1447,7 +1447,7 @@
       "downloadTitle": "Descarga Eazy.",
       "platformSub": "Disponible en web · iOS y Android próximamente · Inglés, alemán, francés, italiano, español, portugués",
       "downloadSub": "Disponible en web · iOS y Android próximamente · Inglés, alemán, francés, italiano, español, portugués",
-      "appStore": "App Store — próximamente",
+      "appStore": "App Store",
       "googlePlay": "Google Play — próximamente",
       "getStartedWeb": "Comenzar en web →"
     },
@@ -1539,6 +1539,44 @@
       "referralPrompt2": "Comparte tu enlace y obtén un mes gratis cuando se suscriban.",
       "copyLink": "Copiar tu enlace →",
       "shareLink": "Compartir tu enlace →"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Preguntas frecuentes",
+      "items": [
+        {
+          "q": "¿Eazy.Family ofrece una prueba gratuita?",
+          "a": "Sí — tienes 14 días de prueba gratuita con acceso completo a todas las funciones."
+        },
+        {
+          "q": "¿En qué dispositivos funciona?",
+          "a": "iOS (iPhone y iPad) y cualquier navegador web. Descárgalo en la App Store o úsalo en eazy.family. Android llegará pronto."
+        },
+        {
+          "q": "¿Se sincroniza con los calendarios de Google, Apple u Outlook?",
+          "a": "Sí. Conecta tus calendarios existentes y ve todo en una sola vista, sin cambiar de app."
+        },
+        {
+          "q": "¿Cómo invito a mi familia?",
+          "a": "Tras registrarte, ve a la sección Familia y comparte un enlace de invitación. Cada miembro obtiene su propio acceso y ve el espacio compartido al instante."
+        },
+        {
+          "q": "¿Puedo usarlo sin crear una cuenta?",
+          "a": "Sí — puedes explorar la app como invitado y crear una cuenta cuando quieras sincronizar dispositivos o invitar a tu familia."
+        },
+        {
+          "q": "¿Nuestros datos familiares son privados?",
+          "a": "Tus datos se guardan de forma segura y nunca se comparten ni se venden. Solo los familiares que invites ven tu contenido compartido."
+        },
+        {
+          "q": "¿En qué idiomas está disponible?",
+          "a": "Inglés, alemán, francés, italiano, español y portugués."
+        },
+        {
+          "q": "¿Puedo usar la entrada por voz?",
+          "a": "Sí. Di cosas como «Añade leche a la lista de la compra» o «Dentista el jueves a las 15h» — Eazy se encarga del resto."
+        }
+      ]
     }
   },
   "helpCenter": {

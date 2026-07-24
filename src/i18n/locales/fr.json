@@ -1445,7 +1445,7 @@
       "downloadTitle": "Téléchargez Eazy.",
       "platformSub": "Disponible sur le web · iOS & Android bientôt · Anglais, Allemand, Français, Italien",
       "downloadSub": "Disponible sur le web · iOS & Android bientôt · Anglais, Allemand, Français, Italien",
-      "appStore": "App Store — bientôt",
+      "appStore": "App Store",
       "googlePlay": "Google Play — bientôt",
       "getStartedWeb": "Commencer sur le web →"
     },
@@ -1537,6 +1537,44 @@
       "referralPrompt2": "Partagez votre lien et obtenez un mois offert quand ils s'abonnent.",
       "copyLink": "Copier votre lien →",
       "shareLink": "Partager votre lien →"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Questions fréquentes",
+      "items": [
+        {
+          "q": "Eazy.Family propose-t-il un essai gratuit ?",
+          "a": "Oui — vous bénéficiez d’un essai gratuit de 14 jours avec un accès complet à toutes les fonctionnalités."
+        },
+        {
+          "q": "Sur quels appareils fonctionne-t-il ?",
+          "a": "iOS (iPhone et iPad) et tout navigateur web. Téléchargez-le sur l’App Store ou utilisez-le sur eazy.family. Android arrive bientôt."
+        },
+        {
+          "q": "Se synchronise-t-il avec les calendriers Google, Apple ou Outlook ?",
+          "a": "Oui. Connectez vos calendriers existants et voyez tout dans une seule vue, sans changer d’application."
+        },
+        {
+          "q": "Comment inviter ma famille ?",
+          "a": "Après votre inscription, allez dans la section Famille et partagez un lien d’invitation. Chaque membre obtient son propre accès et voit l’espace partagé instantanément."
+        },
+        {
+          "q": "Puis-je l’utiliser sans créer de compte ?",
+          "a": "Oui — vous pouvez explorer l’application en tant qu’invité et créer un compte quand vous êtes prêt à synchroniser vos appareils ou inviter votre famille."
+        },
+        {
+          "q": "Nos données familiales sont-elles privées ?",
+          "a": "Vos données sont stockées en sécurité et ne sont jamais partagées ni vendues. Seuls les membres que vous invitez voient vos contenus partagés."
+        },
+        {
+          "q": "Dans quelles langues est-il disponible ?",
+          "a": "Anglais, allemand, français, italien, espagnol et portugais."
+        },
+        {
+          "q": "Puis-je utiliser la saisie vocale ?",
+          "a": "Oui. Dites par exemple « Ajoute du lait à la liste de courses » ou « Dentiste jeudi à 15h » — Eazy s’occupe du reste."
+        }
+      ]
     }
   },
   "helpCenter": {

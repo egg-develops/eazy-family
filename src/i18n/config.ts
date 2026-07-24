@@ -45,7 +45,13 @@ function detectLng(): string {
   // links always render in that language.
   if (typeof window !== 'undefined') {
     const seg = window.location.pathname.split('/')[1];
-    if ((SEO_LOCALE_PREFIXES as readonly string[]).includes(seg)) return seg;
+    if ((SEO_LOCALE_PREFIXES as readonly string[]).includes(seg)) {
+      // Persist so the choice survives navigation away from the localized URL
+      // (e.g. into /onboarding, which has no locale prefix) and page reloads —
+      // otherwise the flow silently reverts to English.
+      try { localStorage.setItem('eazy-family-language', seg); } catch { /* ignore */ }
+      return seg;
+    }
   }
   const stored = localStorage.getItem('eazy-family-language');
   if (stored) return stored;

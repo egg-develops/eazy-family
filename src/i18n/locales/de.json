@@ -1445,7 +1445,7 @@
       "downloadTitle": "Eazy herunterladen.",
       "platformSub": "Im Web verfügbar · iOS & Android demnächst · Englisch, Deutsch, Französisch, Italienisch",
       "downloadSub": "Im Web verfügbar · iOS & Android demnächst · Englisch, Deutsch, Französisch, Italienisch",
-      "appStore": "App Store — demnächst",
+      "appStore": "App Store",
       "googlePlay": "Google Play — demnächst",
       "getStartedWeb": "Im Web starten →"
     },
@@ -1537,6 +1537,44 @@
       "referralPrompt2": "Teile deinen Link und erhalte einen kostenlosen Monat, wenn sie abonnieren.",
       "copyLink": "Deinen Link kopieren →",
       "shareLink": "Deinen Link teilen →"
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "title": "Häufige Fragen",
+      "items": [
+        {
+          "q": "Bietet Eazy.Family eine kostenlose Testphase?",
+          "a": "Ja — du bekommst 14 Tage kostenlos mit vollem Zugriff auf alle Funktionen."
+        },
+        {
+          "q": "Auf welchen Geräten funktioniert es?",
+          "a": "iOS (iPhone & iPad) und jeder Webbrowser. Lade es im App Store herunter oder nutze es auf eazy.family. Android kommt bald."
+        },
+        {
+          "q": "Synchronisiert es mit Google-, Apple- oder Outlook-Kalendern?",
+          "a": "Ja. Verbinde deine bestehenden Kalender und sieh alles in einer Ansicht, ohne die App zu wechseln."
+        },
+        {
+          "q": "Wie lade ich meine Familie ein?",
+          "a": "Nach der Anmeldung gehst du zum Bereich Familie und teilst einen Einladungslink. Familienmitglieder erhalten ihren eigenen Login und sehen den gemeinsamen Bereich sofort."
+        },
+        {
+          "q": "Kann ich es ohne Konto nutzen?",
+          "a": "Ja — du kannst die App als Gast ausprobieren und ein Konto erstellen, wenn du bereit bist, über Geräte hinweg zu synchronisieren oder deine Familie einzuladen."
+        },
+        {
+          "q": "Sind unsere Familiendaten privat?",
+          "a": "Deine Daten werden sicher gespeichert und niemals geteilt oder verkauft. Nur deine eingeladenen Familienmitglieder sehen deine geteilten Inhalte."
+        },
+        {
+          "q": "In welchen Sprachen ist es verfügbar?",
+          "a": "Englisch, Deutsch, Französisch, Italienisch, Spanisch und Portugiesisch."
+        },
+        {
+          "q": "Kann ich Spracheingabe nutzen?",
+          "a": "Ja. Sag zum Beispiel „Milch auf die Einkaufsliste setzen\" oder „Zahnarzt Donnerstag um 15 Uhr\" — Eazy erledigt den Rest."
+        }
+      ]
     }
   },
   "helpCenter": {

@@ -104,21 +104,31 @@ const PfCheck = () => (
   </span>
 );
 
-const CtaDark = ({ onStart, eyebrow, headline, headlineEm, sub, button }: { onStart: () => void; eyebrow: string; headline: string; headlineEm: string; sub: string; button: string }) => (
+const CtaDark = ({ onStart, onStore, eyebrow, headline, headlineEm, sub, button, storeButton }: { onStart: () => void; onStore: () => void; eyebrow: string; headline: string; headlineEm: string; sub: string; button: string; storeButton: string }) => (
   <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
     <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>{eyebrow}</div>
     <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
       {headline} <em style={{ fontStyle: "italic", color: T.primaryL }}>{headlineEm}</em>
     </h2>
     <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>{sub}</p>
-    <button
-      onClick={onStart}
-      style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
-    >
-      {button}
-    </button>
+    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+      <button
+        onClick={onStore}
+        style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
+      >
+        {storeButton}
+      </button>
+      <button
+        onClick={onStart}
+        style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fdf9f3", background: "none", border: "1px solid rgba(253,249,243,0.35)", padding: "10px 26px", borderRadius: "9999px", cursor: "pointer" }}
+      >
+        {button}
+      </button>
+    </div>
   </div>
 );
+
+const APP_STORE_URL = "https://apps.apple.com/app/id6765778216";
 
 const FAQS = [
   {
@@ -156,16 +166,20 @@ const FAQS = [
 ];
 
 const FaqSection = () => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState<number | null>(null);
+  // Localized FAQ (falls back to the English FAQS array if keys are missing).
+  const localized = t('website.faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
+  const faqs = Array.isArray(localized) && localized.length ? localized : FAQS;
   return (
     <section style={{ padding: "72px 40px", borderBottom: `1px solid ${T.outline}`, background: T.bg }} id="faq">
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        <Eyebrow>FAQ</Eyebrow>
+        <Eyebrow>{t('website.faq.eyebrow', 'FAQ')}</Eyebrow>
         <h2 style={{ fontFamily: lora, fontSize: "clamp(24px,4vw,36px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 40, color: "#1c1c18" }}>
-          Common questions
+          {t('website.faq.title', 'Common questions')}
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {FAQS.map((faq, i) => (
+          {faqs.map((faq, i) => (
             <div
               key={i}
               onClick={() => setOpen(open === i ? null : i)}
@@ -486,9 +500,12 @@ export default function Index() {
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: "auto", paddingTop: 4 }}>
-                <button onClick={() => navigate("/onboarding?fresh=true")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
-                  {t('website.pricing.startTrial')}
+              <div style={{ marginTop: "auto", paddingTop: 4, display: "flex", flexDirection: "column", gap: 8 }}>
+                <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={() => track('app_store_click', { location: 'pricing' })} style={{ width: "100%", boxSizing: "border-box", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center", textDecoration: "none", display: "inline-block" }}>
+                  {t('website.hero.downloadApp')}
+                </a>
+                <button onClick={() => navigate("/onboarding?fresh=true")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", textAlign: "center" }}>
+                  {t('website.howItWorks.getStartedWeb')}
                 </button>
               </div>
               <div style={{ textAlign: "center", fontSize: 12, color: T.faint, marginTop: -8 }}>{t('website.pricing.cancelNote')}</div>
@@ -502,11 +519,13 @@ export default function Index() {
 
       {/* ── Footer CTA ── */}
       <CtaDark
+        onStore={() => { track('app_store_click', { location: 'footer_cta' }); window.open(APP_STORE_URL, '_blank', 'noopener'); }}
         onStart={() => navigate("/onboarding?fresh=true")}
         eyebrow={t('website.cta.eyebrow')}
         headline={t('website.cta.headline')}
         headlineEm={t('website.cta.headlineEm')}
         sub={t('website.cta.sub')}
+        storeButton={t('website.hero.downloadApp')}
         button={t('website.cta.button')}
       />
 
