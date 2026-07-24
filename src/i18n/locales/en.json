@@ -2,7 +2,10 @@
   "onboarding": {
     "welcome": {
       "title": "Welcome to Eazy.Family",
-      "description": "Your daily app to make life easy — sync schedules, to-do's, shopping, and plan events with your family's own AI assistant."
+      "description": "Your daily app to make life easy — sync schedules, to-do's, shopping, and plan events with your family's own AI assistant.",
+      "eyebrow": "Welcome to",
+      "tagline": "The smart app for day-to-day family life",
+      "subtitle": "Answer a few questions to customize your experience"
     },
     "language": {
       "title": "Choose your language",
@@ -152,7 +155,8 @@
       "other": "Other",
       "otherPlaceholder": "Type your country",
       "skipInvite": "I'll do this later"
-    }
+    },
+    "you": "You"
   },
   "app": {
     "name": "Eazy.Family",

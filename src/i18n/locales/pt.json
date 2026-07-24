@@ -2,7 +2,10 @@
   "onboarding": {
     "welcome": {
       "title": "Bem-vindo ao Eazy.Family",
-      "description": "A tua app diária para facilitar a vida — sincroniza horários, tarefas, compras e planeia eventos com o assistente de IA da tua família."
+      "description": "A tua app diária para facilitar a vida — sincroniza horários, tarefas, compras e planeia eventos com o assistente de IA da tua família.",
+      "eyebrow": "Bem-vindo à",
+      "tagline": "A app inteligente para o dia a dia da família",
+      "subtitle": "Responde a algumas perguntas para personalizar a tua experiência"
     },
     "language": {
       "title": "Escolhe o teu idioma",
@@ -152,7 +155,8 @@
       "other": "Outro",
       "otherPlaceholder": "Escreva o seu país",
       "skipInvite": "Farei isso mais tarde"
-    }
+    },
+    "you": "Tu"
   },
   "app": {
     "name": "Eazy.Family",

@@ -2,7 +2,10 @@
   "onboarding": {
     "welcome": {
       "title": "Willkommen bei Eazy.Family",
-      "description": "Deine tägliche App für ein einfaches Leben — Termine synchronisieren, To-do's, Einkäufe und Events planen mit deinem eigenen KI-Assistenten."
+      "description": "Deine tägliche App für ein einfaches Leben — Termine synchronisieren, To-do's, Einkäufe und Events planen mit deinem eigenen KI-Assistenten.",
+      "eyebrow": "Willkommen bei",
+      "tagline": "Die smarte App für den Familienalltag",
+      "subtitle": "Beantworte ein paar Fragen, um deine Erfahrung anzupassen"
     },
     "language": {
       "title": "Wähle deine Sprache",
@@ -152,7 +155,8 @@
       "other": "Anderes",
       "otherPlaceholder": "Dein Land eingeben",
       "skipInvite": "Ich mache das später"
-    }
+    },
+    "you": "Du"
   },
   "app": {
     "name": "Eazy.Family",

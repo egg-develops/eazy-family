@@ -352,21 +352,23 @@ const Onboarding = () => {
 };
 
 // ── SCREEN 0 — Welcome ───────────────────────────────────────────────────────
-const WelcomeScreen = ({ next }: { next: () => void }) => (
+const WelcomeScreen = ({ next }: { next: () => void }) => {
+  const { t } = useTranslation();
+  return (
   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
     <div style={{ animation: 'ob-scale-in 0.7s cubic-bezier(0.16,1,0.3,1) both' }}>
       <OrbeMorphic size={200} />
     </div>
     <div style={{ marginTop: 36, animation: 'ob-fade 0.6s ease 0.3s both' }}>
-      <p style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, margin: '0 0 8px' }}>Welcome to</p>
+      <p style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, margin: '0 0 8px' }}>{t('onboarding.welcome.eyebrow')}</p>
       <h1 style={{ fontFamily: LORA, fontSize: 40, fontWeight: 400, color: T.ink, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.01em' }}>
         eazy<span style={{ color: T.primary }}>.</span>family
       </h1>
       <p style={{ fontSize: 16, color: T.ink, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.4 }}>
-        The smart app for day-to-day family life
+        {t('onboarding.welcome.tagline')}
       </p>
       <p style={{ fontSize: 14, color: T.faint, margin: '0 0 40px', lineHeight: 1.6, maxWidth: 280 }}>
-        Answer a few questions to customize your experience
+        {t('onboarding.welcome.subtitle')}
       </p>
       <button
         onClick={next}
@@ -378,11 +380,12 @@ const WelcomeScreen = ({ next }: { next: () => void }) => (
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        Let's get started
+        {t('onboarding.getStarted')}
       </button>
     </div>
   </div>
-);
+  );
+};
 
 // ── SCREEN 1 — Language ───────────────────────────────────────────────────────
 const LANGUAGES = [
@@ -395,6 +398,7 @@ const LANGUAGES = [
 ];
 
 const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
+  const { t } = useTranslation();
   const select = (code: string) => {
     set('language', code);
     i18n.changeLanguage(code);
@@ -410,7 +414,7 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
         <h1 style={{ fontFamily: LORA, fontSize: 36, fontWeight: 400, fontStyle: 'italic', color: T.ink, marginTop: 24, marginBottom: 6 }}>
           eazy<span style={{ color: T.primary }}>.</span>family
         </h1>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>Choose your language</p>
+        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.language.title')}</p>
       </div>
       <div style={{ width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {LANGUAGES.map(lang => (
@@ -791,7 +795,7 @@ const LocationInviteScreen = ({
     {/* Two Orbe circles = invite visual */}
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: -16, paddingTop: 8 }}>
       <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg, #E8956A, ${T.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 4px 16px rgba(150,71,53,0.25)' }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: SANS }}>You</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: SANS }}>{t('onboarding.you')}</span>
       </div>
       <div style={{ width: 56, height: 56, borderRadius: '50%', background: T.outline, border: `2px dashed ${T.faint}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: -10 }}>
         <span style={{ fontSize: 24, color: T.faint }}>+</span>
