@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cloudSet } from "@/lib/preferencesSync";
 import { error as logError } from "@/lib/logger";
 import { openInMaps } from "@/lib/maps";
+import { uploadAttachment, deleteAttachment, type Attachment } from "@/lib/attachmentUpload";
+import { searchPlaces } from "@/lib/placeSearch";
 import { parseDatesLocalized } from "@/lib/localeChrono";
 import { getSpeechLocale } from "@/lib/speechLocale";
 import { Capacitor } from "@capacitor/core";
@@ -61,6 +63,8 @@ interface Event {
   appleCalendarId?: string;
   attendees?: string[];
   visibleTo?: 'everyone' | 'parents' | 'me';
+  notes?: string;
+  attachments?: Attachment[];
 }
 
 interface Reminder {
@@ -512,6 +516,56 @@ const Calendar = () => {
   const [eventNotes, setEventNotes] = useState('');
   const [eventReminder, setEventReminder] = useState('15min');
   const [eventAttendees, setEventAttendees] = useState<string[]>([]);
+  const [eventAttachments, setEventAttachments] = useState<Attachment[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const attachInputRef = useRef<HTMLInputElement>(null);
+  const [locSuggestions, setLocSuggestions] = useState<string[]>([]);
+  const [showLocSuggestions, setShowLocSuggestions] = useState(false);
+  const locSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locAbort = useRef<AbortController | null>(null);
+  const skipLocSearch = useRef(false);
+
+  const onLocationChange = (value: string) => {
+    setEventLocation(value);
+    if (skipLocSearch.current) { skipLocSearch.current = false; return; }
+    if (locSearchTimer.current) clearTimeout(locSearchTimer.current);
+    if (value.trim().length < 3) { setLocSuggestions([]); setShowLocSuggestions(false); return; }
+    locSearchTimer.current = setTimeout(async () => {
+      locAbort.current?.abort();
+      locAbort.current = new AbortController();
+      const results = await searchPlaces(value, { signal: locAbort.current.signal });
+      setLocSuggestions(results);
+      setShowLocSuggestions(results.length > 0);
+    }, 350);
+  };
+
+  const pickLocation = (label: string) => {
+    skipLocSearch.current = true;
+    setEventLocation(label);
+    setLocSuggestions([]);
+    setShowLocSuggestions(false);
+  };
+
+  const handleAttachFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !user) return;
+    setUploadingAttachment(true);
+    try {
+      const uploaded: Attachment[] = [];
+      for (const file of Array.from(files)) {
+        try { uploaded.push(await uploadAttachment(file, user.id)); }
+        catch (e) { toast({ title: t('calendar.attachFailed'), description: (e as Error).message, variant: 'destructive' }); }
+      }
+      if (uploaded.length) setEventAttachments(prev => [...prev, ...uploaded]);
+    } finally {
+      setUploadingAttachment(false);
+      if (attachInputRef.current) attachInputRef.current.value = '';
+    }
+  };
+
+  const removeAttachment = (url: string) => {
+    setEventAttachments(prev => prev.filter(a => a.url !== url));
+    void deleteAttachment(url);
+  };
   const [eventColor, setEventColor] = useState('#964735');
   const [eventVisibleTo, setEventVisibleTo] = useState<'everyone' | 'parents' | 'me'>('everyone');
   const [eventCustomTag, setEventCustomTag] = useState('');
@@ -912,6 +966,9 @@ const Calendar = () => {
     setCustomRepeatNumber("1");
     setCustomRepeatUnit("weeks");
     setEventAttendees([]);
+    setEventAttachments([]);
+    setLocSuggestions([]);
+    setShowLocSuggestions(false);
     setEventColor('#964735');
     setEventVisibleTo('everyone');
     setEventCustomTag('');
@@ -1023,6 +1080,10 @@ const Calendar = () => {
       setEventVisibleTo(item.visibleTo || 'everyone');
       setEventCustomTag(item.customTag || '');
       setEventAttendees(item.attendees || []);
+      setEventNotes(item.notes || '');
+      setEventAttachments(item.attachments || []);
+      setLocSuggestions([]);
+      setShowLocSuggestions(false);
       setEndManuallyAdjusted(false);
       setActiveEventPicker(null);
     } else {
@@ -1095,6 +1156,8 @@ const Calendar = () => {
               color: eventColor,
               visibleTo: eventVisibleTo,
               attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
+              notes: eventNotes.trim() || undefined,
+              attachments: eventAttachments.length > 0 ? eventAttachments : undefined,
             }
           : item
       ));
@@ -1130,6 +1193,8 @@ const Calendar = () => {
         appleCalendarId,
         attendees: eventAttendees.length > 0 ? eventAttendees : undefined,
         visibleTo: eventVisibleTo,
+        notes: eventNotes.trim() || undefined,
+        attachments: eventAttachments.length > 0 ? eventAttachments : undefined,
       };
 
       setItems([...items, newEvent]);
@@ -2322,17 +2387,41 @@ const Calendar = () => {
                   </div>
                 </div>
 
-                {/* Location */}
-                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <button
-                    type="button"
-                    onClick={() => { void openInMaps(eventLocation); }}
-                    style={{ lineHeight: 0 }}
-                  >
-                    <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: eventLocation.trim() ? '#964735' : 'hsl(var(--muted-foreground))' }} />
-                  </button>
-                  <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
-                    placeholder={t('calendar.location')} value={eventLocation} onChange={e => setEventLocation(e.target.value)} />
+                {/* Location — with address autocomplete */}
+                <div className="relative">
+                  <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                    <button
+                      type="button"
+                      onClick={() => { void openInMaps(eventLocation); }}
+                      style={{ lineHeight: 0 }}
+                      title={t('calendar.openInMaps')}
+                    >
+                      <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: eventLocation.trim() ? '#964735' : 'hsl(var(--muted-foreground))' }} />
+                    </button>
+                    <input className="flex-1 outline-none text-sm" style={{ background: 'transparent', color: 'hsl(var(--foreground))' }}
+                      placeholder={t('calendar.location')} value={eventLocation}
+                      autoComplete="off"
+                      onChange={e => onLocationChange(e.target.value)}
+                      onFocus={() => { if (locSuggestions.length) setShowLocSuggestions(true); }}
+                      onBlur={() => setTimeout(() => setShowLocSuggestions(false), 150)} />
+                  </div>
+                  {showLocSuggestions && locSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 rounded-2xl overflow-hidden z-30 shadow-lg"
+                      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                      {locSuggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); pickLocation(s); }}
+                          className="w-full text-left px-4 py-2.5 text-sm flex items-start gap-2.5 hover:opacity-80"
+                          style={{ color: 'hsl(var(--foreground))', borderBottom: i < locSuggestions.length - 1 ? '1px solid hsl(var(--border))' : 'none' }}
+                        >
+                          <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                          <span>{s}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Participants */}
@@ -2373,11 +2462,33 @@ const Calendar = () => {
                     placeholder={t('calendar.notesPlaceholder')} value={eventNotes} onChange={e => setEventNotes(e.target.value)} />
                 </div>
 
-                {/* Attachment */}
-                <div className="rounded-2xl flex items-center gap-3 px-4 py-3.5" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
-                  <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
-                  <span className="flex-1 text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('calendar.addAttachment')}</span>
-                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--border))' }} />
+                {/* Attachments */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
+                  {eventAttachments.map((a) => (
+                    <div key={a.url} className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
+                      <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: '#964735' }} />
+                      <a href={a.url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm truncate underline" style={{ color: 'hsl(var(--foreground))' }}>{a.name}</a>
+                      <button type="button" onClick={() => removeAttachment(a.url)} className="opacity-50 hover:opacity-100">
+                        <X className="w-4 h-4" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => attachInputRef.current?.click()}
+                    disabled={uploadingAttachment}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 disabled:opacity-60"
+                  >
+                    {uploadingAttachment
+                      ? <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                      : <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />}
+                    <span className="flex-1 text-sm text-left" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      {uploadingAttachment ? t('calendar.uploading') : t('calendar.addAttachment')}
+                    </span>
+                    <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--border))' }} />
+                  </button>
+                  <input ref={attachInputRef} type="file" multiple className="hidden"
+                    onChange={e => handleAttachFiles(e.target.files)} />
                 </div>
               </>
             ) : (

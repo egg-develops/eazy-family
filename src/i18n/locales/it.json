@@ -357,7 +357,10 @@
     "year": "Anno",
     "view3Day": "3 Giorni",
     "view42Day": "42 Giorni",
-    "listening": "Ascolto…"
+    "listening": "Ascolto…",
+    "openInMaps": "Apri in Mappe",
+    "uploading": "Caricamento…",
+    "attachFailed": "Allegato non riuscito"
   },
   "calendarIntegrations": {
     "title": "Integrazioni calendario",
