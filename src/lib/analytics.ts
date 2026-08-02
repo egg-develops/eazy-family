@@ -9,6 +9,10 @@
 // Configured privacy-first for CH/EU: EU cloud host by default, respects
 // Do-Not-Track, no session recording, person profiles only for identified users.
 //
+// Any event fired before posthog finishes loading is QUEUED and replayed once
+// it's ready (the earlier version dropped such events, so pageviews/clicks that
+// happened during the ~async chunk load never reached PostHog).
+//
 // Set in Vercel project env (and .env.local for local testing):
 //   VITE_POSTHOG_KEY=phc_xxx
 //   VITE_POSTHOG_HOST=https://eu.i.posthog.com   (optional; EU default below)
@@ -19,43 +23,55 @@ const KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 const HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://eu.i.posthog.com';
 
 let ph: PostHog | null = null;
-let pendingPageview: string | null = null;
+const queue: Array<(p: PostHog) => void> = [];
+
+// Run now if posthog is ready, otherwise queue until initAnalytics resolves.
+function withPH(fn: (p: PostHog) => void) {
+  if (ph) fn(ph);
+  else queue.push(fn);
+}
 
 export function initAnalytics() {
   if (ph || !KEY || typeof window === 'undefined' || Capacitor.isNativePlatform()) return;
-  import('posthog-js').then(({ default: posthog }) => {
-    posthog.init(KEY, {
-      api_host: HOST,
-      person_profiles: 'identified_only',
-      capture_pageview: false, // captured manually on route change (SPA)
-      autocapture: true,
-      respect_dnt: true,
-      disable_session_recording: true,
+  import('posthog-js')
+    .then((mod) => {
+      const posthog = mod.default;
+      posthog.init(KEY, {
+        api_host: HOST,
+        person_profiles: 'identified_only',
+        capture_pageview: false, // captured manually on route change (SPA)
+        autocapture: true,
+        respect_dnt: true,
+        disable_session_recording: true,
+      });
+      ph = posthog;
+      (window as unknown as { __eazyPH?: PostHog }).__eazyPH = posthog; // debug handle
+      // Replay everything captured during the async load.
+      while (queue.length) queue.shift()!(posthog);
+    })
+    .catch((e) => {
+      // Don't break the app, but don't swallow silently either — a failed init
+      // here is why events would never send.
+      console.warn('[analytics] PostHog init failed:', e);
     });
-    ph = posthog;
-    // Flush the landing pageview that fired before posthog finished loading.
-    if (pendingPageview) { trackPageview(pendingPageview); pendingPageview = null; }
-  }).catch(() => { /* analytics is best-effort; never break the app */ });
 }
 
-/** Track a funnel/marketing event. Safe no-op until analytics is initialised. */
+/** Track a funnel/marketing event. Queued until posthog is ready. */
 export function track(event: string, props?: Record<string, unknown>) {
-  if (ph) ph.capture(event, props);
+  withPH((p) => p.capture(event, props));
 }
 
-/** Record an SPA pageview. Called on every route change; queues the first one
- *  if posthog hasn't finished loading yet. */
+/** Record an SPA pageview on each route change. Queued until posthog is ready. */
 export function trackPageview(path: string) {
-  if (ph) ph.capture('$pageview', { $current_url: window.location.origin + path });
-  else pendingPageview = path;
+  withPH((p) => p.capture('$pageview', { $current_url: window.location.origin + path }));
 }
 
 /** Tie subsequent events to a known user (call after sign-in). */
 export function identifyUser(id: string, props?: Record<string, unknown>) {
-  if (ph) ph.identify(id, props);
+  withPH((p) => p.identify(id, props));
 }
 
 /** Clear identity on sign-out. */
 export function resetAnalytics() {
-  if (ph) ph.reset();
+  withPH((p) => p.reset());
 }
