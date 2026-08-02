@@ -518,6 +518,7 @@ const Calendar = () => {
   const [eventAttendees, setEventAttendees] = useState<string[]>([]);
   const [eventAttachments, setEventAttachments] = useState<Attachment[]>([]);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const [detailItem, setDetailItem] = useState<Event | null>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
   const [locSuggestions, setLocSuggestions] = useState<string[]>([]);
   const [showLocSuggestions, setShowLocSuggestions] = useState(false);
@@ -577,8 +578,8 @@ const Calendar = () => {
   const [isTitleListening, setIsTitleListening] = useState(false);
 
   useEffect(() => {
-    if (isDialogOpen && familyMembers.length === 0) loadFamilyMembers();
-  }, [isDialogOpen]);
+    if ((isDialogOpen || detailItem) && familyMembers.length === 0) loadFamilyMembers();
+  }, [isDialogOpen, detailItem]);
 
   // Re-hydrate synced state when cloud preferences arrive
   useEffect(() => {
@@ -890,7 +891,7 @@ const Calendar = () => {
   const openAgendaItem = (item: CalendarItem) => {
     const d = itemAgendaDate(item);
     if (d) setSelectedDate(new Date(d));
-    if (!(item.type === 'event' && item.id.startsWith('apple-device-'))) handleEditItem(item);
+    if (!(item.type === 'event' && item.id.startsWith('apple-device-'))) openDetail(item);
   };
 
   const getItemsForDate = (date: Date) => {
@@ -1060,6 +1061,25 @@ const Calendar = () => {
   const stopTitleVoice = () => {
     calendarSpeech.stop();
     setIsTitleListening(false);
+  };
+
+  // Tapping an event opens a read-only detail sheet (not straight into the
+  // editable form). Reminders are simple → go straight to edit.
+  const openDetail = (item: CalendarItem) => {
+    if (item.type === 'event') setDetailItem(item as Event);
+    else handleEditItem(item);
+  };
+
+  const editFromDetail = () => {
+    const item = detailItem;
+    setDetailItem(null);
+    if (item) handleEditItem(item);
+  };
+
+  const deleteFromDetail = () => {
+    const id = detailItem?.id;
+    setDetailItem(null);
+    if (id) void handleDeleteItem(id);
   };
 
   const handleEditItem = (item: CalendarItem) => {
@@ -1301,7 +1321,7 @@ const Calendar = () => {
                           key={item.id}
                           className="text-[11px] rounded px-1 py-0.5 leading-tight cursor-pointer truncate"
                           style={{ background: tagStyle.bg, borderLeft: `2px solid ${tagStyle.border}`, color: "hsl(var(--foreground))" }}
-                          onClick={() => handleEditItem(item)}
+                          onClick={() => openDetail(item)}
                         >
                           {item.title}
                         </div>
@@ -1877,7 +1897,7 @@ const Calendar = () => {
                   <div key={ev.id}
                     className="flex gap-3 rounded-2xl overflow-hidden"
                     style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', cursor: ev.id.startsWith('apple-device-') ? 'default' : 'pointer' }}
-                    onClick={() => !ev.id.startsWith('apple-device-') && handleEditItem(ev)}
+                    onClick={() => !ev.id.startsWith('apple-device-') && openDetail(ev)}
                   >
                     <div className="self-stretch flex-shrink-0" style={{ background: ev.color || '#964735', width: 5 }} />
                     <div className="flex gap-3 flex-1 p-4">
@@ -2125,6 +2145,73 @@ const Calendar = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Event detail sheet — read-only preview on tap, with Edit / Delete */}
+      {detailItem && (() => {
+        const ev = detailItem;
+        const tagStyle = ev.tag && TAGS[ev.tag] ? TAGS[ev.tag] : null;
+        const attendeeNames = (ev.attendees || [])
+          .map(uid => familyMembers.find(m => m.user_id === uid)?.name)
+          .filter(Boolean) as string[];
+        const timeStr = ev.allDay
+          ? `${t('calendar.allDayLabel')} · ${fmt(ev.startDate, 'EEE, MMM d')}`
+          : `${fmt(ev.startDate, 'EEE, MMM d · p')} – ${fmt(ev.endDate, 'p')}`;
+        return (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setDetailItem(null)}>
+            <div onClick={e => e.stopPropagation()} className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col" style={{ background: 'hsl(var(--card))', maxHeight: '85vh', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+              {/* Header */}
+              <div className="flex items-start gap-3 px-5 pt-5 pb-3">
+                <div className="w-1.5 self-stretch rounded-full flex-shrink-0" style={{ background: ev.color || '#964735', minHeight: 40 }} />
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-bold text-xl leading-tight" style={{ color: 'hsl(var(--foreground))' }}>{ev.title}</h2>
+                  <p className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{timeStr}</p>
+                </div>
+                <button onClick={() => setDetailItem(null)} className="flex-shrink-0 -mr-1"><X className="w-5 h-5" style={{ color: 'hsl(var(--muted-foreground))' }} /></button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-3">
+                {ev.tag && (
+                  <span className="inline-block text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: tagStyle?.bg || '#FDF3EE', color: tagStyle?.dot || '#D97B66' }}>
+                    {ev.tag === 'custom' ? (ev.customTag || t('calendar.tagCustom')) : getTagLabel(ev.tag)}
+                  </span>
+                )}
+                {ev.location && (
+                  <button type="button" onClick={() => void openInMaps(ev.location!)} className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left" style={{ background: 'hsl(var(--muted))' }}>
+                    <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#964735' }} />
+                    <span className="flex-1 text-sm min-w-0 truncate" style={{ color: 'hsl(var(--foreground))' }}>{ev.location}</span>
+                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  </button>
+                )}
+                {attendeeNames.length > 0 && (
+                  <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--muted))' }}>
+                    <Users className="w-4 h-4 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                    <span className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>{attendeeNames.join(', ')}</span>
+                  </div>
+                )}
+                {ev.notes && (
+                  <div className="flex items-start gap-2.5 rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--muted))' }}>
+                    <AlignLeft className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                    <span className="text-sm whitespace-pre-wrap" style={{ color: 'hsl(var(--foreground))' }}>{ev.notes}</span>
+                  </div>
+                )}
+                {(ev.attachments || []).map(a => (
+                  <a key={a.url} href={a.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: 'hsl(var(--muted))' }}>
+                    <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: '#964735' }} />
+                    <span className="flex-1 text-sm truncate underline" style={{ color: 'hsl(var(--foreground))' }}>{a.name}</span>
+                    <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }} />
+                  </a>
+                ))}
+              </div>
+
+              {/* Footer actions */}
+              <div className="flex gap-2 p-4 flex-shrink-0" style={{ borderTop: '1px solid hsl(var(--border))' }}>
+                <button onClick={deleteFromDetail} className="px-5 py-2.5 rounded-full text-sm font-semibold" style={{ color: '#C0392B', background: 'hsl(var(--muted))' }}>{t('common.delete')}</button>
+                <button onClick={editFromDetail} className="flex-1 py-2.5 rounded-full text-sm font-semibold text-white" style={{ background: '#964735' }}>{t('common.edit')}</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* New Event Overlay */}
       {isDialogOpen && (
