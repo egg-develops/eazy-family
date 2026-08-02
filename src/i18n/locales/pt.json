@@ -549,7 +549,19 @@
     "accountDeletedDesc": "Sua conta do Eazy.Family e todos os seus dados associados foram excluídos.",
     "moduleFamilyAgenda": "Página da família",
     "addYourName": "Adiciona o teu nome",
-    "moduleAgenda": "Agenda"
+    "moduleAgenda": "Agenda",
+    "redeem": {
+      "title": "Resgatar um código",
+      "desc": "Tens um código VIP ou promocional? Insere-o para desbloquear o Premium.",
+      "placeholder": "Insere o código",
+      "button": "Resgatar",
+      "success": "Código resgatado!",
+      "successDesc": "Premium desbloqueado para a tua família.",
+      "failed": "Não foi possível resgatar o código",
+      "invalid": "Código inválido ou expirado.",
+      "already": "Já resgataste este código.",
+      "exhausted": "Este código atingiu o limite."
+    }
   },
   "privacySettings": {
     "title": "Definições de privacidade",

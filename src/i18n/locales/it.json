@@ -547,7 +547,19 @@
     "accountDeleted": "Account eliminato",
     "accountDeletedDesc": "Il tuo account Eazy.Family e tutti i dati associati sono stati eliminati.",
     "addYourName": "Aggiungi il tuo nome",
-    "moduleAgenda": "Agenda"
+    "moduleAgenda": "Agenda",
+    "redeem": {
+      "title": "Riscatta un codice",
+      "desc": "Hai un codice VIP o promo? Inseriscilo per sbloccare Premium.",
+      "placeholder": "Inserisci il codice",
+      "button": "Riscatta",
+      "success": "Codice riscattato!",
+      "successDesc": "Premium sbloccato per la tua famiglia.",
+      "failed": "Impossibile riscattare il codice",
+      "invalid": "Codice non valido o scaduto.",
+      "already": "Hai già riscattato questo codice.",
+      "exhausted": "Questo codice ha raggiunto il limite."
+    }
   },
   "privacySettings": {
     "title": "Impostazioni privacy",

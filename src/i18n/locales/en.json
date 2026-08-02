@@ -547,7 +547,19 @@
     "accountDeleted": "Account deleted",
     "accountDeletedDesc": "Your Eazy.Family account and all its associated data have been deleted.",
     "addYourName": "Add your name",
-    "moduleAgenda": "Agenda"
+    "moduleAgenda": "Agenda",
+    "redeem": {
+      "title": "Redeem a code",
+      "desc": "Have a VIP or promo code? Enter it to unlock premium.",
+      "placeholder": "Enter code",
+      "button": "Redeem",
+      "success": "Code redeemed!",
+      "successDesc": "Premium unlocked for your family.",
+      "failed": "Couldn’t redeem code",
+      "invalid": "Invalid or expired code.",
+      "already": "You’ve already redeemed this code.",
+      "exhausted": "This code has reached its limit."
+    }
   },
   "privacySettings": {
     "title": "Privacy Settings",

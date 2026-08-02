@@ -154,6 +154,33 @@ const Settings = () => {
 
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+
+  const handleRedeemCode = async () => {
+    const code = redeemCode.trim();
+    if (!code || redeeming) return;
+    setRedeeming(true);
+    try {
+      const { data, error } = await supabase.rpc('redeem_promo_code', { _code: code });
+      const res = data as { ok?: boolean; reason?: string } | null;
+      if (!error && res?.ok) {
+        toast({ title: t('settings.redeem.success'), description: t('settings.redeem.successDesc') });
+        setRedeemCode('');
+        await refreshSubscription();
+      } else {
+        const reason = res?.reason;
+        const desc = reason === 'already_redeemed' ? t('settings.redeem.already')
+          : reason === 'exhausted' ? t('settings.redeem.exhausted')
+          : t('settings.redeem.invalid');
+        toast({ title: t('settings.redeem.failed'), description: desc, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: t('settings.redeem.failed'), description: t('settings.redeem.invalid'), variant: 'destructive' });
+    } finally {
+      setRedeeming(false);
+    }
+  };
   const [displayName, setDisplayName] = useState(() => localStorage.getItem('eazy-display-name') || "");
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
@@ -565,6 +592,39 @@ const Settings = () => {
         <div className="space-y-2">
           <SectionLabel>{t('referral.title')}</SectionLabel>
           <ReferralSystem />
+        </div>
+      )}
+
+      {/* ── Redeem a code (VIP / promo) ── */}
+      {!isGuest && (
+        <div className="space-y-2">
+          <SectionLabel>{t('settings.redeem.title')}</SectionLabel>
+          <Card_>
+            <div className="p-4 space-y-3">
+              <p className="text-xs" style={{ color: MUTED }}>{t('settings.redeem.desc')}</p>
+              <div className="flex gap-2">
+                <input
+                  value={redeemCode}
+                  onChange={e => setRedeemCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => { if (e.key === 'Enter') handleRedeemCode(); }}
+                  placeholder={t('settings.redeem.placeholder')}
+                  maxLength={40}
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  className="flex-1 min-w-0 text-sm font-mono outline-none rounded-xl px-3 py-2.5"
+                  style={{ background: 'hsl(var(--muted))', color: INK, border: `1px solid ${BORDER}` }}
+                />
+                <button
+                  onClick={handleRedeemCode}
+                  disabled={redeeming || !redeemCode.trim()}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white flex-shrink-0 disabled:opacity-50"
+                  style={{ background: TC }}
+                >
+                  {redeeming ? '…' : t('settings.redeem.button')}
+                </button>
+              </div>
+            </div>
+          </Card_>
         </div>
       )}
 

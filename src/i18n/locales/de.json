@@ -547,7 +547,19 @@
     "accountDeleted": "Konto gelöscht",
     "accountDeletedDesc": "Dein Eazy.Family-Konto und alle zugehörigen Daten wurden gelöscht.",
     "addYourName": "Namen hinzufügen",
-    "moduleAgenda": "Agenda"
+    "moduleAgenda": "Agenda",
+    "redeem": {
+      "title": "Code einlösen",
+      "desc": "Hast du einen VIP- oder Promo-Code? Gib ihn ein, um Premium freizuschalten.",
+      "placeholder": "Code eingeben",
+      "button": "Einlösen",
+      "success": "Code eingelöst!",
+      "successDesc": "Premium für deine Familie freigeschaltet.",
+      "failed": "Code konnte nicht eingelöst werden",
+      "invalid": "Ungültiger oder abgelaufener Code.",
+      "already": "Du hast diesen Code bereits eingelöst.",
+      "exhausted": "Dieser Code hat sein Limit erreicht."
+    }
   },
   "privacySettings": {
     "title": "Datenschutzeinstellungen",

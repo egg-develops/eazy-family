@@ -547,7 +547,19 @@
     "accountDeleted": "Compte supprimé",
     "accountDeletedDesc": "Votre compte Eazy.Family et toutes les données associées ont été supprimés.",
     "addYourName": "Ajoutez votre nom",
-    "moduleAgenda": "Agenda"
+    "moduleAgenda": "Agenda",
+    "redeem": {
+      "title": "Utiliser un code",
+      "desc": "Vous avez un code VIP ou promo ? Saisissez-le pour débloquer Premium.",
+      "placeholder": "Saisir le code",
+      "button": "Valider",
+      "success": "Code validé !",
+      "successDesc": "Premium débloqué pour votre famille.",
+      "failed": "Impossible de valider le code",
+      "invalid": "Code invalide ou expiré.",
+      "already": "Vous avez déjà utilisé ce code.",
+      "exhausted": "Ce code a atteint sa limite."
+    }
   },
   "privacySettings": {
     "title": "Paramètres de confidentialité",
