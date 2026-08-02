@@ -1581,6 +1581,16 @@
           "a": "Sim. Diz coisas como «Adiciona leite à lista de compras» ou «Dentista quinta às 15h» — a Eazy trata do resto."
         }
       ]
+    },
+    "appButtons": {
+      "appStore": "App Store",
+      "webApp": "App web",
+      "androidSoon": "Android — em breve"
+    },
+    "getStarted": {
+      "title": "Começar",
+      "sub": "Escolhe como usar a Eazy.Family",
+      "webSub": "No teu navegador"
     }
   },
   "helpCenter": {

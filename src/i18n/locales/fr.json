@@ -1579,6 +1579,16 @@
           "a": "Oui. Dites par exemple « Ajoute du lait à la liste de courses » ou « Dentiste jeudi à 15h » — Eazy s’occupe du reste."
         }
       ]
+    },
+    "appButtons": {
+      "appStore": "App Store",
+      "webApp": "App web",
+      "androidSoon": "Android — bientôt"
+    },
+    "getStarted": {
+      "title": "Commencer",
+      "sub": "Choisissez comment utiliser Eazy.Family",
+      "webSub": "Dans votre navigateur"
     }
   },
   "helpCenter": {

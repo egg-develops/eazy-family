@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { track } from '@/lib/analytics';
 import { useAuth } from "@/contexts/AuthContext";
 import { PublicNav } from "@/components/PublicNav";
+import { openGetStarted } from "@/components/GetStartedModal";
 import { Capacitor } from "@capacitor/core";
 
 // Design tokens
@@ -104,27 +105,19 @@ const PfCheck = () => (
   </span>
 );
 
-const CtaDark = ({ onStart, onStore, eyebrow, headline, headlineEm, sub, button, storeButton }: { onStart: () => void; onStore: () => void; eyebrow: string; headline: string; headlineEm: string; sub: string; button: string; storeButton: string }) => (
+const CtaDark = ({ onStart, eyebrow, headline, headlineEm, sub, button }: { onStart: () => void; eyebrow: string; headline: string; headlineEm: string; sub: string; button: string }) => (
   <div style={{ background: T.ink, padding: "80px 40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
     <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase", color: T.faint }}>{eyebrow}</div>
     <h2 style={{ fontFamily: lora, fontSize: "clamp(28px,5vw,40px)", fontWeight: 400, color: "#fdf9f3", lineHeight: 1.15, letterSpacing: "-0.02em", maxWidth: 520, margin: 0 }}>
       {headline} <em style={{ fontStyle: "italic", color: T.primaryL }}>{headlineEm}</em>
     </h2>
     <p style={{ fontSize: 14, color: T.faint, fontWeight: 300, margin: 0 }}>{sub}</p>
-    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
-      <button
-        onClick={onStore}
-        style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
-      >
-        {storeButton}
-      </button>
-      <button
-        onClick={onStart}
-        style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fdf9f3", background: "none", border: "1px solid rgba(253,249,243,0.35)", padding: "10px 26px", borderRadius: "9999px", cursor: "pointer" }}
-      >
-        {button}
-      </button>
-    </div>
+    <button
+      onClick={onStart}
+      style={{ fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.ink, background: "#fdf9f3", border: "none", padding: "11px 26px", borderRadius: "9999px", cursor: "pointer" }}
+    >
+      {button}
+    </button>
   </div>
 );
 
@@ -258,15 +251,12 @@ export default function Index() {
               >
                 {t('website.hero.meetOrbe')}
               </button>
-              <a
-                href="https://apps.apple.com/app/id6765778216"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track('app_store_click', { location: 'hero' })}
-                style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s", textDecoration: "none", display: "inline-block" }}
+              <button
+                onClick={openGetStarted}
+                style={{ fontFamily: dm, fontSize: 14, fontWeight: 400, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", transition: "all 0.15s" }}
               >
-                {t('website.hero.downloadApp')}
-              </a>
+                {t('website.getStarted.title')}
+              </button>
             </div>
             <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 20 }}>
               {([t('website.hero.check1'), t('website.hero.check2'), t('website.hero.check3')] as string[]).map(item => (
@@ -470,9 +460,7 @@ export default function Index() {
               <div style={{ fontSize: 13, color: T.inkV, fontWeight: 300 }}>{t('website.howItWorks.downloadSub')}</div>
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <a href="https://apps.apple.com/app/id6765778216" target="_blank" rel="noopener noreferrer" onClick={() => track('app_store_click', { location: 'how_it_works' })} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: T.primary, background: "#fff", border: `1px solid rgba(150,71,53,0.4)`, padding: "9px 16px", borderRadius: "9999px", cursor: "pointer", textDecoration: "none", display: "inline-block" }}>{t('website.howItWorks.appStore')}</a>
-              <button style={{ fontFamily: dm, fontSize: 13, color: T.faint, background: "#fff", border: `1px solid rgba(150,71,53,0.15)`, padding: "9px 16px", borderRadius: "9999px", cursor: "default", opacity: 0.6 }}>{t('website.howItWorks.googlePlay')}</button>
-              <button onClick={() => navigate("/onboarding?fresh=true")} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 18px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.howItWorks.getStartedWeb')}</button>
+              <button onClick={openGetStarted} style={{ fontFamily: dm, fontSize: 13, fontWeight: 500, color: "#fff", background: T.primary, border: "none", padding: "9px 20px", borderRadius: "9999px", cursor: "pointer" }}>{t('website.getStarted.title')}</button>
             </div>
           </div>
         </div>
@@ -500,12 +488,9 @@ export default function Index() {
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: "auto", paddingTop: 4, display: "flex", flexDirection: "column", gap: 8 }}>
-                <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" onClick={() => track('app_store_click', { location: 'pricing' })} style={{ width: "100%", boxSizing: "border-box", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center", textDecoration: "none", display: "inline-block" }}>
-                  {t('website.hero.downloadApp')}
-                </a>
-                <button onClick={() => navigate("/onboarding?fresh=true")} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: T.primary, background: "none", border: `1px solid ${T.outline}`, cursor: "pointer", padding: "10px 22px", borderRadius: "9999px", textAlign: "center" }}>
-                  {t('website.howItWorks.getStartedWeb')}
+              <div style={{ marginTop: "auto", paddingTop: 4 }}>
+                <button onClick={openGetStarted} style={{ width: "100%", fontFamily: dm, fontSize: 14, fontWeight: 500, color: "#fff", background: T.primary, border: "none", cursor: "pointer", padding: "11px 22px", borderRadius: "9999px", textAlign: "center" }}>
+                  {t('website.getStarted.title')}
                 </button>
               </div>
               <div style={{ textAlign: "center", fontSize: 12, color: T.faint, marginTop: -8 }}>{t('website.pricing.cancelNote')}</div>
@@ -519,14 +504,12 @@ export default function Index() {
 
       {/* ── Footer CTA ── */}
       <CtaDark
-        onStore={() => { track('app_store_click', { location: 'footer_cta' }); window.open(APP_STORE_URL, '_blank', 'noopener'); }}
-        onStart={() => navigate("/onboarding?fresh=true")}
+        onStart={openGetStarted}
         eyebrow={t('website.cta.eyebrow')}
         headline={t('website.cta.headline')}
         headlineEm={t('website.cta.headlineEm')}
         sub={t('website.cta.sub')}
-        storeButton={t('website.hero.downloadApp')}
-        button={t('website.cta.button')}
+        button={t('website.getStarted.title')}
       />
 
       {/* ── Footer ── */}

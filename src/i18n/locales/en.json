@@ -1576,6 +1576,16 @@
           "a": "Yes. Say things like \"Add milk to the shopping list\" or \"Dentist Thursday at 3pm\" — Eazy handles the rest."
         }
       ]
+    },
+    "appButtons": {
+      "appStore": "App Store",
+      "webApp": "Web app",
+      "androidSoon": "Android — coming soon"
+    },
+    "getStarted": {
+      "title": "Get started",
+      "sub": "Choose how you’d like to use Eazy.Family",
+      "webSub": "Use it in your browser"
     }
   },
   "helpCenter": {

@@ -1579,6 +1579,16 @@
           "a": "Ja. Sag zum Beispiel „Milch auf die Einkaufsliste setzen\" oder „Zahnarzt Donnerstag um 15 Uhr\" — Eazy erledigt den Rest."
         }
       ]
+    },
+    "appButtons": {
+      "appStore": "App Store",
+      "webApp": "Web-App",
+      "androidSoon": "Android — bald"
+    },
+    "getStarted": {
+      "title": "Loslegen",
+      "sub": "Wähle, wie du Eazy.Family nutzen möchtest",
+      "webSub": "Im Browser nutzen"
     }
   },
   "helpCenter": {

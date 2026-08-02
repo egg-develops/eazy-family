@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n/config';
+import { GetStartedModal, openGetStarted } from "@/components/GetStartedModal";
 
 const PRIMARY = "#964735";
 const INK = "#1c1c18";
@@ -207,7 +208,7 @@ export function PublicNav() {
           {t('website.nav.signIn')}
         </button>
         <button
-          onClick={() => navigate("/onboarding")}
+          onClick={openGetStarted}
           style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: "9999px" }}
         >
           {t('website.nav.getStarted')}
@@ -308,7 +309,7 @@ export function PublicNav() {
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", color: INK_V, background: "none", border: `1px solid ${OUTLINE}`, cursor: "pointer", padding: "10px", borderRadius: "9999px" }}>
               {t('website.nav.signIn')}
             </button>
-            <button onClick={() => { setMenuOpen(false); navigate("/onboarding"); }}
+            <button onClick={() => { setMenuOpen(false); openGetStarted(); }}
               style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 500, color: "#fff", background: PRIMARY, border: "none", cursor: "pointer", padding: "11px", borderRadius: "9999px" }}>
               {t('website.nav.getStarted')}
             </button>
@@ -323,6 +324,7 @@ export function PublicNav() {
         }
       `}</style>
     </nav>
+    <GetStartedModal />
     </>
   );
 }
