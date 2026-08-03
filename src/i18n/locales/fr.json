@@ -688,7 +688,9 @@
     "from": "De",
     "returnHome": "Retourner à l'accueil",
     "more": "plus",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "undo": "Annuler",
+    "undone": "Annulé"
   },
   "events": {
     "title": "Événements",

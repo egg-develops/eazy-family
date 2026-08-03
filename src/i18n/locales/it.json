@@ -688,7 +688,9 @@
     "from": "Da",
     "returnHome": "Torna alla home",
     "more": "altro",
-    "yesterday": "Ieri"
+    "yesterday": "Ieri",
+    "undo": "Annulla",
+    "undone": "Annullato"
   },
   "events": {
     "title": "Eventi",

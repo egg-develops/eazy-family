@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { de as dfDe, fr as dfFr, it as dfIt, es as dfEs, pt as dfPt, enGB as dfEnGB, type Locale } from "date-fns/locale";
@@ -186,6 +187,14 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  // One-tap Undo for auto-committed captures — the safety net that replaces the
+  // old confirm gate. The destinations refresh reactively (Lists has realtime;
+  // calendar/journal listen for update events), so the item disappears on undo.
+  const undoAction = (undo: () => void | Promise<void>) => (
+    <ToastAction altText={t('common.undo')} onClick={() => { void undo(); toast({ title: t('common.undone') }); }}>
+      {t('common.undo')}
+    </ToastAction>
+  );
   const userName = getUserFirstName();
   const speech = useSpeechRecognition();
   const isListening = speech.isListening;
@@ -638,6 +647,9 @@ STYLE:
 
     const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput, getDbRules()) : rawInput;
 
+    // Captured so we can auto-commit immediately (no confirm tap) — see below.
+    let autoEntry: ParsedEntry | null = null;
+
     const result = await parseWithAI();
 
     if (result && result.title) {
@@ -670,8 +682,9 @@ STYLE:
         if (!cleanedTitle) cleanedTitle = cleanCaptureTitle(result.title);
       }
 
-      setParsed({ ...result, title: cleanedTitle, date: resolvedDate });
-      parseSnapshotRef.current = { rawInput, aiResult: { ...result, title: cleanedTitle, date: resolvedDate } };
+      autoEntry = { ...result, title: cleanedTitle, date: resolvedDate };
+      setParsed(autoEntry);
+      parseSnapshotRef.current = { rawInput, aiResult: autoEntry };
     } else {
       // AI unavailable/timed out — extract the assignment deterministically so
       // "fix the shelf and assign to Sofia" still assigns instead of leaving
@@ -698,7 +711,7 @@ STYLE:
         ? `${String(correctedHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
       const fallbackType: CaptureType = userLockedType ?? classifyText(raw);
-      setParsed({
+      autoEntry = {
         type: fallbackType,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
         date: fallbackDate, time: correctedTime, endTime: null,
@@ -706,19 +719,25 @@ STYLE:
         assignees: assignment.names.length ? assignment.names : null,
         reminder: null,
         notes: null, mood: null,
-      });
+      };
+      setParsed(autoEntry);
     }
-    setStep('preview');
     haptic('light');
+    // Do-then-suggest: commit immediately (no confirm tap). The destination
+    // screen shows the item, editable + deletable, and each success toast
+    // carries an Undo action — the safety net that replaces the confirm gate.
+    if (autoEntry) await handleConfirm(autoEntry);
+    else setStep('preview');
   };
 
   handleParseAndPreviewRef.current = handleParseAndPreview;
 
-  const handleConfirm = async () => {
-    if (!parsed || isSubmitting) return;
+  const handleConfirm = async (override?: ParsedEntry) => {
+    const p = override ?? parsed;
+    if (!p || isSubmitting) return;
     setIsSubmitting(true);
     haptic('medium');
-    const entryType = parsed.type || type;
+    const entryType = p.type || type;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -728,11 +747,11 @@ STYLE:
         // Resolve the roster inline — the mount effect may not have loaded it
         // yet, and resolving from empty state silently drops attendees
         // ("dinner with Sofia" → no attendee). Same rule as the task path.
-        const { members: eventMembers } = parsed.assignees?.length
+        const { members: eventMembers } = p.assignees?.length
           ? await ensureRoster()
           : { members: familyMembers };
-        const attendeeUserIds = resolveAssignees(parsed.assignees, eventMembers, { userId: user?.id ?? '', name: userName });
-        const eventDraft = buildCalendarCaptureItem(parsed, {
+        const attendeeUserIds = resolveAssignees(p.assignees, eventMembers, { userId: user?.id ?? '', name: userName });
+        const eventDraft = buildCalendarCaptureItem(p, {
           id: crypto.randomUUID(),
           now: new Date(),
           rawInput,
@@ -742,11 +761,11 @@ STYLE:
         let appleCalendarId: string | undefined;
         if (entryType === 'event' && localStorage.getItem('eazy-apple-calendar-enabled') === 'true') {
           appleCalendarId = (await createAppleEvent({
-            title: parsed.title,
+            title: p.title,
             startDate: new Date(eventDraft.startDate),
             endDate: new Date(eventDraft.endDate),
-            allDay: !parsed.time,
-            location: parsed.location || undefined,
+            allDay: !p.time,
+            location: p.location || undefined,
           })) ?? undefined;
         }
         const newEvent = appleCalendarId
@@ -756,7 +775,7 @@ STYLE:
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: entryType === 'reminder' ? t('ezCapture.toastReminderSet') : t('ezCapture.toastCalendarAdded') });
+        toast({ title: entryType === 'reminder' ? t('ezCapture.toastReminderSet') : t('ezCapture.toastCalendarAdded'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); }) });
         onClose(); navigate('/app/calendar');
 
       } else if (entryType === 'task') {
@@ -764,7 +783,7 @@ STYLE:
         // A name still in the title means the task is ABOUT that person ("call
         // Sofia"), not assigned to them — assigning would silently move a
         // personal task into the shared family list.
-        const guardedAssignees = dropAssigneesMentionedInTitle(parsed.assignees, parsed.title);
+        const guardedAssignees = dropAssigneesMentionedInTitle(p.assignees, p.title);
         // "our shared to-do list", "family task list" etc. → shared even without
         // a specific assignee, so the task lands in the family list and is visible
         // to all members (not hidden behind creator-only RLS).
@@ -777,64 +796,64 @@ STYLE:
         const assignedToOthers = assignedUserIds.some(id => id !== user.id);
         const needsSharedList = assignedToOthers || isExplicitSharedDest;
         const parentId = (needsSharedList && famId) ? await ensureFamilyTaskList(famId, user.id) : null;
-        const rows = buildTaskCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId, parentId, isExplicitlyShared: isExplicitSharedDest });
-        const { error } = await supabase.from('tasks').insert(rows);
+        const rows = buildTaskCaptureRows(p, user.id, { assignedUserIds, familyId: famId, parentId, isExplicitlyShared: isExplicitSharedDest });
+        const { data: insertedTasks, error } = await supabase.from('tasks').insert(rows).select('id');
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: rows.length > 1
-          ? t('ezCapture.toastTasksAdded', { count: rows.length })
-          : t('ezCapture.toastTaskAdded')
+        toast({
+          title: rows.length > 1 ? t('ezCapture.toastTasksAdded', { count: rows.length }) : t('ezCapture.toastTaskAdded'),
+          action: undoAction(async () => { const ids = (insertedTasks || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); }),
         });
         onClose(); navigate(parentId ? '/app/lists?tab=tasks' : '/app/lists');
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) { setIsSubmitting(false); return; }
-        const needRoster = entryType === 'shopping' && !!parsed.assignees?.length;
+        const needRoster = entryType === 'shopping' && !!p.assignees?.length;
         const { famId, members } = needRoster
           ? await ensureRoster()
           : { famId: familyId, members: familyMembers };
         const assignedUserIds = entryType === 'shopping'
-          ? resolveAssignees(parsed.assignees, members, { userId: user.id, name: userName })
+          ? resolveAssignees(p.assignees, members, { userId: user.id, name: userName })
           : [];
-        const rows = buildShoppingCaptureRows(parsed, user.id, { assignedUserIds, familyId: famId });
-        const { error } = await supabase.from('tasks').insert(rows);
+        const rows = buildShoppingCaptureRows(p, user.id, { assignedUserIds, familyId: famId });
+        const { data: insertedShop, error } = await supabase.from('tasks').insert(rows).select('id');
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
         const listLabel = t(entryType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
-        toast({ title: rows.length === 1
-          ? t('ezCapture.toastItemAdded', { list: listLabel })
-          : t('ezCapture.toastItemsAdded', { count: rows.length, list: listLabel })
+        toast({
+          title: rows.length === 1 ? t('ezCapture.toastItemAdded', { list: listLabel }) : t('ezCapture.toastItemsAdded', { count: rows.length, list: listLabel }),
+          action: undoAction(async () => { const ids = (insertedShop || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); }),
         });
         onClose(); navigate('/app/lists?tab=shopping');
 
       } else if (entryType === 'ritual') {
         const entry = {
           id: crypto.randomUUID(),
-          title: parsed.title,
+          title: p.title,
           date: new Date().toISOString(),
           type: 'ritual',
-          notes: parsed.notes || undefined,
+          notes: p.notes || undefined,
         };
         const ex = JSON.parse(localStorage.getItem('eazy-rituals') || '[]');
         localStorage.setItem('eazy-rituals', JSON.stringify([entry, ...ex]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: t('ezCapture.toastRitualCaptured') });
+        toast({ title: t('ezCapture.toastRitualCaptured'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-rituals') || '[]'); localStorage.setItem('eazy-rituals', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); }) });
         onClose(); navigate('/app/rituals');
 
       } else if (entryType === 'journal') {
-        const text = parsed.title + (parsed.notes ? `\n\n${parsed.notes}` : '');
+        const text = p.title + (p.notes ? `\n\n${p.notes}` : '');
         const entry = { id: crypto.randomUUID(), text: text.trim(), date: new Date().toISOString() };
         const existing = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...existing]));
         window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: t('ezCapture.toastJournalSaved') });
+        toast({ title: t('ezCapture.toastJournalSaved'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]'); localStorage.setItem('eazy-journal-entries', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); window.dispatchEvent(new CustomEvent('eazy-journal-updated')); }) });
         onClose();
       }
 
       if (parseSnapshotRef.current && session) {
         const snap = parseSnapshotRef.current;
-        const final = parsed;
+        const final = p;
         const wasCorrected =
           snap.aiResult.title !== final.title ||
           snap.aiResult.type !== final.type ||

@@ -685,7 +685,9 @@
     "from": "From",
     "returnHome": "Return to Home",
     "more": "more",
-    "yesterday": "Yesterday"
+    "yesterday": "Yesterday",
+    "undo": "Undo",
+    "undone": "Undone"
   },
   "events": {
     "title": "Events",

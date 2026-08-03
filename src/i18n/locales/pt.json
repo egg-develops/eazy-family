@@ -690,7 +690,9 @@
     "from": "De",
     "returnHome": "Voltar ao início",
     "more": "mais",
-    "yesterday": "Ontem"
+    "yesterday": "Ontem",
+    "undo": "Anular",
+    "undone": "Anulado"
   },
   "events": {
     "title": "Eventos",

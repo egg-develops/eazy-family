@@ -690,7 +690,9 @@
     "from": "De",
     "returnHome": "Volver al inicio",
     "more": "más",
-    "yesterday": "Ayer"
+    "yesterday": "Ayer",
+    "undo": "Deshacer",
+    "undone": "Deshecho"
   },
   "events": {
     "title": "Eventos",

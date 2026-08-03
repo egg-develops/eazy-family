@@ -688,7 +688,9 @@
     "from": "Von",
     "returnHome": "Zur Startseite zurückkehren",
     "more": "mehr",
-    "yesterday": "Gestern"
+    "yesterday": "Gestern",
+    "undo": "Rückgängig",
+    "undone": "Rückgängig gemacht"
   },
   "events": {
     "title": "Veranstaltungen",
