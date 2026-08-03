@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { haptic } from "@/lib/haptic";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { ToastAction } from "@/components/ui/toast";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { de as dfDe, fr as dfFr, it as dfIt, es as dfEs, pt as dfPt, enGB as dfEnGB, type Locale } from "date-fns/locale";
@@ -31,7 +30,13 @@ import {
   type FamilyMemberLite,
 } from "@/lib/ezCapturePersistence";
 
-type Step = 'capture' | 'processing' | 'preview' | 'guide';
+type Step = 'capture' | 'processing' | 'preview' | 'guide' | 'done';
+
+interface DoneCtx {
+  title: string;
+  navigateTo: string;
+  undo: () => void | Promise<void>;
+}
 
 interface EZCaptureProps {
   onClose: () => void;
@@ -172,6 +177,8 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
   const [step, setStep] = useState<Step>('capture');
   const [parsed, setParsed] = useState<ParsedEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [doneCtx, setDoneCtx] = useState<DoneCtx | null>(null);
+  const [reminderAdded, setReminderAdded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // The tap on the EZ orb that opens this overlay also produces a synthesized
@@ -187,14 +194,6 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  // One-tap Undo for auto-committed captures — the safety net that replaces the
-  // old confirm gate. The destinations refresh reactively (Lists has realtime;
-  // calendar/journal listen for update events), so the item disappears on undo.
-  const undoAction = (undo: () => void | Promise<void>) => (
-    <ToastAction altText={t('common.undo')} onClick={() => { void undo(); toast({ title: t('common.undone') }); }}>
-      {t('common.undo')}
-    </ToastAction>
-  );
   const userName = getUserFirstName();
   const speech = useSpeechRecognition();
   const isListening = speech.isListening;
@@ -732,6 +731,36 @@ STYLE:
 
   handleParseAndPreviewRef.current = handleParseAndPreview;
 
+  // Do-then-suggest result: after auto-commit, show an in-place "Done!" with
+  // Add reminder + Edit + Remove — instead of navigating away.
+  const finishCommit = (ctx: DoneCtx) => {
+    setDoneCtx(ctx);
+    setReminderAdded(false);
+    setStep('done');
+    setIsSubmitting(false);
+    haptic('light');
+  };
+
+  const addReminderForDone = () => {
+    if (!doneCtx || reminderAdded) return;
+    const due = new Date();
+    due.setDate(due.getDate() + 1);
+    due.setHours(9, 0, 0, 0);
+    const rem = {
+      id: crypto.randomUUID(), title: doneCtx.title,
+      dueDate: due.toISOString(), dueTime: '09:00', completed: false, type: 'reminder',
+    };
+    const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
+    localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...arr, rem]));
+    window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
+    setReminderAdded(true);
+    haptic('medium');
+  };
+
+  const editFromDone = () => { const to = doneCtx?.navigateTo; onClose(); if (to) navigate(to); };
+  const removeFromDone = async () => { await doneCtx?.undo(); haptic('medium'); toast({ title: t('common.undone') }); onClose(); };
+  const doneFinish = () => { const to = doneCtx?.navigateTo; onClose(); if (to) navigate(to); };
+
   const handleConfirm = async (override?: ParsedEntry) => {
     const p = override ?? parsed;
     if (!p || isSubmitting) return;
@@ -775,8 +804,7 @@ STYLE:
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: entryType === 'reminder' ? t('ezCapture.toastReminderSet') : t('ezCapture.toastCalendarAdded'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); }) });
-        onClose(); navigate('/app/calendar');
+        finishCommit({ title: p.title, navigateTo: '/app/calendar', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); } });
 
       } else if (entryType === 'task') {
         if (!user || !session) { setIsSubmitting(false); return; }
@@ -800,11 +828,7 @@ STYLE:
         const { data: insertedTasks, error } = await supabase.from('tasks').insert(rows).select('id');
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({
-          title: rows.length > 1 ? t('ezCapture.toastTasksAdded', { count: rows.length }) : t('ezCapture.toastTaskAdded'),
-          action: undoAction(async () => { const ids = (insertedTasks || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); }),
-        });
-        onClose(); navigate(parentId ? '/app/lists?tab=tasks' : '/app/lists');
+        finishCommit({ title: p.title, navigateTo: parentId ? '/app/lists?tab=tasks' : '/app/lists', undo: async () => { const ids = (insertedTasks || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } });
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
         if (!user || !session) { setIsSubmitting(false); return; }
@@ -820,11 +844,7 @@ STYLE:
         if (error) throw error;
         haptic('light'); setTimeout(() => haptic('light'), 150);
         const listLabel = t(entryType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
-        toast({
-          title: rows.length === 1 ? t('ezCapture.toastItemAdded', { list: listLabel }) : t('ezCapture.toastItemsAdded', { count: rows.length, list: listLabel }),
-          action: undoAction(async () => { const ids = (insertedShop || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); }),
-        });
-        onClose(); navigate('/app/lists?tab=shopping');
+        finishCommit({ title: p.title, navigateTo: '/app/lists?tab=shopping', undo: async () => { const ids = (insertedShop || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } });
 
       } else if (entryType === 'ritual') {
         const entry = {
@@ -837,8 +857,7 @@ STYLE:
         const ex = JSON.parse(localStorage.getItem('eazy-rituals') || '[]');
         localStorage.setItem('eazy-rituals', JSON.stringify([entry, ...ex]));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: t('ezCapture.toastRitualCaptured'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-rituals') || '[]'); localStorage.setItem('eazy-rituals', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); }) });
-        onClose(); navigate('/app/rituals');
+        finishCommit({ title: p.title, navigateTo: '/app/rituals', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-rituals') || '[]'); localStorage.setItem('eazy-rituals', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); } });
 
       } else if (entryType === 'journal') {
         const text = p.title + (p.notes ? `\n\n${p.notes}` : '');
@@ -847,8 +866,7 @@ STYLE:
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...existing]));
         window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
-        toast({ title: t('ezCapture.toastJournalSaved'), action: undoAction(() => { const arr = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]'); localStorage.setItem('eazy-journal-entries', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); window.dispatchEvent(new CustomEvent('eazy-journal-updated')); }) });
-        onClose();
+        finishCommit({ title: p.title, navigateTo: '/app/rituals', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]'); localStorage.setItem('eazy-journal-entries', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); window.dispatchEvent(new CustomEvent('eazy-journal-updated')); } });
       }
 
       if (parseSnapshotRef.current && session) {
@@ -1000,6 +1018,35 @@ STYLE:
                 <p className="font-bold" style={{ color: INK }}>{t('ezCapture.processingTitle')}</p>
                 <p className="text-sm" style={{ color: MUTED }}>{t('ezCapture.processingSubtitle')}</p>
               </div>
+            </div>
+          )}
+
+          {/* ── DONE STEP (do-then-suggest) ── */}
+          {step === 'done' && doneCtx && (
+            <div className="rounded-3xl p-6 flex flex-col items-center gap-4" style={{ background: CARD, boxShadow: '0 8px 48px rgba(28,20,18,0.22)' }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#EFF3EF' }}>
+                <Check className="w-7 h-7" style={{ color: '#44664F' }} />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.doneTitle')}</p>
+                <p className="text-sm" style={{ color: MUTED }}>{doneCtx.title}</p>
+              </div>
+              <div className="w-full space-y-2 mt-1">
+                <button onClick={addReminderForDone} disabled={reminderAdded}
+                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left disabled:opacity-60"
+                  style={{ background: MUTED_BG, border: `1px solid ${BORDER}` }}>
+                  <span className="text-lg">🔔</span>
+                  <span className="flex-1 text-sm font-medium" style={{ color: INK }}>
+                    {reminderAdded ? t('ezCapture.reminderSet') : t('ezCapture.addReminder')}
+                  </span>
+                  {reminderAdded && <Check className="w-4 h-4" style={{ color: '#44664F' }} />}
+                </button>
+                <div className="flex gap-2">
+                  <button onClick={editFromDone} className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: MUTED_BG, border: `1px solid ${BORDER}`, color: INK }}>{t('common.edit')}</button>
+                  <button onClick={removeFromDone} className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: MUTED_BG, border: `1px solid ${BORDER}`, color: '#C0392B' }}>{t('common.delete')}</button>
+                </div>
+              </div>
+              <button onClick={doneFinish} className="w-full py-3 rounded-2xl text-sm font-semibold text-white mt-1" style={{ background: '#964735' }}>{t('ezCapture.doneBtn')}</button>
             </div>
           )}
 

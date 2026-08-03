@@ -1841,7 +1841,11 @@
     "subheaderChannel": "Alle im Kanal sehen es",
     "placeholderChannel": "Nachricht an die Familie…",
     "couldNotSend": "Nachricht konnte nicht gesendet werden",
-    "send": "Senden"
+    "send": "Senden",
+    "doneTitle": "Erledigt!",
+    "addReminder": "Erinnerung hinzufügen",
+    "reminderSet": "Erinnerung für morgen gesetzt",
+    "doneBtn": "Fertig"
   },
   "messaging": {
     "typeMessage": "Nachricht eingeben...",

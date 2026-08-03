@@ -1843,7 +1843,11 @@
     "subheaderChannel": "Todos no canal vão ver",
     "placeholderChannel": "Mensagem para a sua família…",
     "couldNotSend": "Não foi possível enviar a mensagem",
-    "send": "Enviar"
+    "send": "Enviar",
+    "doneTitle": "Feito!",
+    "addReminder": "Adicionar um lembrete",
+    "reminderSet": "Lembrete definido para amanhã",
+    "doneBtn": "Concluído"
   },
   "messaging": {
     "typeMessage": "Digite uma mensagem...",

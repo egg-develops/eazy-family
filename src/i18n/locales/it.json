@@ -1841,7 +1841,11 @@
     "subheaderChannel": "Tutti nel canale lo vedranno",
     "placeholderChannel": "Messaggio alla tua famiglia…",
     "couldNotSend": "Impossibile inviare il messaggio",
-    "send": "Invia"
+    "send": "Invia",
+    "doneTitle": "Fatto!",
+    "addReminder": "Aggiungi un promemoria",
+    "reminderSet": "Promemoria impostato per domani",
+    "doneBtn": "Fatto"
   },
   "messaging": {
     "typeMessage": "Scrivi un messaggio...",

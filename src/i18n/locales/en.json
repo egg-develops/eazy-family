@@ -1838,7 +1838,11 @@
     "subheaderChannel": "Everyone in the channel will see it",
     "placeholderChannel": "Message your family…",
     "couldNotSend": "Could not send message",
-    "send": "Send"
+    "send": "Send",
+    "doneTitle": "Done!",
+    "addReminder": "Add a reminder",
+    "reminderSet": "Reminder set for tomorrow",
+    "doneBtn": "Done"
   },
   "messaging": {
     "typeMessage": "Type a message...",

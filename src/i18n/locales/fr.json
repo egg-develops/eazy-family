@@ -1841,7 +1841,11 @@
     "subheaderChannel": "Tout le monde dans le canal le verra",
     "placeholderChannel": "Message à votre famille…",
     "couldNotSend": "Impossible d’envoyer le message",
-    "send": "Envoyer"
+    "send": "Envoyer",
+    "doneTitle": "C’est fait !",
+    "addReminder": "Ajouter un rappel",
+    "reminderSet": "Rappel défini pour demain",
+    "doneBtn": "Terminé"
   },
   "messaging": {
     "typeMessage": "Tapez un message...",
