@@ -475,21 +475,29 @@ Return ONLY the raw JSON object.`;
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
-
+      // Buffer partial lines across chunks — an SSE "data:" line can be split at
+      // a network chunk boundary. Splitting each chunk independently dropped the
+      // straddling line, corrupting the JSON on longer inputs → parse failed →
+      // fell back to the weaker deterministic parser. Keep the trailing partial.
+      let buf = '';
+      const consume = (line: string) => {
+        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) fullContent += content;
+          } catch { /* ignore keep-alives / non-JSON */ }
+        }
+      };
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split('\n')) {
-          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const content = data.choices?.[0]?.delta?.content;
-              if (content) fullContent += content;
-            } catch {}
-          }
-        }
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? ''; // last element is an incomplete line → carry over
+        for (const line of lines) consume(line);
       }
+      if (buf) consume(buf); // flush any final buffered line
 
       const cleaned = fullContent.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
       return JSON.parse(cleaned) as ParsedEntry;
@@ -555,20 +563,25 @@ STYLE:
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buf = ''; // buffer partial SSE lines across chunk boundaries (see parse path)
+      const consume = (line: string) => {
+        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) setGuideAnswer(prev => prev + content);
+          } catch {}
+        }
+      };
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split('\n')) {
-          if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const content = data.choices?.[0]?.delta?.content;
-              if (content) setGuideAnswer(prev => prev + content);
-            } catch {}
-          }
-        }
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() ?? '';
+        for (const line of lines) consume(line);
       }
+      if (buf) consume(buf);
     } catch {
       setGuideAnswer(t('ezCapture.guideError'));
     } finally {
