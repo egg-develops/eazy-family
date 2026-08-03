@@ -14,7 +14,15 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const APP_ID = '6765778216';
-const VENDOR = process.env.ASC_VENDOR_NUMBER;
+// Fall back to .env (git-ignored) so `node scripts/asc-daily-digest.mjs` just works.
+function fromEnvFile(key) {
+  try {
+    const txt = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '.env'), 'utf8');
+    const m = txt.match(new RegExp(`^${key}\\s*=\\s*(.+)$`, 'm'));
+    return m ? m[1].trim() : undefined;
+  } catch { return undefined; }
+}
+const VENDOR = process.env.ASC_VENDOR_NUMBER || fromEnvFile('ASC_VENDOR_NUMBER');
 const DAYS = Number(process.argv[2] || 7);
 const HILITE = ['CH', 'US', 'GB', 'DE', 'FR', 'IT', 'ES', 'PT', 'AT'];
 
