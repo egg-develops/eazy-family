@@ -50,6 +50,14 @@ export async function configureRC(userId?: string): Promise<void> {
     _rcConfigureStatus = 'configuring';
     await Promise.race([Purchases.configure({ apiKey: RC_KEY, appUserID: userId }), timeout<void>(7_000)]);
     _rcConfigureStatus = 'configured';
+    // Apple Search Ads attribution: collect the AdServices token so RevenueCat
+    // can attribute trials/revenue to the exact ASA campaign (iOS 14.3+). Off by
+    // default in the SDK; without it, ad spend is unmeasurable at the ROI level.
+    // Best-effort + bounded — never let it wedge configure.
+    if (platform === 'ios') {
+      Promise.race([Purchases.enableAdServicesAttributionTokenCollection(), timeout<void>(7_000)])
+        .catch(err => logError('[RevenueCat] AdServices attribution enable failed:', err));
+    }
   } catch (err) {
     _rcConfigureStatus = `failed@${_rcConfigureStatus}: ${err instanceof Error ? err.message : String(err)}`;
     logError('[RevenueCat] configureRC failed:', err);
