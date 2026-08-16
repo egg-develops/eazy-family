@@ -1,0 +1,3 @@
+• Entrada de voz más fiable: los artículos de la compra siempre llegan a la lista correcta
+• IA mejorada: gestiona mejor las transcripciones imprecisas del reconocimiento de voz
+• Mejoras de rendimiento y estabilidad

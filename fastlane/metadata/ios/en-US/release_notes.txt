@@ -1,8 +1,3 @@
-Welcome to Eazy.Family! This is our first release.
-
-• Shared family calendar
-• Shared to-do lists
-• Family messaging
-• Eazy AI Assistant
-• Local family events discovery
-• Private and secure — your data belongs to you
+• Voice input reliability: shopping items now always land in the right list — never on the calendar
+• Smarter AI: handles garbled speech-to-text more gracefully
+• Performance and stability improvements

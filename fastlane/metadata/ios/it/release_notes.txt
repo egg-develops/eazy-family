@@ -1,8 +1,3 @@
-Benvenuto su Eazy.Family! Questa è la nostra prima versione.
-
-• Calendario familiare condiviso
-• Liste di cose da fare condivise
-• Messaggistica familiare
-• Assistente IA Eazy
-• Scoperta di eventi familiari locali
-• Privato e sicuro — i tuoi dati appartengono a te
+• Input vocale più affidabile: gli articoli della spesa finiscono sempre nella lista giusta
+• IA migliorata: gestisce meglio le trascrizioni imprecise del riconoscimento vocale
+• Miglioramenti di prestazioni e stabilità
