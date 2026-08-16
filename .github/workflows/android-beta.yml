@@ -56,7 +56,7 @@ jobs:
         run: |
           GRADLE_FILE="android/app/build.gradle"
           CURRENT=$(grep "versionCode" "$GRADLE_FILE" | grep -o '[0-9]*')
-          NEXT=$((CURRENT + 1))
+          NEXT=$((CURRENT + 10))
           sed -i "s/versionCode $CURRENT/versionCode $NEXT/" "$GRADLE_FILE"
           echo "Bumped versionCode: $CURRENT → $NEXT"
           echo "version_code=$NEXT" >> $GITHUB_OUTPUT
