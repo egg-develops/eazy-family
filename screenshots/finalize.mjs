@@ -41,8 +41,14 @@ const HERO = {
         spoken: '«Pianifica la cena dell’anniversario e aggiungi fiori e torta alla lista della spesa.»',
         chipA: 'Calendario · Cena anniversario', chipB: 'Lista della spesa · Fiori, torta', listening: 'Eazy ascolta …' },
   en: { headline: 'Say it. Eazy does it.', sub: 'One button for calendar, tasks and lists.',
-        spoken: '“Plan the anniversary dinner and add flowers and cake to the shopping list.”',
+        spoken: '”Plan the anniversary dinner and add flowers and cake to the shopping list.”',
         chipA: 'Calendar · Anniversary dinner', chipB: 'Shopping list · Flowers, cake', listening: 'Eazy is listening …' },
+  es: { headline: 'Dilo. Eazy lo hace.', sub: 'Un botón para agenda, tareas y listas.',
+        spoken: '«Planifica la cena de aniversario y añade flores y tarta a la lista de la compra.»',
+        chipA: 'Agenda · Cena de aniversario', chipB: 'Lista de la compra · Flores, tarta', listening: 'Eazy escucha …' },
+  pt: { headline: 'Diz. O Eazy trata.', sub: 'Um botão para agenda, tarefas e listas.',
+        spoken: '«Planeia o jantar de aniversário e adiciona flores e bolo à lista de compras.»',
+        chipA: 'Agenda · Jantar de aniversário', chipB: 'Lista de compras · Flores, bolo', listening: 'Eazy está a ouvir …' },
 };
 const H = HERO[LANG] || HERO.en;
 

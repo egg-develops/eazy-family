@@ -175,6 +175,68 @@ const CONTENT = {
     orb: "Crea un'attività per organizzare la cena dell'anniversario e aggiungi fiori e torta alla lista della spesa.",
     dismiss: ['Salta', 'Iniziamo', 'Avanti', 'Fatto'],
   },
+  es: {
+    tasks: [
+      'Recoger a Zoe y Liam del colegio', 'Pedir cita al pediatra (Liam)', 'Equipamiento de fútbol para Zoe',
+      'Pagar tasas escolares (viernes)', 'Cita revisión del coche', 'Hacer la compra del fin de semana',
+      'Arreglar el portón del jardín', 'Inscribir al campamento de verano', 'Planificar la cena de aniversario',
+    ],
+    cal: [
+      { id: 'demo-c1', title: 'Dentista — Liam',          location: 'Clínica dental',  color: '#964735', day: 0, h: 10, dur: 60 },
+      { id: 'demo-c2', title: 'Actuación de danza de Zoe', location: 'Sala municipal', color: '#EE7BB0', day: 0, h: 18, dur: 90 },
+      { id: 'demo-c3', title: 'Clase de natación',         location: 'Piscina',        color: '#964735', day: 2, h: 14, dur: 60 },
+      { id: 'demo-c4', title: 'Museo de los niños',        location: null,             color: '#FFC861', day: 4, h: 10, dur: 120 },
+      { id: 'demo-c5', title: 'Cena en casa de la abuela', location: null,             color: '#44664F', day: 6, h: 18, m: 30, dur: 150 },
+    ],
+    future: [
+      'Excursión de senderismo 🥾', 'Dentista — Liam', 'Recoger a Liam del colegio', 'Fiesta de cumpleaños de Emma 🎂',
+      'Entrenamiento de natación — Zoe', 'Actuación de danza de Zoe 💃', 'Cena en familia 🍝',
+      'Reunión padres-profesores', 'Cumpleaños de la abuela 🎂', 'Noche de cine en familia 🎬',
+    ],
+    journal: [
+      'La escapada familiar fue genial, toda la organización mereció la pena. Algunas cosas sobraban, pero al final todo salió bien.',
+      'Necesito volver a mi rutina de tarde, afecta muchísimo a mi día siguiente. Comparado con las dos últimas semanas en que me sentía de maravilla.',
+    ],
+    shopping: ['Plátanos', 'Tomates cherry', 'Leche entera bio', 'Huevos camperos', 'Queso manchego', 'Pechuga de pollo', 'Pan de masa madre', 'Café en grano', 'Zumo de naranja', 'Lavavajillas', 'Toallitas', 'Pasta'],
+    shared: [
+      { title: 'Reservar vacaciones en familia', day: 3 },
+      { title: 'Firmar autorización del colegio', day: 1 },
+      { title: 'Comprar regalo de cumpleaños para Emma', day: 5 },
+    ],
+    orb: 'Crea una tarea para planificar la cena de aniversario y añade flores y tarta a la lista de la compra.',
+    dismiss: ['Saltar', 'Empezar', 'Siguiente', 'Hecho'],
+  },
+  pt: {
+    tasks: [
+      'Buscar o Zoe e o Liam na escola', 'Marcar consulta no pediatra (Liam)', 'Equipamento de futebol para o Zoe',
+      'Pagar propinas escolares (sexta)', 'Revisão do carro', 'Fazer as compras do fim de semana',
+      'Arranjar o portão do jardim', 'Inscrever no campo de verão', 'Planear o jantar de aniversário',
+    ],
+    cal: [
+      { id: 'demo-c1', title: 'Dentista — Liam',        location: 'Clínica dentária', color: '#964735', day: 0, h: 10, dur: 60 },
+      { id: 'demo-c2', title: 'Espetáculo de dança da Zoe', location: 'Sala municipal', color: '#EE7BB0', day: 0, h: 18, dur: 90 },
+      { id: 'demo-c3', title: 'Aula de natação',         location: 'Piscina',          color: '#964735', day: 2, h: 14, dur: 60 },
+      { id: 'demo-c4', title: 'Museu das crianças',      location: null,               color: '#FFC861', day: 4, h: 10, dur: 120 },
+      { id: 'demo-c5', title: 'Jantar em casa da avó',   location: null,               color: '#44664F', day: 6, h: 18, m: 30, dur: 150 },
+    ],
+    future: [
+      'Caminhada 🥾', 'Dentista — Liam', 'Buscar o Liam na escola', 'Festa de aniversário da Emma 🎂',
+      'Treino de natação — Zoe', 'Espetáculo de dança da Zoe 💃', 'Jantar em família 🍝',
+      'Reunião pais-professores', 'Aniversário da avó 🎂', 'Noite de cinema em família 🎬',
+    ],
+    journal: [
+      'A escapada em família foi ótima, toda a organização valeu a pena. Algumas coisas podiam ter ficado de fora, mas no final correu tudo bem.',
+      'Preciso de voltar à minha rotina da tarde, afeta muito o dia seguinte. Comparado com as últimas duas semanas em que me sentia ótimo.',
+    ],
+    shopping: ['Bananas', 'Tomates cherry', 'Leite gordo bio', 'Ovos do campo', 'Queijo', 'Peito de frango', 'Pão de massa mãe', 'Café em grão', 'Sumo de laranja', 'Detergente loiça', 'Lenços húmidos', 'Massa'],
+    shared: [
+      { title: 'Reservar férias em família', day: 3 },
+      { title: 'Assinar autorização da escola', day: 1 },
+      { title: 'Comprar presente de aniversário para a Emma', day: 5 },
+    ],
+    orb: 'Cria uma tarefa para planear o jantar de aniversário e adiciona flores e bolo à lista de compras.',
+    dismiss: ['Saltar', 'Vamos lá', 'Seguinte', 'Concluído'],
+  },
 };
 const C = CONTENT[LANG] || CONTENT.en;
 
