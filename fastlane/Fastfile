@@ -130,7 +130,8 @@ platform :android do
   lane :release do
     upload_to_play_store(
       track: "internal",
-      track_promote_to: "production"
+      track_promote_to: "production",
+      package_name: "eazy.family.app"
     )
     telegram_notify(message: "🚀 Android promoted to Play Store production")
   end
