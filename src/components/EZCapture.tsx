@@ -665,10 +665,13 @@ STYLE:
     const result = await parseWithAI();
 
     if (result && result.title) {
-      if (result.type) {
-        result.type = guardAIType(result.type, processText, result.date ?? null, result.time ?? null);
-      }
-      if (result.type && !userLockedType) setType(result.type);
+      // Always resolve a type — if the AI omitted it, fall back to the
+      // deterministic classifier so handleConfirm never sees a falsy type.
+      const guardedType = result.type
+        ? guardAIType(result.type, processText, result.date ?? null, result.time ?? null)
+        : (userLockedType ?? classifyText(processText));
+      result.type = guardedType;
+      if (!userLockedType) setType(guardedType);
 
       let cleanedTitle = cleanCaptureTitle(result.title);
       // The AI is told to strip assignment phrases from the title, but if one
@@ -779,7 +782,11 @@ STYLE:
     if (!p || isSubmitting) return;
     setIsSubmitting(true);
     haptic('medium');
-    const entryType = p.type || type;
+    // p.type should always be set by this point (guardedType above), but if
+    // somehow still falsy, use the deterministic classifier on the raw input
+    // rather than the stale 'event' initial state from the Home orb.
+    const rawForGuard = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
+    const entryType = p.type || (userLockedType ?? classifyText(rawForGuard));
 
     try {
       const { data: { session } } = await supabase.auth.getSession();

@@ -125,6 +125,13 @@ export function guardAIType(
   if ((aiType === 'event' || aiType === 'shopping') && isObviouslyShopping) {
     return isPersonalScope(lower) ? 'shopping_personal' : 'shopping';
   }
+  // AI returned 'task' but no task verb is present and the text names a shopping
+  // list explicitly — "add bread to shopping list" → AI confused 'add' with task
+  // action. Override only when there's no genuine task verb so "clean terrace +
+  // add to shopping list" stays a task.
+  if (aiType === 'task' && isObviouslyShopping && !isObviouslyTask) {
+    return isPersonalScope(lower) ? 'shopping_personal' : 'shopping';
+  }
   // An explicit task DESTINATION ("…to our tasks", "…to my to-do list") is
   // definitive — it overrides an "event" misclassification even when the AI
   // attached a time (you can put a due time on a task).
