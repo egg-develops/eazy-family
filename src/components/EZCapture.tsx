@@ -13,6 +13,7 @@ import { parseDatesLocalized } from "@/lib/localeChrono";
 import { getSpeechLocale, getAppLanguageLabel, getAppLanguage, getAppBaseLanguage } from "@/lib/speechLocale";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { createAppleEvent } from "@/lib/appleCalendar";
+import { signalPositiveMoment } from "@/lib/reviewPrompt";
 import { classifyText, guardAIType, isSharedTaskDestination, type CaptureType } from "@/lib/intentClassifier";
 import { initialLockedType } from "@/lib/ezCaptureType";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
@@ -824,6 +825,7 @@ STYLE:
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
         haptic('light'); setTimeout(() => haptic('light'), 150);
+        void signalPositiveMoment();
         finishCommit({ title: p.title, navigateTo: '/app/calendar', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); } });
 
       } else if (entryType === 'task') {

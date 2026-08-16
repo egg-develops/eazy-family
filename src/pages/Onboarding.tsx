@@ -207,6 +207,8 @@ const Onboarding = () => {
     }));
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('eazy-needs-onboarding');
+    // Signal App to show the upgrade dialog on first launch (native only)
+    localStorage.setItem('eazy-show-upgrade', '1');
     navigate('/app', { replace: true });
   }, [screen, user]);
 

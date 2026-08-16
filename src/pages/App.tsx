@@ -59,6 +59,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cloudSet } from "@/lib/preferencesSync";
 import { Capacitor } from "@capacitor/core";
 import { voiceService } from "@/services/VoiceService";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { format, addDays, startOfDay, isToday, isTomorrow } from "date-fns";
 import { de as deLocale, fr as frLocale, it as itLocale, es as esLocale, pt as ptLocale, type Locale } from "date-fns/locale";
 
@@ -70,6 +71,13 @@ const AppLayout = () => {
   const location = useLocation();
   const [userInitials, setUserInitials] = useState("EF");
   const [appTitle, setAppTitle] = useState(getAppTitle);
+  // Read-once on mount: show upgrade dialog after onboarding on native platforms
+  const [postOnboardUpgrade] = useState(() => {
+    if (!Capacitor.isNativePlatform()) return false;
+    const flag = localStorage.getItem('eazy-show-upgrade');
+    if (flag) { localStorage.removeItem('eazy-show-upgrade'); return true; }
+    return false;
+  });
   const [ezOpen, setEzOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -569,6 +577,8 @@ const AppLayout = () => {
 
       {/* Global tutorial — must live at AppLayout level so it hears events from any page */}
       <GlobalTutorial />
+      {/* Post-onboarding upgrade prompt: opens automatically on first native launch */}
+      {postOnboardUpgrade && <UpgradeDialog forceOpen><span /></UpgradeDialog>}
     </div>
   );
 };

@@ -37,9 +37,10 @@ const PURCHASE_TIMEOUT_MS = 15_000;
 
 interface UpgradeDialogProps {
   children: React.ReactNode;
+  forceOpen?: boolean;
 }
 
-export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
+export const UpgradeDialog = ({ children, forceOpen }: UpgradeDialogProps) => {
   const { isPremium, isTrial, refreshSubscription } = useAuth();
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,11 @@ export const UpgradeDialog = ({ children }: UpgradeDialogProps) => {
     mountedRef.current = true;
     return () => { mountedRef.current = false; };
   }, []);
+
+  // Open automatically when triggered post-onboarding
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
 
   // silent = background refresh/prefetch: don't toggle the loading/error UI
   // (the dialog may be closed, or already showing cached prices).

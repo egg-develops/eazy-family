@@ -12,6 +12,7 @@ import {
 } from "@/lib/familyChannel";
 import { haptic } from "@/lib/haptic";
 import { useToast } from "@/hooks/use-toast";
+import { signalPositiveMoment } from "@/lib/reviewPrompt";
 import { compressAndUpload } from "@/lib/imageUpload";
 import { openInMaps } from "@/lib/maps";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
@@ -509,6 +510,7 @@ const FamilyAgenda = () => {
     if (!text.trim()) return;
     addMessage({ type: "text", content: text.trim() });
     setText("");
+    void signalPositiveMoment();
   };
 
   // ── Voice recording ─────────────────────────

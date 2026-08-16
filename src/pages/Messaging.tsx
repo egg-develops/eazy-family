@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { signalPositiveMoment } from "@/lib/reviewPrompt";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -200,6 +201,7 @@ const Messaging = () => {
       // Replace optimistic row with real row from DB
       if (data) setFamilyMessages(prev => prev.map(m => m.id === optimisticId ? data : m));
       haptic("success");
+      void signalPositiveMoment();
     } catch (err) {
       logError("sendFamilyMessage:", err);
       setFamilyMessages(prev => prev.filter(m => m.id !== optimisticId));
