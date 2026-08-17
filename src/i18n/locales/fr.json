@@ -187,6 +187,15 @@
       "shareBtn": "Partager le lien d'invitation",
       "shareMessage": "J'utilise Eazy Family pour organiser notre famille ! Rejoins-moi : {{url}}",
       "skip": "Commencer seul"
+    },
+    "ezTutorial": {
+      "title": "Découvrez votre bouton EZ",
+      "sub": "Votre raccourci vers tout — toujours à portée",
+      "step1Label": "Appui long + glisser pour le placer où vous voulez",
+      "step2Label": "Appuyer + glisser vers le haut pour les actions rapides",
+      "step3Label": "Appui long pour la saisie vocale instantanée",
+      "tapToContinue": "Appuyer pour continuer",
+      "cta": "C'est parti →"
     }
   },
   "app": {

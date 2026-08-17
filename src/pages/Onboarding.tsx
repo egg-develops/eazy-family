@@ -7,6 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { GuidedCaptureScreen } from '@/components/onboarding/GuidedCapture';
+import { EZButtonTutorialScreen } from '@/components/onboarding/EZButtonTutorial';
 import { registerPushToken } from '@/lib/pushNotifications';
 import i18n from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
@@ -30,9 +31,9 @@ const LORA = "'Lora', 'Georgia', serif";
 const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
-// 0:welcome  1:language  2:account  3:guided-capture  4:notifications  5:invite
-const SCREEN_ORDER = [2, 3, 4, 5];
-const VALID_SCREENS = [0, 1, 2, 3, 4, 5];
+// 0:welcome  1:language  2:account  3:guided-capture  4:ez-tutorial  5:notifications  6:invite
+const SCREEN_ORDER = [2, 3, 4, 5, 6];
+const VALID_SCREENS = [0, 1, 2, 3, 4, 5, 6];
 
 const progressFor = (screen: number) => {
   const idx = SCREEN_ORDER.indexOf(screen);
@@ -182,10 +183,13 @@ const Onboarding = () => {
     navigate('/app', { replace: true });
   };
 
-  // After guided capture: go to notifications on native, invite on web
-  const afterCapture = () => {
-    if (Capacitor.isNativePlatform()) go(4, 'fwd');
-    else go(5, 'fwd');
+  // After guided capture: always go to EZ button tutorial
+  const afterCapture = () => go(4, 'fwd');
+
+  // After EZ tutorial: notifications on native, invite on web
+  const afterTutorial = () => {
+    if (Capacitor.isNativePlatform()) go(5, 'fwd');
+    else go(6, 'fwd');
   };
 
   // ── Navigation ─────────────────────────────────────────────────────────────
@@ -233,7 +237,7 @@ const Onboarding = () => {
       )}
 
       {/* Nav row */}
-      {(showBack || (screen >= 2 && screen <= 5)) && (
+      {(showBack || (screen >= 2 && screen <= 6)) && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 0', flexShrink: 0 }}>
           {showBack ? (
             <button
@@ -246,7 +250,7 @@ const Onboarding = () => {
             </button>
           ) : <div />}
           {/* Mini Orbe */}
-          {screen >= 2 && screen <= 5 && (
+          {screen >= 2 && screen <= 6 && (
             <div className="orbe-pulse" style={{ width: 28, height: 28, borderRadius: '50%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #E8956A, #964735)', opacity: 0.5 }} />
               <div style={{ position: 'absolute', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(circle at 60% 40%, #6B9A79, #44664f)', opacity: 0.55, right: '10%' }} />
@@ -277,8 +281,9 @@ const Onboarding = () => {
           />
         )}
         {screen === 3 && <GuidedCaptureScreen onComplete={afterCapture} onSkip={afterCapture} />}
-        {screen === 4 && <NotificationsScreen onComplete={() => go(5, 'fwd')} onSkip={() => go(5, 'fwd')} />}
-        {screen === 5 && <SimpleInviteScreen onFinish={finish} />}
+        {screen === 4 && <EZButtonTutorialScreen onComplete={afterTutorial} />}
+        {screen === 5 && <NotificationsScreen onComplete={() => go(6, 'fwd')} onSkip={() => go(6, 'fwd')} />}
+        {screen === 6 && <SimpleInviteScreen onFinish={finish} />}
       </div>
     </div>
   );

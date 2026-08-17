@@ -167,6 +167,15 @@
       "shareBtn": "Share invite link",
       "shareMessage": "I'm using Eazy Family to keep our family organised! Join me: {{url}}",
       "skip": "Start solo"
+    },
+    "ezTutorial": {
+      "title": "Meet your EZ button",
+      "sub": "Your shortcut to everything — always within reach",
+      "step1Label": "Long press + drag to move it anywhere on screen",
+      "step2Label": "Tap + swipe up to quickly pick what to capture",
+      "step3Label": "Long tap to go straight into voice capture",
+      "tapToContinue": "Tap to continue",
+      "cta": "Got it, let's go →"
     }
   }
 }
