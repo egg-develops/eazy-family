@@ -573,20 +573,27 @@ const NotificationsScreen = ({ onComplete, onSkip }: { onComplete: () => void; o
   );
 };
 
-// ── SCREEN 5 — Invite ─────────────────────────────────────────────────────────
+// ── SCREEN 6 — Invite ─────────────────────────────────────────────────────────
 const SimpleInviteScreen = ({ onFinish }: { onFinish: () => void }) => {
   const { t } = useTranslation();
   const [shared, setShared] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState('https://eazy.family');
+
+  // Generate a personal invite code as soon as this screen mounts
+  useEffect(() => {
+    supabase.rpc('generate_family_invite_code').then(({ data }) => {
+      if (data) setInviteUrl(`https://eazy.family/join-family?code=${data}`);
+    });
+  }, []);
 
   const handleShare = async () => {
-    const url = 'https://eazy.family';
-    const msg = t('onboarding.simpleInvite.shareMessage', { url });
+    const msg = t('onboarding.simpleInvite.shareMessage', { url: inviteUrl });
     try {
-      await navigator.share?.({ title: 'Eazy Family', text: msg, url });
+      await navigator.share?.({ title: 'Eazy Family', text: msg, url: inviteUrl });
       setShared(true);
     } catch {
       try {
-        await navigator.clipboard?.writeText(`${msg}`);
+        await navigator.clipboard?.writeText(msg);
         setShared(true);
       } catch {}
     }
