@@ -156,7 +156,38 @@
       "otherPlaceholder": "Escreva o seu país",
       "skipInvite": "Farei isso mais tarde"
     },
-    "you": "Tu"
+    "you": "Tu",
+    "guidedCapture": {
+      "title": "Experimente agora",
+      "sub": "Toque no microfone e diga algo à sua família",
+      "trySaying": "Tente dizer...",
+      "exShopping": "Comprar leite e ovos",
+      "exEvent": "Consulta médica amanhã",
+      "exTask": "Limpar a cozinha",
+      "listening": "A ouvir...",
+      "tapToStop": "Toque para parar",
+      "processing": "Um momento...",
+      "successLabel": "Capturado!",
+      "continue": "Continuar",
+      "errorMsg": "Não foi possível processar. Tente novamente.",
+      "retry": "Tentar novamente",
+      "typeInstead": "Escrever em vez disso",
+      "typePlaceholder": "O que quer dizer à sua família?",
+      "skip": "Saltar por agora"
+    },
+    "notifications": {
+      "title": "Nunca perca nada",
+      "sub": "Vamos avisá-lo quando a sua família adicionar algo importante",
+      "cta": "Ativar notificações",
+      "skip": "Agora não"
+    },
+    "simpleInvite": {
+      "title": "Juntos é melhor",
+      "sub": "Convide o seu parceiro ou um familiar — Eazy funciona melhor quando todos estão dentro",
+      "shareBtn": "Partilhar link de convite",
+      "shareMessage": "Uso o Eazy Family para organizar a nossa família! Junta-te a mim: {{url}}",
+      "skip": "Começar sozinho"
+    }
   },
   "app": {
     "name": "Eazy.Family",

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { cloudSet } from '@/lib/preferencesSync';
 import { supabase } from '@/integrations/supabase/client';
+import { cloudSet } from '@/lib/preferencesSync';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
-import { VoiceDemo } from '@/components/onboarding/VoiceDemo';
+import { GuidedCaptureScreen } from '@/components/onboarding/GuidedCapture';
+import { registerPushToken } from '@/lib/pushNotifications';
 import i18n from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
 import { error as logError } from '@/lib/logger';
@@ -29,8 +30,10 @@ const LORA = "'Lora', 'Georgia', serif";
 const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
-// 0:language 2:pain-setup 3:family 4:pain-point 5:voice 8:features 9:account 10:location
-const SCREEN_ORDER = [2, 3, 4, 5, 8, 9]; // screens that show progress bar
+// 0:welcome  1:language  2:account  3:guided-capture  4:notifications  5:invite
+const SCREEN_ORDER = [2, 3, 4, 5];
+const VALID_SCREENS = [0, 1, 2, 3, 4, 5];
+
 const progressFor = (screen: number) => {
   const idx = SCREEN_ORDER.indexOf(screen);
   return idx >= 0 ? (idx + 1) / SCREEN_ORDER.length : null;
@@ -39,21 +42,18 @@ const progressFor = (screen: number) => {
 // ── State ─────────────────────────────────────────────────────────────────────
 interface OBState {
   language: string;
-  currentApproach: string[];
-  familySize: string;
-  mainPainPoint: string[];
-  voiceFrequency: string;
-  location: string;
 }
-
-const EMPTY: OBState = { language: '', currentApproach: [], familySize: '', mainPainPoint: [], voiceFrequency: '', location: '' };
-
+const EMPTY: OBState = { language: '' };
 const STORAGE_KEY = 'eazy-onboarding-v2';
 
 const load = (): { screen: number; state: OBState } => {
   try {
     const s = localStorage.getItem(STORAGE_KEY);
-    if (s) return JSON.parse(s);
+    if (s) {
+      const parsed = JSON.parse(s);
+      // Discard saved screens from old flow (6-10 are gone)
+      if (VALID_SCREENS.includes(parsed.screen)) return parsed;
+    }
   } catch {}
   return { screen: 0, state: EMPTY };
 };
@@ -61,53 +61,7 @@ const load = (): { screen: number; state: OBState } => {
 const save = (screen: number, state: OBState) =>
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, state }));
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const OptionCard = ({
-  label, sub, emoji, selected, onClick, multiSelect,
-}: {
-  label: string; sub?: string; emoji?: string; selected: boolean; onClick: () => void; multiSelect?: boolean;
-}) => (
-  <button
-    onClick={onClick}
-    style={{
-      width: '100%', textAlign: 'left',
-      padding: '14px 16px',
-      borderRadius: 16,
-      border: `1.5px solid ${selected ? T.primary : T.outline}`,
-      background: selected ? T.primaryS : T.card,
-      display: 'flex', alignItems: 'center', gap: 12,
-      cursor: 'pointer',
-      transition: 'border-color 0.15s ease, background 0.15s ease',
-      WebkitTapHighlightColor: 'transparent',
-    }}
-  >
-    {emoji && <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{emoji}</span>}
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ fontSize: 14, fontWeight: 500, color: T.ink, display: 'block', lineHeight: 1.3 }}>{label}</span>
-      {sub && <span style={{ fontSize: 12, color: T.faint, display: 'block', marginTop: 2 }}>{sub}</span>}
-    </div>
-    {multiSelect ? (
-      <div style={{
-        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
-        border: `1.5px solid ${selected ? T.primary : T.outline}`,
-        background: selected ? T.primary : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {selected && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-      </div>
-    ) : (
-      <div style={{
-        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-        border: `1.5px solid ${selected ? T.primary : T.outline}`,
-        background: selected ? T.primary : 'transparent',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {selected && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
-      </div>
-    )}
-  </button>
-);
-
+// ── Shared components ─────────────────────────────────────────────────────────
 const PrimaryBtn = ({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) => (
   <button
     onClick={onClick}
@@ -144,34 +98,28 @@ const Onboarding = () => {
   const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
 
-  // Seed the onboarding language from the active UI language (set by the /de,
-  // /fr… marketing URL or a stored preference) so the flow continues in it
-  // instead of resetting to English.
   const initialLang = (i18n.language || '').split('-')[0];
   const saved = searchParams.get('fresh')
     ? { screen: 0, state: { ...EMPTY, language: initialLang } }
     : load();
+
   const [screen, setScreen] = useState(saved.screen);
   const [dir, setDir] = useState<'fwd' | 'back'>('fwd');
   const [state, setState] = useState<OBState>(saved.state);
   const [animKey, setAnimKey] = useState(0);
 
-  // Auth screen state
+  // Account screen local state
   const [authName, setAuthName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authLoading2, setAuthLoading2] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Location
-  const [locationInput, setLocationInput] = useState('');
-
   const { t } = useTranslation();
 
   useEffect(() => { save(screen, state); }, [screen, state]);
 
-  // Keep the flag alive for the entire onboarding session so the
-  // authenticated-user redirect on line 201 never fires mid-flow.
+  // Keep the onboarding flag alive so the auth guard never fires mid-flow
   useEffect(() => {
     if (!user) localStorage.setItem('eazy-needs-onboarding', '1');
   }, [user]);
@@ -182,49 +130,25 @@ const Onboarding = () => {
     setScreen(n);
   }, []);
 
-  const next = useCallback(() => go(screen + 1, 'fwd'), [screen, go]);
-  const back = useCallback(() => {
-    if (screen === 2) go(1, 'back');
-    else if (screen === 1) go(0, 'back');
-    else if (screen === 8) go(5, 'back');
-    else go(screen - 1, 'back');
-  }, [screen, go]);
-
   const set = <K extends keyof OBState>(k: K, v: OBState[K]) =>
     setState(prev => ({ ...prev, [k]: v }));
 
-  // When user becomes authenticated on the account screen (either via Google OAuth
-  // or because they were pre-authenticated from the Auth page), save their profile
-  // and exit onboarding. This useEffect fires after React has flushed state so
-  // ProtectedRoute will see user!=null when we navigate.
+  // When OAuth completes while on the account screen, advance to guided capture
   useEffect(() => {
-    if (screen !== 9 || !user) return;
-    const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+    if (screen !== 2 || !user) return;
+    const name = (user.user_metadata?.full_name as string | undefined) || user.email?.split('@')[0] || 'User';
     localStorage.setItem('eazy-family-onboarding', JSON.stringify({
       userName: name,
       language: state.language,
       userInitials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
     }));
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('eazy-needs-onboarding');
-    // Signal App to show the upgrade dialog on first launch (native only)
-    localStorage.setItem('eazy-show-upgrade', '1');
-    navigate('/app', { replace: true });
+    go(3, 'fwd');
   }, [screen, user]);
-
 
   if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
 
-  const progress = progressFor(screen);
-  const showBack = screen >= 1; // include the Language screen so it isn't a dead-end
-
-  // ── Slide animation style ──────────────────────────────────────────────────
-  const slideAnim = screen === 0 || screen === 1 || screen === 5 || screen === 9
-    ? 'ob-fade'
-    : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
-
-
-  // ── Account creation ───────────────────────────────────────────────────────
+  // ── Account creation via email ─────────────────────────────────────────────
   const handleSignUp = async () => {
     if (!authName.trim() || !authEmail.trim() || !authPassword.trim()) return;
     setAuthLoading2(true);
@@ -236,15 +160,13 @@ const Onboarding = () => {
         options: { data: { full_name: authName.trim() } },
       });
       if (error) { setAuthError(error.message); return; }
-      const finalData = {
+      localStorage.setItem('eazy-family-onboarding', JSON.stringify({
         userName: authName.trim(),
-        location: locationInput || state.location,
         language: state.language,
         userInitials: authName.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
-      };
-      localStorage.setItem('eazy-family-onboarding', JSON.stringify(finalData));
+      }));
       localStorage.removeItem(STORAGE_KEY);
-      go(10, 'fwd');
+      go(3, 'fwd');
     } catch {
       setAuthError('Something went wrong. Please try again.');
     } finally {
@@ -252,17 +174,36 @@ const Onboarding = () => {
     }
   };
 
-  // ── Finish ─────────────────────────────────────────────────────────────────
+  // ── Finish onboarding ──────────────────────────────────────────────────────
   const finish = () => {
-    if (locationInput || state.location) {
-      cloudSet('eazy-family-location', locationInput || state.location);
-    }
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('eazy-needs-onboarding');
-    navigate('/app');
+    localStorage.setItem('eazy-show-upgrade', '1');
+    navigate('/app', { replace: true });
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // After guided capture: go to notifications on native, invite on web
+  const afterCapture = () => {
+    if (Capacitor.isNativePlatform()) go(4, 'fwd');
+    else go(5, 'fwd');
+  };
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+  const back = useCallback(() => {
+    if (screen <= 0) return;
+    go(screen - 1, 'back');
+  }, [screen, go]);
+
+  // Only show back on pre-auth screens to avoid going back into the account screen
+  // when already signed in (which would re-trigger the OAuth useEffect)
+  const showBack = screen >= 1 && !user;
+
+  const progress = progressFor(screen);
+
+  const slideAnim = (screen <= 2)
+    ? 'ob-fade'
+    : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
+
   return (
     <div style={{
       position: 'fixed', inset: 0,
@@ -271,12 +212,10 @@ const Onboarding = () => {
       fontFamily: SANS,
       overflow: 'hidden',
     }}>
-      {/* Injected keyframes */}
       <style>{`
         @keyframes ob-slide-in-right { from { transform: translateX(100%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
         @keyframes ob-slide-in-left  { from { transform: translateX(-100%); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
         @keyframes ob-fade { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ob-card-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes ob-scale-in { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
       `}</style>
 
@@ -294,7 +233,7 @@ const Onboarding = () => {
       )}
 
       {/* Nav row */}
-      {(showBack || (screen >= 2 && screen <= 8)) && (
+      {(showBack || (screen >= 2 && screen <= 5)) && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 0', flexShrink: 0 }}>
           {showBack ? (
             <button
@@ -306,8 +245,8 @@ const Onboarding = () => {
               </svg>
             </button>
           ) : <div />}
-          {/* Mini Orbe top right from screen 2 */}
-          {screen >= 2 && screen <= 8 && (
+          {/* Mini Orbe */}
+          {screen >= 2 && screen <= 5 && (
             <div className="orbe-pulse" style={{ width: 28, height: 28, borderRadius: '50%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #E8956A, #964735)', opacity: 0.5 }} />
               <div style={{ position: 'absolute', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(circle at 60% 40%, #6B9A79, #44664f)', opacity: 0.55, right: '10%' }} />
@@ -327,12 +266,7 @@ const Onboarding = () => {
       >
         {screen === 0 && <WelcomeScreen next={() => go(1, 'fwd')} />}
         {screen === 1 && <LanguageScreen state={state} set={set} next={() => go(2, 'fwd')} />}
-        {screen === 2 && <PainSetupScreen state={state} set={set} next={next} />}
-        {screen === 3 && <FamilySizeScreen state={state} set={set} next={next} />}
-        {screen === 4 && <PainPointScreen state={state} set={set} next={next} />}
-        {screen === 5 && <VoiceDemoScreen state={state} set={set} next={() => go(8, 'fwd')} />}
-        {screen === 8 && <FeaturesScreen next={next} back={back} />}
-        {screen === 9 && (
+        {screen === 2 && (
           <AccountScreen
             name={authName} setName={setAuthName}
             email={authEmail} setEmail={setAuthEmail}
@@ -342,50 +276,47 @@ const Onboarding = () => {
             onSubmit={handleSignUp}
           />
         )}
-        {screen === 10 && (
-          <LocationInviteScreen
-            location={locationInput} setLocation={setLocationInput}
-            onFinish={finish}
-          />
-        )}
+        {screen === 3 && <GuidedCaptureScreen onComplete={afterCapture} onSkip={afterCapture} />}
+        {screen === 4 && <NotificationsScreen onComplete={() => go(5, 'fwd')} onSkip={() => go(5, 'fwd')} />}
+        {screen === 5 && <SimpleInviteScreen onFinish={finish} />}
       </div>
     </div>
   );
 };
 
-// ── SCREEN 0 — Welcome ───────────────────────────────────────────────────────
+// ── SCREEN 0 — Welcome ────────────────────────────────────────────────────────
 const WelcomeScreen = ({ next }: { next: () => void }) => {
   const { t } = useTranslation();
   return (
-  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
-    <div style={{ animation: 'ob-scale-in 0.7s cubic-bezier(0.16,1,0.3,1) both' }}>
-      <OrbeMorphic size={200} />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
+      <div style={{ animation: 'ob-scale-in 0.7s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <OrbeMorphic size={200} />
+      </div>
+      <div style={{ marginTop: 36, animation: 'ob-fade 0.6s ease 0.3s both' }}>
+        <p style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, margin: '0 0 8px' }}>{t('onboarding.welcome.eyebrow')}</p>
+        <h1 style={{ fontFamily: LORA, fontSize: 40, fontWeight: 400, color: T.ink, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.01em' }}>
+          eazy<span style={{ color: T.primary }}>.</span>family
+        </h1>
+        <p style={{ fontSize: 16, color: T.ink, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.4 }}>
+          {t('onboarding.welcome.tagline')}
+        </p>
+        <p style={{ fontSize: 14, color: T.faint, margin: '0 0 40px', lineHeight: 1.6, maxWidth: 280 }}>
+          {t('onboarding.welcome.subtitle')}
+        </p>
+        <button
+          onClick={next}
+          style={{
+            padding: '15px 40px', borderRadius: 9999, border: 'none',
+            background: T.primary, color: '#fff', fontFamily: SANS,
+            fontSize: 16, fontWeight: 500, cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(150,71,53,0.30)',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {t('onboarding.getStarted')}
+        </button>
+      </div>
     </div>
-    <div style={{ marginTop: 36, animation: 'ob-fade 0.6s ease 0.3s both' }}>
-      <p style={{ fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, margin: '0 0 8px' }}>{t('onboarding.welcome.eyebrow')}</p>
-      <h1 style={{ fontFamily: LORA, fontSize: 40, fontWeight: 400, color: T.ink, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.01em' }}>
-        eazy<span style={{ color: T.primary }}>.</span>family
-      </h1>
-      <p style={{ fontSize: 16, color: T.ink, fontWeight: 500, margin: '0 0 10px', lineHeight: 1.4 }}>
-        {t('onboarding.welcome.tagline')}
-      </p>
-      <p style={{ fontSize: 14, color: T.faint, margin: '0 0 40px', lineHeight: 1.6, maxWidth: 280 }}>
-        {t('onboarding.welcome.subtitle')}
-      </p>
-      <button
-        onClick={next}
-        style={{
-          padding: '15px 40px', borderRadius: 9999, border: 'none',
-          background: T.primary, color: '#fff', fontFamily: SANS,
-          fontSize: 16, fontWeight: 500, cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(150,71,53,0.30)',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {t('onboarding.getStarted')}
-      </button>
-    </div>
-  </div>
   );
 };
 
@@ -443,181 +374,7 @@ const LanguageScreen = ({ state, set, next }: { state: OBState; set: any; next: 
   );
 };
 
-// ── SCREEN 2 — Pain Setup ─────────────────────────────────────────────────────
-const PainSetupScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
-  const { t } = useTranslation();
-  // Reversed order as requested
-  const APPROACHES = [
-    { value: 'wing',     label: t('onboarding.painSetup.wing'),     emoji: '🤷' },
-    { value: 'meeting',  label: t('onboarding.painSetup.meeting'),   emoji: '📅' },
-    { value: 'notes',    label: t('onboarding.painSetup.notes'),     emoji: '📝' },
-    { value: 'calendars',label: t('onboarding.painSetup.calendars'), emoji: '🗓' },
-    { value: 'chat',     label: t('onboarding.painSetup.chat'),      emoji: '📱' },
-  ];
-  const selected: string[] = state.currentApproach || [];
-  const toggle = (v: string) => {
-    const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
-    set('currentApproach', next);
-  };
-  return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 0, lineHeight: 1.25 }}>
-          {t('onboarding.painSetup.title')}
-        </h2>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {APPROACHES.map(a => (
-          <OptionCard key={a.value} emoji={a.emoji} label={a.label} selected={selected.includes(a.value)} onClick={() => toggle(a.value)} multiSelect />
-        ))}
-      </div>
-      <PrimaryBtn label={t('onboarding.painSetup.cta', 'Continue')} onClick={next} disabled={selected.length === 0} />
-    </div>
-  );
-};
-
-// ── SCREEN 3 — Family Size ─────────────────────────────────────────────────────
-const FamilySizeScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
-  const { t } = useTranslation();
-  const FAMILY_SIZES = [
-    { value: 'just-me',    label: t('onboarding.familySize.justMe'),    emoji: '🙋' },
-    { value: 'partner',    label: t('onboarding.familySize.partner'),    emoji: '👫' },
-    { value: 'kids',       label: t('onboarding.familySize.kids'),       emoji: '👨‍👩‍👧‍👦' },
-    { value: 'extended',   label: t('onboarding.familySize.extended'),   emoji: '🏡' },
-    { value: 'caretakers', label: 'We also have caretakers',             emoji: '🤝' },
-  ];
-  const select = (v: string) => { set('familySize', v); setTimeout(next, 320); };
-  return (
-    <div style={{ padding: '28px 24px 40px' }}>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-        {t('onboarding.familySize.title')}
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, marginBottom: 28 }}>{t('onboarding.familySize.sub')}</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {FAMILY_SIZES.map(f => (
-          <OptionCard key={f.value} emoji={f.emoji} label={f.label} selected={state.familySize === f.value} onClick={() => select(f.value)} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ── SCREEN 4 — Pain Point ─────────────────────────────────────────────────────
-const PainPointScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
-  const { t } = useTranslation();
-  const PAIN_POINTS = [
-    { value: 'scheduling', label: t('onboarding.painPoint.schedulingLabel'), sub: t('onboarding.painPoint.schedulingSub'), emoji: '🗓' },
-    { value: 'shopping', label: t('onboarding.painPoint.shoppingLabel'), sub: t('onboarding.painPoint.shoppingSub'), emoji: '🛒' },
-    { value: 'tasks', label: t('onboarding.painPoint.tasksLabel'), sub: t('onboarding.painPoint.tasksSub'), emoji: '✅' },
-    { value: 'overview', label: t('onboarding.painPoint.overviewLabel'), sub: t('onboarding.painPoint.overviewSub'), emoji: '🌅' },
-    { value: 'unsure', label: t('onboarding.painPoint.unsureLabel'), sub: t('onboarding.painPoint.unsureSub'), emoji: '🤔' },
-  ];
-  const selected: string[] = state.mainPainPoint || [];
-  const toggle = (v: string) => {
-    const next = selected.includes(v) ? selected.filter(x => x !== v) : [...selected, v];
-    set('mainPainPoint', next);
-  };
-  return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-          {t('onboarding.painPoint.title')}
-        </h2>
-        <p style={{ fontSize: 14, color: T.faint, margin: 0 }}>{t('onboarding.painPoint.sub')}</p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {PAIN_POINTS.map(p => (
-          <OptionCard key={p.value} emoji={p.emoji} label={p.label} sub={p.sub} selected={selected.includes(p.value)} onClick={() => toggle(p.value)} multiSelect />
-        ))}
-      </div>
-      <PrimaryBtn label={t('onboarding.painSetup.cta')} onClick={next} disabled={selected.length === 0} />
-    </div>
-  );
-};
-
-// ── SCREEN 5 — Voice Demo ─────────────────────────────────────────────────────
-const VoiceDemoScreen = ({ state, set, next }: { state: OBState; set: any; next: () => void }) => {
-  const { t } = useTranslation();
-  const VOICE_FREQ = [
-    { value: 'always', label: t('onboarding.voiceDemo.always') },
-    { value: 'sometimes', label: t('onboarding.voiceDemo.sometimes') },
-    { value: 'rarely', label: t('onboarding.voiceDemo.rarely') },
-    { value: 'try', label: t('onboarding.voiceDemo.try') },
-  ];
-  return (
-    <div style={{ padding: '28px 24px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25 }}>
-          {t('onboarding.voiceDemo.title')}
-        </h2>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {VOICE_FREQ.map(f => (
-          <OptionCard key={f.value} label={f.label} selected={state.voiceFrequency === f.value} onClick={() => set('voiceFrequency', f.value)} />
-        ))}
-      </div>
-
-      <div>
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.faint, marginBottom: 12 }}>
-          {t('onboarding.voiceDemo.seeIt')}
-        </p>
-        <VoiceDemo language={state.language || 'en'} />
-      </div>
-
-      <PrimaryBtn label={t('onboarding.voiceDemo.cta')} onClick={next} disabled={!state.voiceFrequency} />
-    </div>
-  );
-};
-
-// ── SCREEN 8 — Features (final slide before account) ─────────────────────────
-const FeaturesScreen = ({ next, back }: { next: () => void; back: () => void }) => {
-  const { t } = useTranslation();
-  const FEATURES = [
-    { emoji: '🎤', text: t('onboarding.paywall.voiceFeature') },
-    { emoji: '👨‍👩‍👧', text: t('onboarding.paywall.familyFeature') },
-    { emoji: '🗓', text: t('onboarding.paywall.conflictsFeature') },
-    { emoji: '🛒', text: t('onboarding.paywall.listsFeature') },
-    { emoji: '⚡', text: t('onboarding.paywall.digestFeature') },
-    { emoji: '✨', text: t('onboarding.paywall.syncFeature') },
-  ];
-  return (
-    <div style={{ padding: '32px 24px 40px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-      <div>
-        <h2 style={{ fontFamily: LORA, fontSize: 26, fontWeight: 400, color: T.ink, marginBottom: 0, lineHeight: 1.25 }}>
-          Okay, we have everything<br />your family needs
-        </h2>
-      </div>
-
-      {/* Feature list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {FEATURES.map(f => (
-          <div key={f.text} style={{
-            display: 'flex', alignItems: 'center', gap: 14,
-            background: T.card, borderRadius: 16, padding: '14px 16px',
-            border: `1px solid ${T.outline}`,
-          }}>
-            <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{f.emoji}</span>
-            <span style={{ fontSize: 14, color: T.inkV, lineHeight: 1.4 }}>{f.text}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <PrimaryBtn label={t('onboarding.paywall.cta')} onClick={next} />
-        <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0, lineHeight: 1.5 }}>
-          {t('onboarding.paywall.trialSub')}
-        </p>
-        <p style={{ textAlign: 'center', fontSize: 13, color: T.faint, margin: 0 }}>
-          {t('onboarding.paywall.alreadyHave')}{' '}
-          <a href="/auth" style={{ color: T.primary, fontWeight: 500, textDecoration: 'none' }}>{t('onboarding.paywall.signIn')}</a>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-// ── SCREEN 9 — Account Creation ───────────────────────────────────────────────
+// ── SCREEN 2 — Account Creation ───────────────────────────────────────────────
 const AccountScreen = ({
   name, setName, email, setEmail, password, setPassword,
   loading, error, onError, onSubmit,
@@ -629,7 +386,6 @@ const AccountScreen = ({
 }) => {
   const oauthBrowserOpen = useRef(false);
 
-  // Close SFSafariViewController when OAuth completes on native
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -686,9 +442,6 @@ const AccountScreen = ({
           onClick={async () => {
             if (Capacitor.isNativePlatform()) {
               try {
-                // Supabase validates the nonce: send the SHA-256 hash to Apple,
-                // and the raw value to the token exchange. Without this, Supabase
-                // rejects the Apple ID token ("nonce missing/invalid").
                 const rawNonce = `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
                 const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce));
                 const hashedNonce = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -701,7 +454,6 @@ const AccountScreen = ({
                 const result = await SignInWithApple.authorize(options);
                 const idToken = result.response.identityToken;
                 if (!idToken) throw new Error('No identity token received');
-                // Apple returns the name only on the FIRST authorization — capture it.
                 const appleName = [result.response.givenName, result.response.familyName].filter(Boolean).join(' ').trim();
                 const { data, error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: idToken, nonce: rawNonce });
                 if (error) throw error;
@@ -765,145 +517,132 @@ const AccountScreen = ({
   );
 };
 
-// ── SCREEN 10 — Location + Invite ─────────────────────────────────────────────
-const LOCATIONS = ['Switzerland', 'United States', 'Germany', 'Italy', 'France', 'Brazil', 'Portugal', 'Spain', 'Other'];
-
-const LocationInviteScreen = ({
-  location, setLocation, onFinish,
-}: {
-  location: string; setLocation: (v: string) => void; onFinish: () => void;
-}) => {
+// ── SCREEN 4 — Notifications ──────────────────────────────────────────────────
+const NotificationsScreen = ({ onComplete, onSkip }: { onComplete: () => void; onSkip: () => void }) => {
+  const [requesting, setRequesting] = useState(false);
   const { t } = useTranslation();
-  const [inviteInput, setInviteInput] = useState('');
-  const [inviteSent, setInviteSent] = useState(false);
-  const [showOther, setShowOther] = useState(false);
 
-  const handleSend = () => {
-    if (!inviteInput.trim()) return;
-    const inviteUrl = 'https://eazy.family/onboarding';
-    const message = `Hey! I'm using Eazy Family to keep our family organised. Join me here: ${inviteUrl}`;
-    if (navigator.share) {
-      navigator.share({ title: 'Join me on Eazy Family', text: message, url: inviteUrl }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(message).catch(() => {});
-    }
-    setInviteSent(true);
-    setInviteInput('');
-    setTimeout(() => setInviteSent(false), 3000);
+  const handleEnable = async () => {
+    setRequesting(true);
+    try {
+      await registerPushToken();
+    } catch {}
+    onComplete();
   };
 
   return (
-  <div style={{ padding: '28px 24px 52px', display: 'flex', flexDirection: 'column', gap: 28 }}>
-    {/* Two Orbe circles = invite visual */}
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: -16, paddingTop: 8 }}>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg, #E8956A, ${T.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 4px 16px rgba(150,71,53,0.25)' }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: '#fff', fontFamily: SANS }}>{t('onboarding.you')}</span>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', gap: 32, textAlign: 'center' }}>
+      {/* Bell visual */}
+      <div style={{
+        width: 120, height: 120, borderRadius: '50%',
+        background: `radial-gradient(circle at 35% 35%, ${T.primaryL}55, ${T.primaryS})`,
+        border: `1.5px solid ${T.outline}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 52,
+      }}>
+        🔔
       </div>
-      <div style={{ width: 56, height: 56, borderRadius: '50%', background: T.outline, border: `2px dashed ${T.faint}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: -10 }}>
-        <span style={{ fontSize: 24, color: T.faint }}>+</span>
+
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 28, fontWeight: 400, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>
+          {t('onboarding.notifications.title')}
+        </h2>
+        <p style={{ fontSize: 15, color: T.inkV, margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
+          {t('onboarding.notifications.sub')}
+        </p>
       </div>
-    </div>
 
-    <div>
-      <h2 style={{ fontFamily: LORA, fontSize: 24, fontWeight: 400, color: T.ink, marginBottom: 6, lineHeight: 1.25, textAlign: 'center' }}>
-        {t('onboarding.locationInvite.title')}
-      </h2>
-      <p style={{ fontSize: 14, color: T.faint, margin: 0, textAlign: 'center' }}>
-        {t('onboarding.locationInvite.sub')}
-      </p>
-    </div>
-
-    {/* Location */}
-    <div>
-      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>{t('onboarding.locationInvite.countryLabel')}</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {LOCATIONS.map(loc => {
-          const isOther = loc === 'Other';
-          const isActive = isOther ? showOther : location === loc;
-          return (
-            <button
-              key={loc}
-              onClick={() => {
-                if (isOther) {
-                  const next = !showOther;
-                  setShowOther(next);
-                  if (!next) setLocation('');
-                } else {
-                  setShowOther(false);
-                  setLocation(loc === location ? '' : loc);
-                }
-              }}
-              style={{
-                padding: '8px 16px', borderRadius: 9999, fontSize: 13, cursor: 'pointer', fontFamily: SANS,
-                border: `1.5px solid ${isActive ? T.primary : T.outline}`,
-                background: isActive ? T.primaryS : T.card,
-                color: isActive ? T.primary : T.inkV,
-                fontWeight: isActive ? 500 : 400,
-                transition: 'all 0.15s ease',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {isOther ? t('onboarding.locationInvite.other') : loc}
-            </button>
-          );
-        })}
-      </div>
-      {showOther && (
-        <input
-          autoFocus
-          placeholder={t('onboarding.locationInvite.otherPlaceholder')}
-          value={location}
-          onChange={e => setLocation(e.target.value)}
-          style={{
-            marginTop: 10, width: '100%', height: 44, padding: '0 14px', borderRadius: 12,
-            border: `1.5px solid ${T.primary}`, background: '#FAFAF8',
-            fontSize: 14, fontFamily: SANS, color: T.ink, outline: 'none', boxSizing: 'border-box',
-          }}
-        />
-      )}
-    </div>
-
-    {/* Invite */}
-    <div>
-      <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.faint, marginBottom: 10 }}>{t('onboarding.locationInvite.inviteTitle')}</p>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <input
-          value={inviteInput}
-          onChange={e => setInviteInput(e.target.value)}
-          placeholder={t('onboarding.locationInvite.invitePlaceholder')}
-          onKeyDown={e => { if (e.key === 'Enter') handleSend(); }}
-          style={{
-            flex: 1, height: 48, padding: '0 14px', borderRadius: 12,
-            border: `1.5px solid ${T.outline}`, background: '#FAFAF8',
-            fontSize: 14, fontFamily: SANS, color: T.ink, outline: 'none',
-          }}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <PrimaryBtn
+          label={requesting ? t('onboarding.accountScreen.pleaseWait') : t('onboarding.notifications.cta')}
+          onClick={handleEnable}
+          disabled={requesting}
         />
         <button
-          onClick={handleSend}
-          disabled={!inviteInput.trim()}
-          style={{
-            height: 48, padding: '0 18px', borderRadius: 12, border: 'none',
-            background: inviteInput.trim() ? T.primary : T.outline,
-            color: '#fff', fontSize: 14, fontWeight: 500,
-            cursor: inviteInput.trim() ? 'pointer' : 'default', fontFamily: SANS, whiteSpace: 'nowrap',
-            transition: 'background 0.15s',
-          }}
+          onClick={onSkip}
+          style={{ background: 'none', border: 'none', fontSize: 14, color: T.faint, cursor: 'pointer', padding: '6px 0', fontFamily: SANS }}
         >
-          {inviteSent ? t('onboarding.locationInvite.inviteSent') : t('onboarding.locationInvite.inviteBtn')}
+          {t('onboarding.notifications.skip')}
         </button>
       </div>
     </div>
+  );
+};
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-      <PrimaryBtn label={t('onboarding.locationInvite.finish')} onClick={onFinish} />
-      <button
-        onClick={onFinish}
-        style={{ background: 'none', border: 'none', fontSize: 13, color: T.faint, cursor: 'pointer', padding: '4px 0', fontFamily: SANS }}
-      >
-        {t('onboarding.locationInvite.skipInvite', 'I\'ll do this later')}
-      </button>
+// ── SCREEN 5 — Invite ─────────────────────────────────────────────────────────
+const SimpleInviteScreen = ({ onFinish }: { onFinish: () => void }) => {
+  const { t } = useTranslation();
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
+    const url = 'https://eazy.family';
+    const msg = t('onboarding.simpleInvite.shareMessage', { url });
+    try {
+      await navigator.share?.({ title: 'Eazy Family', text: msg, url });
+      setShared(true);
+    } catch {
+      try {
+        await navigator.clipboard?.writeText(`${msg}`);
+        setShared(true);
+      } catch {}
+    }
+  };
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px 52px', gap: 28, textAlign: 'center' }}>
+      {/* Two avatars */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: -8 }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%',
+          background: `linear-gradient(135deg, ${T.primaryL}, ${T.primary})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 24, fontWeight: 700, color: '#fff', fontFamily: SANS,
+          zIndex: 1, boxShadow: '0 4px 16px rgba(150,71,53,0.25)',
+        }}>
+          {t('onboarding.you')}
+        </div>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: T.primaryS, zIndex: 2, marginLeft: -8, marginRight: -8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 13, color: T.primary, fontWeight: 700 }}>+</span>
+        </div>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%',
+          background: T.card, border: `2px dashed ${T.outline}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28,
+        }}>
+          👤
+        </div>
+      </div>
+
+      <div>
+        <h2 style={{ fontFamily: LORA, fontSize: 28, fontWeight: 400, color: T.ink, margin: '0 0 10px', lineHeight: 1.2 }}>
+          {t('onboarding.simpleInvite.title')}
+        </h2>
+        <p style={{ fontSize: 15, color: T.inkV, margin: 0, lineHeight: 1.6, maxWidth: 300 }}>
+          {t('onboarding.simpleInvite.sub')}
+        </p>
+      </div>
+
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button
+          onClick={handleShare}
+          style={{
+            width: '100%', padding: '15px 24px', borderRadius: 9999, border: 'none',
+            background: shared ? T.secondary : T.primary, color: '#fff',
+            fontFamily: SANS, fontSize: 15, fontWeight: 500, cursor: 'pointer',
+            transition: 'background 0.2s',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {shared ? '✓ ' : ''}{t('onboarding.simpleInvite.shareBtn')}
+        </button>
+
+        <button
+          onClick={onFinish}
+          style={{ background: 'none', border: 'none', fontSize: 14, color: T.faint, cursor: 'pointer', padding: '6px 0', fontFamily: SANS }}
+        >
+          {t('onboarding.simpleInvite.skip')}
+        </button>
+      </div>
     </div>
-  </div>
   );
 };
 
