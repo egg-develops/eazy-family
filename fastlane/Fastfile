@@ -18,7 +18,7 @@ platform :ios do
     match(type: "appstore", readonly: is_ci)
     increment_build_number(
       xcodeproj: "ios/App/App.xcodeproj",
-      build_number: latest_testflight_build_number(api_key: api_key) + 1
+      build_number: latest_testflight_build_number(api_key: api_key) + 10
     )
     update_code_signing_settings(
       use_automatic_signing: false,
@@ -63,10 +63,10 @@ platform :ios do
       key_filepath: "fastlane/AuthKey_4H662N6NAJ.p8"
     )
     match(type: "appstore", readonly: is_ci)
-    # Build numbers are shared across TestFlight + App Store, so +1 the latest.
+    # Build numbers are shared across TestFlight + App Store, so +10 the latest.
     increment_build_number(
       xcodeproj: "ios/App/App.xcodeproj",
-      build_number: latest_testflight_build_number(api_key: api_key) + 1
+      build_number: latest_testflight_build_number(api_key: api_key) + 10
     )
     update_code_signing_settings(
       use_automatic_signing: false,
