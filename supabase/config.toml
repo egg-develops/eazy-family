@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.dialect-alert]
 verify_jwt = false
+
+[functions.d1-nudge]
+verify_jwt = false
