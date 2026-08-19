@@ -49,3 +49,4 @@ screenshots/video-raw/
 # Local Claude Code state — ignore everything except committed skills
 .claude/*
 !.claude/skills/
+fastlane/screenshots/

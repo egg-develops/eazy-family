@@ -99,13 +99,15 @@ platform :ios do
     # submit for review. skip_screenshots: the listing already has them.
     # automatic_release is env-controlled — false = you release manually once
     # Apple approves; true = goes live automatically after approval.
+    stage_screenshots
     upload_to_app_store(
       api_key: api_key,
       submit_for_review: true,
       automatic_release: ENV["AUTO_RELEASE"] == "true",
       force: true,
       run_precheck_before_submit: false,
-      skip_screenshots: true,
+      skip_screenshots: false,
+      screenshots_path: "fastlane/screenshots",
       metadata_path: "fastlane/metadata/ios",
       submission_information: { add_id_info_uses_idfa: false }
     )
@@ -136,6 +138,27 @@ platform :android do
     telegram_notify(message: "🚀 Android promoted to Play Store production")
   end
 
+end
+
+# Copy finalized store screenshots (1242×2688) into fastlane's expected locale structure.
+# Source: screenshots/store[-<lang>]/ → fastlane/screenshots/<locale>/
+private_lane :stage_screenshots do
+  require 'fileutils'
+  mapping = {
+    'en-US' => 'screenshots/store',
+    'de-DE' => 'screenshots/store-de',
+    'fr-FR' => 'screenshots/store-fr',
+    'it-IT' => 'screenshots/store-it',
+    'es-ES' => 'screenshots/store-es',
+    'pt-PT' => 'screenshots/store-pt',
+  }
+  FileUtils.mkdir_p('fastlane/screenshots')
+  mapping.each do |locale, src|
+    next unless Dir.exist?(src)
+    dst = "fastlane/screenshots/#{locale}"
+    FileUtils.rm_rf(dst)
+    FileUtils.cp_r(src, dst)
+  end
 end
 
 # Shared helper — sends message to Telegram on build events
