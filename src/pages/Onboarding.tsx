@@ -31,8 +31,8 @@ const LORA = "'Lora', 'Georgia', serif";
 const SANS = "'DM Sans', 'Inter', system-ui, sans-serif";
 
 // ── Screen constants ──────────────────────────────────────────────────────────
-// 0:welcome  1:language  2:account  3:guided-capture  4:ez-tutorial  5:notifications  6:invite
-const SCREEN_ORDER = [2, 3, 4, 5, 6];
+// 0:welcome  1:language  2:ez-tutorial  3:account  4:guided-capture  5:notifications  6:invite
+const SCREEN_ORDER = [3, 4, 5, 6];
 const VALID_SCREENS = [0, 1, 2, 3, 4, 5, 6];
 
 const progressFor = (screen: number) => {
@@ -136,7 +136,7 @@ const Onboarding = () => {
 
   // When OAuth completes while on the account screen, advance to guided capture
   useEffect(() => {
-    if (screen !== 2 || !user) return;
+    if (screen !== 3 || !user) return;
     const name = (user.user_metadata?.full_name as string | undefined) || user.email?.split('@')[0] || 'User';
     localStorage.setItem('eazy-family-onboarding', JSON.stringify({
       userName: name,
@@ -144,7 +144,7 @@ const Onboarding = () => {
       userInitials: name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
     }));
     localStorage.removeItem(STORAGE_KEY);
-    go(3, 'fwd');
+    go(4, 'fwd');
   }, [screen, user]);
 
   if (!authLoading && user && !localStorage.getItem('eazy-needs-onboarding')) return <Navigate to="/app" replace />;
@@ -167,7 +167,7 @@ const Onboarding = () => {
         userInitials: authName.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'EF',
       }));
       localStorage.removeItem(STORAGE_KEY);
-      go(3, 'fwd');
+      go(4, 'fwd');
     } catch {
       setAuthError('Something went wrong. Please try again.');
     } finally {
@@ -183,11 +183,11 @@ const Onboarding = () => {
     navigate('/app', { replace: true });
   };
 
-  // After guided capture: always go to EZ button tutorial
-  const afterCapture = () => go(4, 'fwd');
+  // After EZ tutorial: always go to account
+  const afterTutorial = () => go(3, 'fwd');
 
-  // After EZ tutorial: notifications on native, invite on web
-  const afterTutorial = () => {
+  // After guided capture: notifications on native, invite on web
+  const afterCapture = () => {
     if (Capacitor.isNativePlatform()) go(5, 'fwd');
     else go(6, 'fwd');
   };
@@ -204,7 +204,7 @@ const Onboarding = () => {
 
   const progress = progressFor(screen);
 
-  const slideAnim = (screen <= 2)
+  const slideAnim = (screen <= 1)
     ? 'ob-fade'
     : dir === 'fwd' ? 'ob-slide-in-right' : 'ob-slide-in-left';
 
@@ -237,7 +237,7 @@ const Onboarding = () => {
       )}
 
       {/* Nav row */}
-      {(showBack || (screen >= 2 && screen <= 6)) && (
+      {(showBack || (screen >= 3 && screen <= 6)) && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 0', flexShrink: 0 }}>
           {showBack ? (
             <button
@@ -250,7 +250,7 @@ const Onboarding = () => {
             </button>
           ) : <div />}
           {/* Mini Orbe */}
-          {screen >= 2 && screen <= 6 && (
+          {screen >= 3 && screen <= 6 && (
             <div className="orbe-pulse" style={{ width: 28, height: 28, borderRadius: '50%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle at 40% 40%, #E8956A, #964735)', opacity: 0.5 }} />
               <div style={{ position: 'absolute', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(circle at 60% 40%, #6B9A79, #44664f)', opacity: 0.55, right: '10%' }} />
@@ -270,7 +270,8 @@ const Onboarding = () => {
       >
         {screen === 0 && <WelcomeScreen next={() => go(1, 'fwd')} />}
         {screen === 1 && <LanguageScreen state={state} set={set} next={() => go(2, 'fwd')} />}
-        {screen === 2 && (
+        {screen === 2 && <EZButtonTutorialScreen onComplete={afterTutorial} />}
+        {screen === 3 && (
           <AccountScreen
             name={authName} setName={setAuthName}
             email={authEmail} setEmail={setAuthEmail}
@@ -280,8 +281,7 @@ const Onboarding = () => {
             onSubmit={handleSignUp}
           />
         )}
-        {screen === 3 && <GuidedCaptureScreen onComplete={afterCapture} onSkip={afterCapture} />}
-        {screen === 4 && <EZButtonTutorialScreen onComplete={afterTutorial} />}
+        {screen === 4 && <GuidedCaptureScreen onComplete={afterCapture} onSkip={afterCapture} />}
         {screen === 5 && <NotificationsScreen onComplete={() => go(6, 'fwd')} onSkip={() => go(6, 'fwd')} />}
         {screen === 6 && <SimpleInviteScreen onFinish={finish} />}
       </div>
