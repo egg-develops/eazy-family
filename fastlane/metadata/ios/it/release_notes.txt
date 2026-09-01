@@ -1,3 +1,4 @@
-• Input vocale più affidabile: gli articoli della spesa finiscono sempre nella lista giusta
-• IA migliorata: gestisce meglio le trascrizioni imprecise del riconoscimento vocale
-• Miglioramenti di prestazioni e stabilità
+• Nuovo onboarding: scopri il pulsante EZ prima di registrarti — tieni premuto per la voce, scorri per il menu rapido, trascina per riposizionare
+• Link di invito personali: il tuo link porta i familiari direttamente nella tua famiglia
+• Notifiche push: attivale durante la configurazione per restare aggiornato
+• Correzioni di bug e miglioramenti delle prestazioni

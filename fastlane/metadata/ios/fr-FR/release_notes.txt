@@ -1,3 +1,4 @@
-• Saisie vocale plus fiable : les articles de courses arrivent toujours au bon endroit
-• IA améliorée : gère mieux les transcriptions imprécises de la reconnaissance vocale
-• Améliorations de performances et de stabilité
+• Nouvel onboarding : découvre le bouton EZ avant de t'inscrire — appui long pour la voix, glissement vers le haut pour le menu rapide, déplacement par glisser
+• Liens d'invitation personnels : ton lien amène directement tes proches dans ta famille
+• Notifications push : active-les à la configuration pour ne rien manquer
+• Corrections de bugs et améliorations des performances

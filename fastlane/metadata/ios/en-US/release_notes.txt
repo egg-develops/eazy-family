@@ -1,3 +1,4 @@
-• Voice input reliability: shopping items now always land in the right list — never on the calendar
-• Smarter AI: handles garbled speech-to-text more gracefully
-• Performance and stability improvements
+• New onboarding: see what the EZ button does before you sign up — long-press for voice, swipe up for the quick menu, drag to reposition
+• Personal invite links: sharing now sends a direct join link so your partner lands straight in your family
+• Push notifications: opt in during setup to stay on top of things
+• Bug fixes and performance improvements

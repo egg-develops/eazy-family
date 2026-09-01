@@ -1,3 +1,4 @@
-• Zuverlässigere Spracheingabe: Einkaufselemente landen jetzt immer in der richtigen Liste
-• Verbesserter KI-Parser: erkennt auch abgehackte Spracherkennungseingaben
-• Leistungs- und Stabilitätsverbesserungen
+• Neues Onboarding: Erlebe den EZ-Button in Aktion, bevor du dich anmeldest — Gedrückthalten für Spracheingabe, Wischen für das Schnellmenü, Verschieben per Drag
+• Persönliche Einladungslinks: Dein Link führt Familienmitglieder direkt in deine Familie
+• Push-Benachrichtigungen: Aktiviere sie beim Einrichten, um nichts zu verpassen
+• Fehlerbehebungen und Leistungsverbesserungen

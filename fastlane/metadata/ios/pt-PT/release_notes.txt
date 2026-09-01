@@ -1,3 +1,4 @@
-• Entrada de voz mais fiável: os artigos de compras vão sempre para a lista certa
-• IA melhorada: processa melhor as transcrições imprecisas do reconhecimento de voz
-• Melhorias de desempenho e estabilidade
+• Novo onboarding: vê o botão EZ em ação antes de te registares — pressão longa para voz, deslize para o menu rápido, arrasta para reposicionar
+• Links de convite pessoais: o teu link leva os familiares diretamente para a tua família
+• Notificações push: ativa-as durante a configuração para não perderes nada
+• Correções de erros e melhorias de desempenho
