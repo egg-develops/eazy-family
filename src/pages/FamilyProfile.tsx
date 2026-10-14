@@ -16,6 +16,8 @@ import { error as logError } from "@/lib/logger";
 
 interface FamilyMember {
   id: string;
+  /** null for a member added without an account of their own. */
+  user_id: string | null;
   display_name: string;
   email: string | null;
   phone: string | null;
@@ -26,6 +28,10 @@ interface FamilyMember {
   share_email: boolean | null;
   share_phone: boolean | null;
 }
+
+/** Values of the `family_member_role` enum in Postgres. */
+type MemberRole = 'parent' | 'child' | 'grandparent' | 'caretaker' | 'other';
+const MEMBER_ROLES: MemberRole[] = ['child', 'parent', 'grandparent', 'caretaker', 'other'];
 
 interface FamilyInvitation {
   id: string;
@@ -49,6 +55,14 @@ const FamilyProfile = () => {
   const [regeneratingCode, setRegeneratingCode] = useState(false);
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  // Adding someone who has no account of their own — a child, or a grandparent
+  // who won't install the app. They get a family_members row with user_id NULL,
+  // which is enough to be assigned tasks and appear on the family list; an
+  // invitation can attach a real login later.
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberRole, setNewMemberRole] = useState<MemberRole>("child");
+  const [addingMember, setAddingMember] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -345,6 +359,59 @@ const FamilyProfile = () => {
     }
   };
 
+  /**
+   * Create a member who has no account. `user_id` stays NULL — that row is the
+   * person's identity for assignment (tasks reference `family_members.id`), and
+   * it only became visible to the family with migration 20261011000001, which
+   * fixed an RLS predicate that filtered every NULL user_id row out.
+   */
+  const handleAddMember = async () => {
+    if (!user || !familyId) {
+      toast({ title: t('familyProfile.noFamilyCreate'), variant: "destructive" });
+      return;
+    }
+    const name = newMemberName.trim();
+    if (!name) return;
+    if (name.length > 100) {
+      toast({ title: t('familyProfile.nameTooLong'), description: t('familyProfile.nameTooLongDesc'), variant: "destructive" });
+      return;
+    }
+    // Unicode-aware: an ASCII-only pattern would reject "Zoé", "Noë", "Björn".
+    if (!/^[\p{L}\p{N}\s'’-]+$/u.test(name)) {
+      toast({ title: t('familyProfile.invalidCharacters'), description: t('familyProfile.invalidCharactersDesc'), variant: "destructive" });
+      return;
+    }
+
+    setAddingMember(true);
+    try {
+      const { error } = await supabase.from("family_members").insert({
+        family_id: familyId,
+        user_id: null,
+        role: newMemberRole,
+        inviter_id: user.id,
+        is_active: true,
+        // Both: the safe view reads display_name, EZ capture's matcher prefers
+        // display_name then full_name.
+        display_name: name,
+        full_name: name,
+      });
+      if (error) throw error;
+      toast({
+        title: t('familyProfile.memberAdded'),
+        description: t('familyProfile.memberAddedDesc', { name }),
+      });
+      setNewMemberName("");
+      setNewMemberRole("child");
+      setIsAddMemberOpen(false);
+      loadFamilyData();
+    } catch (error) {
+      logError('Error adding family member:', error);
+      toast({ title: t('common.error'), description: t('familyProfile.memberAddFailed'), variant: "destructive" });
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
   if (isGuest) {
     return (
       <GuestUpgradeModal
@@ -491,8 +558,67 @@ const FamilyProfile = () => {
       ) : (
         <Card className="shadow-custom-md">
         <CardHeader>
-          <CardTitle>{t('familyProfile.familyMembers')}</CardTitle>
-          <CardDescription>{t('familyProfile.activeMembers')}</CardDescription>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle>{t('familyProfile.familyMembers')}</CardTitle>
+              <CardDescription>{t('familyProfile.activeMembers')}</CardDescription>
+            </div>
+            <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-shrink-0">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  {t('familyProfile.addMember')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t('familyProfile.addMemberTitle')}</DialogTitle>
+                  <DialogDescription>{t('familyProfile.addMemberDesc')}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="member-name">{t('familyProfile.memberNameLabel')}</Label>
+                    <Input
+                      id="member-name"
+                      value={newMemberName}
+                      maxLength={100}
+                      placeholder={t('familyProfile.memberNamePlaceholder')}
+                      onChange={(e) => setNewMemberName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddMember(); }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('familyProfile.memberRoleLabel')}</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {MEMBER_ROLES.map((role) => (
+                        <Button
+                          key={role}
+                          type="button"
+                          size="sm"
+                          variant={newMemberRole === role ? "default" : "outline"}
+                          className={newMemberRole === role ? "gradient-primary text-white border-0" : ""}
+                          onClick={() => setNewMemberRole(role)}
+                        >
+                          {t(`familyProfile.role.${role}`, { defaultValue: role })}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsAddMemberOpen(false)}>{t('familyProfile.cancel')}</Button>
+                  <Button
+                    onClick={handleAddMember}
+                    disabled={!newMemberName.trim() || addingMember}
+                    className="gradient-primary text-white border-0"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t('familyProfile.addMember')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -510,7 +636,12 @@ const FamilyProfile = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-medium">{member.display_name || "Family Member"}</p>
-                      <Badge variant={getRoleBadgeColor(member.role)}>{member.role}</Badge>
+                      <Badge variant={getRoleBadgeColor(member.role)}>
+                        {t(`familyProfile.role.${member.role}`, { defaultValue: member.role })}
+                      </Badge>
+                      {!member.user_id && (
+                        <Badge variant="outline">{t('familyProfile.noAccountBadge')}</Badge>
+                      )}
                     </div>
                     <div className="space-y-1">
                       {member.email && (

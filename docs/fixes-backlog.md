@@ -11,6 +11,21 @@ Status: `[ ]` open · `[~]` in progress / needs input · `[x]` done
 
 ## Open
 
+### Reminders (from the Nori teardown, 2026-10-11)
+- [ ] **Per-item reminders with offsets and channels.** Today the only reminder is
+  the Done screen's "tomorrow 09:00", which writes a separate calendar item — there
+  is no reminder *on* a task or event. Target shape (Nori's, minus the parts that
+  cost money): `reminders: [{ offsetMinutes, channel }]`, several per item,
+  `channel ∈ app | email`. **Ship `app` via Capacitor local notifications and
+  `email` via the existing digest function; skip SMS and phone-call channels** —
+  they carry per-message cost and consent obligations we don't want in CH/EU.
+  Needs: a `reminders jsonb` column on `tasks` and on the new `calendar_events`
+  table (see `docs/plan-roles-recurrence-calendar-2026-10-11.md`), a scheduling
+  pass that re-arms local notifications on app start, and a server-side sweep for
+  the email channel. `push_tokens` already exists and is empty — wire it or drop it.
+  Do this **after** the calendar move, so reminders are written against the server
+  store once rather than against localStorage and then again.
+
 ### Family Channel
 - [~] **Manual message entry is a poor experience.** Needs specifics — is it the
   input being cramped/awkward, keyboard covering it, no send affordance, or the

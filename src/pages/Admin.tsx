@@ -239,7 +239,9 @@ const Admin = () => {
 
     const catMap: Record<string, number> = {};
     (parseAll || []).forEach((r: any) => {
-      const cat = r.ai_result?.type || 'unknown';
+      // Rows written before multi-entry capture hold a single entry object;
+      // newer ones hold { entries: [...] }. Count the first entry's type.
+      const cat = r.ai_result?.entries?.[0]?.type || r.ai_result?.type || 'unknown';
       catMap[cat] = (catMap[cat] || 0) + 1;
     });
     const ezCategoryBreakdown = Object.entries(catMap).sort((a, b) => b[1] - a[1]).map(([type, count]) => ({ type, count }));

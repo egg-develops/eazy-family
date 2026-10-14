@@ -95,7 +95,7 @@ describe('parseMessageIntent', () => {
 
 describe('resolveAssignees — fuzzy name matching', () => {
   const members: FamilyMemberLite[] = [
-    { user_id: 'u-sofia', name: 'Sofia Müller' },
+    { id: 'm-u-sofia', user_id: 'u-sofia', name: 'Sofia Müller' },
     { user_id: 'u-leo',   name: 'Leo Müller' },
   ];
   const self = { userId: 'u-self', name: 'Alex Müller' };
@@ -112,8 +112,8 @@ describe('resolveAssignees — fuzzy name matching', () => {
 
 describe('resolveAssignees — nickname / short-form matching', () => {
   const members: FamilyMemberLite[] = [
-    { user_id: 'u-cat', name: 'Catharina' },
-    { user_id: 'u-ben', name: 'Benjamin Ray' },
+    { id: 'm-u-cat', user_id: 'u-cat', name: 'Catharina' },
+    { id: 'm-u-ben', user_id: 'u-ben', name: 'Benjamin Ray' },
   ];
   const self = { userId: 'u-self', name: 'Ermias' };
 
@@ -125,7 +125,7 @@ describe('resolveAssignees — nickname / short-form matching', () => {
     expect(resolveAssignees(['Ben'], members, self)).toEqual(['u-ben']));
   it('ambiguous prefix is skipped (no mis-assignment)', () => {
     const two: FamilyMemberLite[] = [
-      { user_id: 'a', name: 'Catharina' }, { user_id: 'b', name: 'Catherine' },
+      { id: 'm-a', user_id: 'a', name: 'Catharina' }, { id: 'm-b', user_id: 'b', name: 'Catherine' },
     ];
     expect(resolveAssignees(['Cathi'], two, self)).toEqual([]);
   });
@@ -135,8 +135,8 @@ describe('resolveAssignees — nickname / short-form matching', () => {
 
 describe('resolveAssignees', () => {
   const members: FamilyMemberLite[] = [
-    { user_id: 'u-mia', name: 'Mia Rivera' },
-    { user_id: 'u-leo', name: 'Leo Rivera' },
+    { id: 'm-u-mia', user_id: 'u-mia', name: 'Mia Rivera' },
+    { id: 'm-u-leo', user_id: 'u-leo', name: 'Leo Rivera' },
   ];
   const self = { userId: 'u-self', name: 'Alex Rivera' };
 

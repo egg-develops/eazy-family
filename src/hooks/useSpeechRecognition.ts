@@ -19,6 +19,9 @@ export type SpeechRecognitionOptions = {
 export const useSpeechRecognition = () => {
   const [isListening, setIsListening] = useState(voiceService.isListening);
   const [isTranscribing, setIsTranscribing] = useState(voiceService.isTranscribing);
+  // Live input level + elapsed time, for on-screen recording feedback. Only the
+  // mobile-web path reports these (the others show partial text instead).
+  const [meter, setMeter] = useState<{ level: number; elapsedMs: number }>({ level: 0, elapsedMs: 0 });
 
   // Latest handlers for the active session — kept in a ref so the singleton
   // subscriptions always dispatch to the current call site's callbacks.
@@ -28,7 +31,9 @@ export const useSpeechRecognition = () => {
     const unsubState = voiceService.onStateChange((s) => {
       setIsListening(s.isListening);
       setIsTranscribing(s.isTranscribing);
+      if (!s.isListening) setMeter({ level: 0, elapsedMs: 0 });
     });
+    const unsubMeter = voiceService.onMeter((level, elapsedMs) => setMeter({ level, elapsedMs }));
     const unsubResult = voiceService.onResult((transcript, isFinal) =>
       optsRef.current?.onResult(transcript, isFinal)
     );
@@ -41,6 +46,7 @@ export const useSpeechRecognition = () => {
 
     return () => {
       unsubState();
+      unsubMeter();
       unsubResult();
       unsubError();
       unsubEnd();
@@ -56,5 +62,5 @@ export const useSpeechRecognition = () => {
     voiceService.stopListening();
   };
 
-  return { isListening, isTranscribing, start, stop, isSingleShot: voiceService.isSingleShot };
+  return { isListening, isTranscribing, meter, start, stop, isSingleShot: voiceService.isSingleShot };
 };

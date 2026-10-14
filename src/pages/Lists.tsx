@@ -46,13 +46,16 @@ interface ListItem {
   family_id?: string | null;
   assigned_to?: string | null;
   assigned_to_users?: string[] | null;
+  assigned_member_ids?: string[] | null;
   visible_to?: string | null;
 }
 
 interface FamilyMember {
   id: string;
-  user_id: string;
+  /** null for a member who has no account yet — assignment keys on `id`. */
+  user_id: string | null;
   full_name: string | null;
+  display_name?: string | null;
   email: string | null;
   role: string;
   photo?: string | null;
@@ -160,18 +163,24 @@ const Lists = () => {
       .then(async ({ data: mine }) => {
         if (!mine?.family_id) return;
         setUserFamilyId(mine.family_id);
-        const { data: members } = await supabase.from('family_members')
-          .select('id, user_id, full_name, email, role')
+        // icon_image is the avatar. It lives on family_members, not on profiles
+        // (profiles_select is own-row-or-admin, so an avatar there is invisible to
+        // the family) and not in user_preferences (RLS scopes that to its owner).
+        // It comes back in this one select, placeholders included.
+        type RosterRow = Omit<FamilyMember, 'photo' | 'displayName'> & { icon_image?: string | null };
+        const withAvatar = await supabase.from('family_members')
+          .select('id, user_id, full_name, display_name, email, role, icon_image')
           .eq('family_id', mine.family_id).eq('is_active', true);
-        if (!members?.length) return;
-        const { data: profiles } = await supabase.from('profiles')
-          .select('user_id, display_name, home_config')
-          .in('user_id', members.map(m => m.user_id));
-        setFamilyMembers(members.map(m => {
-          const p = profiles?.find(pr => pr.user_id === m.user_id);
-          const hc = p?.home_config as { iconImage?: string } | null;
-          return { ...m, photo: hc?.iconImage ?? null, displayName: p?.display_name ?? null };
-        }));
+        // PostgREST fails the WHOLE select on one unknown column, so if the
+        // icon_image migration is not applied yet, retry without it rather than
+        // losing the entire roster to a missing avatar.
+        const roster: RosterRow[] = withAvatar.error
+          ? ((await supabase.from('family_members')
+              .select('id, user_id, full_name, display_name, email, role')
+              .eq('family_id', mine.family_id).eq('is_active', true)).data ?? [])
+          : (withAvatar.data ?? []);
+        if (!roster.length) return;
+        setFamilyMembers(roster.map(m => ({ ...m, photo: m.icon_image ?? null, displayName: m.display_name ?? null })));
       });
   }, [user]);
 
@@ -220,13 +229,34 @@ const Lists = () => {
     setAssigningItemId(null);
   };
 
-  const toggleAssignUser = async (taskId: string, userId: string) => {
+  /**
+   * Assignment is keyed on `family_members.id`, not on the auth user id: a
+   * child with no account has no user id, and keying on it dropped them.
+   * `assigned_to_users` is still written (accounts only) so a client running
+   * the previous release keeps showing assignments.
+   */
+  const assigneeMemberIds = (item: ListItem): string[] => {
+    if (item.assigned_member_ids?.length) return item.assigned_member_ids;
+    // Older rows only have user ids — map them onto the roster.
+    return (item.assigned_to_users ?? [])
+      .map(uid => familyMembers.find(m => m.user_id === uid)?.id)
+      .filter((id): id is string => !!id);
+  };
+
+  const toggleAssignMember = async (taskId: string, memberId: string) => {
     const item = items.find(i => i.id === taskId);
     if (!item) return;
-    const current = item.assigned_to_users ?? [];
-    const next = current.includes(userId) ? current.filter(id => id !== userId) : [...current, userId];
-    setItems(prev => prev.map(i => i.id === taskId ? { ...i, assigned_to_users: next } : i));
-    await supabase.from('tasks').update({ assigned_to_users: next }).eq('id', taskId);
+    const current = assigneeMemberIds(item);
+    const next = current.includes(memberId) ? current.filter(id => id !== memberId) : [...current, memberId];
+    const nextUserIds = next
+      .map(id => familyMembers.find(m => m.id === id)?.user_id)
+      .filter((id): id is string => !!id);
+    setItems(prev => prev.map(i => i.id === taskId
+      ? { ...i, assigned_member_ids: next, assigned_to_users: nextUserIds }
+      : i));
+    await supabase.from('tasks')
+      .update({ assigned_member_ids: next, assigned_to_users: nextUserIds })
+      .eq('id', taskId);
   };
 
   const startEditing = (item: ListItem) => {
@@ -264,7 +294,12 @@ const Lists = () => {
       completed: false,
       ...(scope === 'shared' && {
         visible_to: newListVisibleTo,
-        assigned_to_users: newAssignees.length > 0 ? newAssignees : null,
+        // newAssignees holds family_members.id values; the user-id column is
+        // kept in step for clients still on the previous release.
+        assigned_member_ids: newAssignees.length > 0 ? newAssignees : null,
+        assigned_to_users: newAssignees.length > 0
+          ? newAssignees.map(id => familyMembers.find(m => m.id === id)?.user_id).filter((id): id is string => !!id)
+          : null,
       }),
     }]);
     if (error) { toast({ title: 'Could not add', variant: 'destructive' }); return; }
@@ -360,22 +395,26 @@ const Lists = () => {
   const getListItems = (listId: string) => {
     const all = items.filter(i => i.parent_id === listId);
     if (assigneeFilter === 'all') return all;
-    const filterId = assigneeFilter === 'me' ? (user?.id ?? '') : assigneeFilter;
+    // The filter carries a member id ('me' resolves to my own member row).
+    const myMemberId = familyMembers.find(m => m.user_id === user?.id)?.id ?? '';
+    const filterMemberId = assigneeFilter === 'me' ? myMemberId : assigneeFilter;
+    const filterUserId = familyMembers.find(m => m.id === filterMemberId)?.user_id ?? null;
     return all.filter(i =>
-      i.assigned_to === filterId ||
-      (i.assigned_to_users ?? []).includes(filterId)
+      assigneeMemberIds(i).includes(filterMemberId) ||
+      (!!filterUserId && i.assigned_to === filterUserId)
     );
   };
 
   const shoppingDbType = scope === 'personal' ? 'shopping_personal' : 'shopping';
   // Avatar + first-name pill(s) for assigned members — used on shopping rows.
-  const renderAssigneePills = (uids: string[] | null | undefined, max = 2) => {
-    if (!uids?.length) return null;
+  const renderAssigneePills = (memberIds: string[] | null | undefined, max = 2) => {
+    if (!memberIds?.length) return null;
     return (
       <div className="flex items-center gap-1 flex-shrink-0">
-        {uids.slice(0, max).map(uid => {
-          const m = familyMembers.find(fm => fm.user_id === uid);
-          const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
+        {memberIds.slice(0, max).map(uid => {
+          const m = familyMembers.find(fm => fm.id === uid);
+          if (!m) return null;
+          const name = (m.displayName || m.full_name || 'M').split(' ')[0];
           return (
             <span key={uid}
               className="flex items-center gap-1 rounded-full pl-0.5 pr-2 py-0.5 text-[11px] font-semibold flex-shrink-0"
@@ -634,9 +673,9 @@ const Lists = () => {
                   {/* Other members */}
                   {familyMembers.filter(m => m.user_id !== user?.id).map(m => {
                     const name = (m.displayName || m.full_name || 'Member').split(' ')[0];
-                    const sel = assigneeFilter === m.user_id;
+                    const sel = assigneeFilter === m.id;
                     return (
-                      <button key={m.user_id} onClick={() => setAssigneeFilter(m.user_id)}
+                      <button key={m.id} onClick={() => setAssigneeFilter(m.id)}
                         className="flex items-center gap-1.5 flex-shrink-0 rounded-full text-[11px] font-semibold transition-all"
                         style={{ background: sel ? ACCENT : '#EEF4F0', color: sel ? '#fff' : '#44664F', padding: '4px 10px 4px 4px' }}>
                         {m.photo
@@ -746,20 +785,22 @@ const Lists = () => {
                                   className="flex items-center flex-shrink-0"
                                   title="Assign"
                                 >
-                                  {(item.assigned_to_users?.length ?? 0) > 0 ? (
+                                  {assigneeMemberIds(item).length > 0 ? (
                                     <div className="flex -space-x-1.5">
-                                      {(item.assigned_to_users ?? []).slice(0, 3).map(uid => {
-                                        const m = familyMembers.find(fm => fm.user_id === uid);
-                                        const name = (m?.displayName || m?.full_name || 'M').split(' ')[0];
-                                        return m?.photo ? (
-                                          <img key={uid} src={m.photo}
+                                      {assigneeMemberIds(item).slice(0, 3).map(mid => {
+                                        const m = familyMembers.find(fm => fm.id === mid);
+                                        // Skip an id whose member has since been removed.
+                                        if (!m) return null;
+                                        const name = (m.displayName || m.full_name || 'M').split(' ')[0];
+                                        return m.photo ? (
+                                          <img key={mid} src={m.photo}
                                             className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                                             style={{ outline: `2px solid ${CARD}` }}
                                             alt={name}
                                             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                           />
                                         ) : (
-                                          <span key={uid}
+                                          <span key={mid}
                                             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
                                             style={{ background: '#8FB399', outline: `2px solid ${CARD}` }}
                                           >
@@ -784,10 +825,14 @@ const Lists = () => {
                                   {(() => {
                                     const myData = familyMembers.find(fm => fm.user_id === user?.id);
                                     const others = familyMembers.filter(m => m.user_id !== user?.id);
-                                    return [{ user_id: user?.id ?? '', photo: myData?.photo, name: t('todos.me') }, ...others.map(m => ({ user_id: m.user_id, photo: m.photo, name: (m.displayName || m.full_name || 'Member').split(' ')[0] }))].map(m => {
-                                      const sel = (item.assigned_to_users ?? []).includes(m.user_id);
+                                    const selected = assigneeMemberIds(item);
+                                    return [
+                                      ...(myData ? [{ id: myData.id, photo: myData.photo, name: t('todos.me') }] : []),
+                                      ...others.map(m => ({ id: m.id, photo: m.photo, name: (m.displayName || m.full_name || 'Member').split(' ')[0] })),
+                                    ].map(m => {
+                                      const sel = selected.includes(m.id);
                                       return (
-                                        <button key={m.user_id} onClick={() => toggleAssignUser(item.id, m.user_id)}
+                                        <button key={m.id} onClick={() => toggleAssignMember(item.id, m.id)}
                                           className="flex items-center gap-1 rounded-full text-xs font-semibold transition-all"
                                           style={{ background: sel ? ACCENT : '#EEF4F0', color: sel ? '#fff' : '#44664F', padding: '4px 10px 4px 4px' }}>
                                           {m.photo
@@ -927,7 +972,7 @@ const Lists = () => {
                     ) : (
                       <span className="flex-1 min-w-0 text-[15px] cursor-text truncate" style={{ color: INK }} onClick={() => startEditing(item)} title={item.title}>{item.title}</span>
                     )}
-                    {scope === 'shared' && renderAssigneePills(item.assigned_to_users)}
+                    {scope === 'shared' && renderAssigneePills(assigneeMemberIds(item))}
                     {/* Qty: compact tappable chip by default (frees the row for the name);
                         expands to a stepper only for the tapped row. */}
                     {qtyEditId === item.id ? (
@@ -1052,10 +1097,13 @@ const Lists = () => {
                       {(() => {
                         const myData = familyMembers.find(fm => fm.user_id === user?.id);
                         const others = familyMembers.filter(m => m.user_id !== user?.id);
-                        return [{ user_id: user?.id ?? '', photo: myData?.photo, displayName: myData?.displayName, isSelf: true }, ...others.map(m => ({ ...m, isSelf: false }))].map(m => {
-                          const uid = m.user_id;
-                          const name = (m as any).isSelf ? t('todos.me') : ((m as FamilyMember).displayName || (m as FamilyMember).full_name || 'Member').split(' ')[0];
-                          const photo = (m as any).photo as string | null | undefined;
+                        return [
+                          ...(myData ? [{ ...myData, isSelf: true }] : []),
+                          ...others.map(m => ({ ...m, isSelf: false })),
+                        ].map(m => {
+                          const uid = m.id; // family_members.id — works for members with no account
+                          const name = m.isSelf ? t('todos.me') : (m.displayName || m.full_name || 'Member').split(' ')[0];
+                          const photo = m.photo as string | null | undefined;
                           const selected = newAssignees.includes(uid);
                           return (
                             <button key={uid} type="button"

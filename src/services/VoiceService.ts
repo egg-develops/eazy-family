@@ -18,9 +18,16 @@ import { error as logError } from "@/lib/logger";
  *   onError(cb)             — subscribe to errors; returns an unsubscribe fn
  *   onEnd(cb)               — subscribe to session-end; returns an unsubscribe fn
  *   onStateChange(cb)       — subscribe to {isListening, isTranscribing}; returns an unsubscribe fn
+ *   onMeter(cb)             — subscribe to {level, elapsedMs} while recording (cloud path only)
  *
- * Web Speech API is configured with continuous:false and interimResults:false —
- * the user controls start/stop; the session never auto-cuts off on a pause.
+ * Every path emits text WHILE the user is still speaking, so the transcript is
+ * never a black box until they stop:
+ *   - native: the platform recognizer's partialResults
+ *   - desktop web: Web Speech interimResults (continuous:false, so the session
+ *     still never auto-cuts off on a pause)
+ *   - mobile web: bounded interim passes against the cloud STT endpoint
+ * Interim results are emitted with isFinal=false; a final result is authoritative
+ * and supersedes them.
  *
  * Audio streams and AudioContext are always released at the end of every session.
  */
@@ -31,12 +38,22 @@ export type VoiceResultCallback = (transcript: string, isFinal: boolean) => void
 export type VoiceErrorCallback = (error: string, detail?: string) => void;
 export type VoiceEndCallback = () => void;
 export type VoiceStateCallback = (state: { isListening: boolean; isTranscribing: boolean }) => void;
+/** Live input level (0–1) and elapsed recording time, for on-screen feedback. */
+export type VoiceMeterCallback = (level: number, elapsedMs: number) => void;
 
 // ── Module-level permission cache — persists for the whole app session ───────
 let nativePermissionGranted = false;
 
-// Use MediaRecorder + Whisper on mobile web (iOS Safari has no Web Speech API;
-// mobile Chrome's Web Speech API is unreliable). Desktop keeps the Web Speech API.
+// Interim passes on the mobile-web path: re-transcribe the audio captured so
+// far while the user is still speaking, so text appears during the utterance
+// instead of only after it. Bounded on purpose — each pass is one extra STT
+// call on the whole clip so far, so the cost of a capture stays predictable.
+const INTERIM_INTERVAL_MS = 2500;
+const MAX_INTERIM_PASSES = 3;
+
+// Use MediaRecorder + cloud STT (the `transcribe-audio` edge function, Deepgram
+// nova-2) on mobile web: iOS Safari has no Web Speech API and mobile Chrome's is
+// unreliable. Desktop keeps the Web Speech API.
 function shouldUseWhisper(): boolean {
   if (typeof navigator === "undefined") return false;
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -63,6 +80,7 @@ class VoiceServiceImpl {
   private errorCbs = new Set<VoiceErrorCallback>();
   private endCbs = new Set<VoiceEndCallback>();
   private stateCbs = new Set<VoiceStateCallback>();
+  private meterCbs = new Set<VoiceMeterCallback>();
 
   // State
   private _isListening = false;
@@ -85,6 +103,8 @@ class VoiceServiceImpl {
   private autoStopTimer: ReturnType<typeof setTimeout> | null = null;
   private vadInterval: ReturnType<typeof setInterval> | null = null;
   private audioCtx: AudioContext | null = null;
+  private interimTimer: ReturnType<typeof setInterval> | null = null;
+  private interimAbort: AbortController | null = null;
 
   private readonly isNative = Capacitor.isNativePlatform();
   private readonly useWhisper = !Capacitor.isNativePlatform() && shouldUseWhisper();
@@ -117,6 +137,10 @@ class VoiceServiceImpl {
     this.stateCbs.add(cb);
     return () => this.stateCbs.delete(cb);
   }
+  onMeter(cb: VoiceMeterCallback): () => void {
+    this.meterCbs.add(cb);
+    return () => this.meterCbs.delete(cb);
+  }
 
   private emitResult(transcript: string, isFinal: boolean) {
     this.resultCbs.forEach((cb) => cb(transcript, isFinal));
@@ -143,6 +167,9 @@ class VoiceServiceImpl {
   private emitState() {
     const snap = { isListening: this._isListening, isTranscribing: this._isTranscribing };
     this.stateCbs.forEach((cb) => cb(snap));
+  }
+  private emitMeter(level: number, elapsedMs: number) {
+    this.meterCbs.forEach((cb) => cb(level, elapsedMs));
   }
 
   // ── Public control ───────────────────────────────────────────────────────
@@ -171,6 +198,7 @@ class VoiceServiceImpl {
       SpeechRecognition.stop().catch(() => {});
       this.setListening(false);
     } else if (this.useWhisper) {
+      this.clearInterim();
       this.clearVad();
       this.closeAudioCtx();
       if (this.autoStopTimer) {
@@ -274,6 +302,15 @@ class VoiceServiceImpl {
       clearInterval(this.vadInterval);
       this.vadInterval = null;
     }
+  }
+  /** Stop scheduling interim passes and drop any in-flight one. */
+  private clearInterim() {
+    if (this.interimTimer) {
+      clearInterval(this.interimTimer);
+      this.interimTimer = null;
+    }
+    this.interimAbort?.abort();
+    this.interimAbort = null;
   }
   private closeAudioCtx() {
     this.audioCtx?.close().catch(() => {});
@@ -429,6 +466,7 @@ class VoiceServiceImpl {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaStream = stream;
+      const startedAt = Date.now();
 
       // Voice Activity Detection — auto-stop after silence so users don't need to tap stop
       let hasSpeech = false;
@@ -441,6 +479,7 @@ class VoiceServiceImpl {
           this.audioCtx.createMediaStreamSource(stream).connect(analyser);
           const _analyser = analyser;
           const _data = timeDomainData;
+          let tick = 0;
 
           this.vadInterval = setInterval(() => {
             if (this.mediaRecorder?.state !== "recording") {
@@ -454,6 +493,13 @@ class VoiceServiceImpl {
               sum += n * n;
             }
             const rms = Math.sqrt(sum / _data.length);
+
+            // Feed the on-screen level meter at 200ms (every other 100ms tick)
+            // so the user has immediate feedback before the first interim
+            // transcript lands. Scaled so normal speech fills most of the bar.
+            if (++tick % 2 === 0) {
+              this.emitMeter(Math.min(1, rms / 0.25), Date.now() - startedAt);
+            }
 
             if (rms > SPEECH_RMS_THRESHOLD) {
               hasSpeech = true;
@@ -476,6 +522,8 @@ class VoiceServiceImpl {
       const mimeType = getBestMimeType();
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       const effectiveMimeType = recorder.mimeType || (IS_IOS ? "audio/mp4" : "audio/webm");
+      const ext =
+        effectiveMimeType.includes("mp4") || effectiveMimeType.includes("aac") ? "mp4" : "webm";
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (e) => {
@@ -483,6 +531,7 @@ class VoiceServiceImpl {
       };
 
       recorder.onstop = async () => {
+        this.clearInterim();
         this.clearVad();
         this.closeAudioCtx();
         if (this.autoStopTimer) {
@@ -503,50 +552,16 @@ class VoiceServiceImpl {
         const abort = new AbortController();
         this.transcribeAbort = abort;
 
-        try {
-          const ext =
-            effectiveMimeType.includes("mp4") || effectiveMimeType.includes("aac")
-              ? "mp4"
-              : "webm";
-          const blob = new Blob(chunks, { type: effectiveMimeType });
-          let {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (!session) {
-            const { data: refreshed } = await supabase.auth.refreshSession();
-            session = refreshed.session;
-          }
-          const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-
-          const fd = new FormData();
-          fd.append("audio", blob, `recording.${ext}`);
-          fd.append("language", lang.split("-")[0]);
-
-          const res = await fetch(`${supabaseUrl}/functions/v1/transcribe-audio`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${session?.access_token ?? anonKey}`,
-              apikey: anonKey,
-            },
-            body: fd,
-            signal: abort.signal,
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            const transcript = (data.text ?? "").trim();
-            if (transcript) this.emitResult(transcript, true);
-          } else {
-            logError("[VoiceService] Transcription HTTP error:", res.status);
-            this.emitError("transcription-failed");
-          }
-        } catch (err: any) {
-          if (err?.name !== "AbortError") {
-            logError("[VoiceService] Whisper transcription failed:", err);
-            this.emitError("transcription-failed");
-          }
-        }
+        const transcript = await this.transcribeBlob(
+          new Blob(chunks, { type: effectiveMimeType }),
+          ext,
+          lang,
+          abort.signal
+        );
+        // null = the request failed (not just "no speech heard"), so surface it;
+        // an empty string is a successful transcription of silence and stays quiet.
+        if (transcript) this.emitResult(transcript, true);
+        else if (transcript === null && !abort.signal.aborted) this.emitError("transcription-failed");
 
         this.setTranscribing(false);
         this.emitEnd();
@@ -555,6 +570,34 @@ class VoiceServiceImpl {
       recorder.start(250);
       this.mediaRecorder = recorder;
       this.setListening(true);
+
+      // Live partials on this path: re-transcribe what has been captured so far
+      // while the user keeps speaking. Only for WebM — its chunks concatenate
+      // into a decodable stream mid-recording, whereas iOS Safari's MP4 only
+      // becomes decodable once the recorder finalizes the container.
+      if (ext === "webm") {
+        let passes = 0;
+        let inFlight = false;
+        this.interimTimer = setInterval(() => {
+          if (this.mediaRecorder?.state !== "recording") return;
+          if (inFlight || passes >= MAX_INTERIM_PASSES || chunks.length === 0) return;
+          inFlight = true;
+          passes++;
+          const abort = new AbortController();
+          this.interimAbort = abort;
+          void this.transcribeBlob(
+            new Blob(chunks.slice(), { type: effectiveMimeType }),
+            ext,
+            lang,
+            abort.signal
+          ).then((text) => {
+            inFlight = false;
+            // Drop a late interim: once recording has stopped, the final
+            // transcript is authoritative and must not be overwritten.
+            if (text && this.mediaRecorder?.state === "recording") this.emitResult(text, false);
+          });
+        }, INTERIM_INTERVAL_MS);
+      }
       // 30s hard limit — VAD stops it sooner on silence; 30s covers longer entries
       this.autoStopTimer = setTimeout(() => {
         if (this.mediaRecorder?.state === "recording") {
@@ -562,11 +605,64 @@ class VoiceServiceImpl {
         }
       }, 30000);
     } catch (err: any) {
+      this.clearInterim();
       this.closeAudioCtx();
       this.releaseStream();
       const denied =
         err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError";
       this.emitError(denied ? "not-allowed" : "unknown");
+    }
+  }
+
+  /**
+   * POST one audio clip to the `transcribe-audio` edge function.
+   * Returns the transcript, `""` when the clip held no speech, or `null` when
+   * the request itself failed (so callers can tell silence from an outage).
+   * Shared by the final transcription and the interim passes.
+   */
+  private async transcribeBlob(
+    blob: Blob,
+    ext: string,
+    lang: string,
+    signal: AbortSignal
+  ): Promise<string | null> {
+    try {
+      let {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        session = refreshed.session;
+      }
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+
+      const fd = new FormData();
+      fd.append("audio", blob, `recording.${ext}`);
+      fd.append("language", lang.split("-")[0]);
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/transcribe-audio`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.access_token ?? anonKey}`,
+          apikey: anonKey,
+        },
+        body: fd,
+        signal,
+      });
+
+      if (!res.ok) {
+        logError("[VoiceService] Transcription HTTP error:", res.status);
+        return null;
+      }
+      const data = await res.json();
+      return ((data.text ?? "") as string).trim();
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        logError("[VoiceService] Cloud transcription failed:", err);
+        return null;
+      }
+      return "";
     }
   }
 
@@ -589,17 +685,30 @@ class VoiceServiceImpl {
     const sessionId = this.sessionId;
     const r = new SR();
     r.lang = lang;
-    r.interimResults = false; // user controls start/stop — no interim spam
-    r.continuous = false; // never auto-cutoff mid-session
+    // Live partials: the words appear while the user speaks instead of only
+    // after the engine commits the utterance. continuous stays false, so the
+    // user still controls start/stop and the session never auto-cuts on a pause.
+    r.interimResults = true;
+    r.continuous = false;
     r.maxAlternatives = 1;
 
     r.onresult = (e: any) => {
       if (this.sessionId !== sessionId) return;
-      let sessionText = "";
+      // Committed text first, then the volatile tail. isFinal is false while any
+      // part is still interim, so subscribers know the text can still change.
+      let committed = "";
+      let interim = "";
+      let allFinal = true;
       for (let i = 0; i < e.results.length; i++) {
-        sessionText += e.results[i][0].transcript;
+        const res = e.results[i];
+        if (res.isFinal) committed += res[0].transcript;
+        else {
+          interim += res[0].transcript;
+          allFinal = false;
+        }
       }
-      this.emitResult(sessionText, true);
+      const text = `${committed}${interim}`.trim();
+      if (text) this.emitResult(text, allFinal);
     };
 
     r.onerror = (e: any) => {

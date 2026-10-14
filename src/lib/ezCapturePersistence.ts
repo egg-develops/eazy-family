@@ -12,6 +12,10 @@ export interface EZParsedEntry {
   reminder: string | null;
   notes: string | null;
   mood: string | null;
+  /** Fragment of the utterance this entry came from, when one capture produced
+   *  several entries. Keyword guards (shared destination, family-calendar
+   *  intent, personal scope) must read this instead of the whole utterance. */
+  source?: string | null;
 }
 
 export interface TaskCaptureRow {
@@ -21,14 +25,21 @@ export interface TaskCaptureRow {
   completed: false;
   due_date?: string | null;
   assigned_to_users?: string[] | null;
+  /** family_members.id values — preferred, and the only way to name a member
+   *  who has no account. Requires migration 20261011000001. */
+  assigned_member_ids?: string[] | null;
+  created_by_member_id?: string | null;
   family_id?: string | null;
   visible_to?: string | null;
   parent_id?: string | null;
 }
 
 export interface FamilyMemberLite {
-  user_id: string;
-  name: string; // full or display name
+  /** family_members.id — the stable identity, present for every member. */
+  id: string;
+  /** auth user id, or null for a member who has no account yet. */
+  user_id: string | null;
+  name: string; // display or full name
 }
 
 /** First word, lowercased — for first-name matching. */
@@ -57,29 +68,39 @@ function editDist(a: string, b: string): number {
 
 /**
  * Resolve parsed assignee names (first names from the voice query) to family
- * member user ids. Exact first-name match first; falls back to edit-distance ≤ 1
+ * MEMBER ROWS. Exact first-name match first; falls back to edit-distance ≤ 1
  * for names ≥ 4 chars so "Sophia" resolves to "Sofia", "Leo" to "Léo", etc.
  * "me"/"myself"/"I" and the user's own first name resolve to self.
  * Unmatched names are dropped. Deduplicated, order-preserving.
+ *
+ * Returns member rows rather than ids because the two consumers need different
+ * identities: task/event assignment wants `family_members.id` (which exists for
+ * a child with no login), while the Family Channel needs a real `user_id` to
+ * message. Projecting at the call site keeps one matcher instead of two.
  */
-export function resolveAssignees(
+export function resolveMembers(
   names: string[] | null | undefined,
   members: FamilyMemberLite[],
   self: { userId: string; name: string },
-): string[] {
+): FamilyMemberLite[] {
   if (!names || names.length === 0) return [];
   const selfFirst = firstName(self.name);
-  const out: string[] = [];
-  const add = (id: string) => { if (id && !out.includes(id)) out.push(id); };
+  const selfMember = members.find(m => m.user_id && m.user_id === self.userId);
+  const out: FamilyMemberLite[] = [];
+  const add = (m: FamilyMemberLite | undefined) => {
+    if (m && !out.some(o => o.id === m.id)) out.push(m);
+  };
   for (const raw of names) {
     const fn = firstName(raw);
     if (!fn) continue;
     if (fn === 'me' || fn === 'myself' || fn === 'i' || (selfFirst && fn === selfFirst)) {
-      add(self.userId);
+      // Self may not be in the roster yet (roster still loading, or a solo
+      // user). Fall back to a synthetic row so "remind me" still assigns.
+      add(selfMember ?? { id: self.userId, user_id: self.userId, name: self.name });
       continue;
     }
     const exact = members.find(m => firstName(m.name) === fn);
-    if (exact) { add(exact.user_id); continue; }
+    if (exact) { add(exact); continue; }
     let matched: FamilyMemberLite | undefined;
     // Fuzzy fallback: handles voice pronunciation variants.
     // Threshold scales with name length:
@@ -107,13 +128,44 @@ export function resolveAssignees(
         .sort((a, b) => b.cp - a.cp);
       if (cands.length === 1 || (cands.length > 1 && cands[0].cp > cands[1].cp)) matched = cands[0].m;
     }
-    if (matched) add(matched.user_id);
+    if (matched) add(matched);
   }
   return out;
 }
 
+/**
+ * Matched members as `family_members.id` values — the identity to store on a
+ * task or event, because it exists for members who have no account.
+ */
+export function resolveAssigneeMemberIds(
+  names: string[] | null | undefined,
+  members: FamilyMemberLite[],
+  self: { userId: string; name: string },
+): string[] {
+  return resolveMembers(names, members, self).map(m => m.id);
+}
+
+/**
+ * Matched members as auth user ids, dropping anyone without an account.
+ * Still written alongside member ids for one release so an older client keeps
+ * rendering assignments, and used where a real account is required (messaging).
+ */
+export function resolveAssignees(
+  names: string[] | null | undefined,
+  members: FamilyMemberLite[],
+  self: { userId: string; name: string },
+): string[] {
+  return resolveMembers(names, members, self)
+    .map(m => m.user_id)
+    .filter((id): id is string => !!id);
+}
+
 export interface TaskCaptureOptions {
   assignedUserIds?: string[];
+  /** family_members.id values — may name members with no account. */
+  assignedMemberIds?: string[];
+  /** The acting user's own family_members.id, to tell "mine" from "someone else's". */
+  selfMemberId?: string | null;
   familyId?: string | null;
   /** When set, the task is created as an ITEM inside this shared list. */
   parentId?: string | null;
@@ -156,11 +208,17 @@ export function buildTaskCaptureRows(
     : null;
 
   const assignees = options.assignedUserIds ?? [];
+  const memberIds = options.assignedMemberIds ?? [];
   // Shared when: assigned to another family member (always), OR the user
   // explicitly named a shared/family destination in the input ("our to-do list").
   // Personal tasks ('task') are only visible to their creator under RLS, so any
   // of these conditions requires type='shared' + family_id + parent_id.
-  const hasOthers = assignees.some(id => id !== userId);
+  // Membership is judged on member ids where we have them: a child with no
+  // account has no user id to compare, and judging on user ids alone would
+  // treat "assign it to Mia" as a personal task and hide it from the family.
+  const hasOthers = memberIds.length
+    ? memberIds.some(id => id !== options.selfMemberId)
+    : assignees.some(id => id !== userId);
   const isShared = (hasOthers || !!options.isExplicitlyShared) && !!options.familyId && !!options.parentId;
 
   return entry.title
@@ -174,6 +232,8 @@ export function buildTaskCaptureRows(
       completed: false,
       due_date: dueDate,
       ...(assignees.length ? { assigned_to_users: assignees } : {}),
+      ...(memberIds.length ? { assigned_member_ids: memberIds } : {}),
+      ...(options.selfMemberId ? { created_by_member_id: options.selfMemberId } : {}),
       ...(isShared ? { family_id: options.familyId, visible_to: 'family', parent_id: options.parentId } : {}),
     }));
 }
@@ -186,6 +246,7 @@ export function buildShoppingCaptureRows(
   // Assignment only applies to the shared (family) shopping list.
   const type = entry.type === 'shopping_personal' ? 'shopping_personal' : 'shopping';
   const assignees = type === 'shopping' ? (options.assignedUserIds ?? []) : [];
+  const memberIds = type === 'shopping' ? (options.assignedMemberIds ?? []) : [];
   // Shared shopping MUST carry family_id, or RLS hides it from other members.
   const familyId = type === 'shopping' ? (options.familyId ?? null) : null;
   return entry.title
@@ -200,6 +261,8 @@ export function buildShoppingCaptureRows(
     .map(title => ({
       title, type, user_id: userId, completed: false,
       ...(assignees.length ? { assigned_to_users: assignees } : {}),
+      ...(memberIds.length ? { assigned_member_ids: memberIds } : {}),
+      ...(options.selfMemberId ? { created_by_member_id: options.selfMemberId } : {}),
       ...(familyId ? { family_id: familyId } : {}),
     }));
 }

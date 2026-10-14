@@ -16,6 +16,9 @@ import { createAppleEvent } from "@/lib/appleCalendar";
 import { signalPositiveMoment } from "@/lib/reviewPrompt";
 import { classifyText, guardAIType, isSharedTaskDestination, type CaptureType } from "@/lib/intentClassifier";
 import { initialLockedType } from "@/lib/ezCaptureType";
+import { coerceEntries, guardScopeFor, type RawAiEntry } from "@/lib/ezCaptureEntries";
+import { buildParsePrompt } from "@/lib/ezCapturePrompt";
+import { readSseContent, stripJsonFence } from "@/lib/sseText";
 import { normalizeCHDE, isSwissGermanLocale } from "@/lib/normalizeLocale";
 import { warmDialectCache, getDbRules } from "@/lib/dialectRulesCache";
 import {
@@ -27,6 +30,7 @@ import {
   isFeatureHelpQuery,
   parseMessageIntent,
   resolveAssignees,
+  resolveMembers,
   type EZParsedEntry,
   type FamilyMemberLite,
 } from "@/lib/ezCapturePersistence";
@@ -37,6 +41,9 @@ interface DoneCtx {
   title: string;
   navigateTo: string;
   undo: () => void | Promise<void>;
+  /** One row per committed entry — set only when a single utterance produced
+   *  several (so the Done screen can list what actually landed, and where). */
+  items?: { type: CaptureType; title: string }[];
 }
 
 interface EZCaptureProps {
@@ -63,6 +70,14 @@ const TYPE_DEFS: { id: CaptureType; icon: string; labelKey: string }[] = [
   { id: 'shopping_personal', icon: '🛒', labelKey: 'ezCapture.typeMyList'   },
   { id: 'reminder',          icon: '🔔', labelKey: 'ezCapture.typeReminder' },
 ];
+
+// Icon per type, including the two that aren't user-selectable in TYPE_DEFS —
+// the Done screen lists committed entries of any type.
+const TYPE_ICON: Record<CaptureType, string> = {
+  ...Object.fromEntries(TYPE_DEFS.map(d => [d.id, d.icon])) as Record<CaptureType, string>,
+  ritual: '🌿',
+  journal: '📝',
+};
 
 // Maps each CaptureType to its AI message translation key prefix
 const AI_KEY: Record<CaptureType, string> = {
@@ -128,6 +143,16 @@ const cleanCaptureTitle = (raw: string): string => {
   s = s.replace(/\s+(for|at|on|by|the|to|in|of|pour|par|le|la|les|per|por|para|von|für|an|auf)\s*$/i, '').trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
+
+/** family_members row → the shape the matcher works with. Members without an
+ *  account are kept: their `family_members.id` is what assignment now stores. */
+const toMemberLite = (m: {
+  id: string; user_id: string | null; display_name?: string | null; full_name?: string | null;
+}): FamilyMemberLite => ({
+  id: m.id,
+  user_id: m.user_id ?? null,
+  name: (m.display_name || m.full_name || '').trim(),
+});
 
 const getUserFirstName = (): string => {
   try {
@@ -200,6 +225,10 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
   const isListening = speech.isListening;
   const isTranscribing = speech.isTranscribing;
   const isSingleShot = speech.isSingleShot;
+  // Level + elapsed time, reported only by the mobile-web path. It is the one
+  // path that can't show words the instant they're spoken (its interim passes
+  // land every couple of seconds), so it shows that it is hearing you instead.
+  const meter = speech.meter;
 
   useEffect(() => {
     haptic('medium');
@@ -220,10 +249,10 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
         if (cancelled || !mine?.family_id) return;
         setFamilyId(mine.family_id);
         const { data } = await supabase
-          .from('family_members').select('user_id, full_name')
+          .from('family_members').select('id, user_id, display_name, full_name')
           .eq('family_id', mine.family_id).eq('is_active', true);
         if (cancelled || !data) return;
-        setFamilyMembers(data.filter(m => m.user_id).map(m => ({ user_id: m.user_id as string, name: m.full_name || '' })));
+        setFamilyMembers(data.map(toMemberLite));
       } catch { /* assignment is best-effort; never block capture */ }
     })();
     return () => { cancelled = true; };
@@ -259,10 +288,9 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
         .eq('user_id', user.id).eq('is_active', true).maybeSingle();
       const famId = mine?.family_id ?? familyId ?? null;
       if (!famId) return { famId: null, members: familyMembers };
-      const { data } = await supabase.from('family_members').select('user_id, full_name')
+      const { data } = await supabase.from('family_members').select('id, user_id, display_name, full_name')
         .eq('family_id', famId).eq('is_active', true);
-      const members = (data ?? []).filter(m => m.user_id)
-        .map(m => ({ user_id: m.user_id as string, name: m.full_name || '' }));
+      const members = (data ?? []).map(toMemberLite);
       if (!familyId) setFamilyId(famId);
       if (!familyMembers.length && members.length) setFamilyMembers(members);
       return { famId, members: members.length ? members : familyMembers };
@@ -277,7 +305,7 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
     setType(classifyText(t));
   }, [text]);
 
-  const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry } | null>(null);
+  const parseSnapshotRef = useRef<{ rawInput: string; aiResult: ParsedEntry[] } | null>(null);
   const handleParseAndPreviewRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   const shouldRestartRef = useRef(false);
@@ -325,13 +353,19 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
       sessionBaseRef.current = latestTextRef.current.trim();
       speech.start({
         lang: getUserLocale(),
-        onResult: (transcript) => {
+        onResult: (transcript, isFinal) => {
           consecutiveFailsRef.current = 0;
           const base = sessionBaseRef.current;
           const full = base ? `${base} ${transcript}` : transcript;
-          if (full.length > longestTranscriptRef.current.length) {
-            longestTranscriptRef.current = full;
-          }
+          // Interim results can shrink as the engine revises itself, so the
+          // longest one seen wins — that's what the user watched being typed.
+          // A FINAL result is authoritative and replaces it outright: without
+          // this, a long interim could beat the engine's corrected final text
+          // and that's what we'd save.
+          longestTranscriptRef.current =
+            isFinal || full.length > longestTranscriptRef.current.length
+              ? full
+              : longestTranscriptRef.current;
           setTextTracked(full);
         },
         onError: (error, detail) => {
@@ -396,115 +430,168 @@ export const EZCapture = ({ onClose, defaultType, channelMode }: EZCaptureProps)
     run();
   };
 
-  const parseWithAI = async (): Promise<ParsedEntry | null> => {
-    const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), 15000));
-    return Promise.race([parseWithAIInner(), timeout]);
+  // One id per utterance. It ties the retry below to the same capture (in logs
+  // and in the edge function) instead of looking like a second capture. The
+  // parse is read-only — it writes nothing — so retrying can never double-save.
+  const captureIdRef = useRef('');
+  // Per-attempt budget. The old single 15s race left the first request running
+  // after it gave up and had no second chance, so one flaky connection silently
+  // downgraded the capture to the weaker local parser.
+  const PARSE_ATTEMPT_MS = [10_000, 8_000];
+
+  /**
+   * Returns the parsed entries, [] when the model replied with nothing usable
+   * (caller falls back to the deterministic parser). Retries once when the
+   * attempt failed for transport reasons (abort, timeout, HTTP error, a stream
+   * that cut off mid-JSON) — a deterministic bad reply is not retried.
+   */
+  const parseWithAI = async (processText: string): Promise<ParsedEntry[]> => {
+    for (const budgetMs of PARSE_ATTEMPT_MS) {
+      const entries = await parseWithAIInner(processText, budgetMs);
+      if (entries !== null) return entries;
+    }
+    return [];
   };
 
-  const parseWithAIInner = async (): Promise<ParsedEntry | null> => {
+  const parseWithAIInner = async (
+    processText: string,
+    budgetMs: number,
+  ): Promise<ParsedEntry[] | null> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), budgetMs);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
+      if (!session) return []; // no session → retrying cannot help
 
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const dayOfWeek = format(new Date(), 'EEEE');
-      const isSwissDE = isSwissGermanLocale();
-      const userLanguage = getUserLanguageLabel();
       // Give the parser the family roster so it can resolve a spoken assignee to
       // the right member — handling nicknames and speech mis-hearings the local
       // string matcher can't ("Cathi"/"Katrina" → "Catharina").
       const { members: roster } = await ensureRoster();
-      const rosterNames = roster.map(m => (m.name || '').trim()).filter(Boolean);
-      const rosterHint = rosterNames.length
-        ? ` The family members are: ${rosterNames.join(', ')}. Match the spoken assignee to the CLOSEST family member from this list — allowing for nicknames ("Cathi" → "Catharina") and likely speech mis-hearings ("Katrina" → "Catharina") — and return that member's EXACT name as written here. Return null if no family member is a plausible match.`
-        : '';
-      const langHint = isSwissDE
-        ? `Swiss German (dialect pre-normalized to Standard German). Keep the title in German — do not translate to English.`
-        : `${userLanguage}. Parse date/time expressions correctly for this language. Keep the title in the user's language — do not translate to English.`;
+      // A locked type means a dedicated single-purpose screen (journal from
+      // Rituals), where splitting one utterance into several entries makes no
+      // sense and would scatter the user's text.
+      const singleEntryOnly = !!userLockedType;
 
-      const systemContext = `You are an NLP parser for a family scheduling app. Parse the user's input and return ONLY a valid JSON object — no markdown, no code fences, no explanation.
-
-User's input language: ${langHint}
-
-TYPE CLASSIFICATION — pick exactly one:
-- "shopping": items to BUY for the family/shared list. Triggered by: "our shopping list", "the shopping list", "family list", "grocery list", or no possessive ("buy milk", "pick up bread").
-- "shopping_personal": items to BUY for YOUR OWN personal list. Triggered by: "my shopping list", "my list", "my groceries", "for me". Example: "add wine to my list" → shopping_personal.
-- "task": actions or chores to DO. Triggered by: clean, wash, water, organise, fix, repair, mow, vacuum, call, email, book, finish, return, tidy, take out, drop off — and their equivalents in ${userLanguage}. IMPORTANT: "Clean the terrace", "water the plants", "call dentist" are TASKS, not shopping items — even if phrased as "add X to my list".
-- "event": time-specific appointment, meeting, or occurrence with a date/time.
-- "reminder": "remind me to X".
-- "ritual": habit, gratitude, or reflection entry.
-- "journal": diary or feelings entry.
-
-JSON fields:
-- type: one of the types above
-- title: ONLY the core subject — NEVER include date, time, location, command words, list-destination phrases, or assignment phrases. Strip ALL of: leading verbs ("add", "create", "schedule", "remind me to", "put", "book" and equivalents in ${userLanguage}), trailing destinations ("to my shopping list", "to our shopping list", "to the list", "to my list", "on the calendar", "on the schedule" and equivalents in ${userLanguage}), assignment phrases ("assign to X", "ask X to", "tell X to", "have X", "for X"), date/time phrases. For type "shopping" or "shopping_personal", ALWAYS separate multiple items with commas. For type "task", separate multiple tasks with commas.
-- date: "YYYY-MM-DD" or null. Resolve ALL date references including ordinals. Today is ${today} — resolve to the NEXT occurrence if the date has not yet passed, otherwise the following month.
-- time: "HH:MM" 24h or null.
-- endTime: "HH:MM" 24h or null
-- location: string or null
-- assignees: array of the assignee's name, or null. Extract ONLY from explicit delegation phrases: "assign to X", "assign it X", "assign it to X", "assign this to X", "ask X to", "tell X to", "have X", "get X to", "for X", "X should" (and equivalents in ${userLanguage}).${rosterHint} Use ONLY the (matched) person's name in this array, never in the title. IMPORTANT: the OBJECT of an action is NOT an assignee — "call Sofia", "email the teacher", "pick up Leo from school" have assignees: null.
-- reminder: human-readable string or null
-- notes: string or null
-- mood: string or null (journal only)
-
-Today is ${today} (${dayOfWeek}). Date resolution rules:
-- "this week" = a date within the 7 days starting from today (${today}), not before today.
-- "next week" = a date 7–14 days from today.
-- "this weekend" = the nearest upcoming Saturday.
-- Never resolve a relative date to a date in the past.
-
-Return ONLY the raw JSON object.`;
+      const systemContext = buildParsePrompt({
+        today: format(new Date(), 'yyyy-MM-dd'),
+        dayOfWeek: format(new Date(), 'EEEE'),
+        userLanguage: getUserLanguageLabel(),
+        isSwissGerman: isSwissGermanLocale(),
+        rosterNames: roster.map(m => m.name || ''),
+        singleEntryOnly,
+      });
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
       const response = await fetch(`${supabaseUrl}/functions/v1/eazy-chat`, {
         method: 'POST',
+        // Only headers in the edge function's Access-Control-Allow-Headers list
+        // may be sent: a custom one (x-eazy-capture-id) triggers a preflight the
+        // function rejects, and EVERY parse then fails with "Failed to fetch"
+        // and silently degrades to the local parser. The capture id travels in
+        // the body instead, where it needs no CORS change.
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
-          messages: [{ role: 'user', content: isSwissGermanLocale() ? normalizeCHDE(latestTextRef.current.trim(), getDbRules()) : latestTextRef.current.trim() }],
+          messages: [{ role: 'user', content: processText }],
           systemPrompt: systemContext,
           // Structured extraction must be deterministic — the same utterance
           // should always parse to the same JSON.
           temperature: 0,
+          // Several entries of JSON need more room than the 1024 default; a
+          // reply cut off mid-object parses as nothing at all.
+          maxTokens: 2048,
+          clientRequestId: captureIdRef.current,
         }),
       });
 
       if (!response.ok || !response.body) return null;
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-      // Buffer partial lines across chunks — an SSE "data:" line can be split at
-      // a network chunk boundary. Splitting each chunk independently dropped the
-      // straddling line, corrupting the JSON on longer inputs → parse failed →
-      // fell back to the weaker deterministic parser. Keep the trailing partial.
-      let buf = '';
-      const consume = (line: string) => {
-        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            const content = data.choices?.[0]?.delta?.content;
-            if (content) fullContent += content;
-          } catch { /* ignore keep-alives / non-JSON */ }
-        }
-      };
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() ?? ''; // last element is an incomplete line → carry over
-        for (const line of lines) consume(line);
-      }
-      if (buf) consume(buf); // flush any final buffered line
+      const raw = stripJsonFence(await readSseContent(response.body));
+      if (!raw) return null;
 
-      const cleaned = fullContent.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '');
-      return JSON.parse(cleaned) as ParsedEntry;
+      let payload: unknown;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        // Truncated or malformed JSON — usually a stream that cut off, so it is
+        // worth one retry rather than an immediate downgrade.
+        return null;
+      }
+
+      const rawEntries = coerceEntries(payload);
+      const capped = singleEntryOnly ? rawEntries.slice(0, 1) : rawEntries;
+      return capped
+        .map(e => normalizeEntry(e, guardScopeFor(e, processText, capped.length), processText))
+        .filter((e): e is ParsedEntry => !!e);
     } catch {
       return null;
+    } finally {
+      clearTimeout(timer);
     }
+  };
+
+  /**
+   * Cleans one AI entry into a committable one: guarded type, title stripped of
+   * command/destination/assignment/date noise, and any date still left in the
+   * title pulled out. `guardScope` is the text the keyword guards read — the
+   * whole utterance for a single entry, this entry's own fragment when the
+   * utterance produced several (see guardScopeFor).
+   */
+  const normalizeEntry = (
+    raw: RawAiEntry,
+    guardScope: string,
+    fullText: string,
+  ): ParsedEntry | null => {
+    const rawTitle = (raw.title ?? '').trim();
+    if (!rawTitle) return null;
+
+    // Always resolve a type — if the AI omitted it, fall back to the
+    // deterministic classifier so the commit never sees a falsy type.
+    const guardedType: CaptureType = raw.type
+      ? guardAIType(raw.type as CaptureType, guardScope, raw.date ?? null, raw.time ?? null)
+      : (userLockedType ?? classifyText(guardScope || fullText));
+
+    let cleanedTitle = cleanCaptureTitle(rawTitle);
+    let assignees = raw.assignees ?? null;
+    // The AI is told to strip assignment phrases from the title, but if one
+    // slips through ("fix shelf and assign to Sofia"), pull it out and merge
+    // the name into assignees instead of saving it as part of the title.
+    const residualAssign = extractAssignmentIntent(cleanedTitle);
+    if (residualAssign.names.length) {
+      cleanedTitle = residualAssign.cleaned || cleanedTitle;
+      assignees = Array.from(new Set([...(assignees ?? []), ...residualAssign.names]));
+    }
+
+    let resolvedDate = raw.date ?? null;
+    const residualDate = parseDatesLocalized(cleanedTitle, new Date())[0];
+    if (residualDate) {
+      resolvedDate = format(residualDate.start.date(), 'yyyy-MM-dd');
+      cleanedTitle = (
+        cleanedTitle.slice(0, residualDate.index) +
+        cleanedTitle.slice(residualDate.index + residualDate.text.length)
+      )
+        .replace(/\s+(for|at|on|by|the)\s*$/i, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      if (!cleanedTitle) cleanedTitle = cleanCaptureTitle(rawTitle);
+    }
+
+    return {
+      type: guardedType,
+      title: cleanedTitle,
+      date: resolvedDate,
+      time: raw.time ?? null,
+      endTime: raw.endTime ?? null,
+      location: raw.location ?? null,
+      assignees,
+      reminder: raw.reminder ?? null,
+      notes: raw.notes ?? null,
+      mood: raw.mood ?? null,
+      source: raw.source ?? null,
+    };
   };
 
   const fetchGuideAnswer = async (question: string) => {
@@ -562,27 +649,7 @@ STYLE:
 
       if (!response.ok || !response.body) throw new Error('no response');
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buf = ''; // buffer partial SSE lines across chunk boundaries (see parse path)
-      const consume = (line: string) => {
-        if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            const content = data.choices?.[0]?.delta?.content;
-            if (content) setGuideAnswer(prev => prev + content);
-          } catch {}
-        }
-      };
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() ?? '';
-        for (const line of lines) consume(line);
-      }
-      if (buf) consume(buf);
+      await readSseContent(response.body, delta => setGuideAnswer(prev => prev + delta));
     } catch {
       setGuideAnswer(t('ezCapture.guideError'));
     } finally {
@@ -659,48 +726,18 @@ STYLE:
     setStep('processing');
 
     const processText = isSwissGermanLocale() ? normalizeCHDE(rawInput, getDbRules()) : rawInput;
+    captureIdRef.current = crypto.randomUUID();
 
     // Captured so we can auto-commit immediately (no confirm tap) — see below.
-    let autoEntry: ParsedEntry | null = null;
+    let autoEntries: ParsedEntry[] = [];
 
-    const result = await parseWithAI();
+    const result = await parseWithAI(processText);
 
-    if (result && result.title) {
-      // Always resolve a type — if the AI omitted it, fall back to the
-      // deterministic classifier so handleConfirm never sees a falsy type.
-      const guardedType = result.type
-        ? guardAIType(result.type, processText, result.date ?? null, result.time ?? null)
-        : (userLockedType ?? classifyText(processText));
-      result.type = guardedType;
-      if (!userLockedType) setType(guardedType);
-
-      let cleanedTitle = cleanCaptureTitle(result.title);
-      // The AI is told to strip assignment phrases from the title, but if one
-      // slips through ("fix shelf and assign to Sofia"), pull it out and merge
-      // the name into assignees instead of saving it as part of the title.
-      const residualAssign = extractAssignmentIntent(cleanedTitle);
-      if (residualAssign.names.length) {
-        cleanedTitle = residualAssign.cleaned || cleanedTitle;
-        result.assignees = Array.from(new Set([...(result.assignees ?? []), ...residualAssign.names]));
-      }
-      let resolvedDate = result.date;
-      const now = new Date();
-      const residualDate = parseDatesLocalized(cleanedTitle, now)[0];
-      if (residualDate) {
-        resolvedDate = format(residualDate.start.date(), 'yyyy-MM-dd');
-        cleanedTitle = (
-          cleanedTitle.slice(0, residualDate.index) +
-          cleanedTitle.slice(residualDate.index + residualDate.text.length)
-        )
-          .replace(/\s+(for|at|on|by|the)\s*$/i, '')
-          .replace(/\s{2,}/g, ' ')
-          .trim();
-        if (!cleanedTitle) cleanedTitle = cleanCaptureTitle(result.title);
-      }
-
-      autoEntry = { ...result, title: cleanedTitle, date: resolvedDate };
-      setParsed(autoEntry);
-      parseSnapshotRef.current = { rawInput, aiResult: autoEntry };
+    if (result.length) {
+      autoEntries = result;
+      if (!userLockedType) setType(result[0].type);
+      setParsed(result[0]);
+      parseSnapshotRef.current = { rawInput, aiResult: result };
     } else {
       // AI unavailable/timed out — extract the assignment deterministically so
       // "fix the shelf and assign to Sofia" still assigns instead of leaving
@@ -727,22 +764,25 @@ STYLE:
         ? `${String(correctedHour).padStart(2, '0')}:${String(fallbackMin).padStart(2, '0')}`
         : null;
       const fallbackType: CaptureType = userLockedType ?? classifyText(raw);
-      autoEntry = {
+      // The deterministic fallback stays single-entry: splitting an utterance
+      // reliably needs the parser, and guessing here would scatter the capture.
+      const fallbackEntry: ParsedEntry = {
         type: fallbackType,
         title: cleanCaptureTitle(withoutDate) || cleanCaptureTitle(raw),
         date: fallbackDate, time: correctedTime, endTime: null,
         location: null,
         assignees: assignment.names.length ? assignment.names : null,
         reminder: null,
-        notes: null, mood: null,
+        notes: null, mood: null, source: null,
       };
-      setParsed(autoEntry);
+      autoEntries = [fallbackEntry];
+      setParsed(fallbackEntry);
     }
     haptic('light');
     // Do-then-suggest: commit immediately (no confirm tap). The destination
     // screen shows the item, editable + deletable, and each success toast
     // carries an Undo action — the safety net that replaces the confirm gate.
-    if (autoEntry) await handleConfirm(autoEntry);
+    if (autoEntries.length) await commitEntries(autoEntries, rawInput);
     else setStep('preview');
   };
 
@@ -778,33 +818,40 @@ STYLE:
   const removeFromDone = async () => { await doneCtx?.undo(); haptic('medium'); toast({ title: t('common.undone') }); onClose(); };
   const doneFinish = () => { const to = doneCtx?.navigateTo; onClose(); if (to) navigate(to); };
 
-  const handleConfirm = async (override?: ParsedEntry) => {
-    const p = override ?? parsed;
-    if (!p || isSubmitting) return;
-    setIsSubmitting(true);
-    haptic('medium');
+  /**
+   * Commits ONE entry and returns what the Done screen needs (title, where to
+   * go, how to undo), or null when it could not be saved.
+   *
+   * `scopeText` is the text the keyword guards read: the whole utterance for a
+   * single entry, this entry's own fragment when the utterance produced several
+   * (otherwise "dinner Friday and add wine to my list" would make the dinner
+   * event look like a shopping item, and send both to the family list).
+   */
+  const commitEntry = async (p: ParsedEntry, scopeText: string): Promise<DoneCtx | null> => {
     // p.type should always be set by this point (guardedType above), but if
     // somehow still falsy, use the deterministic classifier on the raw input
     // rather than the stale 'event' initial state from the Home orb.
-    const rawForGuard = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
-    const entryType = p.type || (userLockedType ?? classifyText(rawForGuard));
+    const entryType = p.type || (userLockedType ?? classifyText(scopeText));
+    const items = [{ type: entryType, title: p.title }];
 
-    try {
+    {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (entryType === 'event' || entryType === 'reminder') {
-        const rawInput = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
         // Resolve the roster inline — the mount effect may not have loaded it
         // yet, and resolving from empty state silently drops attendees
         // ("dinner with Sofia" → no attendee). Same rule as the task path.
         const { members: eventMembers } = p.assignees?.length
           ? await ensureRoster()
           : { members: familyMembers };
+        // Calendar items still live in localStorage and key attendees by user
+        // id; members without an account get picked up when the calendar moves
+        // to the server (phase 3 of the plan doc).
         const attendeeUserIds = resolveAssignees(p.assignees, eventMembers, { userId: user?.id ?? '', name: userName });
         const eventDraft = buildCalendarCaptureItem(p, {
           id: crypto.randomUUID(),
           now: new Date(),
-          rawInput,
+          rawInput: scopeText,
           userId: user?.id,
           attendeeUserIds,
         });
@@ -824,12 +871,10 @@ STYLE:
         const existing = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]');
         localStorage.setItem('eazy-family-calendar-items', JSON.stringify([...existing, newEvent]));
         window.dispatchEvent(new CustomEvent('eazy-calendar-updated'));
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        void signalPositiveMoment();
-        finishCommit({ title: p.title, navigateTo: '/app/calendar', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); } });
+        return { title: p.title, navigateTo: '/app/calendar', items, undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-family-calendar-items') || '[]'); localStorage.setItem('eazy-family-calendar-items', JSON.stringify(arr.filter((e: { id: string }) => e.id !== newEvent.id))); window.dispatchEvent(new CustomEvent('eazy-calendar-updated')); } };
 
       } else if (entryType === 'task') {
-        if (!user || !session) { setIsSubmitting(false); return; }
+        if (!user || !session) return null;
         // A name still in the title means the task is ABOUT that person ("call
         // Sofia"), not assigned to them — assigning would silently move a
         // personal task into the shared family list.
@@ -837,36 +882,43 @@ STYLE:
         // "our shared to-do list", "family task list" etc. → shared even without
         // a specific assignee, so the task lands in the family list and is visible
         // to all members (not hidden behind creator-only RLS).
-        const rawForShared = parseSnapshotRef.current?.rawInput ?? latestTextRef.current;
-        const isExplicitSharedDest = isSharedTaskDestination(rawForShared);
+        const isExplicitSharedDest = isSharedTaskDestination(scopeText);
         const { famId, members } = (guardedAssignees?.length || isExplicitSharedDest)
           ? await ensureRoster()
           : { famId: familyId, members: familyMembers };
-        const assignedUserIds = resolveAssignees(guardedAssignees, members, { userId: user.id, name: userName });
-        const assignedToOthers = assignedUserIds.some(id => id !== user.id);
+        const assignedMembers = resolveMembers(guardedAssignees, members, { userId: user.id, name: userName });
+        const assignedMemberIds = assignedMembers.map(m => m.id);
+        const assignedUserIds = assignedMembers.map(m => m.user_id).filter((id): id is string => !!id);
+        const selfMemberId = members.find(m => m.user_id === user.id)?.id ?? null;
+        // "Someone else" is judged on member identity: a child with no account
+        // has no user id, and comparing user ids alone would keep their task
+        // personal to the parent and hide it from the family list.
+        const assignedToOthers = assignedMemberIds.some(id => id !== selfMemberId);
         const needsSharedList = assignedToOthers || isExplicitSharedDest;
         const parentId = (needsSharedList && famId) ? await ensureFamilyTaskList(famId, user.id) : null;
-        const rows = buildTaskCaptureRows(p, user.id, { assignedUserIds, familyId: famId, parentId, isExplicitlyShared: isExplicitSharedDest });
+        const rows = buildTaskCaptureRows(p, user.id, { assignedUserIds, assignedMemberIds, selfMemberId, familyId: famId, parentId, isExplicitlyShared: isExplicitSharedDest });
         const { data: insertedTasks, error } = await supabase.from('tasks').insert(rows).select('id');
         if (error) throw error;
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        finishCommit({ title: p.title, navigateTo: parentId ? '/app/lists?tab=tasks' : '/app/lists', undo: async () => { const ids = (insertedTasks || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } });
+        return { title: p.title, navigateTo: parentId ? '/app/lists?tab=tasks' : '/app/lists', items, undo: async () => { const ids = (insertedTasks || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } };
 
       } else if (entryType === 'shopping' || entryType === 'shopping_personal') {
-        if (!user || !session) { setIsSubmitting(false); return; }
+        if (!user || !session) return null;
         const needRoster = entryType === 'shopping' && !!p.assignees?.length;
         const { famId, members } = needRoster
           ? await ensureRoster()
           : { famId: familyId, members: familyMembers };
-        const assignedUserIds = entryType === 'shopping'
-          ? resolveAssignees(p.assignees, members, { userId: user.id, name: userName })
+        const shoppingMembers = entryType === 'shopping'
+          ? resolveMembers(p.assignees, members, { userId: user.id, name: userName })
           : [];
-        const rows = buildShoppingCaptureRows(p, user.id, { assignedUserIds, familyId: famId });
+        const rows = buildShoppingCaptureRows(p, user.id, {
+          assignedUserIds: shoppingMembers.map(m => m.user_id).filter((id): id is string => !!id),
+          assignedMemberIds: shoppingMembers.map(m => m.id),
+          selfMemberId: members.find(m => m.user_id === user.id)?.id ?? null,
+          familyId: famId,
+        });
         const { data: insertedShop, error } = await supabase.from('tasks').insert(rows).select('id');
         if (error) throw error;
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        const listLabel = t(entryType === 'shopping_personal' ? 'ezCapture.listPersonal' : 'ezCapture.listFamily');
-        finishCommit({ title: p.title, navigateTo: '/app/lists?tab=shopping', undo: async () => { const ids = (insertedShop || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } });
+        return { title: p.title, navigateTo: '/app/lists?tab=shopping', items, undo: async () => { const ids = (insertedShop || []).map((r: { id: string }) => r.id); if (ids.length) await supabase.from('tasks').delete().in('id', ids); } };
 
       } else if (entryType === 'ritual') {
         const entry = {
@@ -878,8 +930,7 @@ STYLE:
         };
         const ex = JSON.parse(localStorage.getItem('eazy-rituals') || '[]');
         localStorage.setItem('eazy-rituals', JSON.stringify([entry, ...ex]));
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        finishCommit({ title: p.title, navigateTo: '/app/rituals', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-rituals') || '[]'); localStorage.setItem('eazy-rituals', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); } });
+        return { title: p.title, navigateTo: '/app/rituals', items, undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-rituals') || '[]'); localStorage.setItem('eazy-rituals', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); } };
 
       } else if (entryType === 'journal') {
         const text = p.title + (p.notes ? `\n\n${p.notes}` : '');
@@ -887,31 +938,79 @@ STYLE:
         const existing = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]');
         localStorage.setItem('eazy-journal-entries', JSON.stringify([entry, ...existing]));
         window.dispatchEvent(new CustomEvent('eazy-journal-updated'));
-        haptic('light'); setTimeout(() => haptic('light'), 150);
-        finishCommit({ title: p.title, navigateTo: '/app/rituals', undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]'); localStorage.setItem('eazy-journal-entries', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); window.dispatchEvent(new CustomEvent('eazy-journal-updated')); } });
+        return { title: p.title, navigateTo: '/app/rituals', items, undo: () => { const arr = JSON.parse(localStorage.getItem('eazy-journal-entries') || '[]'); localStorage.setItem('eazy-journal-entries', JSON.stringify(arr.filter((e: { id: string }) => e.id !== entry.id))); window.dispatchEvent(new CustomEvent('eazy-journal-updated')); } };
       }
-
-      if (parseSnapshotRef.current && session) {
-        const snap = parseSnapshotRef.current;
-        const final = p;
-        const wasCorrected =
-          snap.aiResult.title !== final.title ||
-          snap.aiResult.type !== final.type ||
-          snap.aiResult.date !== final.date ||
-          snap.aiResult.time !== final.time;
-        supabase.from('parse_events').insert({
-          user_id: session.user.id,
-          raw_input: snap.rawInput,
-          ai_result: snap.aiResult,
-          final_result: final,
-          was_corrected: wasCorrected,
-          locale: localStorage.getItem('eazy-family-language') || 'en',
-        }).then(() => {});
-      }
-    } catch {
-      toast({ title: t('ezCapture.toastError'), variant: 'destructive' });
-      setIsSubmitting(false);
     }
+    return null;
+  };
+
+  /**
+   * Commits every entry one utterance produced, then shows a single Done screen
+   * for the lot. Each entry is committed independently: one failure (a task
+   * insert rejected by RLS, say) must not throw away the items that did land —
+   * they stay saved, listed, and undoable.
+   */
+  const commitEntries = async (entries: ParsedEntry[], rawInput: string) => {
+    if (!entries.length || isSubmitting) return;
+    setIsSubmitting(true);
+    haptic('medium');
+
+    const committed: DoneCtx[] = [];
+    let failed = 0;
+    for (const entry of entries) {
+      try {
+        const ctx = await commitEntry(entry, guardScopeFor(entry, rawInput, entries.length));
+        if (ctx) committed.push(ctx);
+        else failed++;
+      } catch {
+        failed++;
+      }
+    }
+
+    if (failed) toast({ title: t('ezCapture.toastError'), variant: 'destructive' });
+    if (!committed.length) {
+      setIsSubmitting(false);
+      setStep('preview');
+      return;
+    }
+
+    logParseEvent(entries);
+    haptic('light'); setTimeout(() => haptic('light'), 150);
+    // Once per capture, not once per entry — it counts engagement towards the
+    // in-app review prompt, and three items is still one good moment.
+    if (committed.some(c => c.items?.some(i => i.type === 'event' || i.type === 'reminder'))) {
+      void signalPositiveMoment();
+    }
+
+    const items = committed.flatMap(c => c.items ?? []);
+    finishCommit({
+      title: items.map(i => i.title).join(', '),
+      navigateTo: committed[0].navigateTo,
+      items: items.length > 1 ? items : undefined,
+      undo: async () => { for (const c of committed) await c.undo(); },
+    });
+  };
+
+  /** Save from the preview screen — the single-entry path. */
+  const handleConfirm = async () => {
+    if (parsed) await commitEntries([parsed], parseSnapshotRef.current?.rawInput ?? latestTextRef.current);
+  };
+
+  /** EZ parse telemetry (admin accuracy dashboard). One row per capture. */
+  const logParseEvent = (finals: ParsedEntry[]) => {
+    const snap = parseSnapshotRef.current;
+    if (!snap) return;
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      supabase.from('parse_events').insert({
+        user_id: session.user.id,
+        raw_input: snap.rawInput,
+        ai_result: { entries: snap.aiResult },
+        final_result: { entries: finals },
+        was_corrected: JSON.stringify(snap.aiResult) !== JSON.stringify(finals),
+        locale: localStorage.getItem('eazy-family-language') || 'en',
+      }).then(() => {});
+    });
   };
 
   const formatPreviewDate = (date: string | null, time: string | null): string | null => {
@@ -1004,6 +1103,27 @@ STYLE:
                 </div>
               </div>
 
+              {/* Live recording feedback for the path without word-by-word
+                  partials: input level + elapsed, so the mic is never a
+                  silent black box while the user is talking. */}
+              {isListening && meter.elapsedMs > 0 && (
+                <div className="flex items-center gap-2 -mt-2 px-1">
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: MUTED_BG }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.round(Math.max(0.04, meter.level) * 100)}%`,
+                        background: '#D97B66',
+                        transition: 'width 0.15s linear',
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs tabular-nums" style={{ color: MUTED }}>
+                    {`0:${String(Math.min(99, Math.floor(meter.elapsedMs / 1000))).padStart(2, '0')}`}
+                  </span>
+                </div>
+              )}
+
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={onClose}
@@ -1051,18 +1171,42 @@ STYLE:
               </div>
               <div className="text-center space-y-1">
                 <p className="font-bold text-lg" style={{ color: INK }}>{t('ezCapture.doneTitle')}</p>
-                <p className="text-sm" style={{ color: MUTED }}>{doneCtx.title}</p>
+                <p className="text-sm" style={{ color: MUTED }}>
+                  {doneCtx.items
+                    ? t('ezCapture.doneItemsAdded', { count: doneCtx.items.length })
+                    : doneCtx.title}
+                </p>
               </div>
+              {/* One utterance, several items: list what actually landed and
+                  under which type, instead of one run-together subtitle. */}
+              {doneCtx.items && (
+                <div className="w-full space-y-1.5">
+                  {doneCtx.items.map((item, i) => (
+                    <div
+                      key={`${item.type}-${i}`}
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5"
+                      style={{ background: MUTED_BG, border: `1px solid ${BORDER}` }}
+                    >
+                      <span className="text-base">{TYPE_ICON[item.type]}</span>
+                      <span className="flex-1 text-sm font-medium" style={{ color: INK }}>{item.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="w-full space-y-2 mt-1">
-                <button onClick={addReminderForDone} disabled={reminderAdded}
-                  className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left disabled:opacity-60"
-                  style={{ background: MUTED_BG, border: `1px solid ${BORDER}` }}>
-                  <span className="text-lg">🔔</span>
-                  <span className="flex-1 text-sm font-medium" style={{ color: INK }}>
-                    {reminderAdded ? t('ezCapture.reminderSet') : t('ezCapture.addReminder')}
-                  </span>
-                  {reminderAdded && <Check className="w-4 h-4" style={{ color: '#44664F' }} />}
-                </button>
+                {/* "Add reminder" attaches to one item — only offered when the
+                    capture produced exactly one. */}
+                {!doneCtx.items && (
+                  <button onClick={addReminderForDone} disabled={reminderAdded}
+                    className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left disabled:opacity-60"
+                    style={{ background: MUTED_BG, border: `1px solid ${BORDER}` }}>
+                    <span className="text-lg">🔔</span>
+                    <span className="flex-1 text-sm font-medium" style={{ color: INK }}>
+                      {reminderAdded ? t('ezCapture.reminderSet') : t('ezCapture.addReminder')}
+                    </span>
+                    {reminderAdded && <Check className="w-4 h-4" style={{ color: '#44664F' }} />}
+                  </button>
+                )}
                 <div className="flex gap-2">
                   <button onClick={editFromDone} className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: MUTED_BG, border: `1px solid ${BORDER}`, color: INK }}>{t('common.edit')}</button>
                   <button onClick={removeFromDone} className="flex-1 rounded-2xl px-4 py-3 text-sm font-medium" style={{ background: MUTED_BG, border: `1px solid ${BORDER}`, color: '#C0392B' }}>{t('common.delete')}</button>

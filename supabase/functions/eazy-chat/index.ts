@@ -39,7 +39,7 @@ serve(async (req) => {
       );
     }
 
-    const { messages, context, systemPrompt: systemPromptOverride, temperature } = await req.json();
+    const { messages, context, systemPrompt: systemPromptOverride, temperature, maxTokens } = await req.json();
 
     if (!Array.isArray(messages)) {
       return new Response(
@@ -79,6 +79,16 @@ serve(async (req) => {
 
     const model = 'claude-haiku-4-5-20251001';
 
+    // Structured-extraction callers (EZ capture) can ask for more room: one
+    // utterance may produce several entries, and a reply cut off mid-object
+    // parses as nothing at all. Clamped so a caller can't run up the bill.
+    const MAX_TOKENS_DEFAULT = 1024;
+    const MAX_TOKENS_CEILING = 4096;
+    const maxTokensResolved =
+      typeof maxTokens === 'number' && Number.isFinite(maxTokens)
+        ? Math.min(MAX_TOKENS_CEILING, Math.max(256, Math.floor(maxTokens)))
+        : MAX_TOKENS_DEFAULT;
+
     const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -88,7 +98,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 1024,
+        max_tokens: maxTokensResolved,
         // Structured-extraction callers (EZ capture) pass temperature 0 for
         // deterministic JSON; conversational callers omit it (API default).
         ...(typeof temperature === 'number' && temperature >= 0 && temperature <= 1
