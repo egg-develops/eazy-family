@@ -910,20 +910,20 @@ const AppHome = () => {
     if (!user) return;
     const COLORS = ['#D97B66', '#44664F', '#6E8FE5', '#EE7BB0', '#964735'];
     Promise.all([
-      supabase.from('profiles').select('home_config, family_id').eq('user_id', user.id).single(),
+      supabase.from('family_members').select('family_id').eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle(),
       supabase.from('tasks').select('id, title, type, user_id').eq('type', 'shared').eq('completed', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('tasks').select('id, title, due_date, type').not('due_date', 'is', null).eq('completed', false).in('type', ['task', 'shared']),
       supabase.from('events').select('id, title, start_date, end_date, all_day, location').order('start_date', { ascending: true }).limit(90),
       supabase.from('tasks').select('*').eq('type', 'task').eq('completed', false).order('created_at', { ascending: false }).limit(3),
-    ]).then(([profilesRes, sharedRes, calTasksRes, eventsRes, quickTasksRes]) => {
-      if (profilesRes.data?.home_config && typeof profilesRes.data.home_config === 'object') {
-        setHomeConfig(prev => {
-          const merged = { ...prev, ...(profilesRes.data.home_config as Partial<HomeConfig>) };
-          cloudSet('eazy-family-home-config', JSON.stringify(merged));
-          return merged;
-        });
-      }
-      if (profilesRes.data?.family_id) setSeedFamilyId(profilesRes.data.family_id);
+    ]).then(([familyRes, sharedRes, calTasksRes, eventsRes, quickTasksRes]) => {
+      // The family link lives on family_members, not profiles. This used to read
+      // `profiles.select('home_config, family_id')`, and NEITHER column exists on
+      // profiles: PostgREST answered 400 42703 every load, so setSeedFamilyId never
+      // ran and useWelcomeSeed (which gates its family inserts on `if (familyId)`)
+      // silently never seeded a new family. Home config is not read here at all:
+      // 'eazy-family-home-config' is a SYNC_KEYS entry (src/lib/preferencesSync.ts)
+      // and is restored from user_preferences on login on any device.
+      if (familyRes.data?.family_id) setSeedFamilyId(familyRes.data.family_id);
       if (sharedRes.data) {
         setSharedItems(sharedRes.data.map((t, i) => ({
           id: t.id, title: t.title, type: 'task',
@@ -968,9 +968,14 @@ const AppHome = () => {
 
   const saveConfig = (newConfig: HomeConfig) => {
     setHomeConfig(newConfig);
+    // cloudSet is the cloud write: it persists to user_preferences and restores on
+    // any device. The avatar is mirrored to family_members.icon_image as well,
+    // because user_preferences is owner-scoped and the family has to be able to
+    // read it to draw each other's avatars.
     cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
-    if (user) {
-      supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(() => {});
+    if (user && newConfig.iconImage !== homeConfig.iconImage) {
+      supabase.from('family_members').update({ icon_image: newConfig.iconImage ?? null }).eq('user_id', user.id)
+        .then(({ error }) => { if (error) logError('saveConfig icon_image:', error); });
     }
   };
 

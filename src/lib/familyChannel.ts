@@ -109,15 +109,20 @@ export function channelMessageToRow(input: ChannelMessageInput, familyId: string
 }
 
 /** Build an author lookup from family member rows (full_name) + profiles. */
+/**
+ * `profiles` is optional and only ever resolves the current user: profiles_select
+ * is own-row-or-admin under RLS, so a caller that joins it for the whole roster
+ * gets one row back. The member row's own display_name is the family-visible name.
+ */
 export function buildAuthors(
-  members: { user_id: string; full_name?: string | null }[],
-  profiles: { user_id: string; display_name?: string | null }[],
+  members: { user_id: string; full_name?: string | null; display_name?: string | null }[],
+  profiles: { user_id: string; display_name?: string | null }[] = [],
 ): Record<string, ChannelAuthor> {
   const nameByProfile = new Map(profiles.map(p => [p.user_id, p.display_name]));
   const authors: Record<string, ChannelAuthor> = {};
   for (const m of members) {
     if (!m.user_id) continue;
-    const name = (nameByProfile.get(m.user_id) || m.full_name || 'Family member').trim();
+    const name = (nameByProfile.get(m.user_id) || m.display_name || m.full_name || 'Family member').trim();
     authors[m.user_id] = { name, initials: initialsFor(name), color: colorForUser(m.user_id) };
   }
   return authors;

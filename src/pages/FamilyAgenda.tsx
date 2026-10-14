@@ -416,15 +416,14 @@ const FamilyAgenda = () => {
       setFamilyId(fid);
       channelCache.familyId = fid;
 
-      // Author lookup: member full_name + profile display_name, stable colour.
+      // Author lookup: the name and a stable colour per member. The display name
+      // comes off the member row. It used to be joined from profiles, which under
+      // RLS returns only your own row (profiles_select is own-row-or-admin), so
+      // every other author silently fell through to full_name.
       const { data: members } = await supabase
-        .from('family_members').select('user_id, full_name')
+        .from('family_members').select('user_id, full_name, display_name')
         .eq('family_id', fid).eq('is_active', true);
-      const ids = (members ?? []).map(m => m.user_id).filter(Boolean) as string[];
-      const { data: profiles } = ids.length
-        ? await supabase.from('profiles').select('user_id, display_name').in('user_id', ids)
-        : { data: [] as { user_id: string; display_name: string | null }[] };
-      const authorMap = buildAuthors(members ?? [], profiles ?? []);
+      const authorMap = buildAuthors(members ?? []);
       if (cancelled) return;
       setAuthors(authorMap);
       channelCache.authors = authorMap;

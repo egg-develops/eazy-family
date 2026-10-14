@@ -144,6 +144,7 @@ export type Database = {
           email: string | null
           family_id: string
           full_name: string | null
+          icon_image: string | null
           id: string
           inviter_id: string
           is_active: boolean | null
@@ -159,6 +160,7 @@ export type Database = {
           email?: string | null
           family_id: string
           full_name?: string | null
+          icon_image?: string | null
           id?: string
           inviter_id: string
           is_active?: boolean | null
@@ -174,6 +176,7 @@ export type Database = {
           email?: string | null
           family_id?: string
           full_name?: string | null
+          icon_image?: string | null
           id?: string
           inviter_id?: string
           is_active?: boolean | null

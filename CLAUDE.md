@@ -153,9 +153,18 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
 13. **Resolving the family roster from async React state during capture/assignment.**
     Module-cached screens re-enter before state hydrates → wrong/empty assignee. →
     **Resolve the roster inline (`ensureRoster`), not from state.**
-14. **Inserting `family_members` rows with `user_id = null`** as fake roster members.
-    RLS SELECT is null-unsafe so they're invisible. → **Set `display_name`; route
-    pending non-real members through `family_invitations`.**
+14. **Reading back a `family_members` row with `.insert().select()`.** Members with
+    `user_id = null` are now a supported, first-class concept (a child or
+    grandparent with no login), created from the Family screen's "Add member" and
+    assignable via `tasks.assigned_member_ids`. Migration
+    `20261011000001_family_member_visibility_and_task_member_assignees.sql` made
+    them visible by replacing a NULL-unsafe policy. But `INSERT ... RETURNING`
+    still has to satisfy the SELECT policy, so a `.select()` chained onto the
+    insert fails with 42501 if the new row isn't readable yet. → **Insert the
+    member without `.select()`, then read it back separately (see
+    `handleAddMember` in `src/pages/FamilyProfile.tsx`). Always set
+    `display_name` AND `full_name`. Assign to `assigned_member_ids`
+    (`family_members.id`), not only `assigned_to_users`.**
 15. **Applying a global 44px min tap-target CSS rule.** It bloats every control. →
     **Gate size behind the "Larger touch targets" toggle and the `.tap-pad` class.**
 16. **`supabase db push` to apply a migration.** The CLI migration history is out of
@@ -183,7 +192,28 @@ build **succeeded**, and (b) the user is on the new bundle/build. See §7.
     freshly-mounted full-screen backdrop and self-dismisses it in the same frame. →
     **Ignore backdrop close-clicks within ~400ms of mount (see `EZCapture`
     `openedAtRef`).**
-22. **Wiping `~/Library/Caches/*` to "clean" a build.** It corrupts the SwiftPM /
+22. **Assuming a Supabase 400 only affects the column it names.** PostgREST fails
+    the **whole** select when one column is unknown, so every other column in that
+    same select silently returns nothing. `profiles` carried two phantom columns
+    (`home_config`, `family_id`) for a long time, and the visible damage was
+    elsewhere entirely: the welcome seed never ran for new families, Settings showed
+    an empty name, member avatars never rendered. The write side is worse, because
+    `.then(() => {})` swallows it. → **On a `42703` / `PGRST204`, treat every column
+    in that select as dead and go looking for distant symptoms. Check a column
+    exists before adding it to a shared select, and never swallow the error of a
+    write.**
+23. **Joining `profiles` to name or picture other family members.** `profiles_select`
+    is `auth.uid() = user_id OR is_admin`: own row only, and RLS is row-level, so
+    there is no "subset of columns" other members can see. A roster-wide
+    `profiles.select(...).in('user_id', memberIds)` returns exactly ONE row and no
+    error, so the join looks like it works and everyone else quietly falls through
+    to a fallback. → **Anything the family must see about a member lives on
+    `family_members` (family-readable and family-writable since
+    20261011000001): `display_name`, `full_name`, `icon_image`. Use `profiles` only
+    for the signed-in user's own row, and mirror a self-edit onto the member row or
+    the family never sees it.** Account-less members have no `profiles` row at all,
+    which is the other half of the reason.
+24. **Wiping `~/Library/Caches/*` to "clean" a build.** It corrupts the SwiftPM /
     Gradle artifact caches ("xcframework.zip already exists"). → **Scope it:
     `rm -rf ~/Library/Caches/org.swift.swiftpm` + delete `Package.resolved`; for
     Gradle, `gradlew --stop` then `rm -rf ~/.gradle/caches`.**

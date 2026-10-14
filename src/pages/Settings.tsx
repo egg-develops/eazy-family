@@ -264,20 +264,17 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('display_name, home_config').eq('user_id', user.id).single()
+    // Only display_name is read here. Home config comes from user_preferences via
+    // preferencesSync ('eazy-family-home-config' is a SYNC_KEYS entry), which
+    // already restores it on login and fires 'eazy-home-config-updated'. Selecting
+    // a second copy from profiles failed the whole select and took display_name
+    // down with it, so Settings showed a stale or empty name.
+    supabase.from('profiles').select('display_name').eq('user_id', user.id).single()
       .then(({ data }) => {
         if (data) {
           const fetchedName = data.display_name || '';
           setDisplayName(fetchedName);
           localStorage.setItem('eazy-display-name', fetchedName);
-          if (data.home_config && typeof data.home_config === 'object') {
-            const cloud = data.home_config as Partial<HomeConfig>;
-            setHomeConfig(prev => ({ ...prev, ...cloud }));
-            if (cloud.appTitle !== undefined) setAppTitleDraft(cloud.appTitle ?? '');
-            const merged = { ...JSON.parse(localStorage.getItem('eazy-family-home-config') || '{}'), ...cloud };
-            localStorage.setItem('eazy-family-home-config', JSON.stringify(merged));
-            window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
-          }
         }
       })
       .catch(e => logError('Settings fetch:', e));
@@ -409,9 +406,15 @@ const Settings = () => {
   const saveHomeConfig = (updates: Partial<HomeConfig>) => {
     const newConfig = { ...homeConfig, ...updates };
     setHomeConfig(newConfig);
+    // cloudSet is the cloud write (user_preferences). The avatar is mirrored to
+    // family_members.icon_image as well, because user_preferences is owner-scoped
+    // and the rest of the family has to read it for avatars.
     cloudSet('eazy-family-home-config', JSON.stringify(newConfig));
     window.dispatchEvent(new CustomEvent('eazy-home-config-updated'));
-    if (user) supabase.from('profiles').update({ home_config: newConfig }).eq('user_id', user.id).then(({ error }) => { if (error) logError('saveHomeConfig:', error); });
+    if (user && updates.iconImage !== undefined) {
+      supabase.from('family_members').update({ icon_image: newConfig.iconImage ?? null }).eq('user_id', user.id)
+        .then(({ error }) => { if (error) logError('saveHomeConfig icon_image:', error); });
+    }
   };
 
   const handleLanguageChange = (lang: string) => {
@@ -481,6 +484,13 @@ const Settings = () => {
         logError('saveDisplayName:', error);
         toast({ title: t('settings.nameSaveFailed', 'Could not save name'), variant: 'destructive' });
       }
+      // The roster reads family_members, and profiles is own-row-only under RLS,
+      // so a name saved only to profiles would never reach the rest of the family:
+      // they would keep seeing whatever FamilyProfile wrote when the member was
+      // created. Mirror it onto the member row so a rename actually propagates.
+      const { error: memberErr } = await supabase.from('family_members')
+        .update({ display_name: trimmed }).eq('user_id', user.id);
+      if (memberErr) logError('saveDisplayName family_members:', memberErr);
     } catch (e) { logError('saveDisplayName:', e); }
   };
 
