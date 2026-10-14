@@ -23,6 +23,13 @@ export default defineConfig(({ mode }) => ({
       'react-dom',
       'react-dom/client',
       '@supabase/supabase-js',
+      // i18next's Trans pulls in html-parse-stringify -> void-elements, which is
+      // CJS with no ESM default export. With noDiscovery the chain is never
+      // pre-bundled, so the dev server serves it raw and the app boots blank
+      // ("does not provide an export named 'default'"). Pre-bundling react-i18next
+      // inlines the whole chain. Production is unaffected (Rollup handles CJS).
+      'i18next',
+      'react-i18next',
     ],
   },
   resolve: {
